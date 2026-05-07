@@ -1,0 +1,15 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*~
+
+# Optional static-site build output (when we add Docusaurus / MkDocs)
+site/
+build/
+node_modules/
