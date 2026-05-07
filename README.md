@@ -28,10 +28,15 @@ vio-handbook/
 │   │   └── agents.md                      ← day 1 for a new AI agent
 │   ├── architecture/
 │   │   └── system-overview.md             ← 3 repos + how they fit together
+│   ├── infrastructure/
+│   │   └── overview.md                    ← services, accounts, secrets locations
 │   ├── decisions/                         ← ADRs (one file per decision)
 │   │   └── NNNN-short-slug.md
 │   ├── sprints/                           ← sprint summaries (closed)
 │   │   └── YYYY-MM-name.md
+│   ├── journal/                           ← daily / per-session log
+│   │   ├── README.md                      ← format + rules
+│   │   └── YYYY-MM/YYYY-MM-DD.md
 │   ├── lessons/                           ← post-mortems, gotchas, "what we learned"
 │   │   └── short-slug.md
 │   ├── playbooks/                         ← operational how-to guides
@@ -40,6 +45,8 @@ vio-handbook/
 │   └── roadmap.md                         ← 6-12 month direction
 └── meetings/                              ← optional: retros, decision logs
 ```
+
+**Journal vs Sprints vs CURRENT_STATE**: see [`docs/journal/README.md`](./docs/journal/README.md) — the journal is the **chronological diary** (per-session), sprints capture the *arc* of a sprint at close, and the code repo's `CURRENT_STATE.md` is *the live state right now*.
 
 ---
 
@@ -92,7 +99,10 @@ Every 3 months, sweep `docs/` for files not touched in 6+ months. Either:
 - **New dev?** → [`docs/onboarding/humans.md`](./docs/onboarding/humans.md)
 - **New AI agent?** → [`docs/onboarding/agents.md`](./docs/onboarding/agents.md)
 - **Want the architecture in one read?** → [`docs/architecture/system-overview.md`](./docs/architecture/system-overview.md)
+- **Where do services live? (Neon / Cloudflare / Apple Developer / Reachu / Stripe / Mixpanel / Azure)** → [`docs/infrastructure/overview.md`](./docs/infrastructure/overview.md)
+- **What did we do recently?** → [`docs/journal/`](./docs/journal/) (chronological)
 - **Looking for the *why* behind a rule or pattern?** → [`docs/decisions/`](./docs/decisions/)
 - **Hit a weird bug and want to know if we've seen it?** → [`docs/lessons/`](./docs/lessons/)
 - **Need to do an op (add sponsor, debug Apple Pay, rotate keys)?** → [`docs/playbooks/`](./docs/playbooks/)
 - **What does "client_app" mean?** → [`docs/glossary.md`](./docs/glossary.md)
+- **What's the current sprint state?** → `socket-server/docs/CURRENT_STATE.md` (in code repo, not here — that's the *live truth*)
