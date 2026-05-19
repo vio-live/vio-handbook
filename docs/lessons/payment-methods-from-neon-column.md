@@ -9,7 +9,7 @@ status: live
 
 ## TL;DR
 
-The buttons rendered in `SponsorCheckoutSection.methodActionButtons` (Apple Pay / Klarna / Card / Vipps / Google Pay) come from a Neon DB column that is **manually populated**, **synced from commerce**, and **not validated against anything**. You can put `"banana"` in there and the SDK will dutifully try to render a button for it.
+The buttons rendered in `SponsorCheckoutSection.methodActionButtons` (Apple Pay / Klarna / Card / Vipps / Google Pay) come from a Neon DB column that is **manually populated**, **synced from Vio Commerce**, and **not validated against anything**. You can put `"banana"` in there and the SDK will dutifully try to render a button for it.
 
 ## The full chain
 
@@ -32,13 +32,13 @@ VioSponsor.CommerceBlock.paymentMethods: [String]
 The `POST /api/campaign/payments/apikey/:apiKey` endpoint (`routes.ts:1044`) accepts any string array. Only check: `Array.isArray(paymentMethods)`. **Not checked** against:
 
 - What the iOS `PaymentMethod` enum (`stripe / klarna / vipps`) plus `applepay` (special-cased in `handleSponsorCheckoutTap`) can actually route.
-- What the sponsor's Commerce channel actually supports (via `PaymentQueries.GetAvailablePaymentMethods` on commerce GraphQL).
+- What the sponsor's Vio Commerce channel actually supports (via `PaymentQueries.GetAvailablePaymentMethods` on Vio Commerce's GraphQL).
 
 So you can ship a button that the SDK can't handle (`googlepay` falls through `handleSponsorCheckoutTap`'s `default: break` → tap is a no-op).
 
-## Update endpoint = commerce's sync target
+## Update endpoint = Vio Commerce's sync target
 
-`POST /api/campaign/payments/apikey/:apiKey` (**no auth middleware** — it's the sync endpoint commerce calls).
+`POST /api/campaign/payments/apikey/:apiKey` (**no auth middleware** — it's the sync endpoint Vio Commerce calls).
 
 - `apiKey` here = `sponsors.commerce_api_key`, NOT the client-app apiKey.
 - Body: `{ "paymentMethods": [...] }` — full array replaces the column.
@@ -46,7 +46,7 @@ So you can ship a button that the SDK can't handle (`googlepay` falls through `h
 
 ## Local dev gotcha
 
-Commerce calls this endpoint against `api-dev.vio.live`, **NOT** against local tunnels. If you activate a payment method in commerce's dashboard, **your local Neon (forked branch) doesn't get the update.** Replicate manually with `scripts/sync-payment-methods-local.ts` (added in `2d333ca`):
+Vio Commerce calls this endpoint against `api-dev.vio.live`, **NOT** against local tunnels. If you activate a payment method in Vio Commerce's dashboard, **your local Neon (forked branch) doesn't get the update.** Replicate manually with `scripts/sync-payment-methods-local.ts` (added in `2d333ca`):
 
 ```bash
 cd vio-backend/socket-server
@@ -72,7 +72,7 @@ All 4 commerce sponsors (Elkjøp #3, Torshov #4, XXL #7, Maxbo #8) had `google_p
 
 ## Where the validation should live (future)
 
-Backend should validate `paymentMethods` against (a) a known-good enum that matches the SDK's capabilities, plus (b) optionally the sponsor's Commerce channel's `GetAvailablePaymentMethods` response. Not done — flagged here so it doesn't get forgotten.
+Backend should validate `paymentMethods` against (a) a known-good enum that matches the SDK's capabilities, plus (b) optionally the sponsor's Vio Commerce channel's `GetAvailablePaymentMethods` response. Not done — flagged here so it doesn't get forgotten.
 
 ## Related diagnostic scripts (socket-server)
 

@@ -23,7 +23,7 @@ if let m = billing_address, m.isEmpty {
 
 Client-side validator throws **before** the GraphQL call. The caller's `catch` logs via `VioLogger.error` — **which doesn't print to console in dev builds** — so the failure is invisible. The next iOS step never runs.
 
-**Workaround**: send the smallest defensible non-empty dict. For a "we don't have user data yet" call, `["country": resolvedCountry]` works — country comes from the market (not user input), satisfies the validator, satisfies commerce's "must have address" check.
+**Workaround**: send the smallest defensible non-empty dict. For a "we don't have user data yet" call, `["country": resolvedCountry]` works — country comes from the market (not user input), satisfies the validator, satisfies Vio Commerce's "must have address" check.
 
 ## How it shows up
 
@@ -35,7 +35,7 @@ Client-side validator throws **before** the GraphQL call. The caller's `catch` l
 
 Two compounding issues:
 
-1. **`CheckoutModule.update` throws on `isEmpty`** — defensive, but with no doc that this happens. The GraphQL backend itself accepts `{}` ([verified empirically](#) 2026-05-13 in `/tmp/test-minimal-address.ts`); the iOS validator is stricter than commerce.
+1. **`CheckoutModule.update` throws on `isEmpty`** — defensive, but with no doc that this happens. The Vio Commerce GraphQL backend itself accepts `{}` ([verified empirically](#) 2026-05-13 in `/tmp/test-minimal-address.ts`); the iOS validator is stricter than the backend.
 2. **`VioLogger.error` is filtered out of console in default dev builds** (not stdout; uses `os_log` at error level which Xcode console suppresses by default). When the only signal is via `VioLogger`, the failure ghosts.
 
 ## Fix the silent-log problem permanently
@@ -55,7 +55,7 @@ Pattern:
 
 ## Where we hit it
 
-Path E experiment in the abandoned `feat/direct-payment-launch` sprint (2026-05-13). Tried to send Klarna `{shipping_address: {}, billing_address: {}}` based on a probe that confirmed Commerce GraphQL accepts empty objects. It did — but the SDK never let the request out. Diagnosed only because Apple Pay's existing `[Q4-DIAG]` `print(...)` calls were visible while the corresponding `VioLogger.debug` from `updateCheckout(forSponsor:)` was absent → "the function isn't even being entered, must be throwing before."
+Path E experiment in the abandoned `feat/direct-payment-launch` sprint (2026-05-13). Tried to send Klarna `{shipping_address: {}, billing_address: {}}` based on a probe that confirmed Vio Commerce's GraphQL accepts empty objects. It did — but the SDK never let the request out. Diagnosed only because Apple Pay's existing `[Q4-DIAG]` `print(...)` calls were visible while the corresponding `VioLogger.debug` from `updateCheckout(forSponsor:)` was absent → "the function isn't even being entered, must be throwing before."
 
 ## Related
 
