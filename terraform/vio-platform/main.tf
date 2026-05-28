@@ -62,7 +62,7 @@ resource "azurerm_kubernetes_cluster" "vio_aks" {
   }
 }
 
-# Placeholder for PostgreSQL Flexible Server Configuration (moved to keyvault-config.tf)
+
   name                   = "postgresql-vio-platform"
   resource_group_name    = azurerm_resource_group.vio_resource_group.name
   location               = azurerm_resource_group.vio_resource_group.location
