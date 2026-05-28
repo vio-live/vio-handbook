@@ -1,6 +1,6 @@
 ---
 title: "Engineering journal"
-last-updated: 2026-05-07
+last-updated: 2026-05-28
 owner: angelo
 status: live
 ---
@@ -69,6 +69,7 @@ journal/
 
 ## Rules
 
+- **Authorship** — cada entry declara quién la escribió en el frontmatter: `author: <nombre>` para autor único, `participants: [n1, n2]` para colaborativo (ej. humano dirigiendo + agente ejecutando). Cuando un agente AI hizo el trabajo, incluí el nombre del agente (`claude`, `jhondev`, etc.) para que el equipo pueda trazar quién hizo qué. Si editás una sección de un entry ajeno, agregá un byline fechado en esa sección: `> [claude, YYYY-MM-DD] ...`. (Nota: esto es trazabilidad del handbook — los commits de git quedan limpios, sin atribución a AI.)
 - **Write at session close**, not mid-session. The summary needs hindsight to be useful.
 - **Link to PRs / commits / ADRs / sprint docs** — the journal is an *index*, not the source.
 - **Don't duplicate** sprint summaries here. If a sprint closes and warrants a sprint doc, write the sprint doc and link it from the journal entry.
