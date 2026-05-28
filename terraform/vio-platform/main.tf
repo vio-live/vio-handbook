@@ -63,15 +63,3 @@ resource "azurerm_kubernetes_cluster" "vio_aks" {
 }
 
 
-  name                   = "postgresql-vio-platform"
-  resource_group_name    = azurerm_resource_group.vio_resource_group.name
-  location               = azurerm_resource_group.vio_resource_group.location
-  version                = "13"
-  sku_name               = "GP_Standard_D2s_v3"
-  storage_mb             = 32768
-  administrator_login    = "pgadmin"
-  administrator_password = "CHANGEME123@"
-  delegated_subnet_id    = azurerm_subnet.postgresql_subnet.id
-  private_dns_zone_id    = azurerm_virtual_network.vio_vnet.id
-  public_network_access_enabled = false
-}
