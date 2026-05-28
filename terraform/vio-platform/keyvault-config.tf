@@ -1,5 +1,6 @@
 provider "azurerm" {
   features {}
+  configure = "global"
 }
 
 # Azure Key Vault
