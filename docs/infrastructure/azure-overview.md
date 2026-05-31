@@ -176,6 +176,45 @@ Todos los DNS deben apuntar a las IPs estáticas. Nunca a IPs dinámicas.
 
 ---
 
+## Socket Server — Container Apps (nueva infra, 2026-05-29)
+
+Infraestructura independiente de los clusters AKS. Gestión: `vio-live/vio-infra-tf` módulo `socket-server-env`.
+
+### Resource Groups
+
+| RG | Entorno |
+|---|---|
+| `rg-socket-server-production` | Production |
+| `rg-socket-server-staging` | Staging |
+| `rg-socket-server-development` | Development |
+
+### Container Apps
+
+| Entorno | Container App | FQDN |
+|---|---|---|
+| production | `ca-socket-server-production` | `ca-socket-server-production.wonderfulwater-d6f8cdb0.norwayeast.azurecontainerapps.io` |
+| staging | `ca-socket-server-staging` | `ca-socket-server-staging.happyglacier-1fcd1645.norwayeast.azurecontainerapps.io` |
+| development | `ca-socket-server-development` | `ca-socket-server-development.gentlesea-a51094e8.norwayeast.azurecontainerapps.io` |
+
+> Dominios custom (`api.vio.live`, `api-staging.vio.live`, `api-dev.vio.live`) **pendientes de conectar**.
+
+### PostgreSQL Flexible Server (acceso privado por VNet)
+
+| Entorno | Servidor | SKU |
+|---|---|---|
+| production | `pg-socket-server-production` | GP_Standard_D2s_v3 |
+| staging | `pg-socket-server-staging` | B_Standard_B1ms |
+| development | `pg-socket-server-development` | B_Standard_B1ms |
+
+### CI/CD
+
+Repo: `tipiodevelopment/socket-server` → `.github/workflows/deploy.yml`
+- Push a `main` → deploy a development
+- `workflow_dispatch` → cualquier entorno
+- Autenticación: Azure OIDC
+
+---
+
 ## Ver también
 
 - [`docs/playbooks/terraform-infra.md`](../playbooks/terraform-infra.md) — gestión de IaC

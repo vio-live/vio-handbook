@@ -22,14 +22,20 @@ All Azure infrastructure for Vio Commerce is managed as code in [vio-live/vio-in
 ```
 vio-infra-tf/
 ├── main.tf              # Provider + remote backend config
-├── variables.tf         # subscription_id
+├── variables.tf         # subscription_id, location
 ├── resource_groups.tf   # prod-reachu, qa, vio-tools, ai-services
 ├── aks.tf               # AKS clusters + ACR pull + static IPs + egress IPs
 ├── registry.tf          # Container registries (prod + qa)
 ├── servicebus.tf        # Service Bus namespaces
 ├── cdn.tf               # Front Door profile + endpoints
 ├── functions.tf         # App Service Plan + Windows Function Apps
-└── storage.tf           # Storage accounts
+├── storage.tf           # Storage accounts
+├── environments.tf      # Socket Server: 3 entornos (production/staging/development)
+└── modules/
+    └── socket-server-env/
+        ├── main.tf      # VNet, PostgreSQL, Container App, identidad, Log Analytics
+        ├── variables.tf
+        └── outputs.tf
 ```
 
 Remote state: `viotfstate/tfstate/vio-commerce.tfstate` (Azure Blob, `vio-tools` RG, `use_azuread_auth=true`).
@@ -74,6 +80,23 @@ Los manifiestos de Kubernetes (Redis, nginx-ingress, cert-manager, ingresses) es
 | `AZURE_SUBSCRIPTION_ID` | `3d276f7e-0783-4581-8a49-ad0a2c432c63` |
 
 Usa **OIDC federation** (sin credenciales estáticas). El `vio-infra-tf-cicd` SP está **deshabilitado** — no reactivar.
+
+## Socket Server — módulo multi-entorno
+
+El módulo `modules/socket-server-env` crea toda la infraestructura de un entorno de socket-server. Se instancia 3 veces desde `environments.tf` usando `for_each`.
+
+Para desplegar solo un entorno:
+```bash
+terraform apply -target='module.socket_server["production"]'
+terraform apply -target='module.socket_server["staging"]'
+terraform apply -target='module.socket_server["development"]'
+```
+
+Para añadir un nuevo entorno o cambiar recursos (CPU, memoria, SKU de PostgreSQL), editar únicamente `environments.tf` — no tocar el módulo.
+
+La imagen de contenedor inicial es un placeholder (`mcr.microsoft.com/azuredocs/containerapps-helloworld:latest`). El CI/CD de `tipiodevelopment/socket-server` actualiza la imagen en cada deploy.
+
+---
 
 ## Naming
 
