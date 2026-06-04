@@ -57,14 +57,14 @@ Ver [`playbooks/socket-server-db.md`](../playbooks/socket-server-db.md) para sna
 
 | URL | What | Source | Notes |
 |-----|------|--------|-------|
-| `https://api-dev.vio.live` | Backend (REST + WS) for dev environment | `socket-server/develop` | What iOS demos point at by default. Serves the develop Neon branch. |
+| `https://api-dev.vio.live` | Backend (REST + WS) — development env | `socket-server/main` → `ca-api-vio-development` | Push a `main` autodeploya aquí. iOS demos apuntan aquí por defecto. |
 | `wss://api-dev.vio.live` | WebSocket for cart_intent + placement events | Same as above | Used by SDK after `discoverCampaigns` |
+| `https://api-staging.vio.live` | Backend — staging env (demo 24/7) | `workflow_dispatch` → `ca-api-vio-staging` | Snapshot `angelo-sepulveda-2026-06-03-1725.sql` restaurado. `vio-demo.vercel.app` apunta aquí. |
+| `https://api.vio.live` | Backend — production | `workflow_dispatch` → `ca-api-vio-production` | Mismo código que staging/dev. Cutover de tráfico real pendiente. |
 | `https://graph-ql-dev.vio.live` | Reachu Commerce GraphQL (dev) | Reachu (third-party) | Per-sponsor `Authorization` header. Cart, checkout, payment ops. |
 | `https://graph-ql.vio.live` | Reachu Commerce GraphQL (prod) | Reachu | Not used yet — production cutover pending. |
 | `https://api-local-angelo.vio.live` | Cloudflare tunnel to Angelo's local backend | Local dev | Per-machine. See "Tunnels" below. |
 | `https://viopartnermockv2.azurewebsites.net` | Partner webhook mock | Vio infra | Receives outbound webhooks (cart_intent forwards to partner). |
-
-**Production**: not in scope yet. The phased cutover plan lives in `socket-server/docs/ROLLOUT_ROADMAP.md`.
 
 ---
 
