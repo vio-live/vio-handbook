@@ -5,9 +5,9 @@
 | Entorno | Host | DB | Driver |
 |---------|------|----|--------|
 | local | `localhost:5432` (Docker) | `socket_server` | `pg` |
-| development | `pg-socket-server-development` (VNet privada) | `socket_server` | `pg` |
-| staging | `pg-socket-server-staging` (VNet privada) | `socket_server` | `pg` |
-| production | `pg-socket-server-production` (VNet privada) | `socket_server` | `pg` |
+| development | `pg-api-vio-development.postgres.database.azure.com` (VNet privada) | `socket_server` | `pg` |
+| staging | `pg-api-vio-staging.postgres.database.azure.com` (VNet privada) | `socket_server` | `pg` |
+| production | `pg-api-vio-production.postgres.database.azure.com` (VNet privada) | `socket_server` | `pg` |
 
 Los PostgreSQL de desarrollo y staging **no tienen acceso público** — solo el Container App dentro de su VNet los alcanza. Para operaciones de mantenimiento se usa un Container App Job dentro de la misma VNet.
 
@@ -37,7 +37,7 @@ yarn dev   # localhost:5001
 
 ## Compartir data entre devs (snapshots)
 
-Los snapshots se guardan en Azure Blob — `containerqa2/db-snapshots`.
+Los snapshots se guardan en Azure Blob — `saapivio/db-snapshots` (Storage Account `saapivio`, RG `rg-vio-shared`).
 
 ```bash
 # Subir tu estado local
@@ -56,25 +56,25 @@ yarn db:snapshot:pull angelo-sepulveda-2026-06-01-0857.sql
 
 ---
 
-## Migrar data Neon → producción
-
-Cuando se necesita restaurar la data de Neon en producción:
+## Restaurar un snapshot en staging o production
 
 ```bash
+# 1. Subir tu DB local como snapshot
+yarn db:snapshot:push
+# anota el nombre generado (ej: angelo-sepulveda-2026-06-03-1725.sql)
+
+# 2. Restaurar en staging via Container App Job
 az containerapp job start \
   --name db-restore-job \
-  --resource-group rg-socket-server-production
+  --resource-group rg-api-vio-staging \
+  --environment-variables "SNAPSHOT_FILE=<nombre>.sql"
+
+# Ver logs de la ejecución
+EXEC=$(az containerapp job execution list --name db-restore-job --resource-group rg-api-vio-staging --query "[-1].name" -o tsv)
+az containerapp job logs show --name db-restore-job --resource-group rg-api-vio-staging --execution $EXEC --container db-restore --tail 50
 ```
 
-El job `db-restore-job` tiene configuradas las variables `NEON_URL` y `PROD_URL`. Corre `pg_dump` desde Neon y `psql` directo a Azure PostgreSQL dentro de la VNet.
-
-**Imagen requerida**: `postgres:17-alpine` (Neon corre PG17 — `pg_dump` v16 falla con version mismatch).
-
-Ver logs de la ejecución:
-```bash
-EXEC=$(az containerapp job execution list --name db-restore-job --resource-group rg-socket-server-production --query "[-1].name" -o tsv)
-az containerapp job logs show --name db-restore-job --resource-group rg-socket-server-production --execution $EXEC --container db-restore --tail 50
-```
+> **Neon fue eliminado el 2026-06-02.** No existe `NEON_URL` en ningún Container App. Todos los entornos usan Azure PostgreSQL únicamente.
 
 ---
 
@@ -91,8 +91,8 @@ Esto ahorra ~$30/mes. Los Container Apps escalan a cero cuando no hay tráfico �
 Para encender manualmente fuera de horario:
 ```bash
 az postgres flexible-server start \
-  --resource-group rg-socket-server-staging \
-  --name pg-socket-server-staging
+  --resource-group rg-api-vio-staging \
+  --name pg-api-vio-staging
 ```
 
 ---
@@ -118,6 +118,6 @@ yarn db:push
 | Síntoma | Causa probable | Fix |
 |---------|---------------|-----|
 | `ERR_INVALID_URL` en startup | Contraseña con chars especiales sin URL-encode | Verificar `DATABASE_URL` — la contraseña debe estar URL-encodeada (`urlencode()` en Terraform) |
-| `ECONNREFUSED :443` | `neon-serverless` conectando a Azure PostgreSQL | `db.ts` debe usar driver `pg` para URLs que no contengan `neon.tech` |
+| `ECONNREFUSED :443` | Driver WebSocket intentando conectar a PostgreSQL estándar | Verificar que `db.ts` use `drizzle-orm/node-postgres` (no `@neondatabase/serverless`) |
 | `F /app/drizzle.config.json file does not exist` | Dockerfile no copia `drizzle.config.ts` ni `shared/` | Verificar stage de producción en Dockerfile |
 | Container App no responde tras encender PostgreSQL | PostgreSQL tarda ~2 min en arrancar | Esperar y reintentar — el Container App reintentará la conexión |

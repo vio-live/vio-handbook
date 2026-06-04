@@ -1,6 +1,6 @@
 ---
 title: "Glossary"
-last-updated: 2026-05-07
+last-updated: 2026-06-04
 owner: angelo
 status: live
 ---
@@ -59,7 +59,7 @@ Canonical terms used across Vio repos. If you see a term used elsewhere that dis
 
 **merchant.live.vio** — The Apple Pay merchant identifier registered to the Vio Apple Developer account. Whitelisted on each sponsor's Stripe Connect account so the per-sponsor charge can complete. See [`lessons/stripe-connect-per-sponsor.md`](./lessons/stripe-connect-per-sponsor.md).
 
-**Neon branch** — Postgres database branch in Neon. Develop is `ep-summer-star-a89av46e`. Each Neon branch has its own endpoint hostname.
+**Neon** — ~~Removed 2026-06-02.~~ Neon was the previous Postgres provider. Fully replaced by Azure PostgreSQL Flexible Server. No Neon connections exist anywhere in the stack.
 
 **operating rule** — One of the 8 LOCKED rules in [`onboarding/humans.md`](./onboarding/humans.md). Don't break them; don't argue them in PR comments — open an ADR to revisit.
 

@@ -1,6 +1,6 @@
 ---
 title: "System overview — 3 repos, how they fit"
-last-updated: 2026-05-07
+last-updated: 2026-06-04
 owner: angelo
 status: live
 ---
@@ -21,7 +21,7 @@ This doc maps the platform across the 3 repos, the data model, and the runtime f
 │  ──────────────────────────────  │    │  ──────────────────────────────  │
 │  Backend (Node + Express)        │    │  iOS SDK + host app demos        │
 │  Dashboard (React, in client/)   │    │  Modules: VioCore, VioUI,        │
-│  Drizzle ORM → Neon Postgres     │    │           VioDesignSystem,       │
+│  Drizzle ORM → Azure PostgreSQL  │    │           VioDesignSystem,       │
 │                                  │    │           VioNetwork,            │
 │  Endpoints:                      │    │           VioComplete            │
 │  - /v2/mobile/* (iOS SDK)        │    │  Demos: Vg, Viaplay, tv2demo,    │
@@ -30,7 +30,7 @@ This doc maps the platform across the 3 repos, the data model, and the runtime f
 │  - /v2/admin/* (operator tools)  │    │  Branch policy: develop only.    │
 │  - /api/* (dashboard, session)   │    │  main = release tags only.       │
 │                                  │    │                                  │
-│  Branch policy: develop only.    │    └──────────────────────────────────┘
+│  Branch policy: main is deploy.  │    └──────────────────────────────────┘
 │  Deploy: api-dev.vio.live        │                  │
 │                                  │                  │ (consumes)
 │  Drift gate: check:docs-drift    │                  │
@@ -58,7 +58,7 @@ This doc maps the platform across the 3 repos, the data model, and the runtime f
 
 ## Data model (the things to know)
 
-The DB lives in Neon Postgres. Develop branch endpoint: `ep-summer-star-a89av46e`.
+The DB lives in Azure PostgreSQL Flexible Server (3 environments: production, staging, development). All in private VNet — no public access. See [`docs/infrastructure/overview.md`](../infrastructure/overview.md) for host names.
 
 ### Top-level tables
 

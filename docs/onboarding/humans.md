@@ -1,6 +1,6 @@
 ---
 title: "Onboarding — humans"
-last-updated: 2026-05-07
+last-updated: 2026-06-04
 owner: angelo
 status: live
 ---
@@ -15,7 +15,7 @@ Vio is split across 3 GitHub repos. They're related but each has its own branch 
 
 | Repo | What it does | Default branch | Production branch |
 |------|--------------|----------------|-------------------|
-| [`tipiodevelopment/socket-server`](https://github.com/tipiodevelopment/socket-server) | Backend (Node + Express + Drizzle ORM) + dashboard frontend (React in `client/`). Serves `/v2/{tv,mobile,commerce,admin}/*` to the SDKs and `/api/*` to the dashboard. | `develop` | `develop` (deployed at `https://api-dev.vio.live`) |
+| [`tipiodevelopment/socket-server`](https://github.com/tipiodevelopment/socket-server) | Backend (Node + Express + Drizzle ORM) + dashboard frontend (React in `client/`). Serves `/v2/{tv,mobile,commerce,admin}/*` to the SDKs and `/api/*` to the dashboard. | `main` | `main` → deploys to development. Use `workflow_dispatch` for staging/production. |
 | [`vio-live/VioSwiftSDK`](https://github.com/vio-live/VioSwiftSDK) | iOS SDK (Swift Package Manager). Modules: `VioCore`, `VioUI`, `VioDesignSystem`, `VioNetwork`, `VioComplete`. Plus host app demos in `Demo/` (Vg, Viaplay, tv2demo). | `develop` | `develop` — never merge to `main` (releases only). |
 | [`vio-live/InteractiveAds-vio`](https://github.com/vio-live/InteractiveAds-vio) | Apple TV SDK (`VioTV` product) + tvOS demo. | `main` | `main` |
 
@@ -41,10 +41,16 @@ These are LOCKED. Don't argue with them in PR comments — open an ADR if you wa
 ```bash
 git clone git@github.com:tipiodevelopment/socket-server.git
 cd socket-server
-npm install
-cp .env.example .env  # ask Angelo for the dev DATABASE_URL (Neon develop branch)
-npm run dev           # boots on :5001 against your .env DATABASE_URL
+yarn install
+cp .env.local.example .env
+# Set DATABASE_URL=postgresql://pgadmin:localpass@localhost:5432/socket_server
+# Ask Angelo for AZURE_STORAGE_CONNECTION_STRING (saapivio storage account)
+docker compose up -d   # starts PostgreSQL 16 on localhost:5432
+yarn db:snapshot:pull  # loads latest demo data from Azure Blob
+yarn dev               # boots on :5001
 ```
+
+Full step-by-step: [`docs/playbooks/socket-server-local-dev.md`](../playbooks/socket-server-local-dev.md)
 
 Tunnel: Angelo runs `api-local-angelo.vio.live` via Cloudflare so the iOS demos can hit local. If you're running your own backend, skip the tunnel and point demos at `https://api-dev.vio.live`.
 
@@ -68,7 +74,7 @@ Lives at `~/Documents/GitHub/InteractiveAds-vio`. Symlinked into `VioSwiftSDK/De
 
 ## 5. Branch + PR workflow
 
-- Branch off `develop` (or `main` for InteractiveAds-vio): `feat/short-slug` / `fix/short-slug` / `chore/short-slug` / `docs/short-slug`.
+- Branch off `main` (socket-server and InteractiveAds-vio) or `develop` (VioSwiftSDK): `feat/short-slug` / `fix/short-slug` / `chore/short-slug` / `docs/short-slug`.
 - Conventional commits: `feat(scope): summary` — scope is the area touched.
 - PR title same format. Body: Summary + Test plan (markdown checklist).
 - For socket-server: run `npm run check:docs-drift` before pushing. CI doesn't gate yet but is mandatory by convention.
@@ -87,4 +93,4 @@ Lives at `~/Documents/GitHub/InteractiveAds-vio`. Symlinked into `VioSwiftSDK/De
 
 ## 7. People
 
-Right now (2026-05-07): Angelo (lead) + Claude (AI pair programmer). Alan does Kotlin SDKs in parallel — see Kotlin specs in `socket-server/docs/KOTLIN_*_SDK_SPEC.md`.
+Right now (2026-06-04): Angelo (lead) + Miguel (AI agent / infra) + Claude (AI pair programmer). Alan does Kotlin SDKs in parallel — see Kotlin specs in `socket-server/docs/KOTLIN_*_SDK_SPEC.md`.

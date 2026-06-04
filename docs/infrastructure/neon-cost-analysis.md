@@ -1,13 +1,15 @@
 ---
 title: "Neon — análisis de costo + alternativas"
-last-updated: 2026-05-28
+last-updated: 2026-06-04
 owner: miguel
-status: live
+status: archived
 ---
+
+> **DEPRECADO — 2026-06-02**: Neon fue eliminado completamente. El stack usa Azure PostgreSQL Flexible Server en los 3 entornos. Este doc se conserva por referencia histórica del análisis de decisión.
 
 # Neon — análisis de costo + alternativas
 
-> Análisis hecho 2026-05-28 con la Neon API (key project-scoped en `socket-server/.env`). Decisión pendiente — territorio de infra (Miguel). Angelo levantó la pregunta "¿conviene sacar Neon?".
+> Análisis hecho 2026-05-28 con la Neon API (key project-scoped en `socket-server/.env`). Decisión tomada el 2026-06-02: migrar a Azure PostgreSQL y eliminar Neon.
 
 ## TL;DR
 

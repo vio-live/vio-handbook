@@ -1,6 +1,6 @@
 ---
 title: "Azure Infrastructure Overview"
-last-updated: 2026-05-27
+last-updated: 2026-06-04
 owner: angelo
 status: live
 ---
@@ -74,8 +74,9 @@ Todo lo de prod más:
 
 | Helm release | Imagen ACR | Réplicas |
 |---|---|---|
-| socket-server | `reachuqa2.azurecr.io/socket-server` | 1 |
 | webapp | `reachuqa2.azurecr.io/webapp` | 2 |
+
+> `socket-server` fue removido del cluster QA — ahora corre en Container Apps (`ca-api-vio-development`). Ver sección api-vio.
 
 > `bigcommerce-app`, `shopify-export`, `shopify-import` — en 0 réplicas en QA. Levantar con `kubectl scale deployment/<nombre> --replicas=1` si se necesitan.
 
@@ -98,11 +99,12 @@ Todos los DNS deben apuntar a las IPs estáticas. Nunca a IPs dinámicas.
 
 | Dominio | Servicio | HTTPS |
 |---|---|---|
-| `api-dev.vio.live` | socket-server | ✅ Let's Encrypt |
 | `graph-ql-dev.vio.live` | graph-ql | ✅ Let's Encrypt |
 | `webapp-dev.vio.live` | webapp | ✅ Let's Encrypt |
 | `api-qa.reachu.io` | base-api | ✅ Let's Encrypt |
 | `api-ecom-dev.vio.live` | base-api | ⏳ sin DNS |
+
+> `api-dev.vio.live` ya no apunta al cluster QA — ahora va al Container App `ca-api-vio-development` (ver sección api-vio abajo).
 
 ---
 
@@ -113,16 +115,17 @@ Todos los DNS deben apuntar a las IPs estáticas. Nunca a IPs dinámicas.
 | `server-bd-prod` | `204.168.185.15` | Prod | 3306 (MySQL) | `20.100.186.77` |
 | `server-bd-develop` | `204.168.215.2` | QA | 3306 (MySQL) | `20.100.169.12` |
 
-> Neon Postgres (socket-server QA): `ep-summer-star-a89av46e-pooler.eastus2.azure.neon.tech`
+> Neon fue eliminado el 2026-06-02. socket-server usa Azure PostgreSQL en todos los entornos (ver sección abajo).
 
 ---
 
 ## Container Registries
 
-| Recurso | RG | Tier |
-|---|---|---|
-| `reachuprod2` | prod-reachu | Standard |
-| `reachuqa2` | qa | Standard |
+| Recurso | RG | Tier | Uso |
+|---|---|---|---|
+| `reachuprod2` | prod-reachu | Standard | Reachu Commerce microservices (prod) |
+| `reachuqa2` | qa | Standard | Reachu Commerce microservices (QA) |
+| `acrvioapi` | rg-vio-shared | Standard | socket-server / api-vio backend |
 
 ---
 
@@ -148,6 +151,7 @@ Todos los DNS deben apuntar a las IPs estáticas. Nunca a IPs dinámicas.
 | `qa8ecc` | qa | Legacy |
 | `viopartnermockqasa` | qa | Partner mock QA |
 | `viopartnermockv2sa` | qa | Partner mock v2 |
+| `saapivio` | rg-vio-shared | DB snapshots (`saapivio/db-snapshots`), sponsor media uploads |
 
 ---
 
@@ -176,7 +180,9 @@ Todos los DNS deben apuntar a las IPs estáticas. Nunca a IPs dinámicas.
 
 ---
 
-## Socket Server — Container Apps (nueva infra, 2026-05-29)
+## api-vio — Container Apps (socket-server backend)
+
+> **Renombrado el 2026-06-02**: todos los recursos pasaron de `socket-server-*` a `api-vio-*`.
 
 Infraestructura independiente de los clusters AKS. Gestión: `vio-live/vio-infra-tf` módulo `socket-server-env`.
 
@@ -184,34 +190,42 @@ Infraestructura independiente de los clusters AKS. Gestión: `vio-live/vio-infra
 
 | RG | Entorno |
 |---|---|
-| `rg-socket-server-production` | Production |
-| `rg-socket-server-staging` | Staging |
-| `rg-socket-server-development` | Development |
+| `rg-api-vio-production` | Production |
+| `rg-api-vio-staging` | Staging |
+| `rg-api-vio-development` | Development |
 
 ### Container Apps
 
-| Entorno | Container App | FQDN |
+| Entorno | Container App | Dominio custom |
 |---|---|---|
-| production | `ca-socket-server-production` | `ca-socket-server-production.wonderfulwater-d6f8cdb0.norwayeast.azurecontainerapps.io` |
-| staging | `ca-socket-server-staging` | `ca-socket-server-staging.happyglacier-1fcd1645.norwayeast.azurecontainerapps.io` |
-| development | `ca-socket-server-development` | `ca-socket-server-development.gentlesea-a51094e8.norwayeast.azurecontainerapps.io` |
+| production | `ca-api-vio-production` | `api.vio.live` ✅ |
+| staging | `ca-api-vio-staging` | `api-staging.vio.live` ✅ |
+| development | `ca-api-vio-development` | `api-dev.vio.live` ✅ |
 
-> Dominios custom (`api.vio.live`, `api-staging.vio.live`, `api-dev.vio.live`) **pendientes de conectar**.
+ACR: `acrvioapi.azurecr.io` (imagen: `acrvioapi.azurecr.io/socket-server`)
 
 ### PostgreSQL Flexible Server (acceso privado por VNet)
 
 | Entorno | Servidor | SKU |
 |---|---|---|
-| production | `pg-socket-server-production` | GP_Standard_D2s_v3 |
-| staging | `pg-socket-server-staging` | B_Standard_B1ms |
-| development | `pg-socket-server-development` | B_Standard_B1ms |
+| production | `pg-api-vio-production.postgres.database.azure.com` | GP_Standard_D2s_v3 |
+| staging | `pg-api-vio-staging.postgres.database.azure.com` | B_Standard_B1ms |
+| development | `pg-api-vio-development.postgres.database.azure.com` | B_Standard_B1ms |
+
+Sin acceso público. Ops de mantenimiento via Container App Job dentro de la VNet.
+
+Snapshots en: `saapivio/db-snapshots` (Storage Account `saapivio`, RG `rg-vio-shared`)
+
+### Scheduler (ahorro ~$30/mes)
+
+Los PostgreSQL de staging y development se apagan L-V 20:00 CET y se encienden a las 08:00 CET via jobs `pg-stop-*` / `pg-start-*`.
 
 ### CI/CD
 
 Repo: `tipiodevelopment/socket-server` → `.github/workflows/deploy.yml`
 - Push a `main` → deploy a development
 - `workflow_dispatch` → cualquier entorno
-- Autenticación: Azure OIDC
+- Autenticación: Azure OIDC (SP `socket-server-cicd`, object ID `4661822f-0aaa-442c-92ca-207816f74647`)
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "Infrastructure overview"
-last-updated: 2026-05-07
+last-updated: 2026-06-04
 owner: angelo
 status: live
 ---
@@ -30,25 +30,26 @@ Single map of every external thing Vio depends on: GitHub, hosting, databases, t
 
 ---
 
-## Database — Neon Postgres
+## Database — Azure PostgreSQL (api-vio)
 
-The backend talks to a single logical Postgres database hosted on Neon, with multiple branches for isolation between environments and per-developer experiments.
+> **Neon fue eliminado el 2026-06-02.** El backend usa Azure PostgreSQL Flexible Server en todos los entornos.
 
-| Branch | Endpoint | Purpose | Status |
-|--------|----------|---------|--------|
-| `develop` | `ep-summer-star-a89av46e-pooler.eastus2.azure.neon.tech` | The "live truth" branch. Backend dev deploy + dashboard reads/writes here. | Active. |
-| `local/angelo-20260423-1814` | `ep-odd-tree-a8c6hlj0-pooler.eastus2.azure.neon.tech` | Angelo's personal working branch. Was forked from develop on 2026-04-23. Stale; data may diverge. | Inactive (kept as safety net). |
-| `backup/develop-pre-promote-20260429-1550` | suspended | Snapshot atomic of develop pre-restore 2026-04-29. Rollback target if needed. | **Don't touch.** |
-| `backup/develop-pre-promote-20260427-1435` | suspended | Older safety net. | **Don't touch.** |
+Tres servidores independientes, todos en VNet privada (sin acceso público). El driver es `pg` estándar en todos los entornos.
 
-**Connection strings**: per-developer, in their local `socket-server/.env`. Format:
-```
-DATABASE_URL=postgresql://neondb_owner:<pwd>@<endpoint>/neondb?channel_binding=require&sslmode=require
-PGHOST=<endpoint>
-```
-Switching environments = changing the host portion of those two lines and restarting the backend.
+| Entorno | Host | SKU | RG |
+|---------|------|-----|----|
+| local | `localhost:5432` (Docker) | — | — |
+| development | `pg-api-vio-development.postgres.database.azure.com` | B_Standard_B1ms | `rg-api-vio-development` |
+| staging | `pg-api-vio-staging.postgres.database.azure.com` | B_Standard_B1ms | `rg-api-vio-staging` |
+| production | `pg-api-vio-production.postgres.database.azure.com` | GP_Standard_D2s_v3 | `rg-api-vio-production` |
 
-**Schema**: Drizzle ORM definitions in `socket-server/shared/schema.ts`. Migrations in `socket-server/migrations/`.
+**Local**: `docker compose up -d` levanta PostgreSQL 16 en `localhost:5432`. `DATABASE_URL=postgresql://pgadmin:localpass@localhost:5432/socket_server`.
+
+**Cloud**: `DATABASE_URL` inyectado como secreto en el Container App por Terraform. Sin acceso desde fuera de la VNet — operaciones de mantenimiento via Container App Job.
+
+**Schema**: Drizzle ORM en `socket-server/shared/schema.ts`. Migraciones en `socket-server/migrations/`. Se aplican automáticamente al arrancar el contenedor.
+
+Ver [`playbooks/socket-server-db.md`](../playbooks/socket-server-db.md) para snapshots, restores y scheduler.
 
 ---
 
