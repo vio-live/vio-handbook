@@ -1,6 +1,6 @@
 ---
 title: "System overview — 3 repos, how they fit"
-last-updated: 2026-06-04
+last-updated: 2026-06-09
 owner: angelo
 status: live
 ---
@@ -133,6 +133,7 @@ Apple TV dispatches a shoppable ad (POST /v2/tv/cart-intent)
 
 | Topic | Doc |
 |---|---|
+| **Vio Web SDK** (Lit web components, npm `@vio-live/web-sdk`) | [`architecture/web-sdk.md`](./web-sdk.md) |
 | Detailed API contract (every endpoint) | `socket-server/docs/API_V2_CONTRACT.md` |
 | Schema (every table + columns) | `socket-server/docs/DB_AND_ENDPOINTS.md` |
 | Multi-sponsor architecture (deep) | `socket-server/docs/multi-sponsor-architecture.md` |
