@@ -134,6 +134,7 @@ Apple TV dispatches a shoppable ad (POST /v2/tv/cart-intent)
 | Topic | Doc |
 |---|---|
 | **Vio Web SDK** (Lit web components, npm `@vio-live/web-sdk`) | [`architecture/web-sdk.md`](./web-sdk.md) |
+| **Vio WooCommerce Sync** (WordPress plugin → catalog sync) | [`architecture/woocommerce-sync.md`](./woocommerce-sync.md) |
 | Detailed API contract (every endpoint) | `socket-server/docs/API_V2_CONTRACT.md` |
 | Schema (every table + columns) | `socket-server/docs/DB_AND_ENDPOINTS.md` |
 | Multi-sponsor architecture (deep) | `socket-server/docs/multi-sponsor-architecture.md` |
