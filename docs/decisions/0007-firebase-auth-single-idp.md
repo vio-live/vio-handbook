@@ -2,10 +2,17 @@
 title: "ADR-0007: Commerce's Firebase Auth becomes the single cross-product IdP"
 last-updated: 2026-06-10
 owner: angelo
-status: draft
+status: live
 ---
 
 # ADR-0007: Commerce's Firebase Auth becomes the single cross-product IdP
+
+> **Implementation status (2026-06-10)**: F1–F3 built and verified on
+> socket-server PR #41. The *authorization* model (roles, capabilities, tenancy)
+> introduced by F3 is recorded separately in
+> [ADR-0008](./0008-operator-authorization-capabilities-tenancy.md); the code-level
+> reference is `socket-server/docs/AUTH_AND_PERMISSIONS.md`. F4 (SSO handoff
+> between fronts) remains pending.
 
 ## Context
 
