@@ -82,6 +82,41 @@ Deben crearse como recursos Terraform con `allocation_method = "Static"` — no 
 
 ---
 
+## Playbook de deploy (comandos de Alan — probados 2026-06-09)
+
+```bash
+# 1. Auth Azure
+az login
+az account set --subscription 3d276f7e-0783-4581-8a49-ad0a2c432c63
+
+# 2. Provisionar cluster + IPs estáticas
+terraform init
+terraform apply -target='module.vio_commerce["prod"]'
+
+# 3. Instalar Istio + cert-manager (segunda fase — cluster debe existir)
+terraform apply \
+  -var='vio_commerce_istio_enabled=true' \
+  -target='helm_release.vio_commerce_cert_manager' \
+  -target='helm_release.vio_commerce_istio_base' \
+  -target='helm_release.vio_commerce_istiod' \
+  -target='helm_release.vio_commerce_istio_ingress' \
+  -target='kubernetes_labels.vio_commerce_default_istio_injection'
+
+# 4. Aplicar manifests de Kubernetes (Redis, cert-manager, gateways Istio)
+./scripts/apply-prod-manifests.sh prod
+
+# 5. Deploy de microservicios
+./scripts/bootstrap-apps-prod.sh prod
+```
+
+> ⚠️ **Pendiente antes del apply definitivo:** añadir `azurerm_postgresql_flexible_server` al módulo `vio-commerce-env` en lugar de usar la DB de Hetzner. La Hetzner DB es compartida con `reachu-prod` — Vio Commerce prod necesita su propia DB limpia en Azure.
+
+## Bloqueantes pre-go-live (identificados por Alan)
+
+1. **DB nueva en Azure** — el módulo actual no incluye DB; no usar Hetzner (datos mezclados con reachu-prod)
+2. **DNS vio.live** — apuntar los 5 dominios a la IP estática `nginx-ingress-vio-prod` una vez creada
+3. **Redis migration** — migrar datos de Redis existentes (solo Shopify) al nuevo cluster
+
 ## Notas pendientes al completar
 
 Cuando Alan termine, actualizar este doc con:
