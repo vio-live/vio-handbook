@@ -81,6 +81,10 @@ A `client_app` declares slots (via `app_component_locations` which the SDK uploa
 
 A campaign can have multiple sponsors. Each sponsor has its own commerce key → its own Reachu cart. The iOS SDK keeps `cartsBySponsor: [Int: SponsorCart]` so adding a product to sponsor A's cart doesn't touch sponsor B's. Apple Pay routes through the per-sponsor SDK so the charge lands on the sponsor's Stripe Connect account. See ADR-0004 (per-sponsor commerce routing) and Q4 L3 sprint summary for the full design.
 
+### Operator auth & permissions in 1 paragraph
+
+Dashboard **operators** (distinct from SDK end-users) sign in with the **shared Commerce Firebase project** — one identity pool for both products; the backend verifies the ID token offline (no coupling to Commerce). Authorization is two axes: a **capability matrix** (`super_admin` / `admin` / `operator` / `viewer`) and **tenancy** — `admin` is a tenant root that owns its apps + sponsors; `operator`/`viewer` belong to an admin (`users.parent_admin_id`); `super_admin` is global. A single `/api` gate checks capability + session per request. This is a **separate layer** from SDK apiKey auth (`/v2`,`/v1`). See [ADR-0007](../decisions/0007-firebase-auth-single-idp.md) (IdP), [ADR-0008](../decisions/0008-operator-authorization-capabilities-tenancy.md) (authz model), and `socket-server/docs/AUTH_AND_PERMISSIONS.md` (implementation).
+
 ---
 
 ## Runtime flows (skim)
@@ -141,4 +145,5 @@ Apple TV dispatches a shoppable ad (POST /v2/tv/cart-intent)
 | Placement system epic + status | `socket-server/docs/TASK_PLACEMENTS.md` |
 | iOS runtime flow (request catalog, retry policy) | `VioSwiftSDK/Documentation/RUNTIME_*.md` |
 | Operator-side authoring | `socket-server/docs/SHOPPABLE_AD_AUTHORING.md` |
+| Operator auth, roles, capabilities, tenancy | [ADR-0007](../decisions/0007-firebase-auth-single-idp.md) + [ADR-0008](../decisions/0008-operator-authorization-capabilities-tenancy.md) + `socket-server/docs/AUTH_AND_PERMISSIONS.md` |
 | What's the platform doing right now? | `socket-server/docs/CURRENT_STATE.md` |
