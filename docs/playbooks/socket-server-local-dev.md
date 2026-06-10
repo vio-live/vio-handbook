@@ -33,12 +33,18 @@ yarn install
 cp .env.local.example .env
 ```
 
-Edita `.env` con dos valores:
+Edita `.env` con estos valores:
 
 ```env
 DATABASE_URL=postgresql://pgadmin:localpass@localhost:5432/socket_server
 
+# Obligatorio — el server muere al arrancar si falta
+SESSION_SECRET=<genera uno con: openssl rand -hex 32>
+
 AZURE_STORAGE_CONNECTION_STRING=<pídele a Angelo el connection string de saapivio>
+
+# En macOS deja 5001: el puerto default (5000) lo ocupa AirPlay Receiver
+PORT=5001
 ```
 
 Para obtener el connection string tú mismo (si tienes acceso a Azure):
