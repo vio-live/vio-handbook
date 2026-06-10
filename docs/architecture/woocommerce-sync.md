@@ -1,6 +1,6 @@
 ---
 title: "Vio WooCommerce Sync — architecture, structure & status"
-last-updated: 2026-06-09
+last-updated: 2026-06-10
 owner: angelo
 status: live
 ---
@@ -18,28 +18,28 @@ status: live
 - **What:** a **WordPress/WooCommerce plugin** that syncs a merchant's WooCommerce
   catalog (products, variants, prices, stock, images) into the Vio commerce platform.
   It is a **ground-up rewrite of the old `Reachu Export` plugin (v3.8)** rebranded to Vio.
-- **State:** **v1.0.0**, code complete and merged to `main`. The **connection flow works
-  end-to-end** in the dev store (Connect → REST key + order webhooks, currency loads,
-  connection auto-detected). Products **queue correctly** into the backend, **but the column
-  stays on "Sent"** — see [the blocker](#-the-blocker-the-product-id-never-comes-back).
+- **State (2026-06-10):** **v1.0.0**, **public** and on `main` (`00bee82`). A **dedicated Vio admin
+  page** (top-level menu) replaces the settings tab; the **connect/disconnect lifecycle works
+  end-to-end** (one-step Connect → OAuth; disconnect tears down **both** sides — local *and* the
+  backend credential). Products **now arrive** at the backend; the column flips to **Synced** once
+  the backend writes the `product-id` back — see [the blocker](#-the-blocker-the-product-id-never-comes-back).
 - **License:** GPL-2.0-or-later (WordPress plugin convention).
 - **Backend today:** the **Reachu** commerce REST API (`api.reachu.io` / `api-qa.reachu.io`).
   Designed to flip to Vio's own domain (`api-commerce.vio.live`) with **zero code change**.
 
 ## The two repos & how they relate
 
-| Repo | Vis. | What | State (2026-06-09) |
+| Repo | Vis. | What | State (2026-06-10) |
 |---|---|---|---|
-| **`vio-live/vio-woocommerce-sync`** | private | the plugin itself (local clone: `/Users/angelo/Documents/GitHub/vio-woocommerce-sync`) | `main` @ `a3c01c6` — everything merged; history scrubbed of AI attribution |
+| **`vio-live/vio-woocommerce-sync`** | **public** | the plugin itself (local clone: `/Users/angelo/Documents/GitHub/vio-woocommerce-sync`) | `main` @ `00bee82` — public; history clean of AI attribution |
 | **`vio-live/woo-vio`** | private | the **dev environment** — `@wordpress/env` (WordPress + WooCommerce in Docker) that mounts and runs the plugin (local clone: `/Users/angelo/Documents/GitHub/woo-vio`) | `main` @ `b8bb02b` — pushed |
 
 `woo-vio` is **only the harness**: it stands up WordPress + WooCommerce locally and mounts
 the plugin (`../vio-woocommerce-sync`, relative path in `.wp-env.json`) so you can develop
 and test in a live store. The shippable artifact is **`vio-woocommerce-sync`**.
 
-> Both repos were moved from the personal `angelosv` account into the **`vio-live`** org.
-> They are **still private** — making `vio-woocommerce-sync` public is a pending step (the
-> history is already clean of AI attribution for that).
+> Both repos live in the **`vio-live`** org. **`vio-woocommerce-sync` is now public** (2026-06-10;
+> history audited — no secrets, no AI attribution). `woo-vio` (the dev harness) stays private.
 
 ## ⛔ The blocker: the `product-id` never comes back
 
@@ -57,9 +57,9 @@ This is the single thing keeping the plugin from being "done". **Read this first
 4. Once `vio-product-id` is set → the column flips to the **Synced** icon, and auto-update on
    save / delete-from-Vio start working (they look the product up by that id).
 
-**What actually happens:** step 3 never lands a `product-id`, so every synced product is stuck
-on **"Sent"** forever, and everything keyed on the remote id (auto-update, true remote delete)
-can't act.
+**What actually happens (as of 2026-06-10):** products **now reach the backend**, but step 3 still
+doesn't land a `product-id`, so the column stays on **"Sent"** and everything keyed on the remote id
+(auto-update, true remote delete) can't act yet. **Alan owns this** (product sync + orders).
 
 **Why the plugin can't paper over it:** I probed ~12 endpoints — the Reachu API exposes **no
 filter** by `originId` / `sku` / `search`; `GET /api/products` returns the full ~9,353-product
@@ -83,15 +83,17 @@ vio-woocommerce-sync/
 ├── vio-woocommerce-sync.php   # Bootstrap: header, constants, HPOS declare, requires, lifecycle hooks
 ├── includes/
 │   ├── class-plugin.php          # Orchestrator: central constants (option/meta keys), init, activate/deactivate, cleanup
-│   ├── class-api-client.php      # HTTP client: environment resolution, auth, one method per endpoint
+│   ├── class-api-client.php      # HTTP client: env resolution, auth, all paths in an EP_* constants block, find_woo_connection()
 │   ├── class-product-mapper.php  # WC_Product → Vio DTO  +  diffing (variants/images/price)
 │   ├── class-sync.php            # Service: push (export) / update / delete-unlink
-│   ├── class-settings.php        # WooCommerce settings tab (API key, environment, currency, connect/connected)
+│   ├── class-config-page.php     # Top-level "Vio" admin page (Connection / Settings / Sync overview / Logs) — render
+│   ├── class-store-status.php    # Data/service layer: connection state, stats, eligible ids, save, diagnostics, logs, helpers
 │   ├── class-products-table.php  # Product-list column, bulk actions, auto-sync on save/trash/delete
 │   ├── class-ajax.php            # AJAX handlers (nonce + capability, NO wp_ajax_nopriv)
-│   └── class-logger.php          # Wrapper over the WooCommerce logger
-├── assets/{js,css,img}/          # products.js, settings.js, admin.css, icon.svg (placeholder)
-├── readme.txt  ·  docs/CODE-AUDIT.md  ·  languages/
+│   └── class-logger.php          # Wrapper over the WooCommerce logger (+ recent() for the Logs panel)
+├── assets/{js,css,img}/          # config.{js,css} (the page), products.js, admin.css, icon.svg (placeholder)
+├── tests/                        # PHPUnit integration suite (StoreStatusTest + bootstrap) · phpunit.xml.dist
+├── readme.txt  ·  docs/{CODE-AUDIT,backend-integration}.md  ·  languages/
 ```
 
 Namespace `Vio\WooSync`; class-per-file loaded by explicit `require_once` in the bootstrap
@@ -111,28 +113,42 @@ Namespace `Vio\WooSync`; class-per-file loaded by explicit `require_once` in the
 - **`Sync`** — business logic: `push_products()` (batch export via `create-sqs`),
   `update_product()` (auto-sync on save, no-op until a `product-id` exists),
   `delete_by_post()` (unlink — see [Delete / unsync](#delete--unsync-semantics)).
-- **`Settings`** — the WooCommerce → Settings → **Vio** tab. Disconnected: API key +
-  environment + currency fields and a **Connect store** button. Connected: a green success
-  notice (account / currency / "REST API key created · Order webhooks active") and a
-  **Disconnect** action; the fields hide. See [Connection flow](#connection-flow).
+- **`Config_Page`** — the top-level **Vio** admin page (`admin.php?page=vio`): four sections —
+  Connection, Settings, Sync overview, Logs. Render/presentation only; reads from `Store_Status`.
+  (Replaced the old WooCommerce settings tab, removed 2026-06-10.)
+- **`Store_Status`** — the page's data/service layer (no HTML): `connection_state()` /
+  `health_payload()` / `connection_message()` (401-vs-network), `stats()`, `pending_product_ids()`,
+  `save_options()`, diagnostics, logs, and the `webhook_exists()` / `currency_options()` helpers.
 - **`Products_Table`** — sync-status column (Synced icon / **"Sent"** / empty), **Vio Sync** /
   **Delete from Vio** bulk actions, and auto-sync hooks (`woocommerce_update_product`,
   `woocommerce_new_product`, `wp_trash_post`, `before_delete_post`).
-- **`Ajax`** — `vio_sync`, `vio_delete`, `vio_finish_sync`, `vio_save_settings`, `vio_logout`;
-  **every** handler checks a nonce + `current_user_can()`, and none registers a `nopriv` variant.
+- **`Ajax`** — `vio_connect`, `vio_save_config`, `vio_health`, `vio_stats`, `vio_pending_ids`,
+  `vio_logs`, `vio_sync`, `vio_delete`, `vio_finish_sync`, `vio_logout`; **every** handler checks a
+  nonce + `current_user_can()`, and none registers a `nopriv` variant.
 
 ## Connection flow
 
-**Connect store** (settings tab) runs WooCommerce's OAuth at `/wc-auth/v1/authorize` with a
-callback at `…/woo/auth/callback-supplier/`. On success the backend creates, in the store:
+**Connect** (Vio page, **one step**): the Settings button saves + validates the API key, then jumps
+to WooCommerce's OAuth at `/wc-auth/v1/authorize` (callback `…/woo/auth/callback-supplier/`) with an
+explicit `return_url` of `admin.php?page=vio` — deriving it from the AJAX request URL was the "blank
+**0** page after approval" bug. On success the backend creates, in the store:
 
 - **1 REST API key** described `Vio WooCommerce Sync` (so `cleanup()` can find & revoke it), and
 - **2 order webhooks** (`order.created`, `order.updated`) pointing at the backend. The backend
   currently **names them "Outshifter order.*"** — cosmetic only.
 
-`Settings::webhook_exists()` treats the store as connected if **any** webhook matches a managed
-name **or** has a delivery-URL host equal to the configured backend host — so the connection is
-detected regardless of the "Outshifter" naming, and regardless of Reachu-vs-Vio host.
+`Store_Status::webhook_exists()` treats the store as connected if **any** webhook matches a managed
+name **or** has a delivery-URL host equal to the configured backend host — robust to the "Outshifter"
+naming and the Reachu→Vio host flip.
+
+**Disconnect** (`Ajax::logout()`) tears down **both** sides, best-effort, while the key is still valid:
+
+1. **Backend** — `Api_Client::find_woo_connection()` reads `GET /api/ecom-user`, matches this store by
+   `connection.url` host, and `DELETE`s the credential at `/api/users/api-credential/` with
+   `{ fullDelete, id: apiCredential.id, ecomUser: { id: <entry id> } }`.
+   ⚠️ **`ecomUser.id` is the `/api/ecom-user` entry's own `id`** (e.g. `199`) — **not** the account id
+   from `/catalog/users/me` (e.g. `1289`), which the backend rejects with **HTTP 417**.
+2. **Store** — `Plugin::cleanup()` deletes the WC REST key + Vio webhooks; the local options are cleared.
 
 > **HTTPS is required** for the OAuth round-trip and webhook delivery. Locally that's provided
 > by the Cloudflare tunnel — see [Dev environment](#dev-environment-woo-vio--gotchas).
@@ -220,12 +236,16 @@ OAuth at `/wc-auth/v1/authorize` with callback `…/woo/auth/callback-supplier/`
 
 1. **Backend `product-id` write-back** (or a filter endpoint) — *the* blocker; Alan/backend.
 2. **Rename backend webhooks** "Outshifter → Vio" (cosmetic).
-3. **Real backend domain** — flip to `api-commerce.vio.live` once Vio exposes it (one constant / one line).
-4. **Make `vio-woocommerce-sync` public** — repo is in `vio-live` but still private; history is already clean.
-5. **Brand assets** — `assets/img/` is a placeholder `icon.svg`; needs real Vio icons.
-6. **Brand URLs** — signup/docs/legal links still point at `reachu.io` / `vio.live` placeholder.
-7. **system-overview** — add this area to [`system-overview`](./system-overview.md).
-8. **`woo-vio` commit history** still carries some `Co-Authored-By` trailers; left as-is (stays private).
+3. **Real backend domain** — flip to `api-commerce.vio.live` once Vio exposes it (one constant / one line). **Alan will set the definitive URLs.**
+4. **Brand assets** — `assets/img/icon.svg` is a placeholder; the menu icon is a placeholder white mark; needs the real Vio logo SVG.
+5. **Brand URLs** — signup/docs/legal links still placeholder.
+6. **Prune dead CSS** — the removed settings tab left unused classes in `admin.css`.
+7. **Live e2e disconnect test** — confirm the credential teardown through the UI button (fix is in + tested).
+8. **system-overview** — add this area to [`system-overview`](./system-overview.md).
+
+**Done since 2026-06-09:** ✅ dedicated Vio admin page · ✅ one-step connect + two-sided disconnect ·
+✅ removed the WC settings tab · ✅ 13 PHPUnit tests · ✅ `docs/backend-integration.md` ·
+✅ **made the repo public** · ✅ shipped to `main` (`00bee82`).
 
 ## Decisions
 
@@ -239,11 +259,18 @@ OAuth at `/wc-auth/v1/authorize` with callback `…/woo/auth/callback-supplier/`
   "Outshifter" naming and to the Reachu→Vio host flip.
 - **Commits carry no AI attribution** (rule 6). `vio-woocommerce-sync` history was rewritten +
   force-pushed to remove earlier `Co-Authored-By` trailers before going public.
+- **(2026-06-10) Top-level Vio menu, not a WC settings tab** — Vio is its own product surface; the
+  tab was removed and its helpers moved into `Store_Status`.
+- **(2026-06-10) Page split** `Config_Page` (view) + `Store_Status` (logic) for testability.
+- **(2026-06-10) Disconnect resolves the credential itself** via `/api/ecom-user` — no backend change.
+- **(2026-06-10) `filemtime` asset versioning** so edits bust the browser cache automatically.
 
 ## Links
 
 - Code audit (in the repo): https://github.com/vio-live/vio-woocommerce-sync/blob/main/docs/CODE-AUDIT.md
 - Session journals: [`2026-06-09 — woo`](../journal/2026-06/2026-06-09-woo.md) (bootstrap),
-  [`2026-06-09 — woo-2`](../journal/2026-06/2026-06-09-woo-2.md) (connect + sync flow + handoff)
+  [`2026-06-09 — woo-2`](../journal/2026-06/2026-06-09-woo-2.md) (connect + sync flow + handoff),
+  [`2026-06-10 — woo`](../journal/2026-06/2026-06-10-woo.md) (admin page + connect/disconnect + public)
+- Backend integration contract (in the repo): https://github.com/vio-live/vio-woocommerce-sync/blob/main/docs/backend-integration.md
 - Plugin repo: https://github.com/vio-live/vio-woocommerce-sync
 - Dev-env repo: https://github.com/vio-live/woo-vio
