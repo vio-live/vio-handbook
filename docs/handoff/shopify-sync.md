@@ -4,6 +4,20 @@
 > Repo: **`vio-live/vio-shopify-sync`**, rama **`rewrite/react-router-app`** (HEAD `d0452d4`).
 > Local: `/Users/angelo/vio-sync`.
 
+## ⏫ Actualización 2026-06-30 — pre-prod + deploy a Vercel
+
+Trabajo nuevo sobre `main-cli` (commiteado en el repo):
+
+- **`e381f2b`** — robustez/UX/tests pre-prod: timeout + retry (backoff) en el cliente Vio; validación/tope de `ids`; **confirmación** antes de Remove/Disconnect + conteo en el toast; estados empty/filtro/error diferenciados; "Unreachable" crítico con **Retry**; **Vitest** (`npm test`, smoke de `vioConnect`); `.env.example` limpio; Dockerfile healthcheck + non-root; ruta `/healthz`.
+- **`5df339e`** — deploy-prep: **sesiones a Redis condicional** (`RedisSessionStorage` si `REDIS_URL`, si no Prisma/SQLite en dev local) → resuelve el pendiente #1 para Vercel; webhook `uninstalled` limpia sesiones vía `sessionStorage`; preset **`@vercel/react-router`** + script `vercel-build`.
+- **`0256c40`** — `docs/DEPLOY.md` en el repo: **handoff de deploy paso a paso** para Alan.
+
+**Deploy en Vercel (staging) — en curso:** proyecto `tipio-2/vio-sync` linkeado; env `VIO_API_HOST`, `SHOPIFY_APP_URL`, `SCOPES` seteadas. **Falta** (Alan): Upstash (`REDIS_URL`), app Shopify staging (`SHOPIFY_API_KEY/SECRET` + `client_id` en `shopify.app.staging.toml`), `vercel deploy`, DNS. Pasos completos en **`vio-sync/docs/DEPLOY.md`**.
+
+**Pendientes del 23-jun, actualizados:** #1 Redis → **resuelto en código** (condicional; falta proveer la instancia Upstash); #2 `VIO_API_HOST` → **seteado** (`api-ecom-staging.vio.live`); #3 `client_id` staging/prod → pendiente (parte del deploy); #4 contrato del backend → pendiente (Alan revisa); #5 consolidar configs de dev → pendiente.
+
+⚠️ **No confundir con `vio-shopify`** (el legacy Koa, otro repo). Ver [`lessons/vio-sync-not-vio-shopify.md`](../lessons/vio-sync-not-vio-shopify.md).
+
 ## Qué es (dirección del flujo)
 
 La app es de **EXPORTACIÓN**: empuja productos de **Shopify → Vio**. El merchant es un **supplier**: sus productos de Shopify se listan y se venden en Vio.
