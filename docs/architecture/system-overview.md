@@ -54,6 +54,10 @@ This doc maps the platform across the 3 repos, the data model, and the runtime f
         Cloudflare R2 / Azure Blob (media)
 ```
 
+> **Reachu/Vio Commerce** (la GraphQL + `base-api` + microservicios de la línea de abajo)
+> es su propia plataforma e-commerce headless, no parte del socket-server. Su arquitectura
+> de código está documentada aparte en [`vio-commerce.md`](./vio-commerce.md).
+
 ---
 
 ## Data model (the things to know)
