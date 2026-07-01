@@ -7,8 +7,14 @@ status: live
 
 # Vio Commerce — Arquitectura del código
 
-**Última revisión:** 2026-07-01 (Claude, mapeo completo del backend de commerce)
-**Estado:** 🟢 Completo — los ~12 repos del backend commerce clonados y mapeados. Falta profundizar en la lógica de cada dominio.
+**Última revisión:** 2026-07-01 (Claude, deep-dive de los 13 servicios)
+**Estado:** 🟢 Completo — 13 servicios leídos a fondo, con brief por servicio + lógica de negocio.
+
+> **Detalle por servicio:** este doc es el mapa. El **brief profundo de cada servicio**
+> (módulos, entities, lógica de negocio, quirks, bugs localizados) vive en el workspace de
+> agentes `~/vio-commerce/briefs/<servicio>.md`, y los hallazgos transversales en
+> `~/vio-commerce/FINDINGS.md`. Ese workspace tiene además un agente-experto por servicio
+> (`.claude/agents/svc-*`).
 
 Este doc describe **cómo está planteado el código** de Vio Commerce y cómo funciona
 en runtime. Para infra/deployment prod (Terraform, IPs, endpoints, Istio) ver los docs
@@ -64,9 +70,9 @@ El grueso del backend commerce se pusheó el **2026-06-30** (los "fix timeout" /
 | **vio-users-microservice** | `/users` | user, **plan, subscription, settings** — usuarios + billing/planes SaaS |
 | **vio-payment-processors-microservice** | `/payment-processors` | **stripe, klarna, vipps** — cobros |
 | **vio-extensions-microservice** | `/extensions` | **bigcommerce, magento, shopify, woo** — conectores de canal de venta (import/export catálogo) |
-| **vio-tracking-microservice** | `/tracking` | general — tracking de envíos (AfterShip) |
-| **vio-template-microservice** | `/templates` | auth, **data-mapping**, request, template, webhook — motor de mapeo/sync de integraciones |
-| **vio-middleware-microservice** | `/middleware` | middleware — capa proxy/middleware genérica |
+| **vio-tracking-microservice** | `/tracking` | ⚠️ **NO trackea envíos** — es un proxy de eventos de analítica a **Mixpanel**. El tracking de envío real (Postmen/AfterShip) está en `base-api` |
+| **vio-template-microservice** | `/templates` | auth (creds de tienda externa), **data-mapping**, webhook — motor de mapeo de integraciones (plantillas JSON en S3 → esquema canónico) |
+| **vio-middleware-microservice** | `/middleware` | ⚠️ **NO es un proxy** — es el **gate de auth central** (forward-auth): valida API key / Firebase token / suscripción activa → 200/401 |
 
 > **⚠️ extensions ≠ payment-processors (resuelto 2026-07-01).** Son **dos repos distintos**.
 > `vio-extensions-microservice` = conectores de **canal** (bigcommerce/magento/shopify/woo).
@@ -77,8 +83,9 @@ El grueso del backend commerce se pusheó el **2026-06-30** (los "fix timeout" /
 
 ### Kernel compartido — `@reachu/*` (cada uno es su propio repo `package-*`)
 
-Publicados a un **registro npm privado**, consumidos por todos los microservicios
-pinneados a **`1.0.212`**. Confirmado 2026-07-01 que viven como repos en `vio-live`:
+Publicados a un **registro npm privado**, consumidos por todos los microservicios. **Ojo:
+hay drift de versión** — la mayoría en `1.0.212`, pero `extensions` en `1.0.219` y `api` en
+`1.0.227`. No están alineados. Confirmado 2026-07-01 que viven como repos en `vio-live`:
 
 | Repo | Paquete | Qué aporta |
 |---|---|---|
@@ -89,6 +96,10 @@ pinneados a **`1.0.212`**. Confirmado 2026-07-01 que viven como repos en `vio-li
 | **package-service** | `@reachu/service` | Utilidades de servicio, incl. `cache.redis` |
 | **package-utils** | `@reachu/utils` | `General`, helpers |
 | **package-testing** | `@reachu/testing` | Harness de tests |
+
+> **BD compartida, NO database-per-service.** Todos los servicios apuntan a la **misma MySQL**;
+> las entities/repos viven en `@reachu/database` y el **schema canónico (~54 entities) +
+> migraciones** vive en `base-api`. Los microservicios no declaran `@Entity` propias.
 
 ---
 
@@ -111,7 +122,10 @@ Son **el mismo esqueleto NestJS**, clonado del mismo starter:
 
 ## 4. Cómo se comunican los servicios (runtime)
 
-**HTTP service-to-service por URL en env, con token compartido.** No hay message bus.
+**Predominantemente HTTP service-to-service por URL en env, con token compartido** — pero
+**NO es todo HTTP**: `orders` y `products` **consumen Azure Service Bus** (con DLQ) para
+creación de orden e import/publish cross-canal (cada uno arrastra además un consumer AWS SQS
+muerto, migración sin limpiar). `base-api` sí es HTTP puro.
 Cada servicio conoce a los demás por variables de entorno (de `shopcart/config.keys.ts`):
 
 ```
@@ -126,9 +140,11 @@ En prod esas URLs resuelven a paths bajo `msrvc.vio.live` (ver prod-plan). Encim
 que fanea a los microservicios REST.
 
 **Ejemplo de flujo (checkout):** `shopcart` orquesta — pide precios/stock a `products`,
-aplica `discount` local, crea la orden en `orders`, y para cobrar delega en
-`payment-processors` (`stripe` / `klarna` / `vipps`). `tracking` (AfterShip) sigue el
-envío. `TAX_RATE_PERCENT` y `EXCHANGE_BASE_CURRENCY` viven en el env de shopcart.
+aplica `discount`, **crea la orden en `orders` (estado PENDING/PROCESSING) ANTES del cobro**,
+e **inicia el pago él mismo** (Stripe/Klarna/Vipps/Apple/Google Pay; Klarna/Vipps por HTTP
+directo, no SDK). El pago se confirma **por webhook**. `payment-processors` **NO inicia
+pagos ni recibe webhooks** — solo hace capture/cancel/refund post-autorización.
+`orders` emite `order:paid` → dispara fulfillment en Shopify/Woo/Magento.
 
 **Canales de venta externos (import/export de catálogo):** `extensions` (bigcommerce/
 magento/shopify/woo) + `api-microservice` (channel/connection/listings) + `template`
