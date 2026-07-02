@@ -63,9 +63,9 @@ Mapa completo de todos los recursos activos en la suscripción Azure de Vio Comm
 |---|---|---|
 | `api-ecom.vio.live` | base-api | `20.100.174.93` |
 | `graph-ql.vio.live` | graph-ql | `20.100.174.93` |
-| `sales-channel.vio.live` | shopify-export | `20.100.174.93` |
-| `shopify-seller.vio.live` | shopify-import | `20.100.174.93` |
-| `msrvc.vio.live` | microservicios internos (path-based) | `20.100.174.93` |
+| `dashboard.ecom.vio.live` | webapp | `20.100.174.93` |
+
+> `sales-channel.vio.live`, `shopify-seller.vio.live`, `msrvc.vio.live` — **deprecados**, sin DNS, no usar.
 
 ---
 
