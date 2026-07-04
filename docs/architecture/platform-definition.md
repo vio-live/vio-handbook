@@ -85,4 +85,37 @@ Fuentes: [`vio-commerce.md`](./vio-commerce.md) (backend commerce), [`system-ove
 
 ## Respuestas (se va llenando)
 
-_(pendiente — se registra aquí cada decisión conforme se cierra, con fecha)_
+- **[2026-07-04] C2 — Tenancy: Publisher = tenant raíz.** El publisher (VG, Aller) es el
+  tenant raíz; marcas/sponsors y sellers cuelgan dentro. `Brand` unifica sponsor+channel.
+  Encaja con la expansión a editoriales.
+- **[2026-07-04] F1 — API: el front habla a los dos backends directo** (commerce GraphQL +
+  socket-server REST), NO se construye un BFF por ahora. Mitigación acordada: el front usa
+  un **api-client agnóstico del origen** (package propio) para no hardcodear endpoints en
+  los componentes — deja la puerta abierta a meter un BFF después sin reescribir la UI.
+- **[2026-07-04] D1 — Navegación = surface/channel-centric.** El eje organizador de la
+  consola es la **superficie** (apps · web/Vev · TV · …), no el dominio ni la campaña.
+- **[2026-07-04] G — Design system: aparcado.** Se decide después; primero la jerarquía.
+
+## Jerarquía propuesta (a validar — 2026-07-04)
+
+Mapeo clave: **Publisher = reseller/channel** (surfacea) · **Brand = supplier (catálogo) +
+sponsor (financia)**. Mismo grafo del commerce (supplier↔reseller) y del engagement (sponsor).
+
+```
+Vio  (super-admin / operador global)
+├── PUBLISHER / PARTNER   ← tenant raíz   (VG, Aller, TV2)
+│     ├── SURFACES / CHANNELS   ← el eje   (apps · web/Vev · TV)
+│     │     · tipo + mecanismo de entrega (SDK/web-component/bridge) + apiKey
+│     │     └── PLACEMENTS   (slots en esa surface)
+│     ├── CAMPAIGNS / EXPERIENCES   (en 1+ surfaces)
+│     │     └── COMPONENTS   (engagement + shoppable, bind a placements)
+│     └── BRAND CONNECTIONS
+├── BRAND / ADVERTISER   (sponsor + supplier)   (Elkjøp, XXL)
+│     ├── CATALOG (products/collections)
+│     ├── COMMERCE CONFIG (Stripe Connect, markets)
+│     └── participa como sponsor en campaigns
+└── ORDERS   →  BRAND × SURFACE × CAMPAIGN
+```
+
+Pendiente de validar: (1) Brand = una entidad vs separar advertiser/supplier; (2) si un
+tenant puede ser publisher Y brand (D2C); (3) qué pasa con los sellers self-serve actuales.
