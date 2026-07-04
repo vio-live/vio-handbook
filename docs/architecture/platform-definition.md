@@ -95,6 +95,9 @@ Fuentes: [`vio-commerce.md`](./vio-commerce.md) (backend commerce), [`system-ove
 - **[2026-07-04] D1 — Navegación = surface/channel-centric.** El eje organizador de la
   consola es la **superficie** (apps · web/Vev · TV · …), no el dominio ni la campaña.
 - **[2026-07-04] G — Design system: aparcado.** Se decide después; primero la jerarquía.
+- **[2026-07-04] B — Capabilities configurables por surface** (no tipos fijos).
+- **[2026-07-04] B — Surfaces v1:** App móvil (SDK) · TV · Web/editorial · Vev.
+- **[2026-07-04] C1 — Roles:** super_admin / admin / operator / viewer **+ sponsor** (usuario de Brand, scope = su catálogo).
 - **[2026-07-04] E1 — Brand = UNA entidad** (dueña del catálogo + sponsor que financia/aparece).
 - **[2026-07-04] C — Publisher y Brand son tenants SIEMPRE separados** (un tenant es uno u otro).
 - **[2026-07-04] C — No hay sellers self-serve.** Todo el que "vende" es una **Brand** con su
@@ -124,4 +127,30 @@ Vio  (super-admin / operador global)
 │
 └── ORDERS   →   BRAND (de quién es el producto) × SURFACE (dónde se vendió) × CAMPAIGN
 ```
+
+### Roles (validado 2026-07-04)
+
+Modelo del dashboard (ADR-0007/0008) **+ sponsor**:
+
+| Rol | Scope |
+|---|---|
+| `super_admin` | Vio, global — ve/opera todo |
+| `admin` | raíz de un tenant (publisher o brand) |
+| `operator` | opera campañas dentro del tenant |
+| `viewer` | solo-lectura, atado a scope |
+| **`sponsor`** | usuario de una **Brand** — acceso **scopeado a su propio catálogo** de productos |
+
+`sponsor` es el puente rol↔entidad: la **Brand** es el tenant; sus usuarios son `sponsor`
+y solo ven/gestionan su catálogo (y su participación en campaigns de publishers).
+
+### Surfaces v1 (validado 2026-07-04)
+
+Capabilities **configurables por surface** (commerce y/o engagement, por surface). Tipos v1:
+
+| Surface | Entrega | Capabilities |
+|---|---|---|
+| App móvil | SDK nativo iOS/Android | engagement + commerce |
+| TV | SDK tvOS/AndroidTV (VioTV) | engagement + commerce |
+| Web / editorial | web-components (vio-web-sdk) | shoppable + checkout, engagement |
+| **Vev** | bridge WebView / no-code | shoppable + engagement embebido |
 
