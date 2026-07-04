@@ -95,27 +95,33 @@ Fuentes: [`vio-commerce.md`](./vio-commerce.md) (backend commerce), [`system-ove
 - **[2026-07-04] D1 — Navegación = surface/channel-centric.** El eje organizador de la
   consola es la **superficie** (apps · web/Vev · TV · …), no el dominio ni la campaña.
 - **[2026-07-04] G — Design system: aparcado.** Se decide después; primero la jerarquía.
+- **[2026-07-04] E1 — Brand = UNA entidad** (dueña del catálogo + sponsor que financia/aparece).
+- **[2026-07-04] C — Publisher y Brand son tenants SIEMPRE separados** (un tenant es uno u otro).
+- **[2026-07-04] C — No hay sellers self-serve.** Todo el que "vende" es una **Brand** con su
+  catálogo **sincronizado** desde Shopify/Woo/Magento/etc. Ese connector es **fuente de sync
+  de catálogo (IN), NO una surface**. Las surfaces son del Publisher (web/app/revista/TV, OUT).
 
-## Jerarquía propuesta (a validar — 2026-07-04)
+## Jerarquía del dominio (validada 2026-07-04)
 
-Mapeo clave: **Publisher = reseller/channel** (surfacea) · **Brand = supplier (catálogo) +
-sponsor (financia)**. Mismo grafo del commerce (supplier↔reseller) y del engagement (sponsor).
+**Modelo de tubos:** *Brands sincronizan catálogo IN → Vio → Publishers lo entregan OUT en sus surfaces.*
+Mapeo con el legacy: Publisher = reseller/channel · Brand = supplier + sponsor.
 
 ```
 Vio  (super-admin / operador global)
-├── PUBLISHER / PARTNER   ← tenant raíz   (VG, Aller, TV2)
-│     ├── SURFACES / CHANNELS   ← el eje   (apps · web/Vev · TV)
-│     │     · tipo + mecanismo de entrega (SDK/web-component/bridge) + apiKey
-│     │     └── PLACEMENTS   (slots en esa surface)
-│     ├── CAMPAIGNS / EXPERIENCES   (en 1+ surfaces)
-│     │     └── COMPONENTS   (engagement + shoppable, bind a placements)
-│     └── BRAND CONNECTIONS
-├── BRAND / ADVERTISER   (sponsor + supplier)   (Elkjøp, XXL)
-│     ├── CATALOG (products/collections)
-│     ├── COMMERCE CONFIG (Stripe Connect, markets)
-│     └── participa como sponsor en campaigns
-└── ORDERS   →  BRAND × SURFACE × CAMPAIGN
+│
+├── PUBLISHER   ← tenant   (Aller, VG, TV2)
+│     ├── SURFACES   (web · app · revista digital · TV · …)   ← entrega al consumidor (OUT)
+│     │     · tipo + mecanismo (vio-web-sdk / SDK nativo / bridge Vev) + apiKey
+│     │     └── PLACEMENTS  (slots donde aparece contenido en la surface)
+│     ├── CAMPAIGNS / EXPERIENCES   (corren en 1+ surfaces)
+│     │     └── COMPONENTS  (engagement [polls/contests] + shoppable → placements)
+│     └── BRAND CONNECTIONS   (qué marcas puede surfacear)
+│
+├── BRAND   ← tenant (siempre separado del publisher)   (Elkjøp, XXL)
+│     ├── CATALOG SYNC   (Shopify / Woo / Magento / …)   ← trae productos IN (NO es surface)
+│     ├── CATALOG   (products / collections sincronizados)
+│     └── COMMERCE CONFIG  (Stripe Connect, markets) · participa como sponsor en campaigns
+│
+└── ORDERS   →   BRAND (de quién es el producto) × SURFACE (dónde se vendió) × CAMPAIGN
 ```
 
-Pendiente de validar: (1) Brand = una entidad vs separar advertiser/supplier; (2) si un
-tenant puede ser publisher Y brand (D2C); (3) qué pasa con los sellers self-serve actuales.
