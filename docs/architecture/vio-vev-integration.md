@@ -1,6 +1,6 @@
 ---
 title: "Vio × Vev — integración shoppable (código de Alan)"
-last-updated: 2026-07-09
+last-updated: 2026-07-15
 owner: angelo
 status: live
 ---
@@ -11,10 +11,10 @@ Cómo funciona la **librería de componentes Vev** que mete el commerce de Vio (
 carrito, checkout, pago) dentro de contenido web diseñado en Vev — drag-and-drop, sin código.
 Es la vía para monetizar **superficies editoriales** (VG, Aller) desde la plataforma.
 
-> **⚠️ Enfoque canónico actual (2026-07-09): §6 — SDK-wrap (`vio-vev`).** El proyecto
-> `vev-vg-demo` (§2–5, re-estilizado sobre el código de Alan) queda **deprecado** frente a
-> `vio-vev`, que **envuelve el `vio-web-sdk` real** para paridad exacta con `vio-demo.vercel.app`
-> (mismo checkout, mismos métodos de pago). Lo que sigue vivo en el artículo de VG es §6.
+> **⚠️ Enfoque canónico actual (2026-07-15): §6 — `vio-vev`** (repo: `vio-live/vev`, rama `main`).
+> El proyecto `vev-vg-demo` (§2–5, re-estilizado sobre el código de Alan) queda **deprecado**.
+> Modelo definitivo: **compartir el CORE del SDK, poseer la UI en Vev** (§6.7). Lo que corre en el
+> artículo de VG es §6. Antes de tocar nada, leer los **gotchas de §6.2** — cada uno costó horas.
 
 - **Repo (paquete de Alan):** `github.com/vio-live/vev` (`name: reachu-demo`, key `czGNimhyDCi`), clonado en `~/Documents/GitHub/vev`.
 - **Copia de trabajo aislada (demo VG):** `~/Documents/GitHub/vev-vg-demo` (cuenta Vev nueva, key `cyt7nEGeyPv`, con las mejoras de §4).
@@ -109,32 +109,55 @@ Hechas en la copia aislada, sin tocar el repo de Alan. `tsc --noEmit` = 0 errore
 
 ---
 
-## 6. SDK-wrap (`vio-vev`) — enfoque CANÓNICO (2026-07-09)
+## 6. `vio-vev` — enfoque CANÓNICO (actualizado 2026-07-15)
 
-En vez de re-implementar/estilizar el commerce en componentes Vev propios (§2–5), este enfoque
-**envuelve el `vio-web-sdk` real** (el mismo que corre `vio-demo.vercel.app`). Así el checkout,
-el carrito y los métodos de pago son **idénticos al demo**, sin reescribir nada.
+Empezó como **wrap del `vio-web-sdk` real** (para tener el checkout y los pagos idénticos a
+`vio-demo.vercel.app` sin reescribir nada) y evolucionó al modelo definitivo de §6.7:
+**compartir el CORE del SDK, poseer la UI en Vev**. El commerce (carrito, checkout, pagos,
+multi-sponsor) sigue siendo único en el SDK; el diseño de los bloques es nuestro.
 
-- **Proyecto:** `~/Documents/GitHub/vio-vev` — paquete Vev `cq1lXld-TA9`. NO es repo git (Vev
-  project local, sin remote). `node_modules` = symlink a `~/Documents/GitHub/vev/node_modules`
-  (el de Alan: trae `react`, `@vev/react`, `@vev/silke`).
+- **Proyecto:** `~/Documents/GitHub/vio-vev` — paquete Vev `cq1lXld-TA9`.
+  **Repo: `github.com/vio-live/vev` (rama `main`)** — se reutilizó el repo de Alan sobrescribiendo
+  `main` (2026-07-15). El reachu-demo original de Alan quedó respaldado en la rama
+  **`alan-reachu-demo`**. `node_modules` = symlink a `~/Documents/GitHub/vev/node_modules`
+  (trae `react`, `@vev/react`, `@vev/silke`).
 - **SDK bundleado:** `vio-vev/vio-sdk/index.js` (~288 KB) = esbuild de
   `vio-web-sdk/src/_vev-entry.ts` (`export * from core + react`), ESM, `--external:react,react-dom`,
   `--tsconfig` (Lit necesita `experimentalDecorators` + `useDefineForClassFields:false`).
-  Comando en §6.4.
-- **Repo del SDK:** `vio-web-sdk` — cambios de esta sesión en rama `feat/vev-sdk-wrap` (ver §6.3).
+  Comando en §6.4. Es un **snapshot vendored**, no una dependencia npm: al tocar el SDK hay que
+  rebundlear + redeployar (§6.2.7).
+- **Repo del SDK:** `vio-web-sdk` — todos los cambios en rama `feat/vev-sdk-wrap` (ver §6.3).
 
-### 6.1 Solo DOS bloques
+### 6.1 Los SIETE bloques
 
+**Setup (1)**
 - **Vio Config (SDK)** — `Vio.init(...)` + `Vio.bootstrap()` y **monta por portal a `document.body`**
-  toda la UI global: FAB de carrito + `<VioCart>` + `<VioCheckout>` + `<VioProductDetail>`.
-  Se coloca **una sola vez**. Defaults **hardcodeados** (listos sin configurar): `apiKey`
-  (host `vg-demo_api_key_57a3038c06434330`), `apiBase` (`api-staging.vio.live`), `graphQLBase`
-  (`graph-ql-dev.vio.live`), `stripePublishableKey` (`pk_test_51TMTbs…`). La **commerce key es
-  DINÁMICA** — la trae el bootstrap del sponsor (`sponsor.commerce.apiKey`), no se hardcodea.
-- **Vio Product (SDK)** — envuelve `<vio-product>`. Producto elegido con un **picker visual**
-  (`product-select.tsx`, editor Silke que lista el catálogo del canal, no se teclea el id).
-  Prop `hideMeta` (checkbox "Solo imagen") → oculta marca/nombre/precio, deja imagen + botón +.
+  toda la UI global del SDK: FAB de carrito + `<VioCart>` + `<VioCheckout>` + `<VioProductDetail>`.
+  Se coloca **una sola vez** (hay guard, §6.2.5). Defaults **hardcodeados** (listos sin configurar):
+  `apiKey` (host `vg-demo_api_key_57a3038c06434330`), `apiBase` (`api-staging.vio.live`),
+  `graphQLBase` (`graph-ql-dev.vio.live`), `stripePublishableKey` (`pk_test_51TMTbs…`). La
+  **commerce key es DINÁMICA** — la trae el bootstrap del sponsor (`sponsor.commerce.apiKey`).
+  - **Panel de conexión (solo en el editor, vía `useEditorState().disabled`):** dot de status
+    (connecting/connected/error/disconnected), input de API key, **Save** (persiste en
+    `localStorage["vio.apiKey"]` + reconecta) y **Disconnect**. En la página publicada no se ve.
+  - **Opciones del cart FAB:** mostrar/ocultar, posición (4 esquinas), icono (bag/cart/basket),
+    color, efecto (none/scale/pulse), tamaño.
+
+**Superficies de producto (3)** — todas comparten `ProductCardView` (mismo look, misma `editableCSS`)
+- **Vio Product Card** — un producto. **UI 100% nuestra** (ya NO usa `<vio-product>` del SDK).
+- **Vio Product Carousel** — multi-producto, scroll-snap, N visibles (2/3/4/5), gap, flechas,
+  heading/kicker/disclaimer editorial.
+- **Vio Product Grid** — multi-producto, columnas (2–5), gap, colapsa a 2 en móvil.
+
+Config de card compartida (`card-props.ts`): layout (standard/image-only/overlay/horizontal),
+botón (icon/text/bar/hidden + label + acción add|detail), **image click** (product info | add to
+cart; con variantes SIEMPRE product info), color de acento, toggles de visibilidad, badge de
+descuento (off/auto/manual), etiqueta **Annonse** (disclosure NO). Más `editableCSS` (9 selectores
+reestilizables desde el panel de diseño de Vev).
+
+**Addons de acción (3)** — `type: "action"`, se **adjuntan a cualquier elemento** (imagen, shape,
+texto) y le dan comportamiento sin diseñar UI:
+- **Vio · Add to Cart** (con picker) · **Vio · Open Product Info** (con picker) · **Vio · Open Cart**.
 
 ### 6.2 Gotchas que costaron sangre (NO re-descubrir)
 
@@ -157,6 +180,20 @@ el carrito y los métodos de pago son **idénticos al demo**, sin reescribir nad
 7. **Categoría "Localhost".** Los componentes se sirven **en vivo desde `vev start`** (localhost).
    Tras cambiar el SDK hay que **rebundle + `vev deploy` + reiniciar `vev start`** (el watcher NO
    vigila `vio-sdk/` fuera de `src/`). Si `vev start` se cae, los bloques **desaparecen** del editor.
+8. **`SilkeModal`, NUNCA `createPortal` crudo.** Un modal hecho con
+   `createPortal(…, document.body)` desde el panel de propiedades **crashea el editor de Vev**
+   (pantalla "We've hit a little bump"). Usar `SilkeModal` de `@vev/silke` — es lo que hace el
+   picker legacy de Alan y funciona. Aplica a cualquier overlay que se lance desde el panel.
+9. **Props `type: "array"` con `component` custom CRASHEAN.** Vev no maneja bien un editor custom
+   sobre un prop de tipo array (crash al seleccionar). Guardar listas como **`type: "object"` con un
+   campo string**: `{ ids: "408948,408949" }` + un `parseIds()`. Serialización a prueba de balas.
+   (Se probó también `object` con `fields:[{items, type:array}]` — menos fiable que el string.)
+10. **El manifest renombra dos claves.** `editableCSS` → **`editableCSScomputed`** y
+    `children` → **`contentChildren`**. Las claves crudas salen `null` en `manifest.json`: no
+    concluir que no se aplicaron sin mirar las computadas.
+11. **Renombrar un bloque no rompe las instancias.** El `widgetId` sale del **nombre de la función**
+    (`VioProductCard` → `cq1lXld-TA9_VioProductCard`), no del `name` visible. Cambiar `name` es
+    seguro; renombrar la función NO (huérfana las instancias colocadas).
 
 ### 6.3 Cambios en `vio-web-sdk` (rama `feat/vev-sdk-wrap`)
 
@@ -169,6 +206,14 @@ el carrito y los métodos de pago son **idénticos al demo**, sin reescribir nad
 - `ui/components/vio-checkout.ts` — Apple Pay con icono + Vipps wordmark; **desktop: el checkout
   vive SIEMPRE como panel lateral derecho** (`@media min-width:601px` sobre `.modal`), nunca full-width.
 - `src/_vev-entry.ts` (nuevo) — entry del bundle para esbuild.
+- **Variantes (§6.8):** `vio-product-detail.ts` — resolución de variante por **combinación exacta
+  con match de token** (`variantOptionValues` + `partMatchesValue`), `isValueAvailable()` para
+  **deshabilitar combinaciones sin stock**, y retry en `fetchProduct()` contra el
+  "Authentication failed" intermitente del backend.
+- **Precios (§6.9):** `vio-product-detail.ts` `unitPrice`/`compareAt` prefieren **`amount`** sobre
+  `amount_incl_taxes`; `core/cart/cart-manager.ts` `addProduct()` ahora precia por la **variante
+  seleccionada** (precio, imagen y título), no por el producto base.
+- Limpieza: quitados los `console.log` de diagnóstico (se conservan los `console.warn` de error).
 
 ### 6.4 Flujo de pago (clave: cómo evitar la dirección manual)
 
@@ -196,11 +241,91 @@ Luego desde `vio-vev`: `npx vev build && npx vev deploy` y reiniciar `npx vev st
 
 - Host key `vg-demo_api_key_57a3038c06434330` en `api-staging.vio.live` → campaña "Lyko" (id 2),
   sponsor **"Fredrik & Louisa"** (id 1, `commerce.apiKey = 1TKRYGF-1W747K6-GENHNNK-1K61V5N`),
-  commerceGraphQL `graph-ql-dev.vio.live`. 5 productos cosmética: **408909–408913**.
-- **Estado:** funcionando en el artículo de VG — card → detalle → carrito → checkout → métodos de
-  pago (Apple Pay directo, Klarna express, Vipps). Apple Pay confirmado en Safari tras registrar dominio.
+  commerceGraphQL `graph-ql-dev.vio.live`.
+- **Catálogo (2026-07-15): 9 productos.** 8 simples (408909–408913, 408940, 408941, 408949) y
+  **1 con variantes**: `408948` Olaplex Bonding Oil No.7 (opción "ML": 30 / 100) — el único para
+  probar variantes/combinaciones. Ojo con su bug de precios (§6.9).
+- **Estado:** funcionando en el artículo de VG — card/carousel/grid → detalle (con variantes) →
+  carrito → checkout → métodos de pago (Apple Pay directo, Klarna express, Vipps). Apple Pay
+  confirmado en Safari tras registrar el dominio en Stripe.
+- **Consultar el backend a mano** (útil para depurar datos): `POST https://graph-ql-dev.vio.live`
+  con header `Authorization: <commerce apiKey>`. Cuidado: `image_size` es **enum** (`large` sin
+  comillas) y `options_enabled` es non-nullable (si viene null revienta la query — omitirlo).
 
 ### 6.6 Seguridad (pendiente de rotar)
 
 - Se pegó por chat un **`sk_test_…` de Stripe** (secret). Aunque es de test, conviene rotarlo
   (Dashboard → API keys → Roll). El `pk_test_…` sí es público (va en el bundle sin problema).
+
+---
+
+### 6.7 DECISIÓN de arquitectura: compartir el CORE, poseer la UI
+
+Locked con Angelo (2026-07-15). El SDK tiene dos capas y **solo una conviene compartir**:
+
+| Capa | Qué es | ¿Compartir? |
+|---|---|---|
+| **Core** (`Vio.cart`, `Vio.checkout`, `Vio.commerceFor`, pagos, multi-sponsor) | lógica, **sin opinión de diseño** | **SÍ** — una sola fuente de verdad para el dinero |
+| **UI** (`<vio-cart>`, `<vio-checkout>`, `<vio-product>`) | presentación, **con opinión de diseño** | **NO** — amarra el diseño del publisher |
+
+**Racional:** para que el card se viera como VG quería hubo que editar componentes UI
+**compartidos** del SDK — o sea, cada capricho de diseño de un publisher se volvía un cambio que
+heredaban todos los consumidores (Aller, etc.). Con el core headless eso no puede pasar: no dibuja
+nada, así que linkearlo nunca condiciona el diseño.
+
+**Estado de la migración:** el **Product Card / Carousel / Grid ya son UI propia** (llaman al core).
+El **carrito, checkout y detalle siguen siendo UI del SDK** (montados por el Config). Siguiente paso
+natural si se quiere ir por libre del todo: reconstruir carrito y checkout como UI propia.
+
+**Empaquetado del core:** hoy es un **snapshot vendored** (`vio-sdk/index.js`). Pendiente decidir
+si pasa a dependencia versionada (npm/registry) — el `core` es tree-shakeable e importable aparte.
+
+### 6.8 Variantes y combinaciones
+
+- El **producto con opciones NUNCA se añade a ciegas**: el `+` del card/carousel/grid abre el
+  **detalle** para elegir la combinación (y `imageClickAction` se ignora si hay variantes).
+- **Resolución de variante por combinación:** el título de la variante se parte por `/`/`|` y se
+  matchea contra los valores elegidos con **match de token de palabra**. Esto importa:
+  - substring suelto → `"M"` matchea `"Medium"` (variante equivocada).
+  - exacto estricto → `"30"` NO matchea `"30 ml"` (cae al `variants[0]`, precio equivocado).
+  - **token** → `"30"` ∈ `["30","ml"]` ✓ y `"m"` ∉ `["medium"]` ✓.
+- **Combinaciones agotadas deshabilitadas** (`isValueAvailable`): tachadas + `not-allowed`. Si
+  **ningún** variant reporta stock (dato ausente), NO deshabilita nada — deja decidir al backend.
+- Precio / compare-at / stock / imagen siguen la variante resuelta; el carrito recibe el `variantId`
+  y **precia por la variante** (§6.9).
+- El card muestra **"Fra {precio}"** cuando el producto tiene opciones (usa el precio **base**).
+
+### 6.9 BUG DE DATOS: `currency_code` de variantes (pendiente, para Alan)
+
+**Síntoma:** el detalle mostraba `3 310,14 kr` para un producto cuya card decía `300 NOK`.
+
+**Causa (verificada contra el backend):** en `408948` (Olaplex Bonding Oil No.7) los precios de las
+**variantes** vienen con `currency_code: "EUR"` mientras el **amount ya es un valor NOK**:
+
+| Nivel | amount | currency_code |
+|---|---|---|
+| Producto base | 300 | **NOK** ✅ |
+| Variante "30" | 300 | **EUR** ⚠️ |
+| Variante "100" | 200 | **EUR** ⚠️ |
+
+Todos los demás productos del canal están en NOK. Como la variante está **etiquetada EUR**, al pedir
+`currency: NOK` el backend **convierte** (×~11.03) un número que ya era NOK → 300 → **3310.14**.
+El base no se toca (ya es NOK) → incoherencia base vs variante dentro del mismo producto.
+
+**No es multi-moneda ni conversión intencionada** — es un `currency_code` mal seteado en la variante.
+**Fix esperado:** la variante debe heredar la moneda del producto (NOK); revisar el ingest/almacenado
+de precios de variante. **Repro:** misma query sin `currency` → base `300 NOK`, variantes
+`300 EUR` / `200 EUR` (mismo amount, etiqueta distinta).
+
+**Mitigación en el SDK mientras tanto:** `unitPrice`/`compareAt` prefieren `amount` sobre
+`amount_incl_taxes`, y el card usa el precio **base** (con "Fra") para productos con opciones.
+
+### 6.10 Higiene del código (audit 2026-07-15)
+
+- `withRetry(fn, {attempts, delay, label})` en `vio-helpers.ts` — lo usan `fetchVioProduct`,
+  `fetchVioProducts` y `loadCatalog` (antes: 3 loops de retry duplicados). El retry existe por el
+  **"Authentication failed" intermitente** del commerce bajo concurrencia.
+- Tipos compartidos (`Item`, `VioProduct`, `CatalogProduct`) y `SPONSOR_ID` en un solo sitio.
+- Logs de diagnóstico tras un flag `DEBUG` (por defecto `false`).
+- Los cards muestran **skeleton** mientras cargan y un placeholder **"Utilgjengelig"** si el fetch
+  falla (antes: cuadro gris vacío).
