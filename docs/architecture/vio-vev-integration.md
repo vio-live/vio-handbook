@@ -1,6 +1,6 @@
 ---
 title: "Vio × Vev — integración shoppable (código de Alan)"
-last-updated: 2026-07-15
+last-updated: 2026-07-23
 owner: angelo
 status: live
 ---
@@ -329,3 +329,62 @@ de precios de variante. **Repro:** misma query sin `currency` → base `300 NOK`
 - Logs de diagnóstico tras un flag `DEBUG` (por defecto `false`).
 - Los cards muestran **skeleton** mientras cargan y un placeholder **"Utilgjengelig"** si el fetch
   falla (antes: cuadro gris vacío).
+
+---
+
+## 7. Estado, cierre y backlog (2026-07-23)
+
+### 7.1 Estado — hecho y funcionando
+
+**Bloques (7)** desplegados en el paquete `cq1lXld-TA9` y usados en el artículo de VG:
+- ✅ **Vio Config (SDK)** — init/bootstrap, monta la UI global del SDK (cart/checkout/detalle),
+  panel de conexión editor-only (status + API key + Save/Disconnect), opciones del cart FAB.
+- ✅ **Vio Product Card / Carousel / Grid** — UI propia (nativa), comparten `ProductCardView` +
+  `card-props` + `editableCSS`. Multi-producto (carousel/grid) vía picker modal `{ ids }`.
+- ✅ **3 addons de acción** — Add to Cart / Open Product Info / Open Cart.
+
+**Funciona end-to-end:** catálogo (commerce apiKey) → card/carousel/grid → detalle con
+**variantes/combinaciones** (agotados deshabilitados) → carrito → checkout → pago
+(**Apple Pay** directo confirmado en Safari, **Klarna** express). Picker modal con `SilkeModal`.
+Estados de carga/error. Logs tras `DEBUG`.
+
+**Repos:** `vio-live/vev` `main` (proyecto Vev) · `vio-web-sdk` `main` (cambios mergeados,
+`fddf16b`) · reachu-demo de Alan preservado en `alan-reachu-demo`. Handbook al día.
+
+### 7.2 Qué falta para CERRAR (must-have antes de dar el artículo por listo)
+
+| # | Gap | Estado / acción | Dueño |
+|---|---|---|---|
+| 1 | 🔴 **Precios de variantes EUR/NOK** | El `currency_code` de las variantes viene `EUR` con amount ya-NOK → conversión ×11 (§6.9). **Raíz encontrada:** `products/…/product.service.ts:686-688` hace default a `EUR` cuando falta `currencyCode`. Bloquea precios correctos. | Alan (backend) |
+| 2 | 🟠 **Decidir Vipps** | Hoy abre el checkout completo, sin PSP real (mock). Definir: dejarlo así, quitarlo del artículo, o cablear el flujo Vipps real. Apple Pay + Klarna sí van. | Angelo |
+| 3 | 🟠 **Klarna en el sponsor** | Que aparezca depende de que el backend tenga Klarna habilitado para el sponsor del artículo. Confirmar. | Backend |
+| 4 | 🟡 **Apple Pay dominio final** | Registrado en el dominio actual; si el artículo publica en otro dominio, re-registrar en Stripe. | Angelo |
+| 5 | 🟡 **Rotar `sk_test_` de Stripe** | Se pegó por chat (§6.6). | Angelo |
+| 6 | 🟡 **Empaquetado del SDK** | Hoy es snapshot vendored (`vio-sdk/index.js`); tocar el SDK exige rebundlear. No bloquea el artículo, sí el mantenimiento. Decidir si pasa a dependencia versionada. | Angelo |
+
+**Definición de "cerrado":** artículo VG con precios correctos (dep. #1), métodos de pago decididos
+(#2/#3), Apple Pay OK en el dominio de publicación (#4). El resto (#5/#6) es higiene.
+
+### 7.3 Backlog de mejoras (post-cierre)
+
+**Tier 1 — arquitectura (deuda que crece)**
+- Migrar **carrito y checkout a UI propia** (hoy siguen siendo UI del SDK montada por el Config).
+  Cierra la decisión de §6.7 (poseer la UI, compartir el core) para TODA la superficie.
+- **SDK como dependencia versionada** (npm/registry) en vez de snapshot vendored — el `core` ya es
+  tree-shakeable e importable aparte.
+
+**Tier 2 — features**
+- **Vipps real** (flujo/PSP), si se decide mantenerlo.
+- **Multi-sponsor**: hoy `SPONSOR_ID = 1` está hardcodeado en el picker/catálogo. Resolver el
+  sponsor desde config/bootstrap para soportar varios en un mismo artículo.
+- **Slot overlay en el card** (re-añadir el que quité por el crash de `type:both`, esta vez con la
+  API correcta) → contenido Vev del editor encima de la imagen.
+- **"Fra {precio mínimo de variante}"** real (hoy usa el precio base) — una vez arreglado #1.
+- **Swatches/preview de variantes** en el card (indicar opciones sin abrir el detalle).
+
+**Tier 3 — calidad / editorial**
+- **Analytics/tracking** (view_product, add_to_cart, begin_checkout, purchase) — el argumento de ROI
+  para el publisher; el reachu-demo de Alan ya lo tenía (ver §4, `data/analytics.ts`).
+- **Lazy-load** con `useVisible` (no fetchear productos hasta que el bloque entra en viewport).
+- **A11y** de los bloques shoppables + **tests** (hoy validación manual + `tsc`).
+- Limpieza: borrar `alan-reachu-demo` cuando ya no se necesite de red.
