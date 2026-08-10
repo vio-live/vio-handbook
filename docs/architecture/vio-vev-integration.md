@@ -388,3 +388,74 @@ Estados de carga/error. Logs tras `DEBUG`.
 - **Lazy-load** con `useVisible` (no fetchear productos hasta que el bloque entra en viewport).
 - **A11y** de los bloques shoppables + **tests** (hoy validación manual + `tsc`).
 - Limpieza: borrar `alan-reachu-demo` cuando ya no se necesite de red.
+
+## 8. Estado 2026-08-10 — pagos reales, review de calidad y alcance de launch
+
+> Actualiza (no reemplaza) el cierre de §7. Desde el 2026-07-28 Alan avanzó la demo a
+> "conectada de verdad" en 3 rondas de trabajo, todas portadas al source del SDK.
+
+### 8.1 Qué hay funcionando (acumulado de las 3 rondas de Alan + ports)
+
+- **Carrito server-side** (GraphQL Cart del commerce: CreateCart/Add/Update/DeleteItem,
+  shippings por supplier) con estado local optimista.
+- **Checkout backend** (CreateCheckout/UpdateCheckout) y **métodos de pago dinámicos**
+  por sponsor (GetAvailablePaymentMethods, con cache).
+- **Klarna nativo** vía GraphQL (CreatePaymentKlarnaNative/Confirm) con shippings reales.
+- **Stripe y Vipps por payment-link** (CreatePaymentStripe/Vipps → redirect → retorno
+  con `?vio_payment=...` → confirmación). Vipps sin formulario (recolecta dirección).
+- **Validación de dirección + fraktmetode obligatoria** en el checkout.
+- **Matching de variantes robusto** (option1/2/3, arrays, títulos; stock multi-formato).
+- **Multi-país v1** (país/locale/símbolo por página) — construido pero POSPUESTO (§8.3).
+- Multi-sponsor v1 (selector en el Config) — construido pero POSPUESTO (§8.3).
+
+**Flujo de trabajo consolidado:** Alan edita el bundle vendored → nosotros aislamos el
+diff exacto vs el artefacto puro, lo portamos tipado a `vio-web-sdk/src`, rebundle, y
+el bundle vuelve a ser generado-nunca-editado. Ports: `87c9e65`, `72b956e`, `eed82ce`
+(SDK) / rebundles `3d85918`, `119ed30` (vio-vev). **Pendiente el handoff** para que
+Alan edite el source directamente.
+
+### 8.2 Review de calidad (2026-08-10) — resumen
+
+Review adversarial de 3 agentes sobre todo lo acumulado (~40 hallazgos). Los patrones:
+
+1. **Optimismo sin reconciliación**: estado local + backend async sin dedupe de
+   promesas ni secuencia → doble CreateCart perdiendo ítems, ítems fantasma cuando
+   AddItem falla en silencio, cantidades pisadas por respuestas fuera de orden.
+2. **Confirmar sin verificar**: el retorno de redirect confía en `?vio_payment=success`
+   (Vipps redirige igual al cancelar → confirmación falsa + carrito borrado sin cobro);
+   Apple Pay autoriza sin ninguna mutación de orden detrás (nunca cobra);
+   `resumeKlarnaReturn` sin cablear (redirects bancarios confirman sin crear orden).
+3. **Multi-X a medias**: cambiar país no refetchea nada; shippings/métodos solo del
+   primer supplier; express del cart solo cobra el primer sponsor.
+4. Otros de peso: total del CTA sin el envío que sí se cobra; `customer@example.com`
+   en órdenes Vipps; colisiones en el matching de variantes (34/30 compra 30/32);
+   stock desconocido = "På lager"; analytics con base IVA inconsistente.
+
+Detalle completo con archivo:línea y fixes: tareas #4/#5 del tracker de la sesión
+vio-backend (y los 3 informes de agentes de esa sesión).
+
+### 8.3 Decisión de alcance (Angelo, 2026-08-10)
+
+**Launch = UN sponsor, UN mercado (NO/NOK).** Multi-sponsor, multi-país y
+multi-supplier quedan POSPUESTOS: el código construido se conserva (no se borra)
+detrás del alcance single, con inventario completo de lo que falta para activarlos
+(tarea #4 de la sesión vio-backend). Motivo: cada uno tiene cabos sueltos que
+afectan el camino del dinero (currency desalineada, sponsor 4 hardcodeado,
+shipping de un solo supplier) y no son necesarios para el artículo de VG.
+
+### 8.4 Qué falta para "listo para usar" (camino crítico)
+
+1. **Hardening del SDK** (bloqueantes del review): verificación de pago en el
+   retorno contra GetCheckout, carrito confiable (dedupe/errores/secuencia),
+   total=cobrado, resumeKlarnaReturn, email obligatorio, fixes de variantes,
+   flag single-market, fix IVA en analytics. → nosotros.
+2. **Apple Pay: apagar para launch o cablear captura server-side** → decisión Angelo.
+3. **Backend commerce (Alan)**: data patch EUR/NOK + purga cache (el 3310 sigue vivo,
+   verificado 2026-08-10) · Klarna habilitado para el sponsor.
+4. **Prueba e2e real por método** (Klarna/Stripe/Vipps) en staging: orden + cobro + email.
+5. **Publicación**: `vev deploy` del paquete final · rotar `sk_test_` · dominio
+   Apple Pay en Stripe si aplica.
+
+Post-launch temprano: multi-supplier gating, "Endre" zombie de Klarna, tormenta de
+refetches, `availableMethods` vacío, params de retorno solo `vio_*`, performance del
+matching, race del fetch en el detalle.
