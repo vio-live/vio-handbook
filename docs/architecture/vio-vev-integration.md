@@ -459,3 +459,31 @@ shipping de un solo supplier) y no son necesarios para el artículo de VG.
 Post-launch temprano: multi-supplier gating, "Endre" zombie de Klarna, tormenta de
 refetches, `availableMethods` vacío, params de retorno solo `vio_*`, performance del
 matching, race del fetch en el detalle.
+
+### 8.5 Estado fin del día 2026-08-10 — hardening hecho, package publicado
+
+Actualiza §8.4 (misma fecha, sesión 2 — journal
+[`2026-08-10-2.md`](../journal/2026-08/2026-08-10-2.md)):
+
+1. ~~Hardening del SDK~~ **HECHO** (19/20 items, incluidos varios del "post-launch":
+   availableMethods, params `vio_*`, race del fetch, matching). `vio-web-sdk`
+   `main @ 4595e93`, rebundle `vio-vev` `main @ bfef5a3`. Único item abierto:
+   **wiring cliente de Apple Pay**.
+2. Apple Pay: el backend SÍ existe (`CreatePaymentApplePay`/`Confirm`/
+   `CreatePaymentIntentStripe`, verificado por introspection). Falta solo el cliente;
+   los botones nativos hoy completan sin cobrar. Decisión pendiente de la respuesta
+   de Alan (¿probó el hosted checkout de Stripe o los botones nativos?) — tarjeta
+   Trello con el contrato pedido.
+3. Backend commerce (Alan): 3 tarjetas Trello creadas — EUR/NOK con diagnóstico
+   dual-currency probado (variante devuelve "300 EUR" plano; cierre: 399500 ≈ 300 NOK
+   / ≈ 27 EUR), contrato Apple Pay, pendientes julio + sponsor 4.
+4. Prueba e2e por método: sigue pendiente (Angelo, en staging).
+5. ~~Publicación `vev deploy`~~ **HECHO** — package `cq1lXld-TA9` publicado con el
+   bundle endurecido. Pendiente: rotar `sk_test_` · dominio Apple Pay en Stripe si
+   aplica.
+
+**Gotcha nuevo (costó la tarde): la cuenta del CLI ≠ la cuenta del editor.** Los
+componentes se registran en el team del token de `~/.config/configstore/vev-cli.json`
+(aquí: team **Vio**, dueño del package); si el navegador está logueado en otra cuenta
+(estaba `angelo@tipio.no` personal), el editor no muestra nada y no hay error en
+ningún lado. Detalle y método de diagnóstico en el journal 2026-08-10-2.
