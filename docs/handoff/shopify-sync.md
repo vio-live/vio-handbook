@@ -1,8 +1,13 @@
 # Handoff — Vio Sync (app de Shopify)
 
-> Estado al **2026-06-23**. App embebida de Shopify reescrita de cero (legacy Next.js → React Router 7).
-> Repo: **`vio-live/vio-shopify-sync`**, rama **`rewrite/react-router-app`** (HEAD `d0452d4`).
-> Local: `/Users/angelo/vio-sync`.
+> Estado al **2026-08-11**. App embebida de Shopify reescrita de cero (legacy Next.js → React Router 7).
+> **YA ESTÁ EN PRODUCCIÓN**: `vio-live/vio-shopify-sync` rama `master` (HEAD `e730740`),
+> deployada en `https://shopify-sync.vio.live` (Vercel). Ver journal
+> [2026-08-11 (2)](../journal/2026-08/2026-08-11-2.md) para el detalle de la
+> verificación de ese push.
+> Local: `/Users/angelo/vio-sync` — hay una rama `prod-compliance-merge` con
+> fixes de compliance/seguridad sobre `master` **todavía sin pushear**
+> (pendiente OK de Angelo), ver sección "Pendiente" abajo.
 
 ## Qué es (dirección del flujo)
 
@@ -23,10 +28,11 @@ Ojo con la terminología: el legacy usaba **"import"** desde la perspectiva de *
 
 | | |
 |---|---|
-| Repo | `vio-live/vio-shopify-sync`, rama **`rewrite/react-router-app`** (el legacy Next.js sigue en `master`/`develop` del mismo repo) |
-| Local | `/Users/angelo/vio-sync` — rama `main-cli`; remotes: `vio` → vio-shopify-sync, `origin` → template de Shopify (no se puede pushear) |
-| HEAD | `d0452d4` |
-| Nota git | El repo es un **clone shallow** del template → para pushear a `vio` hizo falta `git fetch --unshallow origin` una vez |
+| Repo | `vio-live/vio-shopify-sync`, rama **`master`** = producción (el legacy Next.js ya no está en el flujo activo) |
+| Local | `/Users/angelo/vio-sync`; remotes: `vio` → vio-shopify-sync, `origin` → template de Shopify (no se puede pushear) |
+| HEAD (prod) | `e730740` |
+| Rama local sin pushear | `prod-compliance-merge` (GDPR + fix de seguridad + tests, ver Pendiente) |
+| Nota git | El repo es un **clone shallow** del template → para pushear a `vio` puede hacer falta `git fetch --unshallow origin` |
 
 ## Stack
 
@@ -85,31 +91,68 @@ npm run dev -- --tunnel-url=https://shopify-dev.vio.live:8082
 
 ## Multi-entorno
 
-| Entorno | App URL | Config file | Backend |
-|---|---|---|---|
-| Dev | `shopify-dev.vio.live` (túnel) | `shopify.app.toml` / `shopify.app.vio-sync.toml` | `VIO_API_HOST` |
-| Staging | `shopify-sync-staging.vio.live` | `shopify.app.staging.toml` (client_id a completar) | idem |
-| Prod | `shopify-sync.vio.live` | `shopify.app.production.toml` (client_id a completar) | idem |
+| Entorno | App URL | Config file | client_id | Backend |
+|---|---|---|---|---|
+| Staging | `shopify-sync-staging.vio.live` | `shopify.app.vio-sync-staging.toml` | `62494b70…` | `VIO_API_HOST` staging |
+| Prod | `shopify-sync.vio.live` | `shopify.app.vio-sync.toml` | `8994c429…` | `VIO_API_HOST` prod |
 
-- Cada entorno = **una app de Shopify** (client_id distinto) + su `application_url`. CLI multi-config: `shopify app config use <env>` / `deploy --config <env>`.
-- **Lío a ordenar**: hay 2 configs de dev — `shopify.app.toml` (`dfb8ce59…`) y `shopify.app.vio-sync.toml` (`8994c429…`, la **activa**). Consolidar a una.
+Alan consolidó (2026-08-11) de 5 tomls a estos 2 — los demás (`shopify.app.toml`
+con `dfb8ce59…`, `production.toml`, `staging.toml`, `shopify.web.toml`) fueron
+**borrados**, ya no existen.
+
+⚠️ **Riesgo conocido, en proceso de arreglar**: el `client_id` de PROD
+(`8994c429…`) es el **mismo** que se venía usando para dev local con túnel.
+Ambos tomls tenían `automatically_update_urls_on_dev = true` — cualquier
+`shopify app dev` corrido con ese config activo en una máquina de desarrollo
+le pisa `application_url`/`redirect_urls` reales de producción. La rama local
+`prod-compliance-merge` ya lo corrigió a `false` (ver Pendiente) — el
+trade-off es que `shopify app dev` contra ese config deja de servir bien el
+túnel local (probado: `/healthz` pasa de 200 a 500). **Recomendación pendiente:
+crear una app de Partners separada solo para dev**, para no perder la
+comodidad de local dev ni volver a exponer el riesgo.
 
 ## Estado — hecho ✅
 
+- **En producción real**, deployada en Vercel, dominio propio, probada end-to-end
+  con tienda/cuenta reales (2026-08-11, ver journal).
 - Conexión por **API key** + **gating** (no productos hasta conectar) + **Disconnect**.
-- **My products**: tabla `s-table` con búsqueda, filtro de status, filtro exported/not, columna **Type** (Single / N variants), badge **✓ Exported**, selección múltiple + **Export / Remove**, **paginación** por cursor (20/pág).
-- **Connection & log**: estado (Connected / API reachable / nº exportados) + log de exportados + Disconnect.
-- **Rebrand total a Vio**: cero `outshifter`/`reachu` en el código (valores de contrato por env).
+- **My products**: tabla `s-table` con búsqueda, filtro de status, filtro exported/not,
+  columna **Type** (Single / N variants), badge **✓ Exported** con **actualización
+  optimista** (sin refresh manual tras export/remove), selección múltiple con
+  **Export / Remove bulk**, modal de bienvenida al conectar, **paginación** por
+  cursor (20/pág).
+- **Connection & log**: estado (Connected / API reachable / nº exportados) + log
+  de exportados + Disconnect.
+- **Rebrand total a Vio**: cero `outshifter`/`reachu` en el código.
+- **Suite de tests**: 166 tests (Vitest + Testing Library), coverage 100% en
+  statements/branches/functions/lines, typecheck y lint limpios.
+- Session storage: **Redis (Upstash) condicional** — si hay `REDIS_URL` usa
+  `RedisSessionStorage`, si no cae a Prisma/SQLite (dev local sin Redis).
+- Bug de fondo de token de Shopify diagnosticado y con fix propuesto (ver
+  Trello [pmsXD6wr](https://trello.com/c/pmsXD6wr)) — el lock de
+  `asyncrefreshTokenIfApply` en `vio-extensions-microservice` no es atómico
+  bajo llamadas concurrentes; el mecanismo de refresh en sí SÍ funciona para
+  uso secuencial (verificado en prod).
 
 ## Pendiente 🔜
 
-1. **Session storage Redis** — reusar `lib/redis-store.js` del legacy (ioredis + Sentinel). **Ojo:** los hosts de sentinel son **internos de K8s** (`*.svc.cluster.local`) → **no se alcanzan desde Vercel**. Decisión de deploy atada a esto:
-   - **Deploy en K8s** (mismo cluster) → reuso directo del Redis.
-   - **Vercel** → hay que exponer el Redis externamente.
-2. **`VIO_API_HOST` + una API key real** → probar connect / export / disconnect en vivo.
-3. **`client_id`** de las apps de Shopify de staging/prod → completar los `.toml`.
-4. **Confirmar contra el backend** (`vio-shopify-sync` backend / `vio-*-microservice`): (a) endpoint exacto para **validar la key**; (b) cómo asocia el backend **tienda ↔ key** (el plugin de Woo sólo manda `Authorization`; en Shopify, ¿la key implica la tienda o hay que mandar el `shop`?).
-5. Consolidar las 2 configs de dev.
+1. **Mergear + pushear GDPR compliance a `master`**: las 3 rutas de privacidad
+   (`customers/data_request`, `customers/redact`, `shop/redact`) +
+   `[webhooks.privacy_compliance]` en los tomls — **obligatorio para el
+   Shopify App Store**, el release del 2026-08-11 salió sin ellas. Ya está
+   listo en la rama local `prod-compliance-merge`, falta el OK de Angelo para
+   pushear + que Alan corra `shopify app deploy` y redeploy Vercel.
+2. **Separar app de Partners para dev** de la de prod (ver "Riesgo conocido"
+   arriba) — hoy comparten `client_id`.
+3. **Pub/Sub de prod** apunta al proyecto GCP de **staging**
+   (`tipio-staging-development`) — falta un topic real de producción.
+4. **Probar el bug de concurrencia del token bajo carga real** (export masivo
+   en prod, no solo unos pocos productos secuenciales) — ver
+   [pmsXD6wr](https://trello.com/c/pmsXD6wr).
+5. **Checklist de submission al App Store** (listing, screenshots, Protected
+   Customer Data, cuenta demo para el reviewer) — ver `docs/SUBMISSION.md` y
+   `docs/PUBLISH.md` en el repo del app, y Trello
+   [bUTspa3l](https://trello.com/c/bUTspa3l).
 
 ## Gap vs legacy (decidido)
 
