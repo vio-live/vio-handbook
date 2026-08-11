@@ -482,6 +482,14 @@ Actualiza §8.4 (misma fecha, sesión 2 — journal
    bundle endurecido. Pendiente: rotar `sk_test_` · dominio Apple Pay en Stripe si
    aplica.
 
+**Addendum 2026-08-11 (ronda 4 — journal [`2026-08-11.md`](../journal/2026-08/2026-08-11.md)):**
+Alan re-editó el bundle a mano (fail-open en el retorno de Vipps) y deployó
+v0.100/v0.101 pisando el hardening. Reemplazado por verificación fail-closed con
+reintentos (~20s) + estado pending (`vio-web-sdk` `fb60b19`, rebundle `0e3cac4`,
+**package v0.102 publicado**). Su fix real de Klarna shipping (shopcart `45b02ac`)
+verificado ✓. Regla operativa: **nadie deploya el package sin coordinar** — el
+deploy de Vev no tiene lock y el último pisa al anterior.
+
 **Gotcha nuevo (costó la tarde): la cuenta del CLI ≠ la cuenta del editor.** Los
 componentes se registran en el team del token de `~/.config/configstore/vev-cli.json`
 (aquí: team **Vio**, dueño del package); si el navegador está logueado en otra cuenta
