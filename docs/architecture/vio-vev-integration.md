@@ -495,3 +495,76 @@ componentes se registran en el team del token de `~/.config/configstore/vev-cli.
 (aquí: team **Vio**, dueño del package); si el navegador está logueado en otra cuenta
 (estaba `angelo@tipio.no` personal), el editor no muestra nada y no hay error en
 ningún lado. Detalle y método de diagnóstico en el journal 2026-08-10-2.
+
+## 9. Estado 2026-08-13 — package único, Apple Pay cableado, panel rediseñado, Vipps sólido
+
+> Consolida §8.1–§8.5 al estado actual. Detalle día a día en los journals
+> [`2026-08-11`](../journal/2026-08/2026-08-11.md),
+> [`2026-08-12`](../journal/2026-08/2026-08-12.md),
+> [`2026-08-13`](../journal/2026-08/2026-08-13.md).
+
+### 9.1 Qué hay funcionando (acumulado de 5 rondas de Alan + ports)
+
+Todo lo de §8.1 sigue en pie, más:
+
+- **Apple Pay cableado al backend, fail-closed** (ronda 5 portada): sheet →
+  `CreatePaymentApplePay` → `ConfirmPaymentApplePay` (cobro corre DENTRO del
+  evento `authorize`, antes de cerrar el sheet) → confirma solo si el backend
+  confirma. Gateado por la lista de métodos del backend en TODOS los sitios
+  (checkout, cart, detalle) — antes solo el detalle lo hacía bien.
+- **Vipps verificado contra Vipps directamente** (no contra el status
+  genérico del checkout, que se queda atrás): `Payment.GetVippsStatus`
+  (query nueva de Alan, backend sólido con test) + polling dedicado
+  (`AUTHORIZED`→pagado, `CREATED`→sigue esperando, cualquier otro estado→
+  fail-closed inmediato, ~2min de ventana). Resuelve la regresión de Vipps
+  (redirige igual al cancelar) sin reabrir el falso positivo.
+- **Carrera de inicialización resuelta en la raíz**: `Configuration.whenReady()`
+  — si un bloque pide datos antes de que `Vio.init()` corra (Vev monta
+  componentes sin orden garantizado), espera brevemente en vez de salir sin
+  autenticación.
+- **Panel de configuración rediseñado**: un dropdown "Environment"
+  (Development/Staging/Production, reemplaza API Base + GraphQL Base + Stripe
+  PK manual), sin API key por defecto, Save/Connect/Disconnect funcionando de
+  verdad (2 bugs de cross-frame encontrados y corregidos — panel y canvas
+  corren en `window` distintos, ver journal 08-12), estilos Silke nativos
+  (mismo look que los campos del propio Vev).
+- **Package único, limpio**: `cq1lXld-TA9` (team Vio) con **5 componentes**
+  (Config, Card, Carousel, Grid, Open Product Info) — "Add to Cart" y "Open
+  Cart" deprecados y eliminados (ver §single-package en journal 08-11). El
+  package de pruebas de Alan (`czGNimhyDCi`, cuenta personal) sigue
+  compartido — pendiente que él lo des-comparta (limitación de Vev: no se
+  puede hacer desde fuera de su cuenta).
+
+### 9.2 Patrón operativo que se repite (y cómo lo estamos manejando)
+
+Alan sigue iterando directo sobre el bundle vendored (`vio-vev/vio-sdk/index.js`)
+en vez de `vio-web-sdk/src` — a veces commiteando (rondas 4/5), a veces no
+(overnight del 08-12, ~20 deploys v0.107–v0.126 sin ningún commit). El flujo
+que nos ha funcionado, ronda tras ronda: verificar cada claim contra código
+real (nunca asumir), aislar qué es hallazgo real vs atajo inseguro, portar lo
+válido tipado a `vio-web-sdk/src` con la versión fail-closed, rebundle,
+deploy — y cuando hace falta, respaldar nuestro estado en una rama
+(`backup/v0.127-2026-08-11` en ambos repos) antes de que él vuelva a
+deployar encima. El handoff real (que edite `src/` y no el bundle) sigue
+pendiente — cuando lo hace (rondas 4/5), el resultado es mejor para todos.
+
+### 9.3 Qué falta para "listo para usar" (actualiza §8.4)
+
+1. ~~Hardening del SDK~~ **HECHO**. ~~Apple Pay client wiring~~ **HECHO**.
+2. **Prueba e2e real por método** (Klarna/Stripe/Vipps/Apple Pay) en un
+   dominio verificado — sigue pendiente (Angelo). `vio-demo.vercel.app` es el
+   único dominio hoy que puede probar Apple Pay nativo de verdad (vev.site no
+   puede servir el archivo de verificación de Apple, ver journal 08-11).
+3. **Backend commerce (Alan)**: data patch EUR/NOK + purga cache — sigue sin
+   confirmar que se corrió (verificar variante 399500 ≈ 300 NOK / ≈ 27 EUR).
+4. **Re-publicar el proyecto Vev** — la página de prueba puede seguir
+   horneada con un snapshot viejo del package.
+5. Rotar `sk_test_` · dominio Apple Pay en Stripe (si se mantienen los
+   botones nativos, además del dominio final donde publique VG).
+6. Que Alan des-comparta `czGNimhyDCi` (su package de pruebas viejo).
+
+### 9.4 Estado de repos (2026-08-13, tarde)
+
+- `vio-web-sdk` `main` = `b169fa7`.
+- `vio-live/vev` `main` = `2ea212e`.
+- Package `cq1lXld-TA9` current = **v0.206**.
