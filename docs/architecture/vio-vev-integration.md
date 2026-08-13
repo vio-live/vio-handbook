@@ -565,6 +565,21 @@ pendiente — cuando lo hace (rondas 4/5), el resultado es mejor para todos.
 
 ### 9.4 Estado de repos (2026-08-13, tarde)
 
-- `vio-web-sdk` `main` = `b169fa7`.
+- `vio-web-sdk` `main` = `efd9f53`.
 - `vio-live/vev` `main` = `2ea212e`.
 - Package `cq1lXld-TA9` current = **v0.206**.
+
+### 9.5 Protección de rama activada en ambos repos (Angelo, 2026-08-13)
+
+`main` en `vio-web-sdk` y `vev` ahora exige PR para mergear — **push directo
+bloqueado para todos, admins incluidos** (`enforce_admins: true`; Angelo y
+Alan son admin en ambos repos). Sin aprobación obligatoria
+(`required_approving_review_count: 0`, sin CI configurado) — el objetivo es
+visibilidad y evitar sobrescrituras silenciosas, no gatekeeping. Motivo:
+choques repetidos (11→12, 12→13) de deploys/commits pisándose sin avisar.
+
+Flujo documentado en [`vio-web-sdk/CONTRIBUTING.md`](https://github.com/vio-live/vio-web-sdk/blob/main/CONTRIBUTING.md)
+(rama + PR + self-merge, comando exacto de rebundle, regla de nunca editar
+el bundle a mano, checklist antes de `vev deploy`). Afecta también a nuestro
+propio flujo — de ahora en adelante, cada commit a estos repos pasa por
+rama+PR+merge en vez de push directo a `main`.
