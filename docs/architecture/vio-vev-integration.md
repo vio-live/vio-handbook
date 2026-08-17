@@ -583,3 +583,115 @@ Flujo documentado en [`vio-web-sdk/CONTRIBUTING.md`](https://github.com/vio-live
 el bundle a mano, checklist antes de `vev deploy`). Afecta también a nuestro
 propio flujo — de ahora en adelante, cada commit a estos repos pasa por
 rama+PR+merge en vez de push directo a `main`.
+
+## 10. Estado 2026-08-17 — referencia definitiva (versiones, qué está publicado, qué falta)
+
+> Consolida §7–§9. Si solo vas a leer una sección para saber "dónde estamos",
+> es esta. Detalle día a día en el journal
+> [`2026-08-17`](../journal/2026-08/2026-08-17.md).
+
+### 10.1 Versiones exactas — qué está publicado y qué no
+
+| | Commit / versión | ¿Publicado? |
+|---|---|---|
+| `vio-web-sdk` `main` | `66d6091` | — (repo fuente) |
+| `@vio-live/web-sdk` (npm) | **0.3.0** | ✅ **Sí — publicado 2026-08-17, primera release desde 0.2.0 (10-jun)** |
+| `vio-live/vev` `main` | `dfc21db` | — |
+| Package Vev `cq1lXld-TA9` | **v0.214** | ✅ **Sí — es lo que ven todos los proyectos que usan el package hoy** |
+
+**Dos publicaciones distintas, no confundir**: el package de **Vev**
+(`cq1lXld-TA9`, vía `vev deploy`) es lo que consume el editor/las páginas de
+Vev — no pasa por npm. El paquete de **npm** (`@vio-live/web-sdk`) es lo que
+consume cualquier otra integración (ej. `vio-web`/Mote & Livsstil, o
+cualquier publisher que instale el SDK directo) — hasta hoy estaba
+**congelado en 0.2.0 desde junio**, sin nada del trabajo de agosto. Ambos
+ahora reflejan el mismo estado de `vio-web-sdk` `main`, pero son mecanismos
+de distribución completamente separados — actualizar uno NO actualiza el
+otro.
+
+**Verificado sin asumir** (no solo "debería estar"): diff byte a byte entre
+`vio-sdk/index.js` en git y un rebuild fresco desde `vio-web-sdk/src` →
+idéntico, cero drift. La versión publicada (v0.214) corresponde exactamente
+a estos dos commits — no hay ningún cambio "flotando" solo en el package sin
+estar en git, ni viceversa.
+
+**Ojo con páginas publicadas de Vev** (distinto de "el package"): una página
+que ya fue publicada en el editor queda horneada con el snapshot del package
+que existía en ese momento — no se actualiza sola cuando el package cambia.
+La página de prueba `a-vio-dev.vev.site/ess` sigue sin re-publicarse desde
+antes del 08-11; no sirve como referencia de qué hay live hoy.
+
+### 10.2 Qué hay funcionando (acumulado completo, todas las rondas)
+
+Todo lo de §9.1, más lo de esta semana:
+
+- **Vipps reforzado dos veces más**: el retorno ya no depende de que la URL
+  diga `vio_payment=success` — para Vipps se ignora ese parámetro por
+  completo y se verifica siempre contra el estado real de Vipps
+  (`GetVippsStatus`). Una recarga fresca desde el redirect ahora inicializa
+  el checkout antes de mostrar el aviso de confirmación (antes podía verse
+  roto detrás del aviso).
+- **Vipps reestructurado en su propio módulo** (`payments/vipps.ts`, mismo
+  patrón que Apple Pay/Klarna) con tipos (`VippsPaymentState`, etc.) y
+  **los primeros tests unitarios de todo el repo** (`vipps.test.ts`, 4/4).
+- **`getVippsStatus` expuesto públicamente** en `core/index.ts` (existía la
+  función pero no se exportaba del entry point público — gap real, encontrado
+  por Alan).
+- **`npm test` arreglado** — nunca había corrido nada: recogía por error el
+  `vite.config.ts` del demo de ejemplos como root y escaneaba solo esa
+  carpeta. `vitest.config.ts` en la raíz del repo lo corrige.
+- **Carrera de inicialización, fix confirmado en la práctica**: la versión
+  correcta (`Configuration.whenReady()`, sin cachear credenciales en
+  `localStorage`) sigue siendo la que está en producción — se evaluó
+  explícitamente revertir a un enfoque más frágil y se descartó (ver §10.4).
+
+### 10.3 Qué falta (actualiza §9.3 — punto por punto)
+
+1. ~~Hardening~~ ~~Apple Pay wiring~~ ~~Vipps~~ **HECHO**, los tres.
+2. **Prueba e2e real por método en un dominio verificado** — sigue sin
+   hacerse. `vio-demo.vercel.app` es el único dominio hoy que puede probar
+   Apple Pay nativo de verdad.
+3. **Backend commerce (Alan): data patch EUR/NOK** — sigue sin confirmar
+   (variante 399500 debería dar ≈300 NOK / ≈27 EUR).
+4. **Re-publicar la página de prueba de Vev** — sigue horneada vieja.
+5. Rotar `sk_test_` · dominio Apple Pay en Stripe si se mantienen los
+   botones nativos.
+6. Que Alan des-comparta `czGNimhyDCi` (su package de pruebas personal).
+7. **Nuevo**: limpiar 2 ramas ya mergeadas que quedaron sin borrar en remoto
+   (503 transitorio de GitHub al momento de limpiar — inofensivo, solo
+   pendiente de housekeeping). La rama `vio-vev/main-17-ago` (la que
+   contenía la regresión, NO mergeada) tampoco se borró — queda como
+   respaldo por si hace falta revisarla, no requiere acción.
+8. ~~Publicar `@vio-live/web-sdk` en npm~~ **HECHO** — estaba congelado en
+   0.2.0 desde junio (2 meses sin que nadie lo notara: `vev deploy` no lo
+   toca, es un canal de distribución completamente separado). Publicado
+   **0.3.0** el 17-ago con los 27 commits acumulados. Proceso documentado en
+   `CONTRIBUTING.md` para que no vuelva a pasar — sin regla dura de CUÁNDO
+   publicar todavía, criterio por ahora: si un consumidor externo notaría el
+   cambio, publicar.
+
+### 10.4 Incidente del 17-ago y regla de coordinación nueva
+
+Alan volvió a trabajar sin haber pulleado el estado del 13-ago — mismo
+patrón de siempre (ver §9.2), agravado por 6 deploys (v0.207→v0.212) sin
+ningún commit detrás. La branch protection (activa desde el 13) le bloqueó
+el push directo por primera vez — **reaccionó bien**: respaldó su trabajo en
+una rama (`main-17-ago`) en lugar de forzar nada. Encontramos DOS ramas con
+ese nombre, una en cada repo, de calidad muy distinta:
+
+- `vio-vev/main-17-ago`: hand-edit del bundle sobre su checkout viejo,
+  mezclaba una regresión real (revivía el hack de `localStorage` que ya
+  habíamos resuelto mejor) con dos hallazgos válidos. Se descartó la
+  regresión, se portaron los hallazgos al source limpio.
+- `vio-web-sdk/main-17-ago`: Alan editando `src/` directamente por primera
+  vez, basada en el commit más reciente (sin conflicto) — el refactor de
+  Vipps + tests de §10.2. Mergeado con merge commit (no squash) para
+  conservar su autoría.
+
+**Regla nueva (Angelo, 2026-08-17): antes de superseder/reemplazar/deployar
+encima de trabajo de un colaborador — aunque la razón técnica sea sólida —
+señalar el conflicto y confirmar primero, no solo explicarlo después en un
+commit message.** Motivo: el 13-ago superseder los hand-edits de Alan sin
+avisarle en el momento generó confusión real días después (pensó que había
+perdido su trabajo). Guardada como regla operativa permanente, no solo en
+este journal.
