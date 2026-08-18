@@ -1,14 +1,16 @@
 ---
 title: "Playbook: release the Vio WooCommerce plugin to the WordPress.org directory"
-last-updated: 2026-08-10
+last-updated: 2026-08-18
 owner: angelo
 status: live
 ---
 
 # Playbook — WordPress.org release: Vio Sync for WooCommerce
 
-How to submit (done 2026-08-10) and, after approval, deploy updates via SVN.
+How it was submitted (2026-08-10), what the review required, how it was **approved &
+published** (2026-08-18, SVN rev `3653373`), and how to ship future versions.
 Plugin repo: `vio-live/vio-woocommerce-sync`. Slug: **`vio-sync-for-woocommerce`**.
+Live: https://wordpress.org/plugins/vio-sync-for-woocommerce
 
 ## 0. Invariants
 
@@ -23,7 +25,7 @@ Plugin repo: `vio-live/vio-woocommerce-sync`. Slug: **`vio-sync-for-woocommerce`
 
 ## 1. Pre-flight checklist
 
-- [ ] `Version` (main file header) == `Stable tag` (`readme.txt`).
+- [ ] `Version` (main file header) == `Stable tag` (`readme.txt`) == `VIOSYNC_VERSION` define.
 - [ ] `Text Domain` == slug `vio-sync-for-woocommerce`, used in every `__()/esc_*`.
 - [ ] `Plugin URI` ≠ `Author URI` (or omit one) — wp.org rejects equal URIs.
 - [ ] `readme.txt`: External service section (Guideline 8) + Terms/Privacy URLs; screenshot
@@ -31,6 +33,23 @@ Plugin repo: `vio-live/vio-woocommerce-sync`. Slug: **`vio-sync-for-woocommerce`
 - [ ] `.wordpress-org/`: `icon-128`, `icon-256`, `banner-772x250`, `banner-1544x500`,
       `screenshot-1..N` (real sizes).
 - [ ] Plugin Check **0/0** on the correctly-named build (step 2).
+
+**Common basic-review findings (round 1 flagged these — get them right upfront):**
+
+- **Escape late.** Escape EVERY echoed value AT OUTPUT, even hardcoded markup — a
+  `phpcs:ignore` on `EscapeOutput` is NOT accepted. Inline SVG → `wp_kses( $svg, $allowlist )`
+  with an allowlist const for `svg/path/line/polyline/circle/rect/g` + their attrs.
+  (`wp_kses` lower-cases `viewBox`→`viewbox`, but the browser's inline-HTML SVG parser fixes
+  the case, so icons still scale — verified.) Trusted HTML fragments → `wp_kses_post()`.
+- **Unique prefix ≥ 5 chars.** `vio` (3) was too short (the review tool splits on the first
+  `_`, so the first token must be ≥5). Use **`viosync`** for defines (`VIOSYNC_*`), namespace
+  (`VioSync`), AJAX actions, options, filters, transients, nonce, menu slug, script/style
+  handles, and localized JS objects (update the JS callers too). **KEEP** `vio-*` **post-meta**
+  (`vio-product-id` is written by the Vio backend = external contract) and `vio-*` **CSS
+  classes** (not global identifiers) — state this in the reviewer reply. Rename with
+  `perl -pi` via `find -exec` (⚠️ zsh doesn't word-split unquoted `$VAR`; `sed` with mixed
+  quotes fails). Gotcha: `col_vio_sync` (a list-table COLUMN key) is tied to
+  `.column-col_vio_sync` in `admin.css` — rename PHP **and** CSS together.
 
 ## 2. Build the ZIP + verify Plugin Check (the real check)
 
@@ -72,31 +91,58 @@ folder).
   subject "[WordPress Plugin Directory] Review in Progress: …"). Whitelist
   `plugins@wordpress.org`.
 - Wrong account / mistake: **don't resubmit** — reply to the automated email.
+- If the reviewer asks for changes, fix them, keep Plugin Check 0/0, re-upload the ZIP via the
+  same form (the team checks the latest upload), and reply to the email. (Round 1 → the two
+  findings in §1; round 2 = approved.)
 
-## 4. After approval → SVN deploy
+## 4. After approval → SVN deploy (automated, proven 2026-08-18)
 
-wp.org grants SVN at `https://plugins.svn.wordpress.org/vio-sync-for-woocommerce/`. Layout:
-`trunk/` (current code), `tags/1.0.0/` (release), `assets/` (icons/banner/screenshots = our
-`.wordpress-org/`).
+**The live method is the 10up GitHub Action** (`.github/workflows/deploy.yml`, trigger
+`on: push: tags`). One-time setup (done): repo **secrets** `SVN_USERNAME` = `violive` and
+`SVN_PASSWORD` = the wp.org **SVN password** — which is SEPARATE from the login password;
+generate it at `https://profiles.wordpress.org/me/profile/edit/group/3/?screen=svn-password`.
+Then a `git tag x.y.z` push deploys `trunk` + `tags/x.y.z` and copies `.wordpress-org/` → SVN
+`/assets/`. (Secrets go in GitHub — the agent never handles the password.)
 
-Manual:
+**⚠️ First-deploy gotcha (cost 25 min):** commit access is granted **up to 1 hour AFTER
+approval**. If you deploy too early the 10up `svn` step **hangs** (it does not fail fast) —
+the first run sat 25 min before we cancelled it; a retry ~30 min later worked in 1m15s. So:
+after approval, wait; and keep `timeout-minutes: 12` on the job so an early attempt fails fast
+instead of hanging. The repo being readable (`curl -o /dev/null -w '%{http_code}'
+https://plugins.svn.wordpress.org/vio-sync-for-woocommerce/` → 200) does NOT mean commit
+access is active yet.
+
+Manual fallback (only if the Action can't be used — needs the SVN password interactively, so
+a **human** runs the commit; the agent cannot):
 
 ```bash
 svn co https://plugins.svn.wordpress.org/vio-sync-for-woocommerce/ svn-vio
-# copy the step-2 build (NOT .git/dev files) into trunk/, then:
-cp -R /tmp/build/vio-sync-for-woocommerce/* svn-vio/trunk/
+cp -R /tmp/build/vio-sync-for-woocommerce/* svn-vio/trunk/     # the step-2 build, NOT dev files
 cp ~/Documents/GitHub/vio-woocommerce-sync/.wordpress-org/* svn-vio/assets/
 ( cd svn-vio && svn cp trunk tags/1.0.0 && svn add --force trunk tags assets \
-  && svn ci -m "Release 1.0.0" )
+  && svn ci -m "Release 1.0.0" )   # prompts for the SVN password
 ```
 
-Or automate with **`10up/action-wordpress-plugin-deploy`** (GitHub Action): pushing a
-`git tag 1.0.0` deploys `trunk` + `tags/1.0.0`, and `.wordpress-org/` → SVN `assets/`. Needs
-`SVN_USERNAME` / `SVN_PASSWORD` repo secrets.
+After the first release is live: **revoke the staging review API key** and clear the test
+products.
 
-Then **revoke the staging review API key**.
+## 5. Ship a new version (the routine flow)
 
-## 5. Future updates
+1. Make the code changes on `main`.
+2. Bump the version in **three** places — they MUST match:
+   - `vio-sync-for-woocommerce.php` header `Version: x.y.z`
+   - `readme.txt` `Stable tag: x.y.z`  ← this decides which version users download
+   - `define( 'VIOSYNC_VERSION', 'x.y.z' )` (asset cache-bust)
+3. Add a `== Changelog ==` entry at the top of `readme.txt`.
+4. Bump `Tested up to:` if you tested a newer WordPress.
+5. Verify: Plugin Check **0/0** (step 2) + test in the local env.
+6. Ship — the Action does the SVN work:
+   ```bash
+   git commit -am "Release x.y.z: …"
+   git push origin main
+   git tag x.y.z && git push origin x.y.z    # → 10up Action deploys (~1–2 min)
+   ```
 
-Bump `Version` + `Stable tag`, add a `== Changelog ==` entry, rebuild + recheck (step 2),
-commit to `main`, then `git tag x.y.z` (Action) or SVN `trunk` + new `tags/x.y.z`.
+**Rules:** the version must always increase (or WP won't offer the update); `Stable tag`
+governs what users get; assets refresh on every deploy. **Rollback:** ship a fixed `x.y.(z+1)`,
+or point `Stable tag` in `trunk/readme.txt` back to the last good tag and commit.
