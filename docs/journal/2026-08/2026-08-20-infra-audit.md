@@ -68,8 +68,98 @@ No se tomó nada de la documentación como verdad sin verificar en vivo.
 - IPs estáticas provisionadas según el plan (`aks-outbound-vio-prod`, `nginx-ingress-vio-prod`),
   aunque el ingress real es Istio, no nginx (el nombre es legado, no afecta funcionalidad).
 
+## Parte 2 — barrido exhaustivo (nodos, Container Apps, monitoreo, storage, seguridad, Terraform)
+
+### 🔴 Hallazgo más importante: cero alerting real en toda la infra de Vio
+
+Se revisó todo lo que existe en la suscripción de `Microsoft.Insights/metricAlerts` y
+`Microsoft.Insights/actionGroups`. El único metric alert configurado en **toda la suscripción**
+es `ct-health-alert` en `claude-trader-rg` — un proyecto de Angelo sin relación con Vio.
+
+- `vio-commerce-prod` (AKS): sin Application Insights, sin alertas de ningún tipo (pods,
+  restarts, latencia, cert expiry).
+- Container Apps (`ca-api-vio-{production,staging,development}`): sí tienen Log Analytics
+  workspace (`log-api-vio-*`) — pero solo ingesta de logs, cero alertas configuradas encima.
+- Application Insights solo existe para el "Partner Mock Backend" de QA (servicio de prueba para
+  simular TV2/Viaplay), no para los sistemas reales.
+- **Consecuencia:** todos los incidentes documentados en el handbook/memoria (event loop
+  saturation 01/07, hangs de `users` 11/07, restarts crónicos de `base-api`) se detectaron
+  manualmente o porque un usuario reportó timeout — nunca por una alerta automática.
+
+### 🔴 Producción de Vio Backend (Container Apps) no se redeploya hace ~2.5 meses
+
+- `ca-api-vio-production`: **una sola revisión desde que se creó** (`--0000001`, creada
+  `2026-06-01`), sirviendo el 100% del tráfico. Imagen en el commit `4546a79c` de `socket-server`.
+- Comparado contra `main` (rama activa real hoy — ver nota de branch policy abajo): **5 commits
+  atrás**, ~2.5 meses de código sin llegar a prod.
+- Contraste: `staging` — 2 commits atrás (deploy del 08/06); `development` — al día, coincide
+  exacto con el HEAD de `main` de hoy (confirma el patrón "push a main → autodeploy a dev" del
+  doc).
+- No se pudo determinar desde infra si esto es intencional (doc de infra dice "cutover de tráfico
+  real pendiente", pero esa nota es de 2026-06-04, más vieja que el propio deploy actual).
+
+### 🟡 Branch policy de `socket-server` desactualizada en el handbook
+
+`docs/infrastructure/overview.md` dice: *"`socket-server` → `develop` es la rama default + deploy.
+No hay `main`."* — **Falso hoy.** `develop` está congelada desde 2026-06-10 (18 commits atrás de
+`main`). El desarrollo activo real está en `main` (commit de hoy 2026-08-20, PR #43 analytics v1
+merged). El flujo real cambió y nadie actualizó el doc.
+
+### ✅ Nodos / autoscaling — revisado, en orden
+
+- `vio-commerce-prod`: cluster autoscaler **activo** a nivel de nodo (3-5 nodos,
+  `Standard_D4as_v5`). No hay HPA a nivel de pod (ver hallazgo ya reportado arriba), pero al menos
+  el autoscaling de nodos sí existe.
+- `kubernetesqa`: sin autoscaler (fijo en 3 nodos) — correcto para un cluster que se prende/apaga
+  a diario.
+- 0 pods con restarts anómalos o en estado distinto de `Running` en `vio-commerce-prod` al momento
+  del audit.
+
+### ✅ Storage — revisado a nivel de contenedor, no hay exposición real
+
+Las cuentas `containerproduction2`, `saapivio`, etc. tienen `allowBlobPublicAccess: true` a nivel
+de cuenta (permisivo), pero se verificó contenedor por contenedor:
+- Público (`blob`): `others`, `outshifter-uploads-production`, `reachu-uploads-production`,
+  `saapivio/uploads` — esperable, son assets servidos públicamente (logos, imágenes).
+- Privado: `env-file-microservices`, `saapivio/db-snapshots` — correctamente sin acceso público.
+- `viotfstate` (Terraform state) y `viotoolsstorage2026`: `allowBlobPublicAccess: false` a nivel
+  de cuenta — correcto, más estricto.
+
+No se detectó ningún dato sensible expuesto públicamente.
+
+### 🟡 Endpoints de debug — ya no expuestos (mejoró vs. lo reportado en julio)
+
+`/test`, `/cache`, `/testing` en `api-ecom.vio.live` devuelven **404** — el hallazgo viejo del
+análisis de `vio-orders` (julio) sobre endpoints de debug sin auth ya no aplica, al menos en esas
+rutas raíz.
+
+### 🔴 Redis y ambos clusters AKS no están en Terraform (confirmado, sigue igual)
+
+`grep` sobre todo `terraform/` en el handbook (`vio-platform`, `vio-cloud-platform`,
+`production`) — cero menciones de `redis`, `vio-commerce-prod` o `kubernetesqa`. Todo se
+provisionó manualmente vía `az cli`. Esto ya se había detectado en el audit del 02/07 (Redis) —
+sigue sin importarse al state, y ahora se confirma que **los clusters tampoco están en IaC**, pese
+a que `vio-commerce-prod-plan.md` decía que el estándar iba a ser Terraform modular
+(`environments.tf`).
+
+## Preguntas / acciones pendientes para Alan (actualizado, todo junto)
+
+1. `sync-dev.vio.live` sin DNS.
+2. `shopify-export` (AKS) — ¿sigue necesario con dominio propio o quedó obsoleto?
+3. `shopify-import` — ¿limpiar cert muerto, servicio deprecado?
+4. Certs ACME huérfanos `sales-channel`/`shopify-seller` — ¿limpiar?
+5. `msrvc-p.vio.live` — VirtualService sin documentar, ¿qué es?
+6. Sin HPA a nivel de pod en `vio-commerce-prod` — ¿priorizar?
+7. **Nuevo:** `ca-api-vio-production` no se redeploya desde el 01/06 — ¿es intencional (esperando
+   cutover real) o se perdió el hábito de dispararlo?
+8. **Nuevo:** cero alerting en toda la infra real de Vio — ¿se prioriza montar Application
+   Insights + action group al menos para `vio-commerce-prod` y los Container Apps?
+9. **Nuevo:** clusters AKS y Redis fuera de Terraform — ¿se agenda importarlos al state, o se
+   acepta que van a seguir siendo manuales?
+
 ## Siguiente paso
 
 Angelo le va a pasar estas preguntas a Alan. Pendiente actualizar `azure-overview.md` y
 `docs/handoff/shopify-sync.md` una vez se resuelvan los puntos 2, 3 y 5 (para no documentar algo
-que puede volver a cambiar).
+que puede volver a cambiar). También pendiente actualizar la branch policy de `socket-server` en
+`docs/infrastructure/overview.md` (main reemplazó a develop como rama activa).
