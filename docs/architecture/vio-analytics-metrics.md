@@ -79,13 +79,33 @@ espejo server (`ad_activation`, `cart_intent`) son la mitad del cuento.
 - Lecturas con `FINAL` (dedupe) y fallback a `received_at` si el skew de
   reloj supera 5 min.
 
-## Qué falta construir para servir esto (backlog F6, en orden)
+## Cómo se ajusta una métrica (las tres capas, de la más barata a la más profunda)
 
-1. `/v1/stats/content` — núcleo común `GROUP BY content_url` (web/Vev)
-2. `/v1/stats/campaigns/:id/ads` — fill rate + intent rate por activation (TV)
-3. `/v1/stats/retention` — cohortes D1/D7 por surface (apps)
-4. `/v1/stats/cross-device` — cart_intent→purchase por external_user_id
-5. `context.surface_id` en el contrato cuando Surfaces sea entidad (aditivo)
+1. **Query param, sin deploy** — cada endpoint expone sus perillas:
+   `?windowHours=` (ventana de atribución cross-device, default 48h, tope
+   14d) · `?cohortDays=` y `?surface=` (retention) · `?limit=` y
+   `?minImpressions=` (content) · `?days=` (todos). Para experimentar.
+2. **`vio-analytics/src/stats-definitions.ts`** — el archivo ÚNICO con los
+   defaults y las agrupaciones de eventos (qué cuenta como impresión, qué
+   cuenta como click, las etapas del funnel). Un edit + deploy retunea todos
+   los dashboards de forma consistente. Al cambiar algo acá, actualizar
+   ESTE doc (son espejo).
+3. **Redefinición retroactiva** — como el crudo vive en ClickHouse propio,
+   una fórmula nueva se recalcula sobre TODO el histórico, no solo hacia
+   adelante (imposible en herramientas vendor). Cambiar de opinión es
+   barato: por eso el contrato de EVENTOS es estricto y las MÉTRICAS son
+   blandas.
 
-Los 3 endpoints existentes (`overview`, `components`, `funnel`) ya cubren el
-núcleo común; el proxy del dashboard (vio-backend#45, en pausa) los expone.
+## Estado de los endpoints (2026-08-21)
+
+| Endpoint | Estado | Perillas |
+|---|---|---|
+| `/v1/stats/overview` · `components` · `campaigns/:id/funnel` | ✅ | `days` |
+| `/v1/stats/content` (web/Vev) | ✅ | `days`, `limit`, `minImpressions` |
+| `/v1/stats/campaigns/:id/ads` (TV) | ✅ | `days` |
+| `/v1/stats/cross-device` (TV→móvil) | ✅ | `days`, `windowHours` |
+| `/v1/stats/retention` (apps) | ✅ | `cohortDays`, `surface` |
+| `context.surface_id` en el contrato | ⬜ cuando Surfaces sea entidad (aditivo) |
+
+El proxy del dashboard (vio-backend#45, **en pausa** por revisión de Angelo)
+expone los tres primeros; al retomarse F6 se extiende a los nuevos.
