@@ -20,6 +20,18 @@
 | Infra Azure (Terraform) | ✅ Escrita, sin aplicar | `vio-analytics/infra/` |
 | Provisioning (ClickHouse Cloud EU, CNAMEs, secrets, 1er apply) | ⬜ Angelo | `vio-analytics/infra/README.md` |
 
+## Qué tocó esta iniciativa en cada repo (mapa durable)
+
+| Repo | Qué se agregó | Dónde mirar |
+|---|---|---|
+| **`vio-live/vio-analytics`** (nuevo) | El servicio entero: contrato v1 (Zod), colector Fastify (`POST /v1/events`), sinks (ClickHouse writer + `VendorSink` Mixpanel), API de agregados multi-tenant (`GET /v1/stats/*`), CI/CD (OIDC, subjects inmutables), y TODA la infra en Terraform (`infra/`): VM ClickHouse OSS (`vm-clickhouse-vio`, TLS Caddy, backups nocturnos a `saapivio`), 3 Container Apps (`ca-analytics-vio-*`) con identity user-assigned `id-analytics-vio` | `README.md` · `docs/EVENTS_CONTRACT.md` (canónico wire) · `infra/README.md` |
+| **`vio-live/vio-web-sdk`** | `Vio.analytics` (F2): cola pre-init, anon/sesión rolling 30min, batch+sendBeacon, auto-funnel de comercio con snapshot pre-clear, `observeImpression`, sinks colector/GA4/DOM; `Configuration.eventsBase`; opción `autoTrack:false` para hosts con choke point propio; `VioCart.show()` emite `vio:open-cart` | `src/core/analytics/analytics-manager.ts` (+ PR #18/#19) |
+| **`vio-live/vev`** | F3: `analytics.ts` forwarda TODO por su choke point `trackEvent()` → `Vio.analytics` (core con `autoTrack:false` = cero doble conteo); GA4/inspector intactos; toggle "Send to Vio Analytics" en el Config; bundle vendored rebundleado. **El `vev deploy` del package sigue pendiente de OK explícito** | `src/components/analytics.ts` (+ PR #7) |
+| **`tipiodevelopment/vio-backend`** | F4: espejo server-side vía outbox transaccional (`server/events/analytics-mirror.ts`, módulo `analytics` que el worker despacha por HTTP ANTES del switch de scope — nunca WS); `createShoppableAdActivation`/`createCartIntent` en transacción con el enqueue; dispatch exige `accepted===1` (202-con-rechazo = retry→dead-letter). Config: `ANALYTICS_EVENTS_URL` + `ANALYTICS_INTERNAL_TOKEN` (ya seteadas en los 3 `ca-api-vio-*`) | `server/events/analytics-mirror.ts` (+ PRs #43/#44) |
+| **`vio-live/VioSwiftSDK`** | F5 iOS/tvOS: `VioAnalyticsClient` (contrato v1: UserDefaults ids, cola offline en Application Support, batch 20/5s+background, retries dedupe-safe, surface por target); `AnalyticsManager` conserva su API pública y forwarda mapeado; guard de PII (emails del checkout NUNCA al colector); Mixpanel-directo legacy queda para deprecar | `Sources/VioCore/Analytics/` (+ PR #15, base `develop`) |
+| **`vio-live/VioKotlinSDK`** | F5 Android/Android TV: espejo 1:1 del cliente Swift (SharedPreferences, filesDir, coroutines, surface por leanback); mismo patrón de forwards en `AnalyticsManager` | `library/.../VioCore/analytics/` (+ PR #1) |
+| Azure (sin repo) | VM ClickHouse viva con bases `vio_{development,staging,production}` · colector en 3 envs `ready` · espejo encendido en los 3 backends · Mixpanel: proyectos "Vio Analytics" (4055947, prod) y "Vio Analytics - Staging" (4055964; staging + pruebas locales) | Portal / `infra/` |
+
 **Decisiones que superseden al plan original (con Angelo, 2026-08-19/20):**
 
 1. **Repo propio `vio-live/vio-analytics`** — NO `vio-backend/analytics-server/`.
