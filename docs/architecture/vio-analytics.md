@@ -6,6 +6,13 @@
 > todos los SDKs (web en Vev/Replit/custom, iOS, tvOS, Android, Android TV),
 > coordinado con el modelo dinámico de vio-backend.
 
+> Conocimiento durable relacionado: [ADR-0009](../decisions/0009-analytics-independent-collector-closed-contract.md)
+> (arquitectura y contrato) · [ADR-0010](../decisions/0010-clickhouse-oss-self-hosted.md)
+> (store self-hosted) · [playbook de operación](../playbooks/operate-vio-analytics.md)
+> (salud, secrets, backups, gotchas) · lessons
+> [`stale-instances-steal-outbox-rows`](../lessons/stale-instances-steal-outbox-rows.md) y
+> [`container-apps-first-deploy-gotchas`](../lessons/container-apps-first-deploy-gotchas.md).
+
 ## Estado de implementación (sesión 2026-08-19/20)
 
 | Pieza | Estado | Dónde |
