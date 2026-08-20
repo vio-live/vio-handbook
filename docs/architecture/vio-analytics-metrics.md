@@ -106,6 +106,7 @@ espejo server (`ad_activation`, `cart_intent`) son la mitad del cuento.
 | `/v1/stats/cross-device` (TV→móvil) | ✅ | `days`, `windowHours` |
 | `/v1/stats/retention` (apps) | ✅ | `cohortDays`, `surface` |
 | `context.surface_id` en el contrato | ⬜ cuando Surfaces sea entidad (aditivo) |
+| `context.content_title` (snapshot legible) | ✅ 2026-08-21 — el borrado es permanente sin papelera: el título capturado en el evento mantiene los reportes legibles aunque el artículo muera. Auto en web (`document.title`); nativos lo pasan en context (pendiente en Swift/Kotlin, aditivo) |
 
 El proxy del dashboard (vio-backend#45, **en pausa** por revisión de Angelo)
 expone los tres primeros; al retomarse F6 se extiende a los nuevos.
