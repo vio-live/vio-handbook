@@ -156,13 +156,28 @@ versionado para siempre**, aunque parezca no usarse.
 ## App Store submission
 
 **Estado: enviada a review el 2026-08-18, esperando respuesta de Shopify.**
-Al volver, lo primero es chequear el estado en el Partner Dashboard (Apps →
-Vio Sync → App submissions). Todo el contenido del listing (introduction,
-details, features, subtitle, search terms, categoría, scopes, privacy
-policy, screenshots, test account, testing instructions) vive en
+Sesión cerrada el 2026-08-19 hasta que Shopify responda — al volver, lo
+primero es chequear el estado en el Partner Dashboard (Apps → Vio Sync →
+App submissions). Todo el contenido del listing (introduction, details,
+features, subtitle, search terms, categoría, scopes, privacy policy,
+screenshots, test account, testing instructions) vive en
 **`docs/SUBMISSION.md`** del repo del app — esa es la fuente de verdad
 completa, acá solo el resumen de decisiones que no son obvias releyendo ese
 doc.
+
+**Guía pública ya publicada (2026-08-19)**, independiente del resultado de
+la review: [`docs.vio.live/commerce/shopify`](https://docs.vio.live/commerce/shopify)
+— repo `vio-live/vio-docs` (Nextra, deploy automático a Vercel al pushear a
+`main`, sin PR — patrón directo, distinto de `vio-shopify-sync`/`vio-handbook`),
+`content/commerce/shopify.mdx`. Reemplaza el stub "coming soon"; el
+`index.mdx` de la sección Commerce ya no lo marca como pendiente. Copy
+verificada contra las etiquetas reales de la UI (`app/routes/app._index.tsx`
+y `app.additional.tsx` de vio-sync), no copiada de la guía de WooCommerce.
+Publicada **antes** de la aprobación del App Store (el primer paso de la
+guía asume que se puede buscar "Vio Sync" en el App Store — no va a
+aparecer ahí hasta que Shopify apruebe la submission; decisión consciente
+de Angelo: "publícala, no hay problema"). Faltan las screenshots reales y
+el video corto — mismos placeholders que la guía de Woo mientras tanto.
 
 **Categoría**: Sales Channels → Selling online → tag **"Product feeds"**
 (no "Marketplaces" — ver corrección del modelo de negocio arriba en "Qué
@@ -263,6 +278,11 @@ de test).
    escrito (ver `docs/SUBMISSION.md`), faltan los assets de imagen en sí;
    los screenshots de estados conectados necesitan la API key de test real
    (ya la tenemos, ver "Credenciales del reviewer" arriba).
+8. **Screenshots + video reales para `docs.vio.live/commerce/shopify`**
+   (repo `vio-docs`, `public/commerce/shopify/`) — mismo bloqueo que el
+   punto anterior (necesitan la app conectada con datos reales), pero son
+   assets **separados** de los del listing del App Store, no reusar
+   directo sin recortar/formatear para cada contexto.
 
 ## Gap vs legacy (decidido)
 
