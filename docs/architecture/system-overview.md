@@ -56,6 +56,18 @@ This doc maps the platform across the 3 repos, the data model, and the runtime f
 
 ---
 
+## Analytics (2026-08-20 — pieza transversal nueva)
+
+Todas las superficies (web/Vev/Replit, iOS, tvOS, Android, Android TV) y el
+propio backend (vía outbox) reportan eventos a un **colector independiente**
+(`vio-live/vio-analytics` → `events-{dev,staging}.vio.live` / `events.vio.live`),
+que guarda el crudo en **ClickHouse propio** (VM `vm-clickhouse-vio`) y
+reenvía una copia opcional a Mixpanel. Los dashboards leen vía el proxy
+`/api/analytics/vio/*` de este backend (authz de operador). Los SDKs jamás
+hablan con vendors. Contrato cerrado v1: `vio-analytics/docs/EVENTS_CONTRACT.md`.
+
+---
+
 ## Data model (the things to know)
 
 The DB lives in Azure PostgreSQL Flexible Server (3 environments: production, staging, development). All in private VNet — no public access. See [`docs/infrastructure/overview.md`](../infrastructure/overview.md) for host names.
@@ -138,6 +150,7 @@ Apple TV dispatches a shoppable ad (POST /v2/tv/cart-intent)
 | Topic | Doc |
 |---|---|
 | **Vio Web SDK** (Lit web components, npm `@vio-live/web-sdk`) | [`architecture/web-sdk.md`](./web-sdk.md) |
+| **Vio Analytics** (colector propio + ClickHouse; TODOS los SDKs y el backend reportan ahí) | [`architecture/vio-analytics.md`](./vio-analytics.md) + [ADR-0009](../decisions/0009-analytics-independent-collector-closed-contract.md)/[0010](../decisions/0010-clickhouse-oss-self-hosted.md) + [playbook](../playbooks/operate-vio-analytics.md) |
 | **Vio WooCommerce Sync** (WordPress plugin → catalog sync) | [`architecture/woocommerce-sync.md`](./woocommerce-sync.md) |
 | Detailed API contract (every endpoint) | `socket-server/docs/API_V2_CONTRACT.md` |
 | Schema (every table + columns) | `socket-server/docs/DB_AND_ENDPOINTS.md` |
