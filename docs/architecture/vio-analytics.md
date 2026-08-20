@@ -6,6 +6,8 @@
 > todos los SDKs (web en Vev/Replit/custom, iOS, tvOS, Android, Android TV),
 > coordinado con el modelo dinámico de vio-backend.
 
+> Métricas por surface (definiciones + fórmulas + backlog de endpoints):
+> [`vio-analytics-metrics.md`](./vio-analytics-metrics.md).
 > Conocimiento durable relacionado: [ADR-0009](../decisions/0009-analytics-independent-collector-closed-contract.md)
 > (arquitectura y contrato) · [ADR-0010](../decisions/0010-clickhouse-oss-self-hosted.md)
 > (store self-hosted) · [playbook de operación](../playbooks/operate-vio-analytics.md)
