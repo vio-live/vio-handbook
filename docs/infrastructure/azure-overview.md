@@ -17,11 +17,12 @@ Mapa completo de todos los recursos activos en la suscripción Azure de Vio Comm
 
 ## Clusters AKS
 
-> **Clusters anteriores eliminados:** `reachu-prod` (RG `prod-reachu`) y `kubernetesqa` (RG `qa`) ya no existen. Todo corre en `vio-commerce-prod`.
+> **Corrección 2026-08-24:** esta nota decía que `kubernetesqa` (RG `qa`) ya no existía — falso. Se recreó (~2026-07-09) y está activo como cluster QA de **Vio Commerce**. `reachu-prod` (RG `prod-reachu`) sí sigue eliminado. Esta imprecisión causó que un agente casi mezclara infra de Vio Backend con este cluster el 2026-08-24 — ver [`lessons/dont-mix-vio-commerce-and-vio-backend-infra.md`](../lessons/dont-mix-vio-commerce-and-vio-backend-infra.md).
 
 | Cluster | Resource Group | VM Size | Nodos | Ingress IP |
 |---|---|---|---|---|
 | `vio-commerce-prod` | `rg-vio-commerce-prod` | Standard_D4as_v5 | 3 | `20.100.174.93` |
+| `kubernetesqa` | `qa` | Standard_D2s_v5 | 3 | — (namespace `default`: base-api, graph-ql, products, users, etc. — microservicios de Commerce QA) |
 
 ### `vio-commerce-prod` (único cluster activo)
 - Kubernetes: v1.34.8
@@ -76,7 +77,7 @@ Mapa completo de todos los recursos activos en la suscripción Azure de Vio Comm
 | `reachuprod2` | `prod-reachu` | Standard | Vio Commerce microservices |
 | `acrvioapi` | `rg-vio-shared` | Standard | socket-server / api-vio backend |
 
-> `reachuqa2` (RG `qa`) — ya no activo tras eliminación de `kubernetesqa`.
+> `reachuqa2` (RG `qa`) — activo, usado por el cluster `kubernetesqa` (Commerce QA). Corregido 2026-08-24 — ver nota en la sección "Clusters AKS".
 
 ---
 
