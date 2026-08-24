@@ -132,26 +132,99 @@ image `acrvioapi.azurecr.io/vio-backend:{env}-b7e84a0...`:
 
 Firebase auth is live end-to-end for the first time in production.
 
+## Part 2 — same day, follow-up from a second coding agent: schema was still not actually applied
+
+A second agent (working for the Aller/CMS partner integration) pushed back
+with concrete evidence that despite Part 1's "success", **the DB schema
+still wasn't live** in any environment. Investigated and confirmed:
+
+11. Queried staging's real Postgres directly (`az containerapp exec` + a
+    small `pg` script — VNet-only DB, no access from outside, so exec into
+    the running container is the only path in). Confirmed: the `user_role`
+    enum type (migration 0007) **did not exist**. None of migrations
+    0007-0010 had ever actually applied, in any of the 3 environments,
+    despite the container running `drizzle-kit push` on every single boot
+    since June.
+12. Root cause, found in the boot logs: `push` does **live interactive
+    diffing against `shared/schema.ts`** — it never reads `migrations/*.sql`
+    at all — and was hanging forever on an unanswerable confirmation prompt
+    (`"Do you want to truncate users table?"`, no TTY) on every boot.
+    Bonus complication: `migrations/meta/_journal.json` was itself stale
+    (only listed 0000/0001, files exist up to 0010), so even drizzle-orm's
+    own official migrator would have silently skipped 0007+ too. Full
+    writeup: [`lessons/drizzle-kit-push-is-not-a-migration-tool.md`](../lessons/drizzle-kit-push-is-not-a-migration-tool.md).
+13. Wrote `scripts/migrate.mjs` — a small non-interactive runner that reads
+    `*.sql` files directly (not the stale journal), tracks applied ones by
+    filename in `public._migrations_applied`, baselines pre-existing
+    environments (skips 0000-0006 if the tracking table is empty but
+    `public.users` already exists), and fails the process hard on any
+    error. Rewrote migrations 0007/0008 to be idempotent (`IF NOT EXISTS` /
+    `duplicate_object` guards), since some environments had partial state
+    from prior broken `push` attempts. Dockerfile CMD changed to
+    `node scripts/migrate.mjs && node dist/preserver.js`. PR #52.
+14. **Verified against all 3 real databases** before merging (ran the same
+    script manually via `az containerapp exec`, using `--revision` pinned to
+    the known-healthy old revision to avoid connecting into a crash-looping
+    new one): staging had partial state from old `push` attempts (idempotent
+    guards handled it cleanly), development/production were clean baselines.
+    All 3 confirmed via the exact queries the second agent proposed:
+    `surface_platforms_ok=true`, `sponsor_role_ok=true`,
+    `bundle_id_nullable=YES`.
+15. **Self-inflicted incident, caught and fixed within minutes**: the first
+    commit to PR #52 included a stale draft of `migrate.mjs` (one that still
+    trusted the broken journal) — it had been `git add`-ed *before* I
+    discovered the journal was stale and rewrote the script, and never got
+    re-staged before `git commit`. Result: after merging and redeploying,
+    all 3 new revisions failed to boot (`migrate.mjs` correctly failed hard
+    — exactly as designed). **No user-facing impact** — Container Apps kept
+    routing 100% of traffic to the last healthy revision the whole time.
+    Fixed by committing the actual correct file directly to `main` and
+    redeploying all 3.
+16. **Second self-inflicted issue, same root cause class**: the manual
+    verification runs in step 14 used a simplified one-off test script whose
+    baseline logic only marked *one* file (`0006_...sql`) as applied, not
+    all of 0000-0006 like the real `scripts/migrate.mjs` does. This left all
+    3 environments' tracking tables incomplete, so when the *real* script
+    ran on the redeploy, it tried to re-apply migration `0000` (full initial
+    schema) against a database that already had those tables —
+    `relation "broadcast_ads" already exists`, revisions failed to boot
+    again. Fixed by inserting the missing 0000-0005 baseline rows directly
+    (same VNet-only-access exec approach), then `az containerapp revision
+    restart` on the stuck revisions. Confirmed clean in the actual boot logs
+    afterward: `[migrate] Nothing to apply — up to date.` → normal startup.
+
+**Both self-inflicted issues share a lesson**: when a manual/one-off script
+and the "real" committed script need to agree on behavior (like a baseline
+scheme), write one and have the other call it — don't hand-duplicate the
+logic in two places, even for a "just this once" verification run.
+
+## Final verified state, take two (2026-08-24, actually end of session)
+
+All three environments, schema **and** deploy mechanism both confirmed
+correct via real boot logs (not just HTTP checks):
+
+| Env | Domain | Boot log |
+|---|---|---|
+| development | `api-dev.vio.live` | `[migrate] Nothing to apply — up to date.` → `Application fully ready` |
+| staging | `api-staging.vio.live` | same |
+| production | `api.vio.live` | same |
+
+`COMMERCE_GRAPHQL_URL` / `COMMERCE_GRAPHQL_PUBLIC_URL` also resolved in this
+part of the session (see below) — set to the per-environment public HTTPS
+Commerce GraphQL domain on all 3, since there's no VNet peering between
+Vio Backend's Container Apps and Commerce's AKS clusters.
+
 ## What's NOT done / still pending
 
-- **`COMMERCE_GRAPHQL_URL` / `COMMERCE_GRAPHQL_PUBLIC_URL`** were never set
-  on any of the 3 Container Apps — I flagged uncertainty about internal vs.
-  public routing and Angelo didn't confirm before we moved to the branch
-  merge. Still missing.
-- **Sponsors ownership-guard exclusion** (see step 9) — needs a yes/no from
-  Angelo on whether it's intentional.
-- **`azure-overview.md`** (this handbook) currently states *"Clusters
-  anteriores eliminados: `kubernetesqa` (RG `qa`) ya no existen"* — this is
-  **stale**. `kubernetesqa` was recreated (~2026-07-09) and is very much
-  alive as Vio Commerce's QA cluster. This doc's wrong claim directly fed
-  the mistake in step 4 above. **Needs a correction pass** — not done in
-  this session, flagging so it doesn't mislead the next person/agent.
+- **Sponsors ownership-guard exclusion** (see step 9, Part 1) — needs a
+  yes/no from Angelo on whether it's intentional.
 - PR #45's/#39's actual diffs were merged as-authored without independent
   review beyond "mergeable + no conflicts" — worth a normal code review
   pass if nobody's done one yet.
-- No environment-specific `COMMERCE_GRAPHQL_*` wiring means any feature
-  depending on the Commerce catalog from the dashboard is presumably still
-  non-functional in all 3 environments.
+- `migrations/meta/_journal.json` is still stale on disk (harmless now,
+  since `scripts/migrate.mjs` doesn't read it) — worth regenerating properly
+  with `drizzle-kit generate` at some point so `drizzle-kit studio` and any
+  other journal-trusting tooling doesn't get confused. Not urgent.
 
 ## What went wrong on my end (read this before touching Vio Backend infra)
 
@@ -172,6 +245,7 @@ current than the stub I'd anchored on. Full writeup:
 
 - [ADR-0007](../decisions/0007-firebase-auth-single-idp.md), [ADR-0008](../decisions/0008-operator-authorization-capabilities-tenancy.md)
 - [`lessons/dont-mix-vio-commerce-and-vio-backend-infra.md`](../lessons/dont-mix-vio-commerce-and-vio-backend-infra.md)
-- [`infrastructure/azure-overview.md`](../infrastructure/azure-overview.md) — see "api-vio — Container Apps" section (needs the `kubernetesqa` correction noted above)
-- PRs: [#48](https://github.com/tipiodevelopment/vio-backend/pull/48) (superseded), [#49](https://github.com/tipiodevelopment/vio-backend/pull/49), [#51](https://github.com/tipiodevelopment/vio-backend/pull/51), [#45](https://github.com/tipiodevelopment/vio-backend/pull/45), [#39](https://github.com/tipiodevelopment/vio-backend/pull/39), [#42](https://github.com/tipiodevelopment/vio-backend/pull/42) (closed, duplicate)
+- [`lessons/drizzle-kit-push-is-not-a-migration-tool.md`](../lessons/drizzle-kit-push-is-not-a-migration-tool.md)
+- [`infrastructure/azure-overview.md`](../infrastructure/azure-overview.md) — see "api-vio — Container Apps" section; `kubernetesqa`/`reachuqa2` staleness already corrected in this session
+- PRs: [#48](https://github.com/tipiodevelopment/vio-backend/pull/48) (superseded), [#49](https://github.com/tipiodevelopment/vio-backend/pull/49), [#51](https://github.com/tipiodevelopment/vio-backend/pull/51), [#45](https://github.com/tipiodevelopment/vio-backend/pull/45), [#39](https://github.com/tipiodevelopment/vio-backend/pull/39), [#42](https://github.com/tipiodevelopment/vio-backend/pull/42) (closed, duplicate), [#52](https://github.com/tipiodevelopment/vio-backend/pull/52) (real migration runner)
 - Journal: [`journal/2026-08/2026-08-24.md`](../journal/2026-08/2026-08-24.md)
