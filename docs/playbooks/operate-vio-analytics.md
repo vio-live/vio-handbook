@@ -35,6 +35,22 @@ El runbook del pipeline de analytics. Arquitectura y porqués: [ADR-0009](../dec
 | Mixpanel token/secret | tfvars (staging+prod) + secrets de las apps · local: `vio-analytics/.env` (apunta a STAGING siempre) |
 | GH secrets del repo | `AZURE_CLIENT_ID/TENANT_ID/SUBSCRIPTION_ID` (falta `TELEGRAM_*`, opcional) |
 
+## Regla de emparejamiento de entornos (confirmada por Angelo, 2026-08-21)
+
+**API y eventos van SIEMPRE en pareja del mismo entorno.** La api key debe
+existir en el Postgres del MISMO entorno al que se mandan los eventos —
+nunca cruzar (api-local + events-dev = 401 garantizado, fue el caso Replit):
+
+| Si la app habla con… | los eventos van a… |
+|---|---|
+| `api-dev.vio.live` | `events-dev.vio.live` |
+| `api-staging.vio.live` | `events-staging.vio.live` |
+| `api.vio.live` | `events.vio.live` |
+| `api-local-angelo.vio.live` (túnel) | `events-local-angelo.vio.live` (túnel → colector local, que guarda en `vio_development` de la VM) |
+
+En el SDK esto se logra con `environment` (que fija ambos defaults juntos);
+un override de `eventsBase` solo debe usarse manteniendo la pareja.
+
 ## Salud y diagnóstico
 
 ```bash
