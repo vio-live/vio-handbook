@@ -108,5 +108,15 @@ espejo server (`ad_activation`, `cart_intent`) son la mitad del cuento.
 | `context.surface_id` en el contrato | ⬜ cuando Surfaces sea entidad (aditivo) |
 | `context.content_title` (snapshot legible) | ✅ 2026-08-21 — el borrado es permanente sin papelera: el título capturado en el evento mantiene los reportes legibles aunque el artículo muera. Auto en web (`document.title`); nativos lo pasan en context (pendiente en Swift/Kotlin, aditivo) |
 
-El proxy del dashboard (vio-backend#45, **en pausa** por revisión de Angelo)
-expone los tres primeros; al retomarse F6 se extiende a los nuevos.
+**F6 en marcha (2026-08-26, Angelo levantó la pausa)**: #45 mergeado; el
+colector sirve **bundles** empaquetados por audiencia —
+`/v1/stats/operator/bundle` (corte por app; api key o proxy) y
+`/v1/stats/sponsor/bundle` (corte por sponsor; SOLO token interno —
+cross-app a propósito). El dashboard de Vio ya pinta la sección
+"Commerce & Impressions" real en el drill de app (vio-backend#58) vía el
+proxy fino `/api/analytics/vio/bundle`. División quién-ve-qué: app/publisher
+ve su app; sponsor/brand ve su catálogo cross-app; nunca al revés. El
+dashboard de commerce tiene contrato congelado propio
+(`webapp-vio-commerce/docs/stats-service-contract.md`) — el sponsor bundle
+sirve los campos veraces; spend/budget/splits/payouts son modelo de dinero
+de commerce (no existen aún en ningún sistema).
