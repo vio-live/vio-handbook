@@ -87,14 +87,17 @@ After the fixes, both feeds parse with 0 crashes, 0 broken prices, 100%
   in vio-commerce is `vio-base-api/src/cron/index.js` (node-cron); no NestJS
   service uses `@nestjs/schedule`.
 - ~~Types unverified~~ — **resolved.** `npm install` still fails on the private
-  `@reachu` registry (`404 @reachu/config@1.0.237`), but `package-database` is
-  cloned locally, so a throwaway workspace with tsconfig `paths` pointing
-  `@reachu/database` at its **sources** type-checks against the real entities.
-  Both repos come back clean, and the check caught a real defect: the constants
-  added to the products bus consumer had landed between `@Injectable()` and the
-  class, detaching the decorator (`TS1206`). Fixed before commit. base-api needs
-  none of this — it has no `@reachu` dependencies and installs normally.
-- **`package-database`'s built `dist/index.d.ts` is broken.** See FINDINGS.
+  `@reachu` registry (`404 @reachu/config@1.0.237`), but a throwaway workspace
+  with the public deps plus a *copy* of the local `package-database` clone in
+  `node_modules/@reachu/database` type-checks against the real entities. Both
+  repos come back clean, and the check earned its keep immediately: the
+  constants added to the products bus consumer had landed between `@Injectable()`
+  and the class, detaching the decorator (`TS1206`). Fixed before commit.
+  base-api needs none of this — no `@reachu` dependencies, installs normally.
+  Scripted as `tools/typecheck-service.sh` in the vio-commerce workspace.
+  Gotcha worth knowing: symlinking `package-database` instead of copying it
+  produces ~266 phantom errors, because TS resolves from the realpath and
+  `typeorm` is unreachable from the clone.
 - **Nothing is pushed.** Three local branches awaiting Angelo's OK (ADR-0001).
 - Conditional GET (`ETag` / `Last-Modified`) is not used; both feeds serve both
   headers, so a re-sync could skip unchanged fetches entirely.
