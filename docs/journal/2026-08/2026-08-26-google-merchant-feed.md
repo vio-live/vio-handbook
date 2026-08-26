@@ -86,9 +86,15 @@ After the fixes, both feeds parse with 0 crashes, 0 broken prices, 100%
   The upsert makes a re-run safe, but something has to call it. The only cron
   in vio-commerce is `vio-base-api/src/cron/index.js` (node-cron); no NestJS
   service uses `@nestjs/schedule`.
-- **Types unverified in products and base-api.** `npm install` fails locally:
-  the private `@reachu` registry is not configured (`404 @reachu/config@1.0.237`).
-  Only syntax was checked. Per CONVENTIONS this is reported, not worked around.
+- ~~Types unverified~~ — **resolved.** `npm install` still fails on the private
+  `@reachu` registry (`404 @reachu/config@1.0.237`), but `package-database` is
+  cloned locally, so a throwaway workspace with tsconfig `paths` pointing
+  `@reachu/database` at its **sources** type-checks against the real entities.
+  Both repos come back clean, and the check caught a real defect: the constants
+  added to the products bus consumer had landed between `@Injectable()` and the
+  class, detaching the decorator (`TS1206`). Fixed before commit. base-api needs
+  none of this — it has no `@reachu` dependencies and installs normally.
+- **`package-database`'s built `dist/index.d.ts` is broken.** See FINDINGS.
 - **Nothing is pushed.** Three local branches awaiting Angelo's OK (ADR-0001).
 - Conditional GET (`ETag` / `Last-Modified`) is not used; both feeds serve both
   headers, so a re-sync could skip unchanged fetches entirely.
