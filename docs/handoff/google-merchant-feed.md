@@ -47,11 +47,11 @@ Medido contra los dos feeds reales (2 737 y 2 452 items):
 | Mensaje Service Bus | 2 792 KB vs techo de 256 KB | batches, máx 34 KB/producto |
 | Re-importar el mismo feed | duplicaba el catálogo | upsert |
 
-Ramas locales, **sin pushear** (ADR-0001):
+Ramas **subidas** a GitHub:
 
-- `google-merchant-feed` → `agent/google-merchant-feed/fix-parser-and-batching` (`b6ca94f`)
-- `vio-products-microservice` → `agent/products/feed-upsert` (`bbf6a63`)
-- `vio-base-api` → `agent/base-api/feed-import-for-users` (`c64261a`)
+- `google-merchant-feed` → `feature/merchant-feed-parser` (`b6ca94f`)
+- `vio-products-microservice` → `feature/feed-upsert` (`bbf6a63`)
+- `vio-base-api` → `feature/feed-import-for-users` (`c64261a`)
 
 ## Lo que falta, y quién lo toma
 
