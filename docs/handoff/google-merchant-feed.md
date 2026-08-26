@@ -4,11 +4,9 @@
 > Estado: **el import funciona y está abierto a usuarios**, en tres ramas locales
 > sin pushear. Falta el re-sync automático, que necesita schema nuevo.
 >
-> 🎨 **Diseño del flujo — 7 pantallas con mockups:**
-> https://claude.ai/code/artifact/a7372696-999b-4e8e-b7c4-a178b07b5429
-> Es la referencia visual de cómo debe verse la conexión gestionada; los mockups
-> usan los tokens reales de `vio-commerce-webapp` y las cifras medidas del feed
-> de Kondomeriet.
+> 🎨 **Diseño del flujo — 7 pantallas:**
+> [`google-merchant-feed-flow.md`](./google-merchant-feed-flow.md).
+> Mockups visuales en `assets/google-merchant-feed-flow.html` (abrir en navegador).
 >
 > 📋 **Trello (Alan):** https://trello.com/c/Gn2F99Nc — `ProductFeed` + scheduler.
 > 📓 **Sesión:** [`journal/2026-08/2026-08-26-google-merchant-feed.md`](../journal/2026-08/2026-08-26-google-merchant-feed.md).

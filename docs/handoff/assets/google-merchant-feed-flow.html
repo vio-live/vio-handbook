@@ -1,0 +1,558 @@
+<title>Merchant Feed Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+
+<style>
+  /* ── Document chrome: follows the reader's theme ─────────────── */
+  :root {
+    --doc-bg: #FAFAF9;
+    --doc-panel: #FFFFFF;
+    --doc-line: rgba(0,0,0,.10);
+    --doc-line-soft: rgba(0,0,0,.06);
+    --doc-fg: #111111;
+    --doc-fg-2: #4A4A4A;
+    --doc-fg-3: #767674;
+    --doc-accent: #047857;
+    --doc-accent-tint: rgba(16,185,129,.10);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --doc-bg: #0C0C0C;
+      --doc-panel: #131313;
+      --doc-line: rgba(255,255,255,.11);
+      --doc-line-soft: rgba(255,255,255,.06);
+      --doc-fg: #F5F5F4;
+      --doc-fg-2: #B4B4B4;
+      --doc-fg-3: #7C7C7A;
+      --doc-accent: #34D399;
+      --doc-accent-tint: rgba(16,185,129,.14);
+    }
+  }
+  :root[data-theme="dark"] {
+    --doc-bg: #0C0C0C;
+    --doc-panel: #131313;
+    --doc-line: rgba(255,255,255,.11);
+    --doc-line-soft: rgba(255,255,255,.06);
+    --doc-fg: #F5F5F4;
+    --doc-fg-2: #B4B4B4;
+    --doc-fg-3: #7C7C7A;
+    --doc-accent: #34D399;
+    --doc-accent-tint: rgba(16,185,129,.14);
+  }
+
+  /* ── App tokens: the mockups reproduce vio-commerce-webapp, which
+       is dark-first. They stay dark in either reading theme, the way a
+       screenshot would. Values lifted from src/assets/styles/vio-tokens.css ── */
+  .app {
+    --surface-1: #0A0A0A;
+    --surface-2: #111111;
+    --surface-3: #161616;
+    --surface-4: #1C1C1C;
+    --b-subtle: rgba(255,255,255,.06);
+    --b-default: rgba(255,255,255,.10);
+    --b-strong: rgba(255,255,255,.18);
+    --fg-1: #FFFFFF;
+    --fg-2: #B4B4B4;
+    --fg-3: #707070;
+    --fg-4: #4A4A4A;
+    --commerce: #10B981;
+    --commerce-text: #34D399;
+    --commerce-fg: #04231A;
+    --commerce-tint: rgba(16,185,129,.12);
+    --commerce-border: rgba(16,185,129,.35);
+    --warn: #F59E0B;
+    --warn-tint: rgba(245,158,11,.13);
+    --warn-border: rgba(245,158,11,.34);
+    --danger: #F87171;
+    --danger-tint: rgba(248,113,113,.12);
+    --danger-border: rgba(248,113,113,.32);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--doc-bg);
+    color: var(--doc-fg);
+    font-family: "Geist", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 56px 28px 96px; }
+
+  /* ── Masthead ── */
+  .masthead { display: flex; flex-direction: column; gap: 14px; padding-bottom: 30px; border-bottom: 1px solid var(--doc-line); }
+  .eyebrow {
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--doc-fg-3);
+  }
+  h1 { margin: 0; font-size: clamp(30px, 4.4vw, 42px); line-height: 1.1; letter-spacing: -.024em; font-weight: 600; text-wrap: balance; }
+  .standfirst { margin: 0; max-width: 62ch; color: var(--doc-fg-2); font-size: 16.5px; }
+  .standfirst strong { color: var(--doc-fg); font-weight: 500; }
+
+  /* ── Decisions strip ── */
+  .decisions { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 1px; margin: 30px 0 0; background: var(--doc-line-soft); border: 1px solid var(--doc-line-soft); border-radius: 8px; overflow: hidden; }
+  .decision { background: var(--doc-panel); padding: 15px 17px; display: flex; flex-direction: column; gap: 5px; }
+  .decision dt { font-family: "Geist Mono", ui-monospace, monospace; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--doc-fg-3); }
+  .decision dd { margin: 0; font-size: 14px; font-weight: 500; line-height: 1.35; }
+
+  /* ── Sections ── */
+  section { margin-top: 60px; }
+  h2 { margin: 0 0 6px; font-size: 22px; letter-spacing: -.015em; font-weight: 600; }
+  h2 .num { font-family: "Geist Mono", ui-monospace, monospace; font-size: 13px; font-weight: 500; color: var(--doc-accent); margin-right: 12px; letter-spacing: 0; }
+  .lede { margin: 0 0 24px; color: var(--doc-fg-2); max-width: 66ch; }
+  .lede code, p code, li code { font-family: "Geist Mono", ui-monospace, monospace; font-size: .89em; background: var(--doc-accent-tint); color: var(--doc-accent); padding: 1px 5px; border-radius: 4px; }
+
+  .split { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 32px; align-items: start; }
+  @media (max-width: 860px) { .split { grid-template-columns: 1fr; } }
+
+  .notes { display: flex; flex-direction: column; gap: 16px; }
+  .note h3 { margin: 0 0 4px; font-size: 13.5px; font-weight: 600; }
+  .note p { margin: 0; font-size: 13.5px; color: var(--doc-fg-2); line-height: 1.55; }
+  .note.flag h3 { color: var(--doc-accent); }
+
+  /* ── App mockup shell ── */
+  .app {
+    background: var(--surface-1);
+    border: 1px solid rgba(255,255,255,.13);
+    border-radius: 11px;
+    overflow: hidden;
+    color: var(--fg-1);
+    font-size: 13px;
+    box-shadow: 0 14px 40px -18px rgba(0,0,0,.75);
+  }
+  .app-bar { display: flex; align-items: center; gap: 8px; padding: 9px 13px; background: var(--surface-2); border-bottom: 1px solid var(--b-subtle); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.14); }
+  .crumbs { margin-left: 6px; font-family: "Geist Mono", ui-monospace, monospace; font-size: 10.5px; color: var(--fg-3); letter-spacing: .02em; }
+  .app-body { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+
+  .card { background: var(--surface-2); border: 1px solid var(--b-default); border-radius: 9px; padding: 16px; display: flex; flex-direction: column; gap: 13px; }
+  .card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+  .card-title { font-size: 14px; font-weight: 600; margin: 0; }
+  .card-sub { margin: 3px 0 0; font-size: 12px; color: var(--fg-3); line-height: 1.45; }
+
+  .field-label { display: block; font-size: 11.5px; color: var(--fg-2); margin-bottom: 6px; }
+  .input { background: var(--surface-3); border: 1px solid var(--b-default); border-radius: 7px; padding: 9px 11px; font-family: "Geist Mono", ui-monospace, monospace; font-size: 11.5px; color: var(--fg-1); word-break: break-all; }
+  .input.placeholder { color: var(--fg-4); }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; border-radius: 7px; padding: 8px 14px; font-size: 12.5px; font-weight: 500; border: 1px solid transparent; white-space: nowrap; }
+  .btn-primary { background: var(--commerce); color: var(--commerce-fg); }
+  .btn-ghost { background: transparent; border-color: var(--b-default); color: var(--fg-2); }
+  .btn-quiet { background: transparent; border-color: transparent; color: var(--fg-3); padding-left: 4px; padding-right: 4px; }
+  .btn-danger { background: transparent; border-color: var(--danger-border); color: var(--danger); }
+  .row { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+  .row.end { justify-content: flex-end; }
+  .grow { flex: 1; min-width: 0; }
+
+  .pill { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 999px; border: 1px solid; }
+  .pill-ok { background: var(--commerce-tint); border-color: var(--commerce-border); color: var(--commerce-text); }
+  .pill-warn { background: var(--warn-tint); border-color: var(--warn-border); color: var(--warn); }
+  .pill-bad { background: var(--danger-tint); border-color: var(--danger-border); color: var(--danger); }
+  .pill-idle { background: rgba(255,255,255,.05); border-color: var(--b-default); color: var(--fg-3); }
+  .led { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  /* summary numbers */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 1px; background: var(--b-subtle); border: 1px solid var(--b-subtle); border-radius: 8px; overflow: hidden; }
+  .stat { background: var(--surface-3); padding: 11px 13px; }
+  .stat b { display: block; font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+  .stat span { display: block; font-size: 10.5px; color: var(--fg-3); margin-top: 2px; }
+  .stat.accent b { color: var(--commerce-text); }
+  .stat.warn b { color: var(--warn); }
+
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 7px 18px; font-size: 12px; }
+  .kv dt { color: var(--fg-3); }
+  .kv dd { margin: 0; color: var(--fg-2); font-variant-numeric: tabular-nums; }
+  .kv dd.mono { font-family: "Geist Mono", ui-monospace, monospace; font-size: 11px; word-break: break-all; }
+
+  /* radio list for cadence */
+  .choices { display: flex; flex-direction: column; gap: 7px; }
+  .choice { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--b-default); border-radius: 7px; background: var(--surface-3); font-size: 12.5px; }
+  .choice.on { border-color: var(--commerce-border); background: var(--commerce-tint); }
+  .radio { width: 13px; height: 13px; border-radius: 50%; border: 1px solid var(--b-strong); flex: none; }
+  .choice.on .radio { border-color: var(--commerce); border-width: 4px; }
+  .choice em { margin-left: auto; font-style: normal; color: var(--fg-3); font-size: 11.5px; }
+
+  /* progress */
+  .bar { height: 5px; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--commerce); border-radius: 999px; }
+
+  /* review table */
+  .tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .tbl th { text-align: left; font-weight: 500; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--fg-3); padding: 0 10px 8px; border-bottom: 1px solid var(--b-subtle); }
+  .tbl td { padding: 9px 10px; border-bottom: 1px solid var(--b-subtle); color: var(--fg-2); font-variant-numeric: tabular-nums; }
+  .tbl tr:last-child td { border-bottom: 0; }
+  .tbl td.name { color: var(--fg-1); }
+  .tbl td.right { text-align: right; }
+  .check { width: 13px; height: 13px; border-radius: 4px; border: 1px solid var(--b-strong); display: inline-block; vertical-align: -2px; }
+  .check.on { background: var(--commerce); border-color: var(--commerce); position: relative; }
+  .check.on::after { content: ""; position: absolute; left: 4px; top: 1px; width: 3px; height: 6px; border: solid var(--commerce-fg); border-width: 0 1.6px 1.6px 0; transform: rotate(45deg); }
+  .tbl-scroll { overflow-x: auto; }
+
+  /* state strip */
+  .states { display: grid; grid-template-columns: repeat(auto-fit, minmax(232px, 1fr)); gap: 13px; }
+  .state { background: var(--surface-2); border: 1px solid var(--b-default); border-radius: 9px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .state-msg { font-size: 12.5px; color: var(--fg-2); line-height: 1.5; }
+  .state-msg b { color: var(--fg-1); font-weight: 500; }
+  .state-when { font-family: "Geist Mono", ui-monospace, monospace; font-size: 10.5px; color: var(--fg-4); }
+
+  /* blocked list */
+  .blocked { display: flex; flex-direction: column; gap: 1px; background: var(--doc-line-soft); border: 1px solid var(--doc-line-soft); border-radius: 9px; overflow: hidden; }
+  .blocked-row { background: var(--doc-panel); padding: 15px 18px; display: grid; grid-template-columns: 116px 1fr; gap: 18px; align-items: baseline; }
+  @media (max-width: 620px) { .blocked-row { grid-template-columns: 1fr; gap: 5px; } }
+  .owner { font-family: "Geist Mono", ui-monospace, monospace; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+  .owner.me { color: var(--doc-accent); }
+  .owner.alan { color: var(--doc-fg-3); }
+  .blocked-row p { margin: 0; font-size: 13.5px; color: var(--doc-fg-2); }
+  .blocked-row p b { color: var(--doc-fg); font-weight: 500; }
+
+  footer { margin-top: 66px; padding-top: 22px; border-top: 1px solid var(--doc-line); color: var(--doc-fg-3); font-size: 12.5px; }
+  footer code { font-family: "Geist Mono", ui-monospace, monospace; }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow">vio-commerce · webapp · propuesta de flujo</div>
+    <h1>Conexión de feed de producto</h1>
+    <p class="standfirst">
+      Hoy existe un import de un tiro en <strong>Settings → Import tools</strong>: pegás una URL,
+      apretás un botón y esperás. Esto lo convierte en una <strong>conexión gestionada</strong>,
+      al lado de Shopify y Woo — se registra una vez y se mantiene sola.
+    </p>
+  </header>
+
+  <dl class="decisions">
+    <div class="decision"><dt>Cuenta</dt><dd>Se la creamos nosotros al merchant</dd></div>
+    <div class="decision"><dt>Modelo</dt><dd>Conexión gestionada</dd></div>
+    <div class="decision"><dt>Drafts</dt><dd>La 1ra vez, después automático</dd></div>
+    <div class="decision"><dt>Alcance</dt><dd>Todo el catálogo</dd></div>
+    <div class="decision"><dt>Ubicación</dt><dd>Settings → Integrations</dd></div>
+    <div class="decision"><dt>Aprobación</dt><dd>Pantalla de revisión propia</dd></div>
+    <div class="decision"><dt>Cadencia</dt><dd>La elige el usuario</dd></div>
+    <div class="decision"><dt>Historial</dt><dd>Solo la última sync</dd></div>
+  </dl>
+
+  <section>
+    <h2><span class="num">01</span>Conectar</h2>
+    <p class="lede">
+      En Integrations, junto a Shopify y WooCommerce. Al pegar la URL validamos antes de aceptarla:
+      que responda, que sea XML, que traiga <code>&lt;item&gt;</code> y que apunte a un host público.
+    </p>
+    <div class="split">
+      <div class="app">
+        <div class="app-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="crumbs">Settings / Integrations</span></div>
+        <div class="app-body">
+          <div class="card">
+            <div class="card-head">
+              <div>
+                <p class="card-title">Product feed</p>
+                <p class="card-sub">Import a catalogue from a Google Merchant feed. No platform connection needed.</p>
+              </div>
+              <span class="pill pill-idle"><span class="led"></span>Not connected</span>
+            </div>
+            <div>
+              <span class="field-label">Feed URL</span>
+              <div class="input placeholder">https://example.com/googleshopping.xml</div>
+            </div>
+            <div class="row end">
+              <span class="btn btn-primary">Check feed</span>
+            </div>
+          </div>
+          <div class="card" style="border-color: var(--danger-border);">
+            <div class="row" style="gap:10px;align-items:flex-start;">
+              <span class="pill pill-bad"><span class="led"></span>Error</span>
+              <p class="card-sub" style="margin:2px 0 0;flex:1;">Feed url must point at a public host</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="notes">
+        <div class="note">
+          <h3>Validar antes de importar</h3>
+          <p>Hoy no hay validación en el front: mandás cualquier cosa y el error vuelve del backend después. Los mensajes ya existen en base-api.</p>
+        </div>
+        <div class="note flag">
+          <h3>Host público, no interno</h3>
+          <p>La URL la descarga una Cloud Function del lado del servidor, así que se rechazan localhost, IPs privadas y el metadata endpoint de GCP. Ya está implementado.</p>
+        </div>
+        <div class="note">
+          <h3>También acepta archivo</h3>
+          <p>El endpoint toma un XML subido además de una URL. Un archivo suelto no se puede re-sincronizar, así que queda como import de un tiro, no como conexión.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">02</span>Confirmar lo que encontramos</h2>
+    <p class="lede">
+      Antes de escribir nada, mostramos qué trae el feed y se elige la cadencia. Los números son
+      los reales del feed de Kondomeriet.
+    </p>
+    <div class="split">
+      <div class="app">
+        <div class="app-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="crumbs">Settings / Integrations / Product feed</span></div>
+        <div class="app-body">
+          <div class="card">
+            <div class="card-head">
+              <div>
+                <p class="card-title">This feed looks good</p>
+                <p class="card-sub">kondomeriet.no · updated 2 hours ago</p>
+              </div>
+              <span class="pill pill-ok"><span class="led"></span>Valid</span>
+            </div>
+            <div class="stats">
+              <div class="stat accent"><b>2 402</b><span>products</span></div>
+              <div class="stat"><b>173</b><span>with variants</span></div>
+              <div class="stat"><b>76</b><span>categories</span></div>
+              <div class="stat warn"><b>939</b><span>out of stock</span></div>
+              <div class="stat"><b>NOK</b><span>currency</span></div>
+            </div>
+            <div>
+              <span class="field-label">Check for updates</span>
+              <div class="choices">
+                <div class="choice on"><span class="radio"></span>Every hour<em>recommended</em></div>
+                <div class="choice"><span class="radio"></span>4 times a day</div>
+                <div class="choice"><span class="radio"></span>Once a day</div>
+              </div>
+            </div>
+            <div class="row end">
+              <span class="btn btn-ghost">Back</span>
+              <span class="btn btn-primary">Import 2 402 products</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="notes">
+        <div class="note flag">
+          <h3>El preview es gratis</h3>
+          <p>Parsear el feed no escribe nada — los productos se publican al bus recién al confirmar. Podemos mostrar el resumen sin comprometer nada.</p>
+        </div>
+        <div class="note">
+          <h3>Por qué la cadencia se elige</h3>
+          <p>Kondomeriet nos va a pedir respetar un límite de polling. Que sea un campo evita tocar código cuando lo pidan.</p>
+        </div>
+        <div class="note">
+          <h3>Cada hora cuesta casi nada</h3>
+          <p>Mandamos <code>If-None-Match</code> y <code>If-Modified-Since</code>: si no cambió, el servidor responde 304 y no se descargan los 7 MB. Ya implementado.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">03</span>Importar</h2>
+    <p class="lede">
+      El progreso ya llega por socket, un evento <code>google-merchant-feed</code> por SKU con
+      estado <code>PENDING</code> → <code>SUCCESS</code>. Se puede cerrar la pantalla: sigue corriendo.
+    </p>
+    <div class="split">
+      <div class="app">
+        <div class="app-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="crumbs">Settings / Integrations / Product feed</span></div>
+        <div class="app-body">
+          <div class="card">
+            <div class="card-head">
+              <div>
+                <p class="card-title">Importing</p>
+                <p class="card-sub">You can leave this page — we'll tell you when it's done.</p>
+              </div>
+              <span class="pill pill-warn"><span class="led"></span>Running</span>
+            </div>
+            <div class="bar"><i style="width:64%"></i></div>
+            <dl class="kv">
+              <dt>Imported</dt><dd>1 537 of 2 402</dd>
+              <dt>Failed</dt><dd>0</dd>
+              <dt>Started</dt><dd>14:02</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+      <div class="notes">
+        <div class="note">
+          <h3>Sin pantalla bloqueada</h3>
+          <p>Hoy el botón queda con un spinner hasta que responde. Con 2 400 productos eso no sirve: el aviso de fin va al Activity feed que ya existe.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">04</span>Revisar y publicar</h2>
+    <p class="lede">
+      La primera importación deja todo en draft. Revisar 2 400 productos de a uno no es viable,
+      así que la pantalla agrupa por la categoría del feed y se publica por grupo.
+    </p>
+    <div class="split">
+      <div class="app">
+        <div class="app-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="crumbs">Products / Review import</span></div>
+        <div class="app-body">
+          <div class="card">
+            <div class="card-head">
+              <div>
+                <p class="card-title">2 402 products ready to publish</p>
+                <p class="card-sub">Imported from kondomeriet.no · nothing is live until you publish.</p>
+              </div>
+              <span class="pill pill-warn"><span class="led"></span>Draft</span>
+            </div>
+            <div class="tbl-scroll">
+              <table class="tbl">
+                <thead><tr><th style="width:26px"></th><th>Category</th><th class="right">Products</th><th class="right">Out of stock</th><th class="right">Price range</th></tr></thead>
+                <tbody>
+                  <tr><td><span class="check on"></span></td><td class="name">Vibratorer</td><td class="right">412</td><td class="right">147</td><td class="right">199–2 499 NOK</td></tr>
+                  <tr><td><span class="check on"></span></td><td class="name">Glidemiddel</td><td class="right">288</td><td class="right">61</td><td class="right">79–599 NOK</td></tr>
+                  <tr><td><span class="check on"></span></td><td class="name">Undertøy</td><td class="right">237</td><td class="right">98</td><td class="right">149–1 299 NOK</td></tr>
+                  <tr><td><span class="check"></span></td><td class="name">Tilbehør</td><td class="right">194</td><td class="right">44</td><td class="right">49–899 NOK</td></tr>
+                  <tr><td><span class="check on"></span></td><td class="name">Kondomer</td><td class="right">156</td><td class="right">22</td><td class="right">39–449 NOK</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="row">
+              <span class="btn btn-quiet">72 more categories</span>
+              <span class="grow"></span>
+              <span class="btn btn-ghost">Keep as drafts</span>
+              <span class="btn btn-primary">Publish 2 208 selected</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="notes">
+        <div class="note flag">
+          <h3>Agrupar por categoría es lo único que escala</h3>
+          <p>El feed trae <code>g:product_type</code> en el 100% de los items, así que el agrupado sale del dato, no de una heurística.</p>
+        </div>
+        <div class="note">
+          <h3>Destildar excluye, no borra</h3>
+          <p>Una categoría sin publicar queda en draft y se puede publicar después. Los syncs siguientes la mantienen actualizada igual.</p>
+        </div>
+        <div class="note">
+          <h3>Esta pantalla vuelve</h3>
+          <p>Cuando un sync trae productos nuevos, aparece otra vez con solo esos. Es el único momento en que se pide aprobación.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">05</span>Conectado</h2>
+    <p class="lede">
+      El estado permanente. Una tarjeta, como Shopify y Woo, con la última corrida y los controles.
+    </p>
+    <div class="split">
+      <div class="app">
+        <div class="app-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="crumbs">Settings / Integrations</span></div>
+        <div class="app-body">
+          <div class="card">
+            <div class="card-head">
+              <div>
+                <p class="card-title">Product feed</p>
+                <p class="card-sub">kondomeriet.no/export/googleshopping.xml</p>
+              </div>
+              <span class="pill pill-ok"><span class="led"></span>Connected</span>
+            </div>
+            <dl class="kv">
+              <dt>Products</dt><dd>2 402</dd>
+              <dt>Checks</dt><dd>Every hour</dd>
+              <dt>Last sync</dt><dd>14:58 — 12 prices, 40 stock levels updated</dd>
+              <dt>Next check</dt><dd>15:58</dd>
+            </dl>
+            <div class="row">
+              <span class="btn btn-ghost">Sync now</span>
+              <span class="btn btn-ghost">Pause</span>
+              <span class="grow"></span>
+              <span class="btn btn-danger">Disconnect</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="notes">
+        <div class="note">
+          <h3>Solo la última corrida</h3>
+          <p>Sin historial. Si más adelante hace falta responder "¿por qué no se actualizó este precio?", ahí sí necesitamos la entidad de corridas.</p>
+        </div>
+        <div class="note">
+          <h3>Desconectar no borra productos</h3>
+          <p>Deja de sincronizar y los productos quedan como están. Borrarlos sería destruir cosas que órdenes y carritos referencian.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">06</span>Cómo se ve cada sync</h2>
+    <p class="lede">
+      Cinco resultados posibles. Los cuatro primeros no piden nada; el usuario solo actúa cuando
+      hay productos nuevos o cuando algo falla.
+    </p>
+    <div class="app">
+      <div class="app-body">
+        <div class="states">
+          <div class="state">
+            <span class="pill pill-idle"><span class="led"></span>No changes</span>
+            <p class="state-msg">The feed hasn't changed since the last check.</p>
+            <span class="state-when">15:58 · 304, nothing downloaded</span>
+          </div>
+          <div class="state">
+            <span class="pill pill-ok"><span class="led"></span>Updated</span>
+            <p class="state-msg"><b>12 prices</b> and <b>40 stock levels</b> updated.</p>
+            <span class="state-when">14:58 · applied automatically</span>
+          </div>
+          <div class="state">
+            <span class="pill pill-warn"><span class="led"></span>Needs review</span>
+            <p class="state-msg"><b>18 new products</b> arrived as drafts.</p>
+            <span class="state-when">13:58 · Review them →</span>
+          </div>
+          <div class="state">
+            <span class="pill pill-idle"><span class="led"></span>Removed</span>
+            <p class="state-msg"><b>5 products</b> left the feed and were marked unavailable.</p>
+            <span class="state-when">11:58 · not deleted</span>
+          </div>
+          <div class="state">
+            <span class="pill pill-bad"><span class="led"></span>Failed</span>
+            <p class="state-msg">Couldn't reach the feed. <b>3 attempts</b> since 09:58.</p>
+            <span class="state-when">Retrying every hour · products untouched</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">07</span>Qué hace falta para construirlo</h2>
+    <p class="lede">
+      El backend del import ya funciona. Lo que falta es dónde guardar la conexión — sin eso,
+      el feed no se puede registrar y todo sigue siendo manual.
+    </p>
+    <div class="blocked">
+      <div class="blocked-row">
+        <span class="owner alan">Alan · bloquea</span>
+        <p><b>Entidad <code>ProductFeed</code></b> en package-database: url, cadencia, validadores de la última corrida, contadores. Sin esto no hay pantallas 01, 02, 05 ni 06.</p>
+      </div>
+      <div class="blocked-row">
+        <span class="owner alan">Alan</span>
+        <p><b>Scheduler</b> con scheduled messages de Service Bus, más un re-arme diario de respaldo en el cron que ya existe.</p>
+      </div>
+      <div class="blocked-row">
+        <span class="owner me">claude · listo</span>
+        <p><b>Parser, upsert, conditional GET y endpoint de usuario.</b> Import y re-import funcionan hoy; re-importar ya no duplica.</p>
+      </div>
+      <div class="blocked-row">
+        <span class="owner me">claude · pide OK</span>
+        <p><b>Barrido de desaparecidos</b> — el estado "Removed" de la pantalla 06. Se puede hacer sin schema nuevo, pero hace un update masivo.</p>
+      </div>
+      <div class="blocked-row">
+        <span class="owner me">claude</span>
+        <p><b>Las pantallas.</b> La 04 se puede construir ya contra el import actual; el resto espera a <code>ProductFeed</code>.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Mockups en los tokens reales de <code>vio-commerce-webapp</code> · Cifras medidas contra
+    <code>kondomeriet.no/export/googleshopping.xml</code>, 2026-08-26.
+  </footer>
+
+</div>
