@@ -3,7 +3,15 @@
 > Última actualización: 2026-08-26 · dirigido por angelo, ejecutado por claude.
 > Estado: **el import funciona y está abierto a usuarios**, en tres ramas locales
 > sin pushear. Falta el re-sync automático, que necesita schema nuevo.
-> Detalle de la sesión: [`journal/2026-08/2026-08-26-google-merchant-feed.md`](../journal/2026-08/2026-08-26-google-merchant-feed.md).
+>
+> 🎨 **Diseño del flujo — 7 pantallas con mockups:**
+> https://claude.ai/code/artifact/a7372696-999b-4e8e-b7c4-a178b07b5429
+> Es la referencia visual de cómo debe verse la conexión gestionada; los mockups
+> usan los tokens reales de `vio-commerce-webapp` y las cifras medidas del feed
+> de Kondomeriet.
+>
+> 📋 **Trello (Alan):** https://trello.com/c/Gn2F99Nc — `ProductFeed` + scheduler.
+> 📓 **Sesión:** [`journal/2026-08/2026-08-26-google-merchant-feed.md`](../journal/2026-08/2026-08-26-google-merchant-feed.md).
 
 Disparador: Kondomeriet / Nytelse (EQOM Group). Queremos sus catálogos dentro de
 artículos de VG, comprables vía Kustom. Los dos feeds son públicos:
@@ -112,12 +120,20 @@ aviso previo.
    esto no hay forma de responder "¿por qué no se actualizó este precio?", que es
    la pregunta que va a llegar.
 
-### Fase 3 — frontend · **Alan**
+### Fase 3 — frontend · **claude**
 
-8. **Pantalla de Feeds** en `webapp-vio-commerce` (el dashboard del seller):
-   registrar URL, ver última corrida, forzar re-sync. Modelarla como la pantalla
-   de Channels. Ese repo no está clonado en el workspace de agentes, así que
-   claude no puede escribirla.
+8. **Las pantallas**, según el diseño enlazado arriba. Corrección respecto a la
+   versión anterior de este doc: `webapp-vio-commerce` **sí está clonado**
+   (`~/Documents/GitHub/webapp-vio-commerce`, rama `develop`), y ya no es el SPA
+   de Webpack que describe `briefs/front-commerce.md` — es **Next.js 15 + React 18
+   + Tailwind 4**, `vio-commerce-webapp` v4.0.0. Ese brief está desactualizado.
+
+   Y el import de feed **ya tiene UI**: `Settings → Import tools → Google Shopping
+   feed`, pegando a `POST /admin/google-merchant-feed` desde `src/lib/settings.js`.
+   Es el one-shot. Lo que falta es convertirlo en la conexión gestionada.
+
+   De las 7 pantallas del diseño, la 04 (revisión y publicación) se puede construir
+   ya contra el import actual. Las 01, 02, 05 y 06 esperan a `ProductFeed`.
 
 ## Orden y dependencias
 
