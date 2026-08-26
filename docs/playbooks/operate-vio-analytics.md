@@ -61,6 +61,11 @@ curl -s https://events-staging.vio.live/health | jq
 # ¿Llegan eventos de una app? (usa la api key del partner)
 curl -s "https://events-staging.vio.live/v1/stats/overview?days=1" -H "x-api-key: KEY" | jq
 
+# Verificación de tracking para INTEGRADORES (browser-friendly, ?apiKey= en la URL):
+# los eventos crudos recién llegados del tenant, del más nuevo al más viejo.
+# Perillas: &minutes= (ventana, ≤24h) · &name= (filtrar un evento) · &limit= (≤200)
+open "https://events-dev.vio.live/v1/stats/recent?minutes=60&apiKey=KEY"
+
 # Logs del colector
 az containerapp logs show -n ca-analytics-vio-staging -g rg-api-vio-staging --tail 50
 ```
