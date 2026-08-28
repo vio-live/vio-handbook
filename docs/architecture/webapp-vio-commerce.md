@@ -1,10 +1,11 @@
-# Webapp Vio Commerce — arquitectura (estado 2026-08-24 · migración COMPLETA)
+# Webapp Vio Commerce — arquitectura (estado 2026-08-28 · EN PRODUCCIÓN)
 
 Dashboard de sellers de Commerce (`dashboard.ecom.vio.live`), repo
-`vio-live/webapp-vio-commerce`. La migración Next.js + rediseño **terminó**:
-el 2026-08-24 se retiró el SPA legacy por completo (react-router, redux-saga,
-antd, styled-components, Formik — 37 dependencias, −315 paquetes). Este doc
-es el mapa del estado final y sus contratos.
+`vio-live/webapp-vio-commerce`. La migración Next.js + rediseño **terminó y
+está en producción** desde el 2026-08-26 (dashboard `3be4aaf`): el SPA
+legacy se retiró por completo (react-router, redux-saga, antd,
+styled-components, Formik — 37 dependencias, −315 paquetes). Este doc es el
+mapa del estado final y sus contratos.
 
 > Historia del strangler (dos mundos, adapter, rebrand): ver journals
 > 2026-08-19 → 2026-08-24 y el git history de este archivo.
@@ -58,6 +59,32 @@ es el mapa del estado final y sus contratos.
 - Notificaciones: campana SOLO en header (`NotificationsPanel`), "View all
   activity" → `/feed` (página Activity paginada, mark-all/mark-on-click).
 
+## Tiempo real (socket.io)
+
+El servidor sigue vivo en `{API_HOST}/socket.io` (**socket.io v4, solo
+transporte websocket** — polling responde "Transport unknown"). Al retirar
+el legacy se perdió el cliente (lo usaban las sagas); se reintrodujo en
+`src/lib/socket.js`: una conexión por sesión + `useSocketEvent(name, fn)`,
+y `closeSocket()` en el logout.
+
+Contratos (base-api `userService.userSocket` / `notificationService`):
+
+- Los eventos llevan el userId **en el nombre**: `${event}/${userId}` — no
+  hay rooms, hay que suscribirse al nombre exacto.
+- El payload de `users/socket/:id` viene **envuelto**:
+  `{ event, data: { status, data } }` → el estado está en
+  `payload.data.status`.
+- Eventos disponibles: `connection-ecom-user/:id`
+  (`waiting`|`success`), `users/:id/notifications/new`, `new-order/:id`,
+  `accepted-request/:id`, `received-request/:id`, `new-channel/:id`,
+  `product-publish/:id`, `subscription-update/:id`,
+  `imported-from-{shopify,woo,magento}/:id`.
+- Para QA: cualquier evento se puede disparar con
+  `POST /api/users/socket/:userId {data:{event,data}}`.
+
+Hoy se usa para la espera de conexión de tienda y para refrescar la campana
+al instante; el resto de eventos están disponibles y sin cablear.
+
 ## Vistas y flujos (todo real contra backend)
 
 - **/login /signup** — AuthShell split con switcher Commerce/Channel;
@@ -82,6 +109,15 @@ es el mapa del estado final y sus contratos.
 - **/connections** — diseño in-house (sin handoff); requests + partners.
 - **/settings** — 9 secciones; PATCH dialecto `buildForm/formToPatch`
   (currency como objeto DENTRO de settings, merge sin clobber).
+- **/settings/integrations = conectar TU tienda (supplier)**: se elige
+  plataforma (`options.ecom` = `SHOPIFY|WOOCOMMERCE|MAGENTO` en
+  `POST /users/me/api-credentials`; con ella el backend crea el `ecom-user`
+  al vuelo **y la credencial pasa a venir en `GET /ecom-user`** — sin ella
+  la key solo existe en la respuesta del POST y es irrecuperable). Estado
+  "esperando a que conecte" persistido en localStorage (24h) + socket +
+  polling de respaldo. ⚠️ La plataforma se guarda en `ecomUser.name`
+  ("SHOPIFY | user | NOT SHOP") y `ecomName` queda vacío; el GET no
+  devuelve `name` → pendiente de backend.
 - **/feed** — Activity (notificaciones). Generación de REQUEST_RECEIVED
   arreglada en api-ms (PR #1 mergeado); limpieza al borrar request en PR #3.
 - **Flujos de sistema** (migrados 2026-08-24): `/start`→redirect signup ·
@@ -130,17 +166,18 @@ es el mapa del estado final y sus contratos.
 - **Regla operativa**: todo se prueba en staging; `develop:master` SOLO
   con OK explícito de Angelo.
 
-## Pendientes (2026-08-24)
+## Pendientes (2026-08-28)
 
-1. **Prod**: promoción webapp `develop→master` + verificar Google provider
-   en reachu-prod. DNS `dashboard*.vio.live` sigue pendiente (redirect
-   Channel).
-2. **Stats service** (Angelo): /home real + tab Performance.
-3. **Backend (tarjetas Trello Backlog para Alan)**: orders cascade
-   (3x1NUo77) · merge+verify api-ms PR #3 notificaciones huérfanas
-   (KgiM06UT) · reactivar suite de request + jest en CI (nt8AQBdc).
-4. Decisión producto: ¿Intercom/LogRocket de vuelta? (hoy no existen).
-5. Posible: React 19 + App Router, preflight de Tailwind (ya sin antd).
+1. **Backend (tarjetas en Trello To do, asignadas a Alan)**: notificación
+   persistente al conectar la tienda + guardar `ecomName` · PRs api-ms #3
+   (notificaciones huérfanas) y #4 (avisar al aceptar conexión) ·
+   reactivar la suite de `request` y meter jest al CI · cascade de orders.
+2. **Stats service** (Angelo): /home sigue con datos demo (badge visible);
+   contrato esperado en `docs/stats-service-contract.md` del repo.
+3. DNS `dashboard*.vio.live` (redirect de Channel) y verificar el provider
+   de Google en el Firebase de prod.
+4. Posible: React 19 + App Router, preflight de Tailwind (ya sin antd),
+   cablear el resto de eventos de socket (órdenes y sync en vivo).
 
 ## Referencias
 
