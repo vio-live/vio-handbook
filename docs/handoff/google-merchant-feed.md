@@ -1,14 +1,16 @@
 # Handoff — Import de catálogo por Google Merchant feed
 
-> Última actualización: 2026-08-26 · dirigido por angelo, ejecutado por claude.
-> Estado: **el import funciona y está abierto a usuarios**, en tres ramas locales
-> sin pushear. Falta el re-sync automático, que necesita schema nuevo.
+> Última actualización: 2026-08-26 · dirigido por angelo, ejecutado por claude y alan.
+> Estado: **esperando a Alan.** El import funciona; el feed gestionado está
+> mergeado en `develop` pero el sync no respeta la cadencia. Review y tareas
+> pendientes en Trello [`6KuGKjRB`](https://trello.com/c/6KuGKjRB).
 >
 > 🎨 **Diseño del flujo — 7 pantallas:**
 > [`google-merchant-feed-flow.md`](./google-merchant-feed-flow.md).
 > Mockups visuales en `assets/google-merchant-feed-flow.html` (abrir en navegador).
 >
-> 📋 **Trello (Alan):** https://trello.com/c/Gn2F99Nc — `ProductFeed` + scheduler.
+> 📋 **Trello:** [`Gn2F99Nc`](https://trello.com/c/Gn2F99Nc) (implementación inicial, hecha)
+> · [`6KuGKjRB`](https://trello.com/c/6KuGKjRB) (review + optimización, en curso).
 > 📓 **Sesión:** [`journal/2026-08/2026-08-26-google-merchant-feed.md`](../journal/2026-08/2026-08-26-google-merchant-feed.md).
 
 Disparador: Kondomeriet / Nytelse (EQOM Group). Queremos sus catálogos dentro de
@@ -51,99 +53,31 @@ Ramas **subidas** a GitHub:
 - `vio-products-microservice` → `feature/feed-upsert` (`bbf6a63`)
 - `vio-base-api` → `feature/feed-import-for-users` (`c64261a`)
 
-## Lo que falta, y quién lo toma
+## Dónde está cada cosa
 
-El import es **one-shot**: lo dispara un usuario y termina. El upsert hace que
-re-correrlo sea seguro, pero nadie lo agenda. Todo lo que sigue es para que se
-mantenga solo.
+**Hecho y mergeado a `develop`** (Alan, sobre las ramas de claude): entidad
+`ProductFeed` + migración, CRUD en products y base-api, scheduler escrito con
+scheduled messages de Service Bus, cron de re-armado, `inStockQuantity`
+configurable, y el CI de la Cloud Function migrado de GitLab a GitHub Actions.
 
-### Fase 1 — sin schema nuevo · **claude**
+**Hecho, sin mergear** (claude, ramas `feature/feed-skip-unchanged`): la Cloud
+Function publica solo los productos cuyo hash cambió, y el consumer saltea la
+escritura de los que no cambiaron. Medido: de 2 400 productos publicados a 80,
+de 29 mensajes a 1, de 6,6 MB a 176 KB.
 
-Se puede hacer ya, sin tocar `package-database`.
+**Pendiente, con Alan** — ver [`6KuGKjRB`](https://trello.com/c/6KuGKjRB):
 
-1. **Conditional GET en la Cloud Function.** Aceptar `etag` / `lastModified` del
-   llamador, mandarlos como `If-None-Match` / `If-Modified-Since`, y devolver
-   `notModified: true` cuando el servidor responde 304. Los dos feeds sirven
-   ambas cabeceras, así que la mayoría de las corridas terminan sin parsear nada.
-2. **Hash del cuerpo del feed.** Aceptar el hash de la corrida anterior y cortar
-   si el contenido no cambió. Cubre servidores que ignoran las cabeceras
-   condicionales — Kondomeriet manda un `cache-control: max-age=31536000` raro.
+1. Arrancar la cadena del scheduler. Hoy `scheduleNextFeedMessage()` solo se
+   llama desde el handler del mensaje que ella misma encola, así que nunca
+   empieza y todo sincroniza una vez por día vía el cron.
+2. Mandar solo `{ id }` del usuario, no la fila completa con sus tokens.
+3. Columna `contentHash` en `Product`, que cierra el filtrado del lado de products.
+4. Crear las cuentas de Kondomeriet y Nytelse y cargar los feeds en producción.
 
-Ninguna de las dos guarda estado todavía: la función recibe los validadores y los
-devuelve. Quien los persiste es la Fase 2. Se implementan ahora porque son la
-mitad de la función y no dependen de nada.
-
-### Fase 1b — sin schema, pero pide OK · **claude, con visto bueno de Angelo**
-
-3. **Barrido de desaparecidos.** Un producto que deja de estar en el feed hoy
-   queda vivo para siempre. Al cerrar una corrida, marcar como no disponibles los
-   productos de ese `(user, origin)` cuyo `originId` no vino en el feed — usando
-   `quantity` y `status`, que ya existen. **Nunca borrar.**
-
-   Va aparte porque hace un update masivo: si una corrida sale parcial, podría
-   desactivar el catálogo entero. Necesita un guard (no barrer si la corrida
-   falló o si el conteo cae drásticamente) y el OK de Angelo antes de activarse.
-
-### Fase 2 — necesita `package-database` · **Alan**
-
-Todo esto es schema nuevo en el paquete compartido, así que no lo toca claude sin
-aviso previo.
-
-4. **Entidad `ProductFeed`** — el registro de feeds. Sin esto no hay dónde decir
-   "este es mi feed, sincronizalo cada hora", y el import sigue siendo manual.
-
-   ```
-   user, url, active, intervalMinutes,
-   lastEtag, lastModified, lastContentHash,
-   lastRunAt, nextRunAt, consecutiveFailures,
-   inStockQuantity        // hoy hardcodeado en 999, ver abajo
-   ```
-
-5. **Scheduler con scheduled messages de Azure Service Bus.** Cada corrida
-   programa la siguiente. Se eligió sobre `node-cron` y `@nestjs/schedule`
-   porque esos **corren en cada réplica** — con 3 pods son 3 imports del mismo
-   feed pisándose. Los scheduled messages se entregan una sola vez y persisten
-   del lado del broker. No agrega infraestructura: el bus ya está.
-
-   Red de seguridad: un job diario en el cron que ya existe
-   (`vio-base-api/src/cron/index.js`) que re-arma cualquier feed con `nextRunAt`
-   vencido, por si un mensaje programado se pierde y la cadena se corta.
-
-6. **Columna `contentHash` en `Product`.** Para no reescribir 2 400 filas por
-   hora cuando cambiaron 20. Es la optimización más grande del conjunto, pero no
-   bloquea: sin ella el sync funciona, solo escribe de más.
-
-7. **Entidad `ProductFeedRun`** — una fila por corrida (`feedRunId`, duración,
-   items vistos, creados, actualizados, sin cambios, fallidos, si fue 304). Sin
-   esto no hay forma de responder "¿por qué no se actualizó este precio?", que es
-   la pregunta que va a llegar.
-
-### Fase 3 — frontend · **claude**
-
-8. **Las pantallas**, según el diseño enlazado arriba. Corrección respecto a la
-   versión anterior de este doc: `webapp-vio-commerce` **sí está clonado**
-   (`~/Documents/GitHub/webapp-vio-commerce`, rama `develop`), y ya no es el SPA
-   de Webpack que describe `briefs/front-commerce.md` — es **Next.js 15 + React 18
-   + Tailwind 4**, `vio-commerce-webapp` v4.0.0. Ese brief está desactualizado.
-
-   Y el import de feed **ya tiene UI**: `Settings → Import tools → Google Shopping
-   feed`, pegando a `POST /admin/google-merchant-feed` desde `src/lib/settings.js`.
-   Es el one-shot. Lo que falta es convertirlo en la conexión gestionada.
-
-   De las 7 pantallas del diseño, la 04 (revisión y publicación) se puede construir
-   ya contra el import actual. Las 01, 02, 05 y 06 esperan a `ProductFeed`.
-
-## Orden y dependencias
-
-```
-Fase 1  (claude)  ──────────────┐
-                                ├──> Fase 2.4 ProductFeed ──> 2.5 scheduler ──> Fase 3 UI
-Fase 1b (claude, con OK) ───────┘                        └──> 2.7 ProductFeedRun
-                                     2.6 contentHash  (independiente, cuando se quiera)
-```
-
-Las fases 1 y 2 juntas ya dejan la cosa andando sola. La 3 es lo que la vuelve
-self-serve de verdad.
+**Pendiente, de claude**: las pantallas del dashboard, según el diseño. La 04
+—revisión y publicación agrupada por categoría— no depende de nada de lo
+anterior y es la que hace falta apenas se carguen los feeds, porque quedan
+~4 400 productos en draft. Angelo prefirió esperar a que Alan termine.
 
 ## Decisiones tomadas
 
