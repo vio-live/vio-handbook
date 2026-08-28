@@ -33,8 +33,14 @@ auth `Basic <apiKey>` por seller desde `payment_method.options`).
 
 `POST {base-api}/api/payment-method` con
 `options = JSON.stringify({name:'Kustom', apiKey:'kco_test_api_…', autoCapture:true, termsUrl?})`,
-`active: true`. Con la fila creada, `GetAvailablePaymentMethods` devuelve
-`Kustom` automáticamente (la lista ES la tabla `payment_method`).
+`active: true`.
+
+**CORRECCIÓN (ronda final):** mi claim original "la lista ES la tabla
+`payment_method`" era FALSO para el web SDK — tracé la superficie
+equivocada (shopcart `GetPaymentMethodByUserId`). La real es
+api-ms `getAvailablePaymentMethods(channelUserId)`, que lee los TOGGLES de
+`channel_user_settings` — y sin columna `kustom`, el botón no aparecía
+nunca. Resuelto con la Fase A (abajo).
 
 ## Decisiones de alcance
 
@@ -90,3 +96,30 @@ Angelo dio OK: "hazlo tu y termina con todo, deja todo guardado en branches".
    opcional (normalmente sin setear) y **desapareció el prerequisito de deploy**.
    Una key test nunca puede pegar contra live ni al revés.
 5. Pendiente de Angelo: ubicación del repo del plugin Vev (hereda el SDK).
+
+
+## Ronda final (2026-08-28, noche) — "ve con todo lo que necesites arreglar"
+
+Angelo pidió cerrar todo, dejar tarjeta para Alan y documentar. Hecho:
+
+| repo | rama | commit | qué |
+|---|---|---|---|
+| api-microservice | `feature/kustom-payment` | `332e8ab` | **Fase A**: `available-payment-methods` ofrece Kustom si el seller tiene key activa (conectado=ofrecido; desbloquea v1 sin kernel) |
+| package-database | `feature/kustom-channel-toggle` | `8cbac03` | columna `kustom` en ChannelUserSettings — lista para el release train (**Fase B**) |
+| payment-processors | `feature/klarna-per-seller-keys` | `2a86951` | **fix real**: capture/refund resolvía SIEMPRE con la key global; ahora key del seller por orden (lookup vía `checkout.origin_payment_id`→user→`payment_method`, fallback a la global = comportamiento idéntico para órdenes de plataforma) |
+| shopcart | `feature/kustom-payment` | `05c711f` | fix: la key de Klarna ya no se loggea en debug |
+| vio-handbook | main | (este) | `architecture/payments.md` actualizado con interim + Fase B + sección Kustom en checkout |
+
+**Tarjeta para Alan**: https://trello.com/c/7BeicFft (lista To do, asignada) —
+orden de merge de las 7 ramas, checklist E2E de staging, pasos exactos de la
+Fase B post-release del kernel, y pendientes.
+
+**Reclasificación honesta**: el "parcheo" de `GetPaymentMethodByUserId` en
+shopcart NO es un defecto — refleja el fallback de plataforma de
+Stripe/Klarna que la propia UI de Angelo documenta ("Stripe and Klarna fall
+back to Vio's account"). Queda como superficie legacy distinta a la del SDK.
+
+**Sigue abierto**: keys `kco_test_` del cliente (bloquea E2E), publicar SDK
+tras el E2E, repo del plugin Vev, refund programático de órdenes Partner
+(cross-procesador), y el write-path de settings que no persiste `vipps` en
+la primera creación.

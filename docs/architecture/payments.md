@@ -67,8 +67,21 @@ Columnas booleanas: `stripePaymentIntent`, `stripePaymentLink`, `klarna`,
   canal).
 - ⚠️ **`kustom` NO existe como columna** (al 2026-08-28). `POST
   update/settings {"kustom":true}` responde **200 y lo ignora en
-  silencio**. Hasta que exista, un seller puede guardar su credencial de
-  Kustom pero no puede activarlo en ningún canal.
+  silencio**.
+- **Interim (2026-08-28 tarde, rama `feature/kustom-payment` de api-ms):**
+  `getAvailablePaymentMethods` ofrece `Kustom` cuando el seller tiene una
+  fila `payment_method` ACTIVA con `name:'Kustom'` — **conectado = ofrecido
+  en todos sus canales**. Racional: Kustom no tiene fallback de plataforma,
+  la credencial es la señal honesta; y sin esto el botón del SDK no
+  aparecía nunca. Aplica en ambas ramas de la función (canal con y sin fila
+  de settings).
+- **Fase B (toggle real):** la columna `kustom` ya está lista en el kernel
+  (`package-database` rama `feature/kustom-channel-toggle`). Tras publicar
+  `@reachu/database`: api-ms persiste `data.kustom` en `postUpdateSettings`
+  (+ sync remoto) y la condición de oferta pasa a `settings.kustom == true
+  && seller-tiene-key`. Pasos exactos en la tarjeta de Alan
+  (https://trello.com/c/7BeicFft). Al desplegarla, prender el toggle del
+  canal del piloto (default false).
 
 En el dashboard la lista de switches **se deriva de las claves que
 devuelve el backend** (`methodsFor` en `src/lib/channels.js`), así que el
@@ -80,7 +93,28 @@ front.
 `checkout.service.getAvailablePaymentMethods` (nivel seller) mapea las
 filas de `payment_method` a `{name}` y **añade a mano** Stripe, Stripe
 payment link y Klarna si faltan — de ahí el fallback de esos tres. Kustom
-y Vipps solo aparecen si el seller tiene su fila.
+y Vipps solo aparecen si el seller tiene su fila. (Ojo: esta superficie de
+shopcart NO es la que consume el web SDK — esa es la del api-ms de arriba.)
+
+### Kustom en el checkout (rama `feature/kustom-payment`, 2026-08-28)
+
+El camino KCO legacy de shopcart se **parametrizó** con
+`via: 'klarna' | 'kustom'` en vez de clonarse (`klarna.service.createPayment`
+/ `cart.service.initPaymentKlarna` / `checkout.service.paymentKlarnaOk`).
+`KustomConnectorService`: key por seller sin fallback, host **derivado del
+prefijo de la key** (`kco_test_`→playground, `kco_live_`→live; env
+`KUSTOM_API_URL` solo como override), `auto_capture` y `terms` del options
+JSON. Push webhook: Kustom → `base-api POST /kustom/webhooks` →
+shopcart `pre`/`ok` → orden Commerce (`paymentProcessor:'Kustom'`, channel
+`Partner`). Gateway: `Payment { CreatePaymentKustom / GetKustomOrder }`
+(DTOs heredan `InitPaymentKlarnaDTO`). SDK: `mountKustomCheckout` embebe el
+`html_snippet` (widget-does-everything) y el retorno
+`?order_id=…&payment_processor=KUSTOM` re-lee la orden y muestra el recibo
+KCO. El refund programático de órdenes `Partner` NO existe para ningún
+procesador (orders-ms solo despacha WORDPRESS) — refunds por Merchant
+Portal hasta diseñar ese dispatch. En payment-processors, capture/refund de
+Klarna resuelve ahora la key por orden (seller primero, fallback global;
+rama `feature/klarna-per-seller-keys`).
 
 ## Referencias
 
