@@ -84,4 +84,9 @@ Angelo dio OK: "hazlo tu y termina con todo, deja todo guardado en branches".
 3. Falta: keys `kco_test_` del cliente → E2E en staging → publicar SDK
    (versión menor nueva desde `feature/kustom-payment`). El toggle por canal
    quedó diferido (ver Cierre).
-4. Pendiente de Angelo: ubicación del repo del plugin Vev (hereda el SDK).
+4. **Amendment (shopcart `edeb0e0`)**: el host de Kustom ahora se DERIVA del
+   prefijo de la key (`kco_test_`→playground, `kco_live_`→live) — objeción de
+   Angelo bien fundada: la env `KUSTOM_API_URL` quedó solo como override
+   opcional (normalmente sin setear) y **desapareció el prerequisito de deploy**.
+   Una key test nunca puede pegar contra live ni al revés.
+5. Pendiente de Angelo: ubicación del repo del plugin Vev (hereda el SDK).
