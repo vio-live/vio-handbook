@@ -52,6 +52,27 @@ auth `Basic <apiKey>` por seller desde `payment_method.options`).
   `${href}?order_id=…&payment_processor=KUSTOM` — el SDK manda
   `origin+pathname` limpio (`kustomCleanHref()`).
 
+## Cierre (mismo día, tarde)
+
+Angelo dio OK: "hazlo tu y termina con todo, deja todo guardado en branches".
+
+- **Las 4 ramas `feature/kustom-payment` PUSHEADAS** (shopcart, base-api,
+  graphql, vio-web-sdk).
+- **La UI de credenciales ya estaba hecha por Angelo** en el front
+  (`webapp-vio-commerce` develop `505ee5d` "settings: nueva sección Payments —
+  credenciales por proveedor (incluye Kustom)"). Verificada contra el contrato
+  del backend: matchea EXACTO (`name:'Kustom'`, pattern `^kco_(test|live)_api_`,
+  `termsUrl` opcional, `autoCapture` boolean default true, sin fallback).
+- **Toggle `kustom` por canal: DIFERIDO con razón.** `channelUserSettings`
+  tiene columnas fijas en el kernel (`@reachu/database`) → agregar el toggle
+  exige migración + release del kernel, y su único efecto runtime es el sync
+  de la lista display hacia los sponsors de Vio (`updateRemotePaymentsMethods`
+  → vio-backend `/api/campaign/payments/apikey/:apiKey`), consumida por los
+  SDKs móviles. El web SDK (alcance v1) lee `payment_method` vía
+  `GetAvailablePaymentMethods` — el toggle no lo afecta. Hacerlo cuando Kustom
+  deba aparecer en apps móviles. (Quirk pre-existente visto ahí: el sync remoto
+  lee `data.vipps` pero la entidad settings no persiste columna vipps.)
+
 ## Deudas conocidas / follow-ups
 
 1. **Typecheck de shopcart/base-api imposible en esta máquina**: registro
@@ -60,7 +81,7 @@ auth `Basic <apiKey>` por seller desde `payment_method.options`).
 2. Defectos pre-existentes anotados (NO introducidos): payment-processors usa
    key GLOBAL para capture/refund Klarna; `GetPaymentMethodByUserId` parchea
    Stripe/Klarna en listas vacías; `getKlarnaApiKey` loggea la key en debug.
-3. Falta: UI de credenciales (Angelo), toggle `kustom` en
-   `webapp-vio-commerce/src/lib/channels.js` (una línea), keys `kco_test_` del
-   cliente, E2E en staging, publicar SDK (versión menor nueva).
+3. Falta: keys `kco_test_` del cliente → E2E en staging → publicar SDK
+   (versión menor nueva desde `feature/kustom-payment`). El toggle por canal
+   quedó diferido (ver Cierre).
 4. Pendiente de Angelo: ubicación del repo del plugin Vev (hereda el SDK).
