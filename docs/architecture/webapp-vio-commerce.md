@@ -107,6 +107,9 @@ al instante; el resto de eventos están disponibles y sin cablear.
 - **/collections** — ids string uuid; multi-group
   `data=[{product_id}|{collection_id}]`.
 - **/connections** — diseño in-house (sin handoff); requests + partners.
+- **/settings/payments** — credenciales de pago del seller (Stripe,
+  Klarna, Kustom, Vipps). Modelo, contratos y gotchas en
+  [`payments.md`](./payments.md); helpers en `src/lib/payments.js`.
 - **/settings** — 9 secciones; PATCH dialecto `buildForm/formToPatch`
   (currency como objeto DENTRO de settings, merge sin clobber).
 - **/settings/integrations = conectar TU tienda (supplier)**: se elige
