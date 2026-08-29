@@ -88,6 +88,16 @@ devuelve el backend** (`methodsFor` en `src/lib/channels.js`), así que el
 switch de Kustom aparecerá solo cuando la columna exista — sin tocar el
 front.
 
+### ⚠️ La ruta pública de base-api está muerta
+
+`GET /api/channel/available-payment-methods` **es inalcanzable**:
+`/channel/:id` se declara antes (línea 325 de `channelRouter.js`) que la
+ruta literal (1057), así que Express la captura y responde
+`400 "Param must be an number"`. El SDK no se ve afectado porque va por
+GraphQL → endpoint **interno** de api-ms
+(`/channel/available-payment-methods/:channelUserId`). Para verificar
+disponibilidad, usar ese camino.
+
 ## Resolución en el checkout (shopcart)
 
 `checkout.service.getAvailablePaymentMethods` (nivel seller) mapea las
