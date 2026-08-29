@@ -25,6 +25,7 @@ los conectores — **el casing importa**:
 | Stripe | `STRIPE` | `publishKey`, `secretKey` | **Sí** |
 | Klarna | `Klarna` | `apiKey` | **Sí** |
 | Kustom | `Kustom` | `apiKey` (`kco_(test\|live)_api_…`), `autoCapture?`, `termsUrl?` | **No** — sin clave propia no se ofrece |
+| Qliro | `Qliro` | `apiKey` (MerchantApiKey), `apiSecret` (firma), `sandbox?` (elige host), `termsUrl?` | **No** — sin credenciales no se ofrece |
 | Vipps | `VIPPS` | `clientId`, `clientSecret`, `subscriptionKey`, `merchantSerialNumber` | **No** |
 
 - Apple Pay y Google Pay **corren sobre las claves Stripe del seller**
@@ -105,6 +106,25 @@ filas de `payment_method` a `{name}` y **añade a mano** Stripe, Stripe
 payment link y Klarna si faltan — de ahí el fallback de esos tres. Kustom
 y Vipps solo aparecen si el seller tiene su fila. (Ojo: esta superficie de
 shopcart NO es la que consume el web SDK — esa es la del api-ms de arriba.)
+
+### Qliro en el checkout (rama `feature/qliro-payment`, 2026-08-29)
+
+No es dialecto KCO → servicios propios (`qliroConnector` + `qliro.service`
+en shopcart) pero misma arquitectura y respuesta normalizada
+`{order_id, status, html_snippet}` que Kustom. Claves: auth
+`Qliro base64(sha256(body+secret))` (el connector manda el string exacto
+firmado); host por flag `sandbox` de las options (la credencial no codifica
+entorno); montos DECIMALES; `MetaData` en cada OrderItem lleva
+productId/variantId/variantTitle; retorno por
+`?checkout_id=…&payment_processor=QLIRO` (la confirmation URL se registra
+antes de existir el OrderId); push idempotente
+(`/qliro/webhooks` en base-api responde el contrato
+`{"CallbackResponse":"received"}`). Sin auto-capture: la captura es de
+order management (MarkItemsAsShipped) — portal hasta el dispatch Partner.
+Gateway: `Payment { CreatePaymentQliro / GetQliroOrder(checkout_id) }`.
+Kernel: columna `qliro` lista en `feature/qliro-channel-toggle` (Fase B
+igual que kustom). v1 sin descuentos en el payload y con shipping de línea
+única — ver journal 2026-08-29-qliro-payment.
 
 ### Kustom en el checkout (rama `feature/kustom-payment`, 2026-08-28)
 
