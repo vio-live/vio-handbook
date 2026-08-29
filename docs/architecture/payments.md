@@ -146,6 +146,19 @@ Portal hasta diseñar ese dispatch. En payment-processors, capture/refund de
 Klarna resuelve ahora la key por orden (seller primero, fallback global;
 rama `feature/klarna-per-seller-keys`).
 
+## Hardening (2026-08-29, ramas feature/payment-*)
+
+- **Reconciliación**: `POST shopcart /checkout/payments/reconcile` — barrido
+  idempotente de pushes perdidos (Kustom/Qliro); scheduler externo ~10 min.
+- **Verify**: `POST /api/paymentmethod/verify` (front→base-api→api-micro)
+  sondea al PSP sin crear nada (401/403=invalid, 404=valid); el front solo
+  bloquea ante rechazo definitivo. Sondas: Qliro, Kustom, Stripe.
+- **Secretos**: cifrado AES-256-GCM on-write (`PAYMENT_SECRETS_KEY`, mismo
+  valor en shopcart/api-micro/payment-processors; passthrough sin key),
+  lecturas API enmascaradas `••••last4` con merge server-side en update,
+  `reencrypt-all` interno para migrar lo existente. decrypt en todos los
+  lectores DB-directos. Ver journal 2026-08-29-payment-hardening.
+
 ## Referencias
 
 - Dashboard: `src/lib/payments.js` (contratos + helpers),
