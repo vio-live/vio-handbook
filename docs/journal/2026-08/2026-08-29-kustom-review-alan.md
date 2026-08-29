@@ -36,3 +36,46 @@ incluida. Bloqueantes restantes: (1) key `kco_test_` real del cliente,
 (2) prender el toggle `kustom` del canal piloto (default false), (3) E2E,
 (4) merge + publish del web-sdk (`feature/kustom-payment`), (5) repo del
 plugin Vev.
+
+
+## Verificación independiente desde el dashboard (sesión webapp, 29-ago)
+
+Los claims de arriba se comprobaron de nuevo desde el lado del cliente, y
+se cerró la pieza que faltaba: **el gate real por el camino del SDK**.
+
+- **La columna está viva, no solo mergeada**: `POST /channel/update/settings/491
+  {"kustom":true}` ahora **persiste** (antes devolvía 200 y lo ignoraba).
+- **El pin del kernel es correcto**: el orden de commits en
+  `package-database` pone la columna **antes** de versionar 1.0.242, así
+  que los micros pinneados a 1.0.242 sí la llevan (1.0.243 solo añade
+  `content_hash`, de otro trabajo).
+- **Gate verificado por GraphQL** con la API key del canal 491
+  (`Payment { GetAvailablePaymentMethods { name } }`), las 4 combinaciones:
+
+  | estado | respuesta |
+  |---|---|
+  | toggle ON + credencial | **Stripe, Kustom** |
+  | toggle OFF + credencial | Stripe |
+  | toggle ON, sin credencial | Stripe |
+  | restaurado | **Stripe, Kustom** |
+
+  La cadena completa funciona: credencial (Settings → Payments) → toggle
+  del canal → api-ms → GraphQL → SDK.
+- **El front no necesitó nada**: el switch de Kustom apareció solo al
+  llegar la columna (la lista se deriva de las claves que devuelve el
+  backend) y la fila informativa de la Fase A desapareció sola.
+
+### Hueco encontrado al probar, y corregido
+
+De la tabla sale un caso que la UI no contemplaba: **el toggle encendido
+sin credencial** deja al checkout sin ofrecer el método mientras el switch
+dice que está activo. Ahora el switch avisa *"Needs your <método> key —
+add it in Settings → Payments"* para los métodos sin fallback (Kustom,
+Vipps). Verificado en ambos estados — dashboard `707ccb4`.
+
+### Bloqueantes reales (sin cambios)
+
+1. **web-sdk sin mergear** (`main` no tiene Kustom) — es lo que impide la
+   compra E2E aunque el backend esté completo.
+2. **Sin key `kco_test_api_` real** — no lo destraba código, lo destraba
+   una cuenta de playground del cliente.
