@@ -26,6 +26,7 @@ los conectores — **el casing importa**:
 | Klarna | `Klarna` | `apiKey` | **Sí** |
 | Kustom | `Kustom` | `apiKey` (`kco_(test\|live)_api_…`), `autoCapture?`, `termsUrl?` | **No** — sin clave propia no se ofrece |
 | Qliro | `Qliro` | `apiKey` (MerchantApiKey), `apiSecret` (firma), `sandbox?` (elige host), `termsUrl?` | **No** — sin credenciales no se ofrece |
+| Walley | `Walley` | `clientId` + `clientSecret` (OAuth2, scope fijo por entorno), `storeId?`, `sandbox?` (elige host), `termsUrl?` | **No** — sin credenciales no se ofrece |
 | Vipps | `VIPPS` | `clientId`, `clientSecret`, `subscriptionKey`, `merchantSerialNumber` | **No** |
 
 - Apple Pay y Google Pay **corren sobre las claves Stripe del seller**
@@ -125,6 +126,18 @@ Gateway: `Payment { CreatePaymentQliro / GetQliroOrder(checkout_id) }`.
 Kernel: columna `qliro` lista en `feature/qliro-channel-toggle` (Fase B
 igual que kustom). v1 sin descuentos en el payload y con shipping de línea
 única — ver journal 2026-08-29-qliro-payment.
+
+### Walley en el checkout (rama `feature/walley-payment`, 2026-08-31)
+
+Tercer embebido. OAuth2 client-credentials con scope fijo por entorno
+(token cacheado por seller); montos decimales + vat porcentaje; el embed es
+un `<script data-token>` que shopcart SINTETIZA como snippet para reusar el
+embed compartido; la notification lleva nuestro `?ref=<checkout id>` en la
+URI (sin body útil); el éxito es el evento DOM
+`walleyCheckoutPurchaseCompleted` (sin redirect; redirectPageUri de red de
+seguridad); `fees.shipping` es fallback POR DISEÑO bajo el Delivery Module
+→ sin flag providerShipping. Items `productId[:variantId]` (sin metadata).
+Verify = token grant. Reconciliación cubre los tres embebidos.
 
 ### Kustom en el checkout (rama `feature/kustom-payment`, 2026-08-28)
 
