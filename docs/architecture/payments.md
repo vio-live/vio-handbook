@@ -153,6 +153,10 @@ rama `feature/klarna-per-seller-keys`).
 - **Verify**: `POST /api/paymentmethod/verify` (front→base-api→api-micro)
   sondea al PSP sin crear nada (401/403=invalid, 404=valid); el front solo
   bloquea ante rechazo definitivo. Sondas: Qliro, Kustom, Stripe.
+- **Envíos por el PSP** (`providerShipping` en options, default false):
+  Kustom+KSA no manda `shipping_options`; Qliro+integrated no inyecta la
+  línea Shipping y pasa el fallback `AvailableShippingMethods`. La vuelta
+  se lee igual que siempre (selected_shipping_option / OrderItem Shipping).
 - **Secretos**: cifrado AES-256-GCM on-write (`PAYMENT_SECRETS_KEY`, mismo
   valor en shopcart/api-micro/payment-processors; passthrough sin key),
   lecturas API enmascaradas `••••last4` con merge server-side en update,

@@ -59,3 +59,28 @@ keys en Vio). Klarna/Vipps sin sonda aún (documentado).
 Nota de proceso: un amend en la rama del webapp terminó en push -f sobre la
 propia rama recién creada (sin trabajo ajeno encima) — va contra la regla
 locked igual; próxima vez, fixup commit.
+
+
+## Addendum 2026-08-31 — `providerShipping`: envíos por el TMS del PSP
+
+De las preguntas de Angelo sobre envíos salió que AMBOS PSPs tienen servicio
+de shipping a nivel de cuenta (Kustom: KSA con TMS Ingrid/nShift/Unifaun/
+Shipmondo; Qliro: integrated shipping con Ingrid/nShift, activado vía
+merchant solutions) donde el widget busca los rates solo. Nuestro v1 siempre
+inyectaba el envío → con el servicio activo, en Qliro se DUPLICARÍA.
+
+Fix (mismas ramas de esta tarjeta): flag `providerShipping` en el options
+JSON (checkbox en Settings→Payments, default false). Kustom: no se manda
+`shipping_options` (KSA manda; la vuelta ya se leía de
+selected_shipping_option). Qliro: no se inyecta la línea Shipping; va el
+fallback recomendado (`AvailableShippingMethods` con nuestro rate).
+shopcart `35689ec`, webapp `d11e7a1`. Verificar en E2E que Qliro devuelva
+el envío elegido como OrderItem Shipping (asunción del handler).
+
+Hallazgo colateral de la misma conversación (pregunta "¿la orden llega a su
+ecommerce?"): los PSPs no lo hacen, pero **Vio Commerce ya lo hace** —
+`processOrderPaidByCustomer` → evento `order:paid` → extensions crea la
+orden en el Shopify/Woo/Magento del supplier cuando los productos tienen
+ese `origin`. Los ok-handlers de Kustom/Qliro ya disparan esa cadena.
+Y con TMS activo, el shipment preliminar aparece en el nShift/Ingrid del
+seller — la logística lo ve sin tocar su ecommerce.
