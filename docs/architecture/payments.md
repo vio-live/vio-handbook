@@ -157,6 +157,12 @@ rama `feature/klarna-per-seller-keys`).
   Kustom+KSA no manda `shipping_options`; Qliro+integrated no inyecta la
   línea Shipping y pasa el fallback `AvailableShippingMethods`. La vuelta
   se lee igual que siempre (selected_shipping_option / OrderItem Shipping).
+- **Webhook saliente `order.paid`** (`user_settings.orderWebhookUrl` +
+  secret HMAC): al pagarse una orden, orders-ms avisa al sistema propio del
+  seller (reseller = orden completa; suppliers = su parte) para TODOS los
+  orígenes de producto — tienda conectada, Google Merchant feed o listado
+  directo. Los PSPs solo notifican al creador de la orden (nuestra push
+  URL), nunca al ecommerce del merchant.
 - **Secretos**: cifrado AES-256-GCM on-write (`PAYMENT_SECRETS_KEY`, mismo
   valor en shopcart/api-micro/payment-processors; passthrough sin key),
   lecturas API enmascaradas `••••last4` con merge server-side en update,

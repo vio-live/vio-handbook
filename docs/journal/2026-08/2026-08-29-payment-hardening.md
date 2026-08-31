@@ -84,3 +84,27 @@ orden en el Shopify/Woo/Magento del supplier cuando los productos tienen
 ese `origin`. Los ok-handlers de Kustom/Qliro ya disparan esa cadena.
 Y con TMS activo, el shipment preliminar aparece en el nShift/Ingrid del
 seller — la logística lo ve sin tocar su ecommerce.
+
+
+## Addendum 2026-08-31 (2) — webhook saliente `order.paid`
+
+Corrección de Angelo al hallazgo anterior: el fanout `order:paid`→extensions
+solo cubre productos con origin de tienda conectada — los de **Google
+Merchant feed** y los **listados directo en Commerce** no le llegaban al
+sistema del seller por ningún lado. Y los PSPs no ayudan: verificado en docs
+de ambos, Kustom y Qliro notifican **al creador de la orden** vía la push
+URL por-orden (Qliro con 10 reintentos) — no existe canal a nivel cuenta
+hacia el ecommerce del merchant para órdenes API. El avisador somos nosotros.
+
+**Implementado**: webhook saliente genérico para TODOS los orígenes.
+- Kernel `feature/order-webhook` (`415e50c`): `orderWebhookUrl` +
+  `orderWebhookSecret` en `user_settings` (migración 1788100000000) — puede
+  viajar en el mismo release que la columna qliro.
+- orders `feature/order-webhook` (`f76a3fa`): tras
+  `processOrderPaidByCustomer`, POST `order.paid` (resumen + items con
+  origin + customer + shipping) al reseller (orden completa) y a cada
+  supplier con items (su parte), HMAC-SHA256 en `X-Vio-Signature` si hay
+  secret, 1 retry inmediato, fire-and-forget. Contra kernel viejo las
+  properties leen undefined → apagado en silencio (deploy-safe).
+- Fase B (tarjeta): UI del campo en settings + mapeo del update de user;
+  piloto por SQL mientras tanto. Follow-up: retries durables (outbox).
