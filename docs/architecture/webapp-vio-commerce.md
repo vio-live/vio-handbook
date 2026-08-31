@@ -168,6 +168,19 @@ al instante; el resto de eventos están disponibles y sin cablear.
   custom environment de Vercel (env vars con `customEnvironmentIds`).
 - **Regla operativa**: todo se prueba en staging; `develop:master` SOLO
   con OK explícito de Angelo.
+- **El front NO deploya por GitHub Actions.** El workflow "CI/CD" del repo
+  está parado desde 2026-08-10; los deploys los hace la integración Git de
+  Vercel en cada push. Que `gh run list` no muestre nada NO significa que
+  no haya deployado — comprobarlo con `vercel ls` (hay una fila con
+  environment `staging` por push) y no con el pipeline de Azure, que es
+  del backend (AKS), no de esto.
+- **Cómo verificar que un cambio llegó a staging.** Funcionalmente, con el
+  navegador: entrar a `dashboard-staging.ecom.vio.live` y comprobar el
+  comportamiento (un `aria-label` nuevo, una petición que ya no se repite).
+  NO sirve grepear el bundle: los chunks de página se cargan bajo demanda,
+  así que buscar un string en los `<script>` del HTML da falso negativo y
+  parece que el deploy no salió. Dos veces me llevó a decir "staging no
+  está tomando los cambios" cuando sí los tenía.
 
 ## Pendientes (2026-08-28)
 
