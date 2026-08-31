@@ -32,3 +32,35 @@ Corolario práctico: cuando el usuario describe la forma del fallo con sus
 palabras ("de a uno", "el primero sí", "solo a veces"), eso es evidencia de
 primera mano sobre el mecanismo. Vale más que cualquier medición propia sobre un
 entorno que no es el suyo.
+
+## Segundo caso: el canal "sin asignar" de Bohus (2026-09-01)
+
+Mismo modo de fallo, otro dominio
+([journal](../journal/2026-09/2026-09-01-bohus-demo-y-theming.md)). Commerce
+devolvía `"The user does not have an assigned channel"` al pedir productos del
+canal de Bohus. Teoricé **dos veces** y las dos mandé a Angelo para el lado
+equivocado:
+
+1. "El canal no está asignado en Commerce" — leyendo el mensaje de error
+   literalmente. Falso: `GetChannels` con esa misma key devolvía el canal.
+2. "Esa key es de cuenta; falta la del canal" — inventando una taxonomía de keys
+   a partir del comportamiento. Falso: el placeholder del propio dashboard tiene
+   el mismo formato, y la comparación de abajo lo desmintió.
+
+Lo que lo resolvió no fue otra teoría, sino un **control**: correr la misma query,
+contra el mismo endpoint, con una key que **sí funcionaba** (la del `.env` local,
+canal 474 "Aller"). Formato idéntico, ambas listaban su canal, misma clase de key
+— con lo cual la diferencia sólo podía estar en la configuración del canal.
+
+### La lección adicional
+
+Cuando algo falla y **existe un caso equivalente que funciona**, compararlos es
+más barato y más concluyente que razonar sobre el mecanismo. Un experimento
+controlado de dos minutos gana a media hora de deducción sobre documentación y
+schemas. Antes de teorizar sobre por qué X falla, preguntarse: *¿tengo a mano
+algún Y del mismo tipo que ande?*
+
+Corolario: un mensaje de error de un sistema ajeno describe **dónde se rompió su
+código**, no necesariamente **qué le falta a tu configuración**. Acá
+`getAuthChannel()` no encontraba canal en el contexto de auth; leerlo como "el
+canal no existe" agregó una capa de interpretación que no estaba en el dato.

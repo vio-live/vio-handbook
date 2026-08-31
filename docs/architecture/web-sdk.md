@@ -85,6 +85,45 @@ Vio.init({ apiKey, apiBase, graphqlBase, stripePublishableKey })
   (tsup `splitting: true`). This is load-bearing — see the
   [build lesson](../lessons/web-sdk-tsup-singleton-and-build.md).
 
+## Theming — one engine, three panels
+
+`applyVioTheme(overrides, target?)` in `src/ui/tokens.ts` is the **only supported
+way** to restyle the SDK. It sets `--vio-*` custom properties as an inline style on
+`:root` (or a scoped element), which always wins over the stylesheet `injectTokens`
+installs — no specificity fights, no `!important`, order-independent.
+
+Every panel (the Vio Config block in Vev, a future Replit CMS panel, anything else)
+calls **this one function** and never sets `--vio-*` by hand. That is what makes a
+capability added here show up everywhere for free; the corollary is that styling
+logic must never be added inside a panel.
+
+**Override surface** (20 keys as of 0.8.0, curated on purpose — sizes, tracking and
+line heights stay internal):
+
+| Group | Keys |
+|---|---|
+| Text | `colorText`, `colorTextSecondary`, `colorTextTertiary`, `colorTextOnPrimary` |
+| Surface | `colorSurface`, `colorSurfaceMuted`, `colorSurfaceHover` |
+| Accent / border | `colorAccent`, `colorBorder`, `colorBorderDefault` |
+| Fonts | `fontSerif`, `fontSans` |
+| Corner radius | `radiusSm`, `radiusMd`, `radiusLg`, `radiusXl` |
+| Spacing (density) | `spaceSm`, `spaceMd`, `spaceLg`, `spaceXl` |
+
+Notes worth keeping:
+
+- Passing `null`/`undefined` for a key calls `removeProperty` — it **reverts to the
+  SDK default** rather than leaving a stale override. Panels rely on this for their
+  "Default" preset, so switching back doesn't freeze today's numbers into the page.
+- The API is **per token**; presets (Sharp/Rounded, Compact/Roomy) belong to the
+  panel, not the SDK.
+- `colorTextOnPrimary` is correctness, not taste — a light accent makes the pay
+  button's label unreadable, so it belongs next to the accent control.
+- It writes to `:root` by default, so one Config block themes the whole page. For two
+  differently-branded sponsors on one page, pass `target`.
+- A component that hardcodes a value instead of reading its token is invisibly
+  unthemeable. The checkout hardcoded `border-radius` in 11 places until 0.8.0 —
+  when adding a token, check that the components actually consume it.
+
 ## Backend wiring
 
 - **socket-server** (`tipiodevelopment/socket-server`, `api-staging.vio.live`) = the SDK gateway:
