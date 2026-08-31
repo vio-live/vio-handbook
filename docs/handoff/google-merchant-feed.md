@@ -1,17 +1,20 @@
 # Handoff — Import de catálogo por Google Merchant feed
 
-> Última actualización: 2026-08-26 · dirigido por angelo, ejecutado por claude y alan.
-> Estado: **esperando a Alan.** El import funciona; el feed gestionado está
-> mergeado en `develop` pero el sync no respeta la cadencia. Review y tareas
-> pendientes en Trello [`6KuGKjRB`](https://trello.com/c/6KuGKjRB).
+> Última actualización: 2026-08-31 · dirigido por angelo, ejecutado por claude y alan.
+> Estado: **el feed gestionado está completo y desplegado a staging.** Quedan tres
+> cosas, todas de Alan: la memoria de la Cloud Function, el lock de Redis, y crear
+> las cuentas de cliente para cargar los feeds en producción.
 >
 > 🎨 **Diseño del flujo — 7 pantallas:**
 > [`google-merchant-feed-flow.md`](./google-merchant-feed-flow.md).
 > Mockups visuales en `assets/google-merchant-feed-flow.html` (abrir en navegador).
 >
-> 📋 **Trello:** [`Gn2F99Nc`](https://trello.com/c/Gn2F99Nc) (implementación inicial, hecha)
-> · [`6KuGKjRB`](https://trello.com/c/6KuGKjRB) (review + optimización, en curso).
-> 📓 **Sesión:** [`journal/2026-08/2026-08-26-google-merchant-feed.md`](../journal/2026-08/2026-08-26-google-merchant-feed.md).
+> 📋 **Trello:** [`Gn2F99Nc`](https://trello.com/c/Gn2F99Nc) hecha ·
+> [`6KuGKjRB`](https://trello.com/c/6KuGKjRB) sólo faltan las cuentas de prod ·
+> [`JaNGo19Y`](https://trello.com/c/JaNGo19Y) memoria + lock ·
+> [`pYmZZEcM`](https://trello.com/c/pYmZZEcM) upload por archivo, a verificar en staging.
+> 📓 **Sesiones:** [26-ago](../journal/2026-08/2026-08-26-google-merchant-feed.md) ·
+> [31-ago](../journal/2026-08/2026-08-31-feed-merge-and-file-upload.md).
 
 Disparador: Kondomeriet / Nytelse (EQOM Group). Queremos sus catálogos dentro de
 artículos de VG, comprables vía Kustom. Los dos feeds son públicos:
@@ -55,31 +58,52 @@ Ramas **subidas** a GitHub:
 
 ## Dónde está cada cosa
 
-**Hecho y mergeado a `develop`** (Alan, sobre las ramas de claude): entidad
-`ProductFeed` + migración, CRUD en products y base-api, scheduler escrito con
-scheduled messages de Service Bus, cron de re-armado, `inStockQuantity`
-configurable, y el CI de la Cloud Function migrado de GitLab a GitHub Actions.
+**Staging es `develop`**, no `pre-develop`. El workflow confunde —`develop` usa los
+secrets `*_QA` pero `APP_NAME_DEV`, y `pre-develop` usa `*_STAGING` pero
+`APP_NAME_PRE`— y `pre-develop` está 6 y 9 commits atrás, sin usar.
+`vio-base-api` directamente no tiene rama `pre-develop`.
 
-**Hecho, sin mergear** (claude, ramas `feature/feed-skip-unchanged`): la Cloud
-Function publica solo los productos cuyo hash cambió, y el consumer saltea la
-escritura de los que no cambiaron. Medido: de 2 400 productos publicados a 80,
-de 29 mensajes a 1, de 6,6 MB a 176 KB.
+**Desplegado a staging** (todo en `develop`):
 
-**Pendiente, con Alan** — ver [`6KuGKjRB`](https://trello.com/c/6KuGKjRB):
+| Repo | `develop` | Qué lleva |
+|---|---|---|
+| `google-merchant-feed` | `a7a3895` | parser arreglado, conditional GET, y publica sólo lo cambiado |
+| `vio-products-microservice` | `be864c1` | `ProductFeed`, scheduler, upsert, y no escribe lo que no cambió |
+| `vio-base-api` | `651aced` | endpoint de usuario, anti-SSRF, upload a blob, límite de multer |
+| `webapp-vio-commerce` | `d4b6b35` | UI de import por URL o archivo (`staging` también adelantada) |
 
-1. Arrancar la cadena del scheduler. Hoy `scheduleNextFeedMessage()` solo se
-   llama desde el handler del mensaje que ella misma encola, así que nunca
-   empieza y todo sincroniza una vez por día vía el cron.
-2. Mandar solo `{ id }` del usuario, no la fila completa con sus tokens.
-3. Columna `contentHash` en `Product`, que cierra el filtrado del lado de products.
-4. Crear las cuentas de Kondomeriet y Nytelse y cargar los feeds en producción.
+**Pendiente, todo de Alan:**
 
-**Pendiente, de claude**: las pantallas del dashboard, según el diseño. La 04
-—revisión y publicación agrupada por categoría— no depende de nada de lo
-anterior y es la que hace falta apenas se carguen los feeds, porque quedan
-~4 400 productos en draft. Angelo prefirió esperar a que Alan termine.
+1. **La memoria de la Cloud Function** — lo más importante. El deploy no setea
+   `--memory` ni `--timeout`, así que quedan 256 MB y 60 s. Medido con el feed
+   real de Kondomeriet: **386 MB de RSS**. Hasta que no suba, un catálogo grande
+   falla igual venga de URL o de archivo. `--memory=1GiB --timeout=540s` alcanza.
+2. **El lock de Redis falla abierto** — si Redis no está o el `set` tira error, el
+   job corre igual en todos los pods.
+3. **Las cuentas de Kondomeriet y Nytelse** y la carga de los feeds en producción.
+   Verificado que quedan en draft: `Product.status` default 0, el payload no lo
+   setea, y el front trata `status === 1` como Published.
+
+**Sin verificar** (necesita credenciales): que
+`AZURE_SERVICE_CONTAINER_CONNECTION_STRING` y `AZURE_BUCKET` estén en cada
+entorno, y que la función pueda descargar el SAS del blob. Si falta, la subida de
+archivo cae al modo inline en silencio y vuelve el techo de 10 MB.
+
+**Pendiente de claude**: las pantallas del dashboard, según el diseño. La 04
+—revisión y publicación agrupada por categoría— no depende de nada de lo anterior
+y es la que hace falta apenas se carguen los feeds, porque quedan ~4 400 productos
+en draft.
 
 ## Decisiones tomadas
+
+- **Un archivo subido no crea un `ProductFeed`.** No hay URL que re-consultar, así
+  que no hay nada que sincronizar; modelarlo como conexión gestionada sería mentir
+  en la UI. Pero los productos igual quedan con `origin: 'NATIVE'` y `originId` =
+  el `g:id` del merchant, así que si el cliente después da la URL, la conexión
+  gestionada hace upsert sobre los mismos productos en vez de duplicar. El camino
+  "mandame un export para arrancar, después conectamos el feed" funciona solo.
+- **El hash de contenido lo calcula la Cloud Function, no products.** Dos
+  implementaciones divergen y el filtro deja de matchear en silencio.
 
 - **Clave de upsert: `(user, origin, originId)`**, con `originId` = `g:id` del
   merchant. Es el único id estable entre refrescos. `g:mpn` no sirve: viene vacío
