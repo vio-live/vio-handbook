@@ -77,6 +77,32 @@ mismo. Mitigado el mismo día por la edición múltiple con categoría en cascad
 
 Todo en [`UJqerHhu`](https://trello.com/c/UJqerHhu), prioridad ALTA.
 
+## Y después: las categorías
+
+Cerrado el bug de las URLs, se atacó el hallazgo de la mañana — que ningún
+producto de feed se puede publicar por falta de categoría.
+
+Rastreando el modelo aparecieron **tres mecanismos conviviendo** (`ProductCategory`,
+`Product.subcategories`, `Category.fatherId`) y no era evidente cuál estaba vivo.
+Lo está `ProductCategory` (Product ↔ Category), que es lo que escribe el
+dashboard. Documentado en
+[`architecture/product-categories.md`](../../architecture/product-categories.md),
+porque cuesta más rastrearlo que leerlo.
+
+**Resuelto** en `feature/feed-categories` (`707d746`): `g:product_type` se recrea
+como jerarquía bajo una raíz con el nombre del vendedor, reusando el patrón que ya
+usa el import de Shopify — `slug` agrupa por origen, `fatherId` arma el árbol. La
+raíz importa porque **la taxonomía es global a todos los vendedores**: Kondomeriet
+genera 115 categorías, y sin raíz las 115 caerían sueltas en la lista de todos.
+Con raíz, una sola entrada de primer nivel por cliente.
+
+**Y el rastreo destapó un bug** en la edición múltiple de categorías subida ese
+mismo día: el front manda el id de la **sub-categoría** por el campo que apunta a
+`Category`. Son tablas distintas con auto-increments independientes, así que los
+ids se solapan y `findOne` devuelve una categoría cualquiera con ese número —
+asigna la equivocada en silencio. No se tocó: va en [`wE0bclIW`](https://trello.com/c/wE0bclIW)
+porque toca código de Angelo y la decisión de cómo unificarlo es suya.
+
 ## Lecciones
 
 - **Un solo merchant de prueba esconde clases enteras de bugs.** Kondomeriet no
@@ -84,6 +110,9 @@ Todo en [`UJqerHhu`](https://trello.com/c/UJqerHhu), prioridad ALTA.
 - **Cuando una partición coincide con la sospecha, buscar todas las particiones.**
   Comprobar que `availability` era la *única* que daba 8/8 habría mostrado antes
   que era coincidencia y no causa.
+- **Un modelo con tres mecanismos para lo mismo hay que rastrearlo, no deducirlo.**
+  El nombre del campo (`categories`) no decía cuál de los tres escribía; hubo que
+  seguir la llamada hasta el `save`.
 - **El barrel `migrations/index.ts` está congelado en 2022** y no lista ninguna
   migración reciente. El runner real (`migrations/execute` → `config/connect.ts`)
   usa un glob, así que no rompe — pero es una trampa para el que lo lea.
