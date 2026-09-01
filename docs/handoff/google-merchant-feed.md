@@ -1,20 +1,18 @@
 # Handoff — Import de catálogo por Google Merchant feed
 
-> Última actualización: 2026-08-31 · dirigido por angelo, ejecutado por claude y alan.
-> Estado: **el feed gestionado está completo y desplegado a staging.** Quedan tres
-> cosas, todas de Alan: la memoria de la Cloud Function, el lock de Redis, y crear
-> las cuentas de cliente para cargar los feeds en producción.
+> Última actualización: 2026-09-01 · dirigido por angelo, ejecutado por claude y alan.
+> Estado: **el feed funciona de punta a punta y está en staging y producción.**
+> Quedan tres cosas, todas de Alan y todas ALTA: la memoria de la Cloud Function,
+> correr la migración de las columnas de URL, y el lock de Redis.
+> → [`UJqerHhu`](https://trello.com/c/UJqerHhu)
 >
 > 🎨 **Diseño del flujo — 7 pantallas:**
 > [`google-merchant-feed-flow.md`](./google-merchant-feed-flow.md).
-> Mockups visuales en `assets/google-merchant-feed-flow.html` (abrir en navegador).
+> Mockups en `assets/google-merchant-feed-flow.html` (abrir en navegador).
 >
-> 📋 **Trello:** [`Gn2F99Nc`](https://trello.com/c/Gn2F99Nc) hecha ·
-> [`6KuGKjRB`](https://trello.com/c/6KuGKjRB) sólo faltan las cuentas de prod ·
-> [`JaNGo19Y`](https://trello.com/c/JaNGo19Y) memoria + lock ·
-> [`pYmZZEcM`](https://trello.com/c/pYmZZEcM) upload por archivo, a verificar en staging.
 > 📓 **Sesiones:** [26-ago](../journal/2026-08/2026-08-26-google-merchant-feed.md) ·
-> [31-ago](../journal/2026-08/2026-08-31-feed-merge-and-file-upload.md).
+> [31-ago](../journal/2026-08/2026-08-31-feed-merge-and-file-upload.md) ·
+> [1-sep](../journal/2026-09/2026-09-01-feed-url-columns.md).
 
 Disparador: Kondomeriet / Nytelse (EQOM Group). Queremos sus catálogos dentro de
 artículos de VG, comprables vía Kustom. Los dos feeds son públicos:
@@ -58,43 +56,43 @@ Ramas **subidas** a GitHub:
 
 ## Dónde está cada cosa
 
-**Staging es `develop`**, no `pre-develop`. El workflow confunde —`develop` usa los
-secrets `*_QA` pero `APP_NAME_DEV`, y `pre-develop` usa `*_STAGING` pero
-`APP_NAME_PRE`— y `pre-develop` está 6 y 9 commits atrás, sin usar.
-`vio-base-api` directamente no tiene rama `pre-develop`.
+**Staging es `develop`**, no `pre-develop` (el workflow confunde: `develop` usa
+secrets `*_QA`, `pre-develop` usa `*_STAGING` pero está sin usar). `vio-base-api`
+no tiene rama `pre-develop`.
 
-**Desplegado a staging** (todo en `develop`):
+Todo el feed está en `develop`, y la Cloud Function y base-api llegaron también a
+`main`/`master`: parser, `ProductFeed`, scheduler, filtrado por hash en dos
+niveles, import por archivo subido a blob, y las columnas de URL a 2048
+(`@reachu/database` v1.0.244).
 
-| Repo | `develop` | Qué lleva |
-|---|---|---|
-| `google-merchant-feed` | `a7a3895` | parser arreglado, conditional GET, y publica sólo lo cambiado |
-| `vio-products-microservice` | `be864c1` | `ProductFeed`, scheduler, upsert, y no escribe lo que no cambió |
-| `vio-base-api` | `651aced` | endpoint de usuario, anti-SSRF, upload a blob, límite de multer |
-| `webapp-vio-commerce` | `d4b6b35` | UI de import por URL o archivo (`staging` también adelantada) |
+**Pendiente, todo de Alan** — [`UJqerHhu`](https://trello.com/c/UJqerHhu):
 
-**Pendiente, todo de Alan:**
+1. **La memoria de la Cloud Function.** El deploy no setea `--memory` ni
+   `--timeout`: quedan 256 MB y 60 s, y el parseo del feed real usa **386 MB de
+   RSS**. Ya está en producción así. Un catálogo grande se muere a mitad, que es
+   el síntoma del import parcial de ~600 productos. `--memory=1GiB
+   --timeout=540s` alcanza.
+2. **Correr la migración `1788500000000-LongerUrlColumns`.** Ningún workflow
+   ejecuta migraciones — verificado en los tres repos, es manual. El código dice
+   `varchar(2048)` pero la columna solo se amplía si alguien la corre. Se
+   confirma reimportando el feed de Bohus: tienen que entrar los 16.
+3. **El lock de Redis falla abierto**: si Redis no responde, el job corre igual
+   en todos los pods.
 
-1. **La memoria de la Cloud Function** — lo más importante. El deploy no setea
-   `--memory` ni `--timeout`, así que quedan 256 MB y 60 s. Medido con el feed
-   real de Kondomeriet: **386 MB de RSS**. Hasta que no suba, un catálogo grande
-   falla igual venga de URL o de archivo. `--memory=1GiB --timeout=540s` alcanza.
-2. **El lock de Redis falla abierto** — si Redis no está o el `set` tira error, el
-   job corre igual en todos los pods.
-3. **Las cuentas de Kondomeriet y Nytelse** y la carga de los feeds en producción.
-   Verificado que quedan en draft: `Product.status` default 0, el payload no lo
-   setea, y el front trata `status === 1` como Published.
+**Pendiente de claude:** mapear `g:product_type` a categorías. Sin categoría el
+dashboard no deja publicar, así que hoy ningún producto importado por feed llega
+a estar vendible sin asignarla a mano. La edición múltiple con categoría en
+cascada (`78ea525`) lo mitiga por tandas.
 
-**Sin verificar** (necesita credenciales): que
-`AZURE_SERVICE_CONTAINER_CONNECTION_STRING` y `AZURE_BUCKET` estén en cada
-entorno, y que la función pueda descargar el SAS del blob. Si falta, la subida de
-archivo cae al modo inline en silencio y vuelve el techo de 10 MB.
-
-**Pendiente de claude**: las pantallas del dashboard, según el diseño. La 04
-—revisión y publicación agrupada por categoría— no depende de nada de lo anterior
-y es la que hace falta apenas se carguen los feeds, porque quedan ~4 400 productos
-en draft.
+Las pantallas del diseño siguen sin construir; la 04 —revisión agrupada por
+categoría— es la que hace falta apenas se carguen catálogos grandes.
 
 ## Decisiones tomadas
+
+- **Las columnas que guardan URLs de un merchant van a `varchar(2048)`.** Con el
+  `varchar(255)` por defecto un feed cuyo CDN use rutas largas pierde productos en
+  silencio. Bohus tiene imágenes de 316 caracteres; Kondomeriet no pasa de 113,
+  que es por qué no se vio antes.
 
 - **Un archivo subido no crea un `ProductFeed`.** No hay URL que re-consultar, así
   que no hay nada que sincronizar; modelarlo como conexión gestionada sería mentir
