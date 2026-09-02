@@ -22,13 +22,15 @@ cosa que cree productos sin categoría los deja en draft sin salida.
 | Mecanismo | Qué une | Estado |
 |---|---|---|
 | `ProductCategory` | Product ↔ **Category** | **el vivo** — es lo que escribe el dashboard |
-| `Product.subcategories` | Product ↔ **Subcategory** (ManyToMany) | legacy; solo se escribe si mandás `info.subcategories` |
-| `Category.fatherCategory` / `fatherId` | Category ↔ Category | jerarquía autorreferente, usada por el import de Shopify |
+| `Category.fatherCategory` / `fatherId` | Category ↔ Category | **el vivo** para la jerarquía |
+| `Product.subcategories` + entidad `Subcategory` | Product ↔ Subcategory | **muerto** — la tabla está vacía desde que se rehízo el import de Shopify |
 
-Además `Category.subcategories` es un `OneToMany` a la entidad `Subcategory`, que
-es **otra** forma de jerarquía, distinta de `fatherId`.
+> [claude, 2026-09-02] Corregido. La primera versión de este documento decía que
+> `Subcategory` seguía en juego y describía dos bugs que no existen. Confirmado por
+> Alan y verificado en el código: la tabla está vacía y la jerarquía real es
+> `fatherId`.
 
-### El camino vivo, rastreado
+#### El camino vivo, rastreado
 
 ```
 front: { categories: [id] }
@@ -84,20 +86,21 @@ Reglas de la implementación:
 - Fallar al categorizar se loguea y sigue: quedar en draft es recuperable, perder
   el producto no.
 
-## Dos problemas conocidos
+## Cuidado con `findAll()`: está deprecado
 
-**1. `findAll()` no respeta `fatherId`.** Devuelve todo plano, así que las
-categorías con padre aparecen como de primer nivel. Ya pasa con las de Shopify
-desde 2024. Arreglarlo cambia lo que ve todo vendedor en un endpoint compartido.
+`category.service.ts` tiene **dos** métodos y el nombre de la ruta engaña:
 
-**2. El dashboard manda ids de `Subcategory` por el campo de `Category`.**
-`categoryCascade` envía `categories: [subcategoryId]` cuando se elige una
-sub-categoría, y `newUpdate` lo busca en el repositorio de `Category`. Son tablas
-distintas con auto-increments independientes: los ids se solapan, así que devuelve
-**una categoría cualquiera con ese número** en vez de nada. Asigna la categoría
-equivocada en silencio.
+- `findAll()` — **deprecado**. Hace un `leftJoin` a `subcategories` (la tabla
+  vacía) y devuelve todo plano. Leerlo por error lleva a conclusiones falsas.
+- `getCategoryTree()` — **el vivo**. Lee solo `Category`, agrupa por `fatherId` y
+  devuelve un árbol anidado.
 
-Los dos en [`wE0bclIW`](https://trello.com/c/wE0bclIW).
+La ruta es `@Get('/find/all')` pero el handler se llama **`findAllNew()`**, y es
+el que llama a `getCategoryTree()`. `/api/categories-all` de base-api pega ahí.
+
+Así que el árbol que ve el dashboard es **todo de `Category`**: lo que el front
+llama "sub-categoría" es una `Category` hija, y el id que manda es de `Category`.
+No hay mezcla de espacios de ids.
 
 ## Si vas a tocar esto
 

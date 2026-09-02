@@ -96,12 +96,11 @@ raíz importa porque **la taxonomía es global a todos los vendedores**: Kondome
 genera 115 categorías, y sin raíz las 115 caerían sueltas en la lista de todos.
 Con raíz, una sola entrada de primer nivel por cliente.
 
-**Y el rastreo destapó un bug** en la edición múltiple de categorías subida ese
-mismo día: el front manda el id de la **sub-categoría** por el campo que apunta a
-`Category`. Son tablas distintas con auto-increments independientes, así que los
-ids se solapan y `findOne` devuelve una categoría cualquiera con ese número —
-asigna la equivocada en silencio. No se tocó: va en [`wE0bclIW`](https://trello.com/c/wE0bclIW)
-porque toca código de Angelo y la decisión de cómo unificarlo es suya.
+**Se reportaron dos bugs que resultaron no existir.** Ver la corrección en el
+journal del 2026-09-02: `findAll()` está deprecado y la ruta usa
+`getCategoryTree()`, que arma el árbol solo con `Category` y `fatherId`. La tabla
+`Subcategory` está vacía. Lo que el front llama "sub-categoría" es una `Category`
+hija, así que no hay mezcla de espacios de ids.
 
 ## Lecciones
 
