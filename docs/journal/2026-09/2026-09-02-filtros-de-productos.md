@@ -92,11 +92,10 @@ usa. Mergear solo el front no arregla nada.
   puebla. La implementación real tendría que derivarlo de las clases de envío
   del producto (`/shipping/product-id/:id`), no de una columna en el producto.
 
-### Pendiente
-
-- **Los tramos de precio son en EUR mentales**: "Under kr 10 / 25 / 50 / 100"
-  contra un catálogo de 599 a 19 299 kr. Los umbrales están hardcodeados y solo
-  cambia el símbolo, no el orden de magnitud. Sin decidir.
+- **Los tramos de precio se escalan con la moneda**. Eran "Under kr 10 / 25 /
+  50 / 100" contra un catálogo de 599 a 19 299 kr: los cuatro seleccionaban
+  nada. Solo se traducía el símbolo, no el orden de magnitud. NOK/SEK/DKK pasan
+  a 100/250/500/1000; EUR/USD/GBP quedan igual.
 
 ## Blockers
 
