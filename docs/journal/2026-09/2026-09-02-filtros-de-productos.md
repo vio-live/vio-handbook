@@ -64,13 +64,16 @@ había un test que **fijaba el comportamiento roto** (`expect(…).toBe('ASC')`)
 **5. `orderstatus` ordenaba por `product.origin`**, no por `product.status`.
 Copy-paste de la rama de arriba.
 
-## Hecho (commits locales, sin push)
+## Hecho — tres PRs abiertos con OK de Angelo
 
-| Repo | Rama | Commit |
+| Repo | Rama | PR |
 |---|---|---|
-| webapp-vio-commerce | `fix/listings-filters` | `9d00e94` |
-| vio-products-microservice | `feature/fix-listings-filters` | `b5a0afa` |
-| vio-base-api | `feature/listings-origin-filter` | `58ee526` |
+| webapp-vio-commerce | `fix/listings-filters` | [#3](https://github.com/vio-live/webapp-vio-commerce/pull/3) |
+| vio-products-microservice | `feature/fix-listings-filters` | [#2](https://github.com/vio-live/vio-products-microservice/pull/2) |
+| vio-base-api | `feature/listings-origin-filter` | [#1](https://github.com/vio-live/vio-base-api/pull/1) |
+
+Los tres van juntos: el front manda `origin`, base-api lo reenvía, products lo
+usa. Mergear solo el front no arregla nada.
 
 - **webapp**: dirección del orden en minúscula; Source manda `origin` con los
   valores reales y suma **Vio** (`NATIVE`), que no estaba como opción; el
@@ -81,21 +84,27 @@ Copy-paste de la rama de arriba.
   `channels` queda intacto para no romper a nadie.
 - **base-api**: `/listings` acepta y reenvía `origin`.
 
-## Decisión pendiente de Angelo
+## Decisiones
 
-- **Ships to**: hoy es decorativo. O se saca de la UI, o se implementa de
-  verdad desde las clases de envío del producto. Dejar un filtro que siempre
-  contesta "No products match" es lo que Alan reportó.
+- **"Ships to" se saca de la UI** (decisión de Angelo). Filtraba por
+  `product.shipTo`, columna de texto que no escribe ningún servicio: siempre
+  cero. El param sigue soportado en la capa de datos por si algún día se
+  puebla. La implementación real tendría que derivarlo de las clases de envío
+  del producto (`/shipping/product-id/:id`), no de una columna en el producto.
+
+### Pendiente
+
 - **Los tramos de precio son en EUR mentales**: "Under kr 10 / 25 / 50 / 100"
   contra un catálogo de 599 a 19 299 kr. Los umbrales están hardcodeados y solo
-  cambia el símbolo, no el orden de magnitud.
+  cambia el símbolo, no el orden de magnitud. Sin decidir.
 
 ## Blockers
 
 - **`products` no typechequea local**: sin `node_modules` porque `@reachu/*`
   vive en el registro privado (solo CI). El cambio se revisó a mano. `base-api`
   sí typechequea limpio.
-- Nada pusheado. Los tres repos esperan OK.
+- Los tres PRs esperan review. El de products necesita que el CI corra el
+  typecheck que no se pudo correr local.
 
 ## Lección
 
