@@ -90,6 +90,23 @@ exit 3. Un rename futuro falla a gritos en vez de mentir.
 Orden de merge, migración y evidencia en Trello
 [`8BpvMIdF`](https://trello.com/c/8BpvMIdF).
 
+## Reparto final (tarde)
+
+Angelo: *"Haz todo tú y lo de la DB lo arregla Miguel, agente de infra."*
+
+- **Mergeado por claude a `develop`:** función (`367d8d4`, rebaseada sobre el PR
+  de memoria; despliega `GoogleMerchantFeed-Test`) y `package-database`
+  (`dfc3b23`; deja la migración y la entidad disponibles, no despliega nada).
+- **Miguel:** correr la migración, pinneada con `DB_MIGRATION_FILE`. Runbook en
+  [`playbooks/migracion-feed-run-history.md`](../../playbooks/migracion-feed-run-history.md).
+- **Bloqueado hasta publicar `@vio-/database` 1.0.246:** el merge de products —
+  no compila sin la entidad publicada, y publicar es manual con credenciales del
+  registro que claude no tiene. No hay workflow ni script de publish.
+- **Función a `main` (prod):** en espera de un sync real en Test antes de
+  promocionar.
+- **`intervalMinutes` 5 → 60:** el PATCH necesita sesión de las cuentas; queda
+  para quien la tenga.
+
 ## Decisiones
 
 - Un producto descontinuado se marca **agotado**, no se borra ni se despublica.
