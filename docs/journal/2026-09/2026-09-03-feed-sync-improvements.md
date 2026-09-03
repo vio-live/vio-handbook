@@ -107,6 +107,30 @@ Angelo: *"Haz todo tú y lo de la DB lo arregla Miguel, agente de infra."*
 - **`intervalMinutes` 5 → 60:** el PATCH necesita sesión de las cuentas; queda
   para quien la tenga.
 
+## Un deploy roto, y por qué
+
+El merge del parser a `develop` (`367d8d4`) **falló el deploy** de Test. El log:
+
+```
+error @azure/core-util@1.14.0: The engine "node" is incompatible with this
+module. Expected version ">=22.0.0". Got "20.20.2"
+```
+
+`saxes` no tuvo nada que ver. Agregué la dependencia con **`npm install` en un
+proyecto yarn**: npm re-resolvió el árbol entero y reescribió `yarn.lock`,
+subiendo la transitiva `@azure/core-util` de 1.8.0 a 1.14.0, que exige Node 22 —
+y la función corre `nodejs20`. El `yarn install --frozen-lockfile` del Cloud
+Build rechazó el árbol.
+
+Arreglo (`317d703`): restaurar el `yarn.lock` anterior y agregar `saxes` con
+**yarn**, que solo resuelve lo nuevo. `core-util` quedó en 1.8.0, `saxes` 6.0.0,
+`xml-js` fuera, 29 tests. Redeploy exitoso. Prod (`main`) nunca tuvo el merge
+roto: un build fallido no reemplaza la revisión que corre.
+
+**Lección:** el gestor de paquetes lo dicta el lockfile del repo, no el hábito.
+`yarn.lock` presente → yarn. Y verificar el deploy después de cada merge a una
+rama que despliega — el fallo solo apareció porque miré `gh run list`.
+
 ## Decisiones
 
 - Un producto descontinuado se marca **agotado**, no se borra ni se despublica.
