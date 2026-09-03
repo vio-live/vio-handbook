@@ -131,6 +131,20 @@ roto: un build fallido no reemplaza la revisión que corre.
 `yarn.lock` presente → yarn. Y verificar el deploy después de cada merge a una
 rama que despliega — el fallo solo apareció porque miré `gh run list`.
 
+## Migración en staging — hecha (Miguel)
+
+Miguel corrió `FeedRunHistory1789000000000` en staging **pinneada** y la verificó
+antes y después: revisó la migración y la entidad (snake_case, FK a
+`product_feed`) antes de ejecutar; después, tabla `product_feed_run` con FK,
+columna `product.absent_runs`, registro en `migrations`, y la query de sanity
+(`absent_runs <> 0` = 0). 0 pendientes en el scan completo.
+
+**Prod espera el orden documentado.** Al cierre del día, `@vio-/database@1.0.246`
+**no está publicada** — el registro tiene 1.0.244 y 1.0.245, y `develop` sigue en
+1.0.245. Products sigue bloqueado hasta ese publish (manual, con credenciales del
+registro: Alan). Cadena restante: publish → products a `develop` → migración prod
+(Miguel) → products a prod.
+
 ## Decisiones
 
 - Un producto descontinuado se marca **agotado**, no se borra ni se despublica.
