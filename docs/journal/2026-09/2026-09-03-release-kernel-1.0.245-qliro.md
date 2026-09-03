@@ -93,3 +93,29 @@ detectado antes el error de `TYPEORM_SSL`.
 | Walley / hardening | ❌ fuera: no compilan |
 | Rotación de claves de `.env.test` | ⏳ pendiente |
 | Teams en la org npm → `@vio-live/*` | ⏳ recomendado, no urgente |
+
+## Tarde — cierre de lo que esperaba a Alan
+
+- **Qliro Fase B hecha** (api-ms PR #8): el toggle `qliro` se persiste, se devuelve en la
+  respuesta de settings (el dashboard deriva el switch solo) y el gate exige
+  `settings.qliro == true && credencial activa`, calcado de Kustom. Verificado en QA: pods
+  sanos, y la lista de Bohus (sin credencial de Qliro) sin cambios. La verificación positiva
+  (toggle + credencial) queda para un seller de prueba; Claude no entra al dashboard con
+  contraseñas. `payments.md` actualizado (PR #14).
+- **Filtros de listados** mergeados y desplegados: base-api #1, products #2, webapp #3.
+  Falta la prueba manual del filtro por Source en el dashboard.
+- **Cloud Function del feed** con memoria 1024 MB y timeout 540 s en Test (agente de infra,
+  PR #1) y en **Prod** (Angelo, develop → main; `availableMemory: 1024M`, `timeoutSeconds:
+  540`, `europe-north1`, 11:16 UTC). Primer ítem del checklist de `JaNGo19Y` cerrado.
+- **Trello al día**: Qliro, las tres del feed, "No filtra por Source" y la de filtrado con
+  comentarios de estado; nada movido de lista, las verificaciones siguen abiertas.
+- **Inventario de lo que sigue pendiente** (Trello + GitHub, no de memoria): Walley entero
+  (incluido el SDK web, que no tiene Walley), hardening de pagos (tres repos, va junto por
+  `PAYMENT_SECRETS_KEY`; solo payment-processors compila), los tres defectos del API de
+  métodos de pago, tests de request en api-ms, categoría de Shopify al importar, stats
+  bridge, dos bugs de front, subcategoría del feed, y la decisión sobre
+  `StatusErrorResponsePlugin`. Del lado de Vio: `QLIRO_API_URL` vacío en staging y prod,
+  Azure Storage en dev y prod, rotación de claves de `.env.test`, Teams en la org npm, y la
+  decisión sobre la excepción a ADR-0001.
+- Plan VG×Lyko actualizado (PR #13): Fase 1 hecha; siguiente, Fase 2 (canal de Lyko);
+  `providerShipping` no existe fuera de la rama de hardening.
