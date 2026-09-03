@@ -63,7 +63,7 @@ no tiene rama `pre-develop`.
 Todo el feed está en `develop`, y la Cloud Function y base-api llegaron también a
 `main`/`master`: parser, `ProductFeed`, scheduler, filtrado por hash en dos
 niveles, import por archivo subido a blob, y las columnas de URL a 2048
-(`@reachu/database` v1.0.244).
+(`@vio-/database` v1.0.244, ex `@reachu`).
 
 **Pendiente, todo de Alan** — [`UJqerHhu`](https://trello.com/c/UJqerHhu):
 
@@ -115,7 +115,7 @@ categoría— es la que hace falta apenas se carguen catálogos grandes.
 
 ## Pendientes de infraestructura
 
-- El registro npm privado `@reachu` no está configurado en la máquina de dev.
+- El registro npm privado (`@vio-/*`, token del usuario `vio-`) no está configurado en la máquina de dev.
   Workaround para type-checkear: `tools/typecheck-service.sh` en el workspace
   `vio-commerce`.
 - La Cloud Function se deploya desde `vio-live/google-merchant-feed` (venía de

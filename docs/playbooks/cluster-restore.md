@@ -94,7 +94,7 @@ Si difiere, actualizar el ConfigMap y reiniciar los pods sentinel.
 
 ## Paso 6 — Microservicios
 
-Los pipelines fallan por `@reachu/config` no disponible en npm. Desplegar desde ACR `:latest`:
+Los pipelines fallan por `@vio-/config` no disponible en npm (kernel `@vio-/*`, privado bajo el usuario `vio-`; ver journal 2026-09-02). Desplegar desde ACR `:latest`:
 
 ```bash
 gh api repos/vio-live/<repo>/contents/charts/<name>-0.1.0.tgz --jq '.content' | base64 -d > /tmp/<name>.tgz

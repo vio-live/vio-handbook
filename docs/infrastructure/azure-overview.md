@@ -85,8 +85,8 @@ Mapa completo de todos los recursos activos en la suscripción Azure de Vio Comm
 
 Azure Managed Redis. Migrado desde Redis Sentinel en-cluster el 2026-07-01 (Alan).
 - TLS obligatoria en todos los entornos
-- `@reachu/service` package actualizado para soportar Azure Managed Redis con TLS
-- `graph-ql` y `base-api` tienen lógica propia (no usan `@reachu/service`) — también actualizados
+- `@vio-/service` (ex `@reachu/service`) actualizado para soportar Azure Managed Redis con TLS
+- `graph-ql` y `base-api` tienen lógica propia (no usan `@vio-/service`) — también actualizados
 
 ---
 

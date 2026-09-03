@@ -79,7 +79,9 @@ Columnas booleanas: `stripePaymentIntent`, `stripePaymentLink`, `klarna`,
   de settings).
 - **Fase B (toggle real):** la columna `kustom` ya está lista en el kernel
   (`package-database` rama `feature/kustom-channel-toggle`). Tras publicar
-  `@reachu/database`: api-ms persiste `data.kustom` en `postUpdateSettings`
+  `@vio-/database` (ex `@reachu/database`): api-ms persiste `data.kustom` en `postUpdateSettings`
+  (el kernel se publica en el npm de Vio como `@vio-/*` desde 2026-09-02 — ver
+  [ADR-0011](../decisions/0011-kernel-en-npm-de-vio.md))
   (+ sync remoto) y la condición de oferta pasa a `settings.kustom == true
   && seller-tiene-key`. Pasos exactos en la tarjeta de Alan
   (https://trello.com/c/7BeicFft). Al desplegarla, prender el toggle del
