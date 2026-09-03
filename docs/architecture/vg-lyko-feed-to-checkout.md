@@ -90,14 +90,21 @@ pedido completo — cliente, ambas direcciones, ítems con precios y VAT, métod
 staging, consumidores desplegados). Con un incidente: la migración del webhook creaba las
 columnas en camelCase; corregido en package-database PR #6. Detalle en el journal.
 
-**Fase 2 — Configurar el canal de Lyko.** Credenciales Qliro, toggle `qliro`,
-`termsUrl`, URL del webhook y `providerShipping`. ⚠️ La UI del campo de webhook es la
-Fase B de esa tarjeta y **no está hecha** — hoy se carga por SQL.
+**Fase 2 — Configurar el canal de Lyko. ⏳ siguiente.** Credenciales Qliro del seller,
+toggle `qliro` (ya existe en `channel_user_settings`), `termsUrl` de Lyko, URL y secreto
+del webhook (`user_settings.order_webhook_url/secret`, ya existen) y el cap de stock en
+Commerce. ⚠️ La UI del campo de webhook es la Fase B de la tarjeta de Qliro y **no está
+hecha** — hoy se carga por SQL. `providerShipping` **no se puede configurar todavía**: el
+flag solo existe en `shopcart` `feature/payment-hardening`, que no compila contra el kernel
+publicado; hasta que esa rama se termine, el envío sale por el shipping de Commerce, no por
+el integrado de Qliro.
 
-**Fase 3 — El receptor del lado de Lyko.** No es trabajo nuestro salvo que lo tomemos
-explícitamente.
+**Fase 3 — El receptor del lado de Lyko. ⏳ sin dueño.** No es trabajo nuestro salvo que lo
+tomemos explícitamente. Lo que ya está de nuestro lado: el webhook `order.paid` con
+HMAC-SHA256 en `X-Vio-Signature`, desplegado en QA.
 
-**Fase 4 — E2E en sandbox.** Dos verificaciones específicas: que `MerchantReference`
+**Fase 4 — E2E en sandbox. ⏳ bloqueada por la Fase 2** (necesita un canal con credenciales
+de Qliro). Dos verificaciones específicas: que `MerchantReference`
 entre y sea único, y **dónde vuelve el envío elegido** — por el schema de Get Order
 parece llegar en `OrderItems[].Metadata.AdditionalShippingProperties` (con
 `ShippingProvider`, `ServiceId` y el `Agent` del punto de retiro) y **no** como línea
