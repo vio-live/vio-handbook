@@ -133,6 +133,11 @@ canal piloto y el E2E en sandbox. v1 sin descuentos en el payload y con shipping
 
 ### Walley en el checkout (rama `feature/walley-payment`, 2026-08-31)
 
+> **Estado 2026-09-03:** backend al día y compilando en ramas `integration/walley-payment`
+> (api-ms #11 y shopcart #5 apilados sobre hardening; graphql #3, base-api #4, webapp #5),
+> todos en borrador. Kernel: columna `walley` mergeada en develop (PR #7), sale en 1.0.246.
+> **El SDK web no tiene Walley todavía.** Orden: hardening → kernel 1.0.246 → set → SDK.
+
 Tercer embebido. OAuth2 client-credentials con scope fijo por entorno
 (token cacheado por seller); montos decimales + vat porcentaje; el embed es
 un `<script data-token>` que shopcart SINTETIZA como snippet para reusar el
@@ -164,6 +169,12 @@ Klarna resuelve ahora la key por orden (seller primero, fallback global;
 rama `feature/klarna-per-seller-keys`).
 
 ## Hardening (2026-08-29, ramas feature/payment-*)
+
+> **Estado 2026-09-03:** las tres ramas compilan contra el kernel 1.0.245 y están al día con
+> develop (ramas `integration/*`; fixes: `opts: Record<string, any>` en `verify()`, forma del
+> `data` del logger). PRs en borrador: api-ms #10, shopcart #4, payment-processors #3. Se
+> mergean **juntos**, con `PAYMENT_SECRETS_KEY` igual en los tres `.env`, `reencrypt-all`
+> tras el deploy, un scheduler para `/payments/reconcile`, y review funcional previo.
 
 - **Reconciliación**: `POST shopcart /checkout/payments/reconcile` — barrido
   idempotente de pushes perdidos (Kustom/Qliro); scheduler externo ~10 min.
