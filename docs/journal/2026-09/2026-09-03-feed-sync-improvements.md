@@ -139,11 +139,32 @@ antes y después: revisó la migración y la entidad (snake_case, FK a
 columna `product.absent_runs`, registro en `migrations`, y la query de sanity
 (`absent_runs <> 0` = 0). 0 pendientes en el scan completo.
 
-**Prod espera el orden documentado.** Al cierre del día, `@vio-/database@1.0.246`
-**no está publicada** — el registro tiene 1.0.244 y 1.0.245, y `develop` sigue en
-1.0.245. Products sigue bloqueado hasta ese publish (manual, con credenciales del
-registro: Alan). Cadena restante: publish → products a `develop` → migración prod
-(Miguel) → products a prod.
+Al cierre de la tarde, `@vio-/database@1.0.246` aún no estaba publicada; se
+destrabó a la noche.
+
+## Publish, merge y deploy de products — hecho (noche)
+
+Alan publicó **1.0.246 y 1.0.247** de los siete paquetes `@vio-/*` y subió las
+deps de products en `develop` a 1.0.247. Antes de mergear se verificó el
+**tarball publicado** (`npm pack @vio-/database@1.0.247`): trae
+`dist/entity/ProductFeedRun.d.ts`, `Product.absentRuns`, `ProductFeedRunRepository`
+y la migración `FeedRunHistory` en `dist/migrations`. Una versión nueva no
+garantiza que lleve el cambio; mirar adentro cuesta diez segundos.
+
+Detalle del `npm pack`: con el scope `@vio-` (guion final) el tarball se llama
+`vio--database-1.0.247.tgz`, con doble guion. El primer intento asumió el nombre
+y `tar` falló — las cuatro comprobaciones dieron ✗ por eso, no por el paquete.
+Capturar el nombre que imprime `npm pack` en vez de adivinarlo.
+
+Cadena, cada paso gateando el siguiente: rebase de `feature/feed-sync-improvements`
+sobre el `develop` movido (2 commits detrás, 0 conflictos) → type-check del
+código rebaseado contra el clon local (0 errores) → merge `--no-ff` →
+**`0696374`** en `develop` → deploy run `33764585754` **success**.
+
+**Señal a Miguel dejada en [`8BpvMIdF`](https://trello.com/c/8BpvMIdF)** con el
+hash, como se había acordado: misma migración en prod con el runbook, y después
+products a `master`. Lo que queda: migración prod (Miguel) → products prod →
+función `develop` → `main` (tras un sync real en Test) → `intervalMinutes` 5 → 60.
 
 ## Decisiones
 
