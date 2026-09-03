@@ -40,7 +40,8 @@ los conectores — **el casing importa**:
 ### API (base-api → api-ms `paymentMethod`)
 
 ```
-GET    /api/paymentmethod/byuser   → [{ paymentMethod_id, active, options, userId }]
+GET    /api/paymentmethod/byuser         → [{ paymentMethod_id, active, options, userId }]  (solo activos)
+GET    /api/paymentmethod/byuser?all=1   → ídem, incluye filas con active:false (pausados)
 GET    /api/paymentmethod/:id
 POST   /api/paymentmethod          { options: string, active: boolean }   (userId del token)
 PATCH  /api/paymentmethod/:id      { options: string, active: boolean }
@@ -48,12 +49,11 @@ DELETE /api/paymentmethod/:id      (softDelete)
 ```
 
 ⚠️ **Gotchas verificados**:
-- La lista vacía responde **404** con cuerpo `[]` (no 200). Normalizar en
-  el cliente.
 - El id viene como **`paymentMethod_id`**, no `id`.
-- `getByUser` filtra `active = 1`: una fila desactivada **desaparece de la
-  API y queda inalcanzable**. Por eso el dashboard no ofrece "pausar" —
-  configurar, editar o quitar. (Pedido de cambio abierto.)
+- Hasta el 2026-09-03 la lista vacía respondía 404 y `getByUser` escondía las filas
+  con `active:false` (quedaban inalcanzables). Corregido en api-ms #9 + base-api #3:
+  `200 []` siempre, y `?all=1` devuelve también los pausados con su flag. El dashboard
+  puede ofrecer pausar/reanudar sin borrar filas.
 
 ## Activación por canal (`channel_user_settings`)
 
@@ -93,15 +93,14 @@ devuelve el backend** (`methodsFor` en `src/lib/channels.js`), así que el
 switch de Kustom aparecerá solo cuando la columna exista — sin tocar el
 front.
 
-### ⚠️ La ruta pública de base-api está muerta
+### La ruta pública de base-api (reparada el 2026-09-03)
 
 `GET /api/channel/available-payment-methods` **es inalcanzable**:
-`/channel/:id` se declara antes (línea 325 de `channelRouter.js`) que la
-ruta literal (1057), así que Express la captura y responde
-`400 "Param must be an number"`. El SDK no se ve afectado porque va por
-GraphQL → endpoint **interno** de api-ms
-(`/channel/available-payment-methods/:channelUserId`). Para verificar
-disponibilidad, usar ese camino.
+`GET /api/channel/available-payment-methods` (Authorization: API key del canal) hoy
+responde `200` con la lista del canal. Hasta base-api #3 estaba declarada 700 líneas
+debajo de `/channel/:id` en `channelRouter.js`, Express la capturaba como `:id` y
+respondía `400 "Param must be an number"`. El SDK nunca la usó: va por GraphQL →
+endpoint **interno** de api-ms (`/channel/available-payment-methods/:channelUserId`).
 
 ## Resolución en el checkout (shopcart)
 
