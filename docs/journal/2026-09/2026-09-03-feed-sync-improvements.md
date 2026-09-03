@@ -1,0 +1,97 @@
+---
+date: 2026-09-03
+session: full-day
+participants: [angelo, claude]
+status: live
+---
+
+# Session — 2026-09-03 · el sync de feeds, versión dos
+
+Continúa [`2026-09-02-verificacion-release-feed.md`](./2026-09-02-verificacion-release-feed.md).
+
+## Goal
+
+Angelo preguntó qué optimizaría del sync de feeds y cómo lo hacen otros sistemas.
+Propuse cinco cosas; le gustaron todas y pidió implementarlas. Con una condición
+para la parte de schema: **"estar muy seguros"** con las migraciones.
+
+## Lo que ya estaba a nivel de sistema maduro
+
+Conditional GET, hash del cuerpo, filtrado por producto, upsert idempotente, no
+escribir lo que no cambió. En la parte de *transferir y escribir*, un sync típico
+ya movía 176 KB y tocaba ~80 filas. Los huecos estaban en otros lados.
+
+## Lo hecho
+
+**Barrido de descontinuados** — era un bug, no una optimización. Un producto que
+el merchant saca del feed seguía vendible para siempre. La función ahora devuelve
+`originIds` y el sync cuenta ausencias por producto: a las **3 corridas seguidas**
+sin aparecer, `quantity = 0` en producto y variantes. Nunca se borra ni se
+despublica; si reaparece, el upsert restaura el stock. Las 3 corridas son el guard
+contra corridas parciales — el patrón de Merchant Center y de las plataformas de
+feeds (expirar tras N ausencias, no a la primera).
+
+**Parser en streaming.** `xml2json` + `JSON.parse` materializaba el feed dos veces:
+250 MB de heap por 7 MB de XML — la razón del 1 GB en la función. Reescrito con
+`saxes` construyendo **solo los `<item>`, en la forma exacta de xml-js**, así que
+nada aguas abajo cambió y los 29 tests pasan intactos. Medido contra los dos feeds
+reales: salida byte-idéntica hasta el `originData` serializado, heap 251 → 83 MB
+y 250 → 76 MB, 3× más rápido.
+
+**Cadencia adaptativa.** Los dos feeds se regeneran una vez al día a hora fija
+(08:25 y 07:15 UTC, segundos idénticos entre días). Si las últimas corridas con
+cambios coinciden en hora (±30 min, ≥3 corridas), la próxima se programa 10
+minutos después; si no, aplica `intervalMinutes`. Nunca más de 6 h sin consultar,
+nunca antes del intervalo configurado. Alan había dejado los feeds en **5
+minutos**: 288 consultas diarias para un cambio.
+
+**Historial de corridas** (`ProductFeedRun`). Lo habíamos descartado ("solo la
+última"); lo trajimos de vuelta porque es lo que responde *"¿por qué no se
+actualizó el martes?"* y la historia sobre la que aprende la cadencia.
+
+**Imágenes a nuestro storage.** Tras un lote que creó productos se encola
+`consolidate-images-user` — el job que ya usan Shopify y Magento — una vez por
+corrida. Desacopla el catálogo del CDN de cada cliente.
+
+## Schema, con cuidado
+
+`Product.absentRuns` (int, default 0) y la tabla `product_feed_run`, en la
+migración `1789000000000-FeedRunHistory`. **Solo aditiva**: no toca ninguna fila
+existente y el `down()` borra exactamente lo que el `up()` crea. Índice en
+`(feed_id, started_at)`, la única query del historial. Se deja para revisión de
+Alan antes de correrla.
+
+## Un descubrimiento del tooling
+
+`tools/typecheck-service.sh` reportaba que `ProductFeedRun` no existía. No era el
+código: **el kernel se renombró `@reachu/*` → `@vio-/*` el 2026-09-02** y el
+script solo conocía el scope viejo, así que npm instalaba el `@vio-/database`
+publicado — sin la entidad de la rama. Arreglado: copia el clon bajo ambos scopes
+y resuelve desde `src/`, porque `dist/` solo se rebuildea al publicar.
+
+## Ramas subidas, pendientes de Alan
+
+| Repo | Rama | Commit |
+|---|---|---|
+| `package-database` | `feature/feed-run-history` | `280eaa7` |
+| `vio-products-microservice` | `feature/feed-sync-improvements` | `c80604f` |
+| `google-merchant-feed` | `feature/streaming-parser` | `ad11ce3` |
+
+Orden de merge, migración y evidencia en Trello
+[`8BpvMIdF`](https://trello.com/c/8BpvMIdF).
+
+## Decisiones
+
+- Un producto descontinuado se marca **agotado**, no se borra ni se despublica.
+- `intervalMinutes` pasa a ser un **piso**, no la cadencia: el scheduler puede
+  esperar más si aprendió el horario, nunca menos.
+- El historial **nunca bloquea** un sync: abrir o cerrar la fila captura y sigue.
+- Credenciales de cuentas de cliente: tema cerrado (el cliente la cambia al
+  recibir la cuenta). No volver a plantearlo.
+
+## Lección
+
+**Un método deprecado con el nombre obvio** (ayer) y **un scope renombrado que el
+tooling no conocía** (hoy) producen el mismo síntoma: errores convincentes sobre
+código correcto. Las dos veces la salida fue verificar la premisa del error, no el
+código que señalaba.

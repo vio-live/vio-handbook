@@ -1,10 +1,10 @@
 # Handoff — Import de catálogo por Google Merchant feed
 
 > Última actualización: 2026-09-01 · dirigido por angelo, ejecutado por claude y alan.
-> Estado: **el feed funciona de punta a punta y está en staging y producción.**
-> Quedan tres cosas, todas de Alan y todas ALTA: la memoria de la Cloud Function,
-> correr la migración de las columnas de URL, y el lock de Redis.
-> → [`UJqerHhu`](https://trello.com/c/UJqerHhu)
+> Estado: **en producción con dos merchants reales** (Kondomeriet, Nytelse, más
+> Bohus por archivo). La versión dos del sync —descontinuados, parser streaming,
+> cadencia adaptativa, historial, imágenes a nuestro storage— está en tres ramas
+> esperando merge y una migración aditiva: Trello [`8BpvMIdF`](https://trello.com/c/8BpvMIdF).
 >
 > 🎨 **Diseño del flujo — 7 pantallas:**
 > [`google-merchant-feed-flow.md`](./google-merchant-feed-flow.md).
@@ -86,6 +86,24 @@ cascada (`78ea525`) lo mitiga por tandas.
 
 Las pantallas del diseño siguen sin construir; la 04 —revisión agrupada por
 categoría— es la que hace falta apenas se carguen catálogos grandes.
+
+## Cómo funciona el sync (versión dos, pendiente de merge)
+
+```
+scheduled message (Service Bus)  ──►  syncProductFeed
+  abre ProductFeedRun
+  manda etag / lastModified / contentHash / knownHashes a la Cloud Function
+     ├─ 304 o mismo hash  ──►  NO_CHANGES, nada descargado
+     └─ cambió            ──►  parser SAX, publica solo lo distinto, devuelve originIds
+  barrido: presentes → absentRuns = 0 · ausentes → +1 · 3 seguidas → quantity 0
+  cierra ProductFeedRun con contadores
+  nextRunAt: 10 min después de la hora aprendida de regeneración,
+             si no hay patrón → intervalMinutes; tope 6 h, piso intervalMinutes
+  creó productos → encola consolidate-images-user (una vez por corrida)
+```
+
+Detalle y mediciones en
+[`journal/2026-09/2026-09-03-feed-sync-improvements.md`](../journal/2026-09/2026-09-03-feed-sync-improvements.md).
 
 ## Decisiones tomadas
 
