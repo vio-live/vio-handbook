@@ -1,7 +1,7 @@
 # Vio Commerce — Plan de Infraestructura Prod
 
-**Fecha:** 2026-06-09  
-**Estado:** 🟡 Pendiente — Alan en progreso
+**Fecha:** 2026-06-09
+**Estado:** 🟢 Ejecutado — verificado en vivo 2026-09-03 (Miguel). El plan de abajo es historial de lo que se decidió, no el estado actual; para el estado real de endpoints/routing ver [`environments-and-endpoints.md`](./environments-and-endpoints.md). Cluster `vio-commerce-prod` corriendo, 15 deployments activos en namespace `default`, routing Istio confirmado (`msrvc-p.vio.live`, no `msrvc.vio.live` como decía el plan original).
 
 ---
 

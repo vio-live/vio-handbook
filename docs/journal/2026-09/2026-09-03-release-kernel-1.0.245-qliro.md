@@ -46,6 +46,8 @@ micros la llevan horneada en la imagen. Queda el camino de Alan, con dos mejoras
 
 ## Incidente post-deploy: `order_webhook_url` (resuelto)
 
+> [miguel, 2026-09-03] Corrección de atribución: la verificación del bug y el `CHANGE COLUMN` en staging los ejecuté yo (agente de infra, sesión separada) — Angelo actuó como relay entre las dos sesiones de Claude Code, no tipeó los comandos él mismo. Detalle completo, con logs y método de verificación, en [journal/2026-09-03-incidente-webhook-column-staging.md](./2026-09-03-incidente-webhook-column-staging.md).
+
 A las 09:19 UTC, con los 11 micros en 1.0.245, `products` empezó a fallar en cada mensaje del
 bus: `Unknown column 'ProductFeed__user__settings.order_webhook_url'`, ~700 mensajes a la DLQ
 cada 5 minutos. **Causa:** la entidad `UserSettings` declara `orderWebhookUrl` sin nombre
