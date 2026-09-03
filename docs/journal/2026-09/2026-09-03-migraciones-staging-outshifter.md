@@ -1,0 +1,11 @@
+## Sincronización de migraciones DB staging (outshifter) — Miguel
+
+- Contexto: Angelo migró los paquetes npm de `@reachu` a la cuenta `vio` (todos los `@vio-/*@1.0.245`, confirmado sin rastro de `@reachu`). Quería poder correr migraciones de DB por su cuenta, sin depender de Alan.
+- Repo del flujo de migraciones: `vio-live/package-database` (`@vio-/database`). Comando real: `yarn migration:execute` con `DB_MIGRATION_FILE=<archivo>` (correr todas de golpe vía wildcard rompe por un `src/migrations/index.ts` obsoleto que reexporta solo 10 migraciones viejas — typeorm las cuenta duplicadas).
+- Bug encontrado: `.env.migrations.example` del repo trae `TYPEORM_SSL={"rejectUnauthorized":false}`, pero esa variable no existe en el env-reader de typeorm 0.2.41 — la conexión salía sin SSL y Azure MySQL la rechaza (`require_secure_transport=ON`). El fix real es `TYPEORM_DRIVER_EXTRA={"ssl":{"rejectUnauthorized":false}}`.
+- Estado encontrado: la tabla `migrations` de staging estaba muy atrasada (149/194) pero el schema real ya tenía casi todo aplicado (probable snapshot/sync desde prod en algún momento sin actualizar el tracking). De 57 pendientes analizadas:
+  - 49 + 3 descartadas (Wolt, un índice + su rollback que se cancelan entre sí) = 52 ya estaban aplicadas en el schema real, solo les faltaba el registro en `migrations` — se insertaron manualmente (fake-mark), sin tocar el schema.
+  - De las 8 restantes: 4 corrieron con DDL real (`externalRequest_v1`, `channel_apikey`, `qliro-channel-toggle`, `order-webhook`) y 4 resultaron obsoletas/superadas por migraciones posteriores (`add-columns-template-endpoint`, `test-step-1`, `promote_to_prod_27_12_23`, `product_scraping_v4`) — se marcaron sin ejecutar para no reintroducir columnas que migraciones más nuevas ya habían renombrado/eliminado.
+- Verificación final: `SELECT` de pendientes vía comparación `migrations` (DB) vs archivos locales → **0 pendientes**.
+- Backup de seguridad: confirmado backup automático diario de Azure MySQL Flexible Server disponible antes de tocar nada (point-in-time hasta 2026-09-02).
+- Pendiente: Angelo tiene ahora token npm propio (`@vio-` scope) y puede correr migraciones sin depender de Alan. Si se agregan migraciones nuevas, usar `DB_MIGRATION_FILE` de a una, no el wildcard completo (por el bug del `index.ts`).
