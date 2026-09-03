@@ -1,6 +1,6 @@
 # VG × Lyko — del feed al cobro, con Qliro
 
-**Estado 2026-09-01.** Flujo propuesto: catálogo de Lyko por Google feed → artículo
+**Estado 2026-09-03** (actualizado; escrito el 2026-09-01). Flujo propuesto: catálogo de Lyko por Google feed → artículo
 de VG vía Vev → cobro con Qliro usando las credenciales de Lyko → la orden llega al
 ecommerce de Lyko (Optimizely) → envíos por el integrated shipping de Qliro.
 
@@ -36,14 +36,16 @@ consecuencias técnicas directas:
 |---|---|
 | Google feed → Commerce | ✅ mergeado, vivo en staging |
 | Commerce → artículo VG (Vev) | ✅ deployado (package v0.282) |
-| Cobro con Qliro | ⚠️ escrito, **6 repos sin mergear** |
-| Orden → ecommerce de Lyko | ⚠️ webhook escrito, **sin mergear** |
-| Shipping del proveedor | ⚠️ flag `providerShipping` escrito, **sin mergear** |
+| Cobro con Qliro | ✅ mergeado y desplegado en QA/staging el 2026-09-03 (kernel 1.0.245 + shopcart, api, graphql, base-api, webapp) |
+| Orden → ecommerce de Lyko | ✅ webhook `order.paid` mergeado (orders + kernel), columnas `order_webhook_url/secret` en staging |
+| Shipping del proveedor | ❌ `providerShipping` vive solo en shopcart `feature/payment-hardening`, que **no compila** contra el kernel publicado |
 
-Ramas pendientes: `package-database` (`feature/qliro-channel-toggle`,
-`feature/order-webhook`), `shopcart` (`feature/qliro-payment`,
-`feature/payment-hardening`), `base-api`, `graphql`, `api-micro` y `webapp`
-(`feature/qliro-payment`). El SDK ya está mergeado y publicado (`0.8.0`).
+Ramas mergeadas el 2026-09-03: `package-database` (`feature/qliro-channel-toggle`,
+`feature/order-webhook`), `shopcart` (`feature/qliro-payment`), `orders`
+(`feature/order-webhook`), `api`, `graphql`, `base-api` y `webapp` (`feature/qliro-payment`).
+Sigue fuera: `shopcart` `feature/payment-hardening` (con `providerShipping`). El SDK ya
+está mergeado y publicado (`0.8.0`). Journal:
+[`2026-09-03-release-kernel-1.0.245-qliro.md`](../journal/2026-09/2026-09-03-release-kernel-1.0.245-qliro.md).
 
 ## Cómo llega la orden a Optimizely
 
@@ -84,9 +86,9 @@ pedido completo — cliente, ambas direcciones, ítems con precios y VAT, métod
   validado contra la propia regex de Qliro.
 - `MerchantTermsUrl` ahora es obligatorio y falla con un mensaje que nombra al seller.
 
-**Fase 1 — Mergear, kernel primero.** Las dos ramas de `package-database` van juntas
-en un release del kernel; después los consumidores; después deploy. Sin código nuevo.
-(La lección de Alan: el kernel siempre primero.)
+**Fase 1 — Mergear, kernel primero. ✅ hecho 2026-09-03** (kernel 1.0.245, migraciones en
+staging, consumidores desplegados). Con un incidente: la migración del webhook creaba las
+columnas en camelCase; corregido en package-database PR #6. Detalle en el journal.
 
 **Fase 2 — Configurar el canal de Lyko.** Credenciales Qliro, toggle `qliro`,
 `termsUrl`, URL del webhook y `providerShipping`. ⚠️ La UI del campo de webhook es la
