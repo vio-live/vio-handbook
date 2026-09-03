@@ -135,7 +135,7 @@ canal piloto y el E2E en sandbox. v1 sin descuentos en el payload y con shipping
 
 > **Estado 2026-09-03:** backend al día y compilando en ramas `integration/walley-payment`
 > (api-ms #11 y shopcart #5 apilados sobre hardening; graphql #3, base-api #4, webapp #5),
-> todos en borrador. Kernel: columna `walley` mergeada en develop (PR #7), sale en 1.0.246.
+> todos en borrador. Kernel: columna `walley` mergeada en develop (PR #8, tras resolver el choque con `qliro` en la entidad), sale en 1.0.246 junto con la migración corregida del webhook.
 > **El SDK web no tiene Walley todavía.** Orden: hardening → kernel 1.0.246 → set → SDK.
 
 Tercer embebido. OAuth2 client-credentials con scope fijo por entorno
