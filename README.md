@@ -27,7 +27,8 @@ vio-handbook/
 │   │   ├── humans.md                      ← day 1 for a new dev
 │   │   └── agents.md                      ← day 1 for a new AI agent
 │   ├── architecture/
-│   │   └── system-overview.md             ← 3 repos + how they fit together
+│   │   ├── system-overview.md             ← 3 repos + how they fit together
+│   │   └── vio-commerce.md                ← e-commerce backend (base-api + microservicios NestJS)
 │   ├── infrastructure/
 │   │   └── overview.md                    ← services, accounts, secrets locations
 │   ├── decisions/                         ← ADRs (one file per decision)
