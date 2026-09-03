@@ -1,6 +1,6 @@
 ---
 title: "Onboarding — AI agents"
-last-updated: 2026-05-07
+last-updated: 2026-09-03
 owner: angelo
 status: live
 ---
@@ -66,7 +66,7 @@ After step 5, you have enough context to ask the user a focused question instead
 
 These appear in the user's global memory too, but you should know them by heart:
 
-1. **No auto-merge.** Open the PR; the user merges it.
+1. **No auto-merge in code repos.** Open the PR; the user merges it. **Exception — the handbook:** documentation is pushed directly to `main`, always, in the same session ([ADR-0012](../decisions/0012-agentes-pushean-documentacion-al-handbook.md)). A journal entry left as a local commit is a rule violation, not caution.
 2. **VioSwiftSDK never→main.** Always `develop`.
 3. **No v1 fallbacks.** v2 is the target.
 4. **No hardcoded apiKeys.** Bootstrap from `/v2/mobile/config`.
@@ -74,6 +74,8 @@ These appear in the user's global memory too, but you should know them by heart:
 6. **No AI attribution** in commit messages (no `Co-Authored-By: Claude`).
 7. **No new doc files** without justification (different *type* of doc, not duplicate content).
 8. **`npm run check:docs-drift`** before merging anything in socket-server.
+9. **Fetch first.** At session start run `git fetch` in the code repo and `git pull --rebase` in the handbook, so you know where things stand and what the others did. Pull again right before pushing to the handbook.
+10. **Document every substantive session with `/documentar`.** It updates your per-instance memory *and* writes the handbook entry, then pushes. See below.
 
 ## What to do when in doubt
 
@@ -81,6 +83,17 @@ These appear in the user's global memory too, but you should know them by heart:
 2. **Confirm with the user before destructive operations** (delete branch, rewrite history, drop table, change auth).
 3. **Diagnose before fixing.** If a bug spans iOS + backend + commerce, instrument with logs first; don't guess-patch multiple layers simultaneously.
 4. **Cite paths and line numbers** when you reference code: `Sources/VioUI/Managers/ApplePayManager.swift:175`.
+
+## `/documentar` — closing a session
+
+Global Claude Code skill (`~/.claude/skills/documentar/`), available in every project. Run it at the end of any substantive session, or when the user says "documentá" / "guardá esto". It does, in order:
+
+1. `git pull --rebase` on the handbook (and `git fetch` on the current code repo).
+2. **Memory (Layer 1):** save what is per-instance only — user preferences, corrections, current focus, anchors. Never platform knowledge.
+3. **Handbook (Layer 2):** pick the doc type (journal entry always; lesson / playbook / ADR when the session produced one), follow [`journal/README.md`](../journal/README.md) for format and authorship, use `date +%F` for the date, and the anti-collision filename `YYYY-MM-DD-<svc|topic>-<slug>.md`.
+4. Commit (imperative subject, no AI attribution) and **push to `origin/main`**. Report the commit URL.
+
+Code repos are untouched by this command; they stay under ADR-0001.
 
 ## How to add a new ADR / lesson / playbook
 
@@ -92,7 +105,7 @@ When you discover something durable (a decision, a gotcha, a recurring op):
    - **Playbook**: a repeatable how-to ("to do X, follow these steps").
 2. Pick the next number (for ADRs) or a kebab-case slug.
 3. Use the template — see existing files for the shape. Always include frontmatter.
-4. Open a PR (the user merges).
+4. Commit and push to `main` ([ADR-0012](../decisions/0012-agentes-pushean-documentacion-al-handbook.md)). No PR needed for docs.
 
 ## Things you should NOT do
 
