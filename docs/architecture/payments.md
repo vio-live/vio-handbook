@@ -58,8 +58,9 @@ DELETE /api/paymentmethod/:id      (softDelete)
 ## Activación por canal (`channel_user_settings`)
 
 Columnas booleanas: `stripePaymentIntent`, `stripePaymentLink`, `klarna`,
-`vipps`, `googlePay`, `applePay` (+ `markets`, `purchaseConditions`,
-`orderConfirmationEmail`, que no son de pago).
+`vipps`, `googlePay`, `applePay`, `kustom`, `qliro` (+ `markets`, `purchaseConditions`,
+`orderConfirmationEmail`, que no son de pago). `kustom` y `qliro` llegaron con el kernel
+1.0.245 (2026-09-03); `walley` sigue en `feature/walley-channel-toggle`, sin mergear.
 
 - Se escriben con `POST /api/channel/update/settings/:channelUserId`.
 - `api-ms channel.service.getAvailablePaymentMethods(channelUserId)` las
@@ -125,8 +126,10 @@ antes de existir el OrderId); push idempotente
 `{"CallbackResponse":"received"}`). Sin auto-capture: la captura es de
 order management (MarkItemsAsShipped) — portal hasta el dispatch Partner.
 Gateway: `Payment { CreatePaymentQliro / GetQliroOrder(checkout_id) }`.
-Kernel: columna `qliro` lista en `feature/qliro-channel-toggle` (Fase B
-igual que kustom). v1 sin descuentos en el payload y con shipping de línea
+Kernel: columna `qliro` mergeada y en staging (kernel 1.0.245, 2026-09-03). **Fase B hecha**
+(api-ms PR #8): el toggle se persiste y `getAvailablePaymentMethods` exige
+`settings.qliro == true && credencial activa`, igual que Kustom. Queda prender el toggle del
+canal piloto y el E2E en sandbox. v1 sin descuentos en el payload y con shipping de línea
 única — ver journal 2026-08-29-qliro-payment.
 
 ### Walley en el checkout (rama `feature/walley-payment`, 2026-08-31)
