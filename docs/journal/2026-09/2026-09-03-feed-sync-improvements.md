@@ -66,8 +66,18 @@ Alan antes de correrla.
 `tools/typecheck-service.sh` reportaba que `ProductFeedRun` no existía. No era el
 código: **el kernel se renombró `@reachu/*` → `@vio-/*` el 2026-09-02** y el
 script solo conocía el scope viejo, así que npm instalaba el `@vio-/database`
-publicado — sin la entidad de la rama. Arreglado: copia el clon bajo ambos scopes
-y resuelve desde `src/`, porque `dist/` solo se rebuildea al publicar.
+publicado — sin la entidad de la rama. Primer arreglo: copiar el clon bajo ambos scopes. **Insuficiente** — Angelo lo
+marcó: eso cierra un rename y se reabre en el siguiente. El fallo real nunca fue
+el nombre del scope, fue que el script **falló en silencio**: un scope que no
+conocía dejó a npm instalar el paquete publicado, y `tsc` reportó errores
+convincentes sobre código correcto.
+
+Arreglo de verdad (`37e84ea` en el workspace): el scope se **detecta desde lo que
+el servicio importa** (`from '@x/database'`), nunca de una lista, y antes de
+correr `tsc` hay dos guards que **abortan** si el paquete que el servicio va a
+resolver no es el clon local desde `src/`. Probado en negativo: scope no
+detectable → exit 2; paquete publicado → exit 3; clon con `types` en `dist/` →
+exit 3. Un rename futuro falla a gritos en vez de mentir.
 
 ## Ramas subidas, pendientes de Alan
 
