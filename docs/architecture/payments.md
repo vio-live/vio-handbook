@@ -126,9 +126,21 @@ antes de existir el OrderId); push idempotente
 order management (MarkItemsAsShipped) — portal hasta el dispatch Partner.
 Gateway: `Payment { CreatePaymentQliro / GetQliroOrder(checkout_id) }`.
 Kernel: columna `qliro` mergeada y en staging (kernel 1.0.245, 2026-09-03). **Fase B hecha**
-(api-ms PR #8): el toggle se persiste y `getAvailablePaymentMethods` exige
-`settings.qliro == true && credencial activa`, igual que Kustom. Queda prender el toggle del
-canal piloto y el E2E en sandbox. v1 sin descuentos en el payload y con shipping de línea
+(api-ms PR #8): el toggle se persiste y lo exige el gate.
+
+**Fallback de plataforma (2026-09-04, decisión de Angelo).** A diferencia de Kustom, Qliro
+**sí** tiene credencial de plataforma: `getConfig()` resuelve la del seller primero y, si no
+tiene, cae a `QLIRO_API_KEY` / `QLIRO_API_SECRET` / `QLIRO_SANDBOX` / `QLIRO_TERMS_URL` del
+entorno compartido — el mismo modelo que `getKlarnaApiKey`. Por eso el gate pasó a
+`settings.qliro == true && (credencial del seller O clave de plataforma)`: la credencial del
+seller dejó de ser la señal de disponibilidad, el toggle por canal es quien decide.
+`providerShipping` se fuerza a `false` en el camino de plataforma (el TMS integrado es de la
+cuenta del seller). ⚠️ El settlement sigue a la cuenta que se use, así que las credenciales
+del entorno deciden quién es merchant of record para los sellers sin las suyas. En QA están
+cargadas las de sandbox (verificadas contra Qliro: create order 201 + read-back 200); en
+producción irán las de Vio.
+
+Queda prender el toggle del canal piloto y el E2E en sandbox. v1 sin descuentos en el payload y con shipping de línea
 única — ver journal 2026-08-29-qliro-payment.
 
 ### Walley en el checkout (rama `feature/walley-payment`, 2026-08-31)
