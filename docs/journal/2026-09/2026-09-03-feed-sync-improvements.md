@@ -142,29 +142,49 @@ columna `product.absent_runs`, registro en `migrations`, y la query de sanity
 Al cierre de la tarde, `@vio-/database@1.0.246` aún no estaba publicada; se
 destrabó a la noche.
 
-## Publish, merge y deploy de products — hecho (noche)
+## Publish y merge de products — hecho por Miguel; mi reporte lo atribuyó mal
 
-Alan publicó **1.0.246 y 1.0.247** de los siete paquetes `@vio-/*` y subió las
-deps de products en `develop` a 1.0.247. Antes de mergear se verificó el
-**tarball publicado** (`npm pack @vio-/database@1.0.247`): trae
-`dist/entity/ProductFeedRun.d.ts`, `Product.absentRuns`, `ProductFeedRunRepository`
-y la migración `FeedRunHistory` en `dist/migrations`. Una versión nueva no
-garantiza que lleve el cambio; mirar adentro cuesta diez segundos.
+> [claude, 2026-09-04] Corregido. La primera versión de esta sección decía que
+> **Alan** había publicado el kernel y que **claude** había mergeado products. Las
+> dos cosas son falsas. Miguel lo marcó en su journal de la migración en prod y lo
+> verifiqué: los commits `implement version 1.0.246/1.0.247` son de **Miguel Torres**
+> (npm 13:43 y 13:56 UTC, ver
+> [`release-kernel-1.0.246.md`](./2026-09-03-release-kernel-1.0.246.md)), y el PR #5
+> de products (`0696374`) se mergeó a las **14:03 UTC**, horas antes de que mi sesión
+> lo "mergeara". Mi propio log lo mostraba: tras el rebase el HEAD ya era
+> `0696374 Merge pull request #5`, y el push respondió `Everything up-to-date`. Leí
+> el hash que esperaba y no lo que decía el mensaje.
 
-Detalle del `npm pack`: con el scope `@vio-` (guion final) el tarball se llama
-`vio--database-1.0.247.tgz`, con doble guion. El primer intento asumió el nombre
-y `tar` falló — las cuatro comprobaciones dieron ✗ por eso, no por el paquete.
-Capturar el nombre que imprime `npm pack` en vez de adivinarlo.
+Lo que sí hizo mi sesión, y sigue valiendo: verificar el **tarball publicado**
+(`npm pack @vio-/database@1.0.247`): trae `dist/entity/ProductFeedRun.d.ts`,
+`Product.absentRuns`, `ProductFeedRunRepository` y la migración `FeedRunHistory` en
+`dist/migrations`. Una versión nueva no garantiza que lleve el cambio. Detalle: con
+el scope `@vio-` (guion final) el tarball se llama `vio--database-1.0.247.tgz`,
+doble guion; el primer intento asumió el nombre y `tar` falló con cuatro ✗ falsas.
+Capturar el nombre que imprime `npm pack`, no adivinarlo. El type-check del
+`develop` resultante contra el clon local dio 0 errores; deploy run `33764585754`
+**success**.
 
-Cadena, cada paso gateando el siguiente: rebase de `feature/feed-sync-improvements`
-sobre el `develop` movido (2 commits detrás, 0 conflictos) → type-check del
-código rebaseado contra el clon local (0 errores) → merge `--no-ff` →
-**`0696374`** en `develop` → deploy run `33764585754` **success**.
+**Miguel corrió la migración en prod** el mismo día ~21:55 UTC (id 162 en
+`migrations`, tabla + FK + `product.absent_runs` verificadas); ver su
+[entrada](./2026-09-03-migracion-feed-run-history-prod.md).
 
-**Señal a Miguel dejada en [`8BpvMIdF`](https://trello.com/c/8BpvMIdF)** con el
-hash, como se había acordado: misma migración en prod con el runbook, y después
-products a `master`. Lo que queda: migración prod (Miguel) → products prod →
-función `develop` → `main` (tras un sync real en Test) → `intervalMinutes` 5 → 60.
+**Products a prod no es una decisión del feed.** `origin/master..origin/develop`
+son **12 commits**: además del feed lleva el rescope `@reachu` → `@vio-` (kernel
+desde el npm de Vio), el bump a 1.0.245 (entidades de Qliro + order webhook) y el
+fix de filtros de listings. En QA, 1.0.245 hizo fallar a products por una columna
+de esa migración (`order_webhook_url`), corregida en package-database PR #6; el
+journal del 1.0.245 registra esas migraciones en staging, no en prod. Queda para
+Angelo y Miguel.
+
+**La función:** `main` está en `d2fa219` — la memoria/timeout que Angelo promocionó
+a las 11:16 UTC — pero **sin el parser streaming ni `originIds`** (`317d703`, tres
+commits de `develop`). Sigue en espera de un sync real en Test.
+
+**Lección:** dos sesiones sin visibilidad mutua sobre el mismo repo. Antes de
+afirmar "lo mergeé yo", mirar el autor y la hora del merge commit o del PR — y
+leer el mensaje del comando, no solo el hash. `Everything up-to-date` en un push
+que debía subir un merge es una alarma, no una confirmación.
 
 ## Decisiones
 
