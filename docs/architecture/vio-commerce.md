@@ -157,6 +157,53 @@ consume esta capa.
 
 ## 5. Deployment (resumen — detalle en infra docs)
 
+### Ramas y entornos — hay DOS, no tres (verificado 2026-09-08)
+
+| Rama | Entorno | Clúster / Registry |
+|---|---|---|
+| `develop` | El que el equipo llama QA **y también staging** | AKS `kubernetesqa` (RG `qa`) · ACR `reachuqa2` |
+| `main` / `master` | Producción | AKS `vio-commerce-prod` (RG `rg-vio-commerce-prod`) · ACR `reachuprod2` |
+
+**Mergear a `develop` es desplegar.** El paso de Deploy no espera a que los pods estén
+sanos, así que hay que mirar el pipeline y los pods después.
+
+⚠️ **El tercer nivel es ficción.** El `deploy.yml` de cada servicio tiene cableado
+`pre-develop`→STAGING con su juego completo de secretos `*_STAGING`, pero:
+
+- La rama `pre-develop` existe en **1 de 8 repos** (products), abandonada el 2026-08-20 y
+  34 commits por detrás de develop.
+- **La infraestructura de staging no existe.** En la suscripción sólo hay dos AKS
+  (`vio-commerce-prod`, `kubernetesqa`) y dos ACR relevantes (`reachuprod2`, `reachuqa2`).
+
+Es un camino armado que nadie vigila: si alguien crea una rama `pre-develop` en cualquier
+repo, el pipeline dispara y despliega con esos secretos — a ninguna parte si están vacíos,
+o **a donde apunten** si alguien los rellenó. Conviene borrar ese camino de los workflows.
+
+Nota de vocabulario: el host `graph-ql-staging.vio.live` dice *staging* pero pega en
+`kubernetesqa`. Son el mismo sitio.
+
+### ⚠️ El registry vive en el chart, y difiere por rama
+
+`charts/<svc>/values.yaml` lleva `image.repository`, y **difiere entre ramas a propósito**:
+
+```
+main:    repository: reachuprod2.azurecr.io/<svc>
+develop: repository: reachuqa2.azurecr.io/<svc>
+```
+
+El paso de deploy es `helm upgrade --install ./charts/<svc>-0.1.0.tgz` **sin ningún
+`--set image.repository`**, así que el registry sale tal cual del archivo versionado. Cada
+merge `develop`→`main` depende de que alguien resuelva bien ese archivo; si gana la
+versión de develop, **producción intenta tirar imágenes del registry de QA**. Hay además
+un `.tgz` binario del chart que git no puede fusionar de forma sensata.
+
+Arreglo limpio, aún no hecho: pasar `--set image.repository=$ACR/<svc>` en el `helm
+upgrade` (el ACR ya está en una variable de entorno del workflow) y dejar el chart
+idéntico en las dos ramas. Ver
+[`lessons/config-de-entorno-en-archivo-versionado.md`](../lessons/config-de-entorno-en-archivo-versionado.md).
+
+### Lo demás
+
 - **Contenedores:** cada repo tiene `Dockerfile` + Helm chart en `charts/<svc>/`.
 - **Registry:** Azure Container Registry `reachuqa2.azurecr.io/<svc>:latest` (QA; prod tendrá el suyo). IaC en repo **`vio-infra-tf`** (Terraform), config K8s en **`vio-kubernetes-config`**.
 - **Orquestación:** **Azure Kubernetes Service (AKS)**, `replicaCount: 2`, HPA, `Service` ClusterIP puerto 80 → `targetPort 8000`.
@@ -190,7 +237,8 @@ Otros repos de `vio-live` que orbitan commerce pero no son el backend de runtime
 4. **Duplicación monolito↔microservicio** por la migración en curso — la fuente de verdad
    de un dominio puede ser el router viejo de `base-api` O el microservicio nuevo. Verificar
    cuál está ruteado en prod antes de tocar.
-5. **Rama de trabajo = `develop`** en todos (no `main`/`master`).
+5. **Rama de trabajo = `develop`** en todos (no `main`/`master`). Y `develop` **es** el
+   entorno compartido: mergear es desplegar. Ver §5.
 6. **MySQL, no Postgres** aquí (ojo: el resto de Vio backend / socket-server usa Neon/Postgres — no mezclar).
 7. **Dos gateways:** `base-api` (REST legacy, Express) y `graphql` (Apollo). El nuevo
    frontend debería ir por GraphQL; lo legacy sigue en base-api hasta terminar de migrar.
