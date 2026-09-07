@@ -2,7 +2,7 @@
 title: "Qliro — modos de configuración: shipping, métodos de pago y apariencia"
 last-updated: 2026-09-07
 owner: angelo
-status: draft
+status: live
 ---
 
 # Qliro — modos de configuración
@@ -135,11 +135,31 @@ En `payment_method.options` del seller (donde ya viven `apiKey`, `apiSecret`, `s
 
 Cada fase deja algo utilizable y no depende de la siguiente.
 
-**Fase 1 — Modos de envío en el backend.** `shipping.mode` con las cuatro variantes, la regla
+**Fase 1 (texto original) — Modos de envío en el backend.** `shipping.mode` con las cuatro variantes, la regla
 de fallback y la prohibición de la URL de callback con Ingrid. Tests unitarios del armado del
 payload por modo: es lógica pura y hoy no tiene ninguno.
 
-**Fase 2 — Sincronización con el widget.** `q1Ready` en el SDK, `onShippingMethodChanged` +
+**Fase 1 — HECHA** (shopcart#12). Cuatro modos, la regla de fallback y la prohibición
+de la URL con Ingrid. 24 tests del armado del payload por modo.
+
+**Fase 2 — HECHA** (shopcart#15 + base-api#5 + graphql#4 + web-sdk#32). Ver el
+[journal del 2026-09-07](../journal/2026-09/2026-09-07-qliro-fase-2-sincronizacion.md).
+Dos correcciones al diseño que salieron de la documentación y de verificar:
+
+- **Qliro ya crea la línea de envío** desde el método que eligió el cliente al
+  completarse la compra, así que "Qliro manda" ya era cierto en el pedido. La fase
+  quedó acotada a mantener el carrito al día mientras el cliente sigue en el widget.
+- **No se comparan totales** para desbloquear, sino `MerchantUpdateVersion`. En los
+  modos donde Qliro es dueño del importe del envío, nuestro total y el suyo difieren
+  legítimamente y el cliente quedaría bloqueado en un checkout que sí está al día.
+- **La URL de callback va firmada.** Qliro no le manda credenciales; la URL es la
+  credencial. HMAC sobre checkout id + expiración con el API secret del seller,
+  48 h de validez. Sin token no se registra.
+
+⚠️ La mitad de navegador **no llega a producción** hasta publicar el SDK y rebundlear
+Vev.
+
+**Fase 2 (texto original) — Sincronización con el widget.** `q1Ready` en el SDK, `onShippingMethodChanged` +
 `lock`/`onOrderUpdated`/`unlock`, y `PUT /Orders/{id}` en shopcart. Sin esto, los modos de la
 Fase 1 dejan el total desincronizado. Incluye `onPaymentDeclined` y `onSessionExpired` (la
 sesión dura 90 minutos; el pedido, 48 horas).
