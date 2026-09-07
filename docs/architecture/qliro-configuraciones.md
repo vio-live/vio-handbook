@@ -159,6 +159,25 @@ Dos correcciones al diseño que salieron de la documentación y de verificar:
 ⚠️ La mitad de navegador **no llega a producción** hasta publicar el SDK y rebundlear
 Vev.
 
+**Fase 3 — HECHA** (shopcart#18 + graphql#5 + web-sdk#33). El tema del anfitrión llega a
+Qliro. El mapeo vive en el **servidor**, no en el SDK: las reglas (clamp de saturación,
+derivación del hover, parseo de unidades) son testeables sin navegador, y el SDK no
+necesita conocer los nombres de campo de Qliro. Todo lo que llega es **no confiable** —
+viene de una página web—: o parsea a una forma documentada, o se descarta.
+Verificado en QA: `rgb(193,74,59)`→`#C14A3B`, hover `#92382D`, `#ffe5e0`→`#F1EEEE`
+(dessaturado al 10 %), `0.5rem`→8, `9999px`→1000.
+
+**Fase 4 — HECHA** (webapp#9). Selector de modo con los campos condicionados por modo.
+El toggle de refresco sólo existe en `vio-methods`; cambiar de modo no arrastra la
+configuración del anterior; un seller viejo abre en el modo que realmente corre.
+
+**Fase 5 — HECHA** (shopcart#18 + base-api#6). `MerchantOrderValidationUrl` y
+`MerchantProvidedMetadata` (que **sí** sobrevive la ida y vuelta, a diferencia del
+`MetaData` por ítem). ⚠️ **Qliro da la orden por aprobada si no contestamos en 5
+segundos**, de ahí dos asimetrías deliberadas: la validación no espera por nada, y un
+llamante que no podemos autenticar se aprueba en vez de rechazarse —rechazar sólo daría
+una forma de bloquear compras reales, sin volver la comprobación más estricta—.
+
 **Fase 2 (texto original) — Sincronización con el widget.** `q1Ready` en el SDK, `onShippingMethodChanged` +
 `lock`/`onOrderUpdated`/`unlock`, y `PUT /Orders/{id}` en shopcart. Sin esto, los modos de la
 Fase 1 dejan el total desincronizado. Incluye `onPaymentDeclined` y `onSessionExpired` (la

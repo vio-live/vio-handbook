@@ -117,3 +117,67 @@ los materializa `GetCheckoutById(_, true)`. Arreglado en
 - La tarjeta de E2E manual de Alan ([QYJRBZ5D](https://trello.com/c/QYJRBZ5D)) ahora
   puede llegar hasta el final: el defecto que la habría cortado en el último paso
   está arreglado.
+
+---
+
+## Continuación: fases 3, 4 y 5, y el SDK en producción
+
+Angelo dijo "ve con todo". Las cinco fases del diseño están cerradas.
+
+**Fase 3 — apariencia.** El tema del anfitrión llega a Qliro. Decisión de diseño: el mapeo
+vive en el **servidor**, no en el SDK. Las reglas son testeables sin navegador, y el SDK no
+necesita conocer los nombres de campo de Qliro, así que otro proveedor se puede vestir con
+los mismos cuatro tokens. Todo lo que llega es **no confiable** — viene de una página web:
+o parsea a una forma que Qliro documenta, o se descarta y Qliro se queda con su default.
+
+Verificado leyendo el `styling` del snippet que sirve Qliro. Antes venía vacío; ahora:
+
+```
+primaryColor: "#C14A3B", callToActionColor: "#C14A3B",
+callToActionHoverColor: "#92382D", backgroundColor: "#F1EEEE",
+cornerRadius: 8, buttonCornerRadius: 1000
+```
+
+Es decir: `rgb()` parseado, hover derivado, `#ffe5e0` dessaturado al 10 % conservando la
+claridad, `0.5rem`→8 y `9999px`→1000 (saturado al máximo, no rechazado).
+
+**Fase 5 — validación y trazabilidad.** `MerchantProvidedMetadata` **sí** sobrevive la ida
+y vuelta, a diferencia del `MetaData` por ítem: el checkout id y el cart id quedan sellados
+en el pedido de Qliro. Y `MerchantOrderValidationUrl` permite rechazar un carrito que se
+quedó sin stock mientras el cliente decidía.
+
+⚠️ **Qliro da la orden por aprobada si no contestamos en 5 segundos.** De ahí dos
+asimetrías deliberadas: la validación hace una comprobación barata sobre datos ya cargados
+y no espera nada (una validación lenta no es estricta: es ninguna), y un llamante que no
+podemos autenticar se **aprueba**, porque rechazar sólo le daría a cualquiera que alcance
+el endpoint una forma de bloquear compras reales.
+
+**Fase 4 — UI.** Selector de modo con campos condicionados. El toggle de refresco sólo
+existe en `vio-methods` —Qliro prohíbe esa URL con Ingrid y nShift maneja la interacción
+él mismo—, cambiar de modo no arrastra la configuración del anterior, y un seller
+configurado antes de los modos abre en el que realmente corre. La UI **no** se verificó en
+navegador: el dashboard exige login. Lo cubierto por tests es la lógica donde estaba el
+riesgo.
+
+**SDK y Vev.** `@vio-live/web-sdk` 0.10.0 construido y listo, pero **npm pidió una OTP por
+navegador**: la publicación queda pendiente de Angelo. El bundle de Vev **no depende de
+npm** —se arma con esbuild desde el código fuente—, así que el paquete `cq1lXld-TA9` ya
+está desplegado con las fases 2 y 3 dentro.
+
+### PRs de esta continuación
+
+| Repo | PR |
+|---|---|
+| shopcart | [#18](https://github.com/vio-live/vio-shopcart-microservice/pull/18) fases 3+5 |
+| base-api | [#6](https://github.com/vio-live/vio-base-api/pull/6) |
+| graphql | [#5](https://github.com/vio-live/graphql/pull/5) |
+| web-sdk | [#33](https://github.com/vio-live/vio-web-sdk/pull/33) |
+| vev | [#16](https://github.com/vio-live/vev/pull/16) |
+| webapp | [#9](https://github.com/vio-live/webapp-vio-commerce/pull/9) |
+
+### Pendiente
+
+- **`npm publish` del SDK 0.10.0** — pide OTP por navegador. Rama `release/0.10.0`.
+- Pedir a merchant solutions de Qliro que habiliten nShift/Ingrid y definan la regla de
+  `MerchantConstraintName`; hasta entonces esos dos modos no se pueden probar de verdad.
+- E2E de Walley (no tiene fallback de plataforma; necesita un seller con credenciales).
