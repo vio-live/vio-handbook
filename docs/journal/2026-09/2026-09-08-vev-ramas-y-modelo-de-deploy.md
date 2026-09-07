@@ -86,5 +86,7 @@ utilizable el `restore`, y es gratis.
 
 - Si en algún momento se quiere staging de verdad: crear el paquete en Vev y decidir qué
   artículos lo usan. Recién ahí tiene sentido el trabajo de ramas y CI.
-- Automatizar el despliegue con `-t/--token` en Actions es independiente de lo anterior y
-  se puede hacer cuando moleste depender de un portátil.
+- ~~Automatizar el despliegue con `-t/--token` en Actions~~ — **descartado**: la cuenta de
+  Vev no lo permite (Angelo, 2026-09-08). El CLI sí lo soporta, así que el bloqueo no está
+  ahí; queda anotado para que nadie lo reinvestigue por ese lado. El despliegue de Vev
+  seguirá siendo manual.

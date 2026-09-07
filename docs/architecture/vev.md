@@ -74,10 +74,14 @@ Al 2026-09-08 el paquete lleva **285 versiones**. Por eso:
 > `No deploy message` es una versión a la que nadie se va a atrever a volver. La mitad
 > del historial está así, y es el único motivo por el que `restore` no se usa.
 
-### Automatizarlo es posible
+### Automatizarlo: descartado por la cuenta
 
-`vev deploy` acepta `-t/--token`, así que un workflow de GitHub Actions puede desplegar
-sin depender de un portátil. No está hecho.
+`vev deploy` acepta `-t/--token`, así que **por el lado del CLI se podría** desplegar
+desde un workflow sin depender de un portátil. No se va a hacer: **la cuenta de Vev no lo
+permite** (Angelo, 2026-09-08).
+
+Queda escrito para que nadie vuelva a investigarlo por el lado del CLI: el bloqueo no está
+ahí. El despliegue de Vev seguirá siendo manual mientras la cuenta sea la que es.
 
 ## Por qué no hay `develop` → staging
 
@@ -92,8 +96,10 @@ Se evaluó el 2026-09-08 y **se decidió no montarlo**, por dos razones:
    misma trampa que `charts/*/values.yaml` en los microservicios, y acá sería peor: un
    merge equivocado no rompe el despliegue, lo manda al paquete que no era **en silencio**.
 
-Si algún día se monta, la forma limpia es sacar la clave de `vev.json` y que el workflow
-la escriba según la rama desde un secreto de GitHub.
+Si algún día se monta, la forma limpia sería sacar la clave de `vev.json` y que el
+despliegue la resuelva por rama, no que viva en un archivo versionado. Nótese que eso
+suponía un workflow, y los workflows están descartados por la cuenta (ver arriba): un
+staging real hoy implicaría también hacer el cambio de paquete a mano.
 
 ## Ramas
 
