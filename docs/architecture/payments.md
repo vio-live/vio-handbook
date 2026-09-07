@@ -140,7 +140,31 @@ del entorno deciden quién es merchant of record para los sellers sin las suyas.
 cargadas las de sandbox (verificadas contra Qliro: create order 201 + read-back 200); en
 producción irán las de Vio.
 
-Queda prender el toggle del canal piloto y el E2E en sandbox. v1 sin descuentos en el payload y con shipping de línea
+**E2E en sandbox: hecho y verde (2026-09-07)** — carrito → ítem → checkout → condiciones →
+`CreatePaymentQliro` (OrderId real, snippet) → read-back, sobre el canal de Bohus, que no
+tiene credenciales propias, así que probó también el fallback de plataforma. Dos detalles
+que hay que repetir en cualquier E2E: el checkout exige
+`buyer_accepts_purchase_conditions` y `buyer_accepts_terms_conditions` antes de iniciar el
+pago (si no, 500 con "Is required that customer accepted purchase conditions"), y el envío
+viaja como línea `Type: Shipping` dentro de `OrderItems`.
+
+### ⚠️ Qliro firma el body: los bytes firmados tienen que ser los enviados
+
+`Authorization: Qliro base64(sha256(body + apiSecret))`. El conector serializa el payload una
+vez y pasa el **string** como `params.data` justamente para que nadie lo reordene — pero
+**axios 0.21.3, con un body de tipo string y `Content-Type: application/json`, lo JSON-encodea
+una segunda vez**. Qliro recibe un string que contiene el JSON, el digest no coincide, y
+**todo write responde 401 con cuerpo vacío**. Estuvo así desde que se escribió el conector:
+con estas credenciales era imposible cobrar.
+
+El arreglo (shopcart PR #11) es un `transformRequest` identidad, que manda los bytes firmados
+tal cual; tres tests unitarios fijan el contrato. Solo Qliro firma su body — Klarna, Kustom y
+Walley pasan objetos a axios y no están afectados.
+
+**Cómo se diagnosticó, por si aparece algo parecido:** comparar el hash sha256 de las
+credenciales (sin imprimirlas) entre el pod y una que se sabe buena, y después correr `fetch`
+y `axios` **dentro del pod** contra un servidor HTTP local para ver los bytes crudos de cada
+uno — ahí saltó que axios mandaba 23 bytes donde `fetch` mandaba 15. v1 sin descuentos en el payload y con shipping de línea
 única — ver journal 2026-08-29-qliro-payment.
 
 ### Walley en el checkout (rama `feature/walley-payment`, 2026-08-31)
