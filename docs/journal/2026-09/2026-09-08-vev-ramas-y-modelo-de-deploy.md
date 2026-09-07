@@ -132,10 +132,18 @@ En GitHub queda sólo `main`.
 **Desplegar Vev siempre con mensaje:** `vev deploy -m "qué entra"`. Es lo que vuelve
 utilizable el `restore`, y es gratis.
 
+## Ámbito, para el que lea esto después
+
+A mitad de sesión Angelo acotó el ámbito a **Vev**. Lo de la Parte 1 (Commerce) queda
+documentado porque el hallazgo importa y le sirve a quien lo tome, pero **no es trabajo de
+esta sesión ni de este agente**: nada de eso se ejecutó.
+
 ## Siguiente
 
-- **Commerce:** borrar el camino `pre-develop` de los 7 `deploy.yml` y sacar el registry
-  del chart. Ninguna de las dos se hizo; la segunda cambia comportamiento de deploy.
+- **Commerce — otro agente.** Borrar el camino `pre-develop` de los 7 `deploy.yml` y sacar
+  el registry del chart con `--set image.repository=$ACR/<svc>`. Ninguna se hizo; la
+  segunda cambia comportamiento de deploy y conviene verificarla en un servicio antes de
+  replicarla.
 - **Vev:** si en algún momento se quiere staging de verdad, crear el paquete y decidir qué
   artículos lo usan. Recién ahí tiene sentido el trabajo de ramas.
 - ~~Automatizar el despliegue con `-t/--token` en Actions~~ — **descartado**: la cuenta de
