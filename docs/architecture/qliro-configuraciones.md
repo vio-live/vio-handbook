@@ -58,6 +58,20 @@ recomienda, así que queda como regla única:
   Ingrid la propia documentación lo llama *strongly recommended*.
 - Si el seller no tiene envíos configurados de ningún lado, degradamos a `vio-line` con
   nuestra tarifa; si tampoco hay tarifa, sin línea de envío en vez de fallar.
+
+**Verificado contra la sandbox el 2026-09-07.** Su documentación dice que el respaldo se usa
+"si la API de Ingrid no responde", pero no dice qué pasa si el proveedor **no está
+habilitado en la cuenta**. Probado pidiendo Ingrid y nShift sin tenerlos habilitados:
+
+| Qué se manda | Qué hace Qliro |
+|---|---|
+| Ingrid/nShift **+ respaldo nuestro** | Pedido OK, línea de envío 199, total 848 ✅ |
+| Ingrid/nShift **sin respaldo** | Pedido OK, **sin línea de envío**, total 649 ⚠️ |
+
+**Qliro no falla ni avisa.** Sin la tarifa de respaldo el pedido se crea mudo y el cliente
+paga sin envío. La regla de Angelo no es una comodidad: es lo único que impide ese cobro
+incompleto, y aplica también cuando el proveedor está simplemente apagado, no sólo cuando
+su API se cae.
 - ⚠️ Con Ingrid, `MerchantOrderAvailableShippingMethodsUrl` **no se manda** — Qliro lo
   prohíbe explícitamente cuando Ingrid está activo.
 
