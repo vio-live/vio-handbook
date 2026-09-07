@@ -57,6 +57,39 @@ matan cualquier spec sin base. Se agregó `jest.unit.json` + `yarn test:unit` en
 api-ms, con 27 tests: resolución de credenciales de Qliro, el módulo de cifrado —que no tenía
 ninguno— y la firma del conector.
 
+## Tarde — que se pueda pagar de verdad desde el artículo
+
+El E2E por API estaba verde, pero probar el **bundle vendorizado real en un navegador**
+contra staging destapó que desde el artículo no se podía pagar. Dos defectos del SDK, los
+dos silenciosos:
+
+1. **El checkout nacía sin aceptar las condiciones.** `mountKustom/Qliro/WalleyCheckout`
+   creaban el checkout con la mutación cruda en vez de `createCheckout()`, que además las
+   acepta. shopcart rechaza iniciar el pago sin eso, así que fallaba justo en el camino
+   normal: cuando el comprador elige el método desde el carrito y el mount es quien crea el
+   checkout.
+2. **El widget nunca renderizaba.** Los bootstrap de Qliro y Walley resuelven su contenedor
+   desde el documento, y `vio-checkout` es un componente Lit: todo vive en shadow DOM. El
+   snippet se inyectaba, el script corría, y no aparecía nada — sin error. Lección:
+   [`embeds-de-terceros-y-shadow-dom.md`](../../lessons/embeds-de-terceros-y-shadow-dom.md).
+
+Arreglados en `vio-web-sdk` [#31](https://github.com/vio-live/vio-web-sdk/pull/31) → **0.9.1**
+publicado en npm, rebundleado y deployado en Vev ([#15](https://github.com/vio-live/vev/pull/15)).
+Verificado en el navegador: el widget de Qliro renderiza dentro del checkout para el canal de
+Bohus, que **no tiene credenciales propias**, o sea sobre el fallback de plataforma.
+
+**Del lado de datos**, dos bloqueos que no eran de código: la campaña del demo había vencido
+el 03-sep (el SDK descarta las inactivas) y al sponsor le faltaba la `commerceApiKey`. Los
+403 al guardarla eran de alcance de tenant — la lista de sponsors es un catálogo compartido
+a propósito, pero editar exige ser dueño o super_admin. El 502 de la pantalla era
+`/api/sportmonks/leagues`, otra integración sin API key.
+
+**npm pide 2FA para publicar** desde ahora: `npm publish` a secas pide el código por
+pantalla; `--otp=` se traba si no se reemplaza el placeholder.
+
+Queda pedido a Alan el E2E manual completo, de activar el método a la orden pagada, con
+evidencia: <https://trello.com/c/QYJRBZ5D>.
+
 ## Decisions
 
 - **Qliro lleva credencial de plataforma; Kustom y Walley no.** Decisión de Angelo: en
@@ -73,7 +106,8 @@ ninguno— y la firma del conector.
 - `PAYMENT_SECRETS_KEY` sin cargar: el cifrado está desplegado y dormido. Se activa poniéndola
   en el `.env.local` compartido y reconstruyendo los tres servicios.
 - **Walley no tiene fallback de plataforma** ni credenciales de seller cargadas, así que su E2E
-  sigue pendiente. Si se quiere el mismo trato que Qliro, es el mismo patrón.
+  sigue pendiente. Si se quiere el mismo trato que Qliro, es el mismo patrón — su arreglo de
+  light DOM ya está, pero nadie lo probó contra el widget real.
 - `/verify` de credenciales existe en api-ms pero **no está proxiado por base-api** ni lo llama
   el dashboard: pieza a medio conectar.
 
