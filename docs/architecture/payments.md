@@ -110,7 +110,7 @@ payment link y Klarna si faltan — de ahí el fallback de esos tres. Kustom
 y Vipps solo aparecen si el seller tiene su fila. (Ojo: esta superficie de
 shopcart NO es la que consume el web SDK — esa es la del api-ms de arriba.)
 
-### Qliro en el checkout (rama `feature/qliro-payment`, 2026-08-29)
+### Qliro en el checkout — **en QA/staging desde el 2026-09-03**
 
 No es dialecto KCO → servicios propios (`qliroConnector` + `qliro.service`
 en shopcart) pero misma arquitectura y respuesta normalizada
@@ -167,7 +167,7 @@ y `axios` **dentro del pod** contra un servidor HTTP local para ver los bytes cr
 uno — ahí saltó que axios mandaba 23 bytes donde `fetch` mandaba 15. v1 sin descuentos en el payload y con shipping de línea
 única — ver journal 2026-08-29-qliro-payment.
 
-### Walley en el checkout (rama `feature/walley-payment`, 2026-08-31)
+### Walley en el checkout — **mergeado el 2026-09-04, sin probar contra el widget real**
 
 > **Estado 2026-09-03:** backend al día y compilando en ramas `integration/walley-payment`
 > (api-ms #11 y shopcart #5 apilados sobre hardening; graphql #3, base-api #4, webapp #5),
@@ -184,7 +184,7 @@ seguridad); `fees.shipping` es fallback POR DISEÑO bajo el Delivery Module
 → sin flag providerShipping. Items `productId[:variantId]` (sin metadata).
 Verify = token grant. Reconciliación cubre los tres embebidos.
 
-### Kustom en el checkout (rama `feature/kustom-payment`, 2026-08-28)
+### Kustom en el checkout — mergeado
 
 El camino KCO legacy de shopcart se **parametrizó** con
 `via: 'klarna' | 'kustom'` en vez de clonarse (`klarna.service.createPayment`
@@ -204,7 +204,7 @@ Portal hasta diseñar ese dispatch. En payment-processors, capture/refund de
 Klarna resuelve ahora la key por orden (seller primero, fallback global;
 rama `feature/klarna-per-seller-keys`).
 
-## Hardening (2026-08-29, ramas feature/payment-*)
+## Hardening — **mergeado el 2026-09-03, dormido hasta cargar la clave**
 
 > **Estado 2026-09-03:** las tres ramas compilan contra el kernel 1.0.245 y están al día con
 > develop (ramas `integration/*`; fixes: `opts: Record<string, any>` en `verify()`, forma del
@@ -232,6 +232,16 @@ rama `feature/klarna-per-seller-keys`).
   lecturas API enmascaradas `••••last4` con merge server-side en update,
   `reencrypt-all` interno para migrar lo existente. decrypt en todos los
   lectores DB-directos. Ver journal 2026-08-29-payment-hardening.
+
+## El SDK web y el artículo
+
+Los tres métodos embebidos llegan al artículo por el **paquete de Vev**, que vendorea un
+bundle del SDK generado desde el código (no desde npm). Cómo funcionan del lado del cliente,
+y las dos reglas que hay que respetar para agregar un cuarto proveedor, están en
+[`web-sdk.md`](./web-sdk.md#checkout-embebido--kustom-qliro-walley).
+
+Un cambio en el SDK **no llega al artículo** hasta rebundlear y correr `vev deploy`; publicar
+en npm es para el resto de los consumidores y es un paso aparte.
 
 ## Referencias
 
