@@ -66,7 +66,7 @@ After step 5, you have enough context to ask the user a focused question instead
 
 These appear in the user's global memory too, but you should know them by heart:
 
-1. **No auto-merge in code repos.** Open the PR; the user merges it. **Exception — the handbook:** documentation is pushed directly to `main`, always, in the same session ([ADR-0012](../decisions/0012-agentes-pushean-documentacion-al-handbook.md)). A journal entry left as a local commit is a rule violation, not caution.
+1. **No auto-merge in code repos.** Open the PR and stop — *unless* the user gives an explicit OK for that PR or named set, in which case you may merge it yourself, and you **must** verify the deploy afterwards (pipeline, pods, smoke) and report ([ADR-0015](../decisions/0015-merge-delegado-con-ok-explicito.md)). Production (`main`/`master`) still needs a human in the UI, and never bypass protections. **Exception — the handbook:** documentation is pushed directly to `main`, always, in the same session ([ADR-0012](../decisions/0012-agentes-pushean-documentacion-al-handbook.md)). A journal entry left as a local commit is a rule violation, not caution.
 2. **VioSwiftSDK never→main.** Always `develop`.
 3. **No v1 fallbacks.** v2 is the target.
 4. **No hardcoded apiKeys.** Bootstrap from `/v2/mobile/config`.
