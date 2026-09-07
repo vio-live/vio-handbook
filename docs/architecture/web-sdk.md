@@ -1,6 +1,6 @@
 ---
 title: "Vio Web SDK — architecture, structure & status"
-last-updated: 2026-06-09
+last-updated: 2026-09-07
 owner: angelo
 status: live
 ---
@@ -124,6 +124,36 @@ Notes worth keeping:
   unthemeable. The checkout hardcoded `border-radius` in 11 places until 0.8.0 —
   when adding a token, check that the components actually consume it.
 
+## Checkout embebido — Kustom, Qliro, Walley
+
+Tres proveedores de la misma familia: **el widget hace todo** (dirección, envío y pago), así
+que el checkout de Vio les cede la pantalla y no muestra su propio formulario. El contrato es
+idéntico para los tres — el backend normaliza cada API a `{ order_id, status, html_snippet }`
+— y el SDK inyecta ese snippet ejecutando sus `<script>` (`renderKustomSnippet`, compartida).
+
+| | Kustom | Qliro | Walley |
+|---|---|---|---|
+| Mutación | `CreatePaymentKustom` | `CreatePaymentQliro` | `CreatePaymentWalley` |
+| Lectura de vuelta | por `order_id` | por `checkout_id` | por `checkout_id` |
+| Retorno | `?order_id=…&payment_processor=KUSTOM` | `…&payment_processor=QLIRO` | `…&payment_processor=WALLEY` |
+| Éxito | redirect | redirect | evento DOM `walleyCheckoutPurchaseCompleted` (+ redirect de red de seguridad) |
+| Credencial de plataforma | no | **sí** | no |
+
+La orden de Commerce **siempre** la crea el webhook del proveedor del lado del servidor; el
+navegador nunca confirma dinero.
+
+### Dos cosas que hay que respetar al agregar un cuarto
+
+Las dos salieron de defectos reales, corregidos en 0.9.1 — ver la
+[lección sobre embeds y shadow DOM](../lessons/embeds-de-terceros-y-shadow-dom.md):
+
+1. **Crear el checkout con `createCheckout()`**, nunca con la mutación cruda: esa función
+   además acepta las condiciones de compra, y shopcart se niega a iniciar un pago sin ellas.
+2. **El contenedor del widget va en el light DOM**, proyectado al panel con un slot. Qliro y
+   Walley resuelven su punto de montaje desde el documento y no ven nada dentro del shadow
+   root del componente; el snippet se inyecta, el script corre y no aparece nada, sin error.
+   Kustom resuelve el padre de su propio `<script>` y funciona de las dos formas.
+
 ## Backend wiring
 
 - **socket-server** (`tipiodevelopment/socket-server`, `api-staging.vio.live`) = the SDK gateway:
@@ -149,8 +179,16 @@ Notes worth keeping:
   *Always validate by installing the tarball/version in the demo and rendering it BEFORE
   publishing — that's how the two build bugs were caught on 0.1.0.*
 
-## Status (2026-06-09)
+## Status (2026-09-07)
 
+- ✅ `@vio-live/web-sdk@0.9.1` publicado. Trae los tres métodos embebidos y los dos arreglos
+  que impedían pagar con ellos. El paquete de Vev (`cq1lXld-TA9`) vendorea un bundle
+  generado **desde el código**, no desde npm, así que un `vev deploy` puede ir por delante
+  del publish — y al revés.
+- ⚠️ **npm exige 2FA para publicar**: correr `npm publish` a secas, que pide el código por
+  pantalla. `main` está protegido en este repo, así que el bump de versión va por PR.
+- ⚠️ `SDK_VERSION` (`src/core/version.ts`) hay que subirla junto con el `package.json`: es lo
+  que viaja como `sdk_version` en cada evento de analytics. Estuvo desfasada tres releases.
 - ✅ `@vio-live/web-sdk@0.1.0` published (public), repo in sync.
 - ✅ Demo deployed on it (`vio-demo.vercel.app`): 5 products from staging, single sponsor
   (Fredrik & Louisa), all components registered — verified headless.
