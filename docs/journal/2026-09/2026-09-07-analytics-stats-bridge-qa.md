@@ -30,10 +30,18 @@ Con eso confirmado, ejecuté los 3 pasos:
 2. **Merge + rebuild:** mergeé PR #7 a `develop` (autorizado explícitamente por Angelo — "dale"). Build+deploy de QA verdes (`gh run watch`). Confirmé que el `.env` horneado en el pod nuevo tiene las 2 variables (`kubectl exec ... grep`).
 3. **Verificación end-to-end parcial:** `curl https://api-ecom-dev.vio.live/api/stats/overview` devuelve `401 Not authorized` (pide auth) en vez de `503 stats service not configured` — confirma que el puente está activo y configurado. Falta la prueba con un ID token real de Firebase, eso lo hace un usuario/Angelo.
 
-**Pendiente:** paso 3 del handoff — `STATS_API_HOST` en el proyecto de Vercel del webapp de Commerce (QA/preview). No lo hice todavía porque no tenía acceso a Vercel desde este entorno.
-
 ### Acceso a Vercel
 
-Angelo instaló el CLI (`npm install -g vercel`) y pasó un token personal de la cuenta `vio-live` (confirmado con `vercel whoami` → `vio-live`). Guardado en `TOOLS.md` de mi workspace (no en este handbook — ver regla de secretos), para usar con `vercel <comando> --token=<token>` sin depender de login interactivo con email. No hay sesión persistida (`~/Library/Application Support/com.vercel.cli` sin `auth.json`), así que el token se pasa en cada comando.
+Angelo instaló el CLI (`npm install -g vercel`) y pasó un token personal de la cuenta `vio-live` (confirmado con `vercel whoami` → `vio-live`; el scope real de los proyectos es el team `tipio-2`). Guardado en `TOOLS.md` de mi workspace (no en este handbook — ver regla de secretos), para usar con `vercel <comando> --token=<token>` sin depender de login interactivo con email. No hay sesión persistida (`~/Library/Application Support/com.vercel.cli` sin `auth.json`), así que el token se pasa en cada comando.
 
-- Pendiente: usar este acceso para completar el paso 3 (`STATS_API_HOST`) del puente de analytics.
+### Paso 3 completado — STATS_API_HOST en Vercel
+
+Con el acceso de arriba, cerré el paso 3 del handoff:
+
+- Proyecto correcto identificado: `tipio-2/vio-commerce-webapp` (prod: `dashboard.ecom.vio.live`).
+- Confirmé el patrón existente antes de tocar nada: `API_HOST`/`RETURNS_API_HOST` ya tienen un valor específico para `Preview` + git branch `develop` (`https://api-ecom-dev.vio.live`) — ese es el que corresponde a QA en este proyecto, distinto del `Preview` genérico que cubre cualquier feature branch.
+- Agregué `STATS_API_HOST=https://api-ecom-dev.vio.live/api` con el mismo scope (`Preview`, branch `develop`), sin el `/stats` final (lo compone el cliente).
+- Redeployé el último build de `develop` (`vercel redeploy`) para que la variable se hornee — salió publicado en `dashboard-staging.ecom.vio.live`, que ya teníamos mapeado como el dominio de QA del webapp.
+- Intenté verificar buscando el valor en el JS del cliente y no apareció — **falso negativo esperado**, no un fallo: `STATS_API_HOST` no tiene prefijo `NEXT_PUBLIC_`, así que Next.js la mantiene server-side a propósito y nunca la expone en el bundle del navegador.
+
+**Pendiente real:** prueba end-to-end logueado en el dashboard de QA para confirmar que ya trae datos reales en vez de demo — necesita una sesión de Firebase, no la puedo hacer yo desde acá.
