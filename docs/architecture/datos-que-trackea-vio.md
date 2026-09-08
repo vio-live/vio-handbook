@@ -15,16 +15,107 @@ Fuente de verdad: `vio-analytics/src/contract/analytics-schema.ts` (contrato
 v1, **cerrado**). Nada fuera de esta lista puede entrar: el colector rechaza
 cualquier nombre de evento que no esté acá.
 
-## Los 20 eventos
+## Parte 1 — Los 20 eventos, uno por uno
 
-| Grupo | Eventos | Cuándo |
+### Comercio: el recorrido hacia la compra
+
+| Evento | Cuándo se dispara | Para qué sirve |
 |---|---|---|
-| **Comercio** (8) | `view_item_list` · `select_item` · `view_item` · `add_to_cart` · `remove_from_cart` · `view_cart` · `begin_checkout` · `purchase` | El embudo de compra; nombres compatibles con GA4 |
-| **Engagement** (6) | `component_impression` · `component_click` · `ad_impression` · `ad_click` · `poll_impression` · `contest_impression` | Se mostró o se tocó un componente de Vio |
-| **Sesión** (2) | `session_start` · `session_end` | Ciclo de visita (30 min de inactividad) |
-| **Diagnóstico** (2) | `checkout_error` · `sdk_error` | Qué salió MAL — sin esto, "abandonó" y "falló el pago" son indistinguibles |
-| **Servidor** (2) | `ad_activation` · `cart_intent` | Los emite el backend de Vio, no el dispositivo. Se rechazan si vienen de un cliente |
+| `view_item_list` | Se renderiza un conjunto de productos (carousel, grilla, tira de cards) | Cuánta gente **vio la oferta**. Es el denominador del CTR |
+| `select_item` | Alguien toca una card de producto | Interés real, no solo exposición |
+| `view_item` | Se abre el detalle de un producto | Intención más fuerte: quiso saber más |
+| `add_to_cart` | Se agrega al carrito | El primer compromiso |
+| `remove_from_cart` | Se saca del carrito | La duda. Sin esto, el abandono es una caja negra |
+| `view_cart` | Se abre el carrito | Momento de revisión antes de pagar |
+| `begin_checkout` | Arranca el pago | Intención máxima previa a la compra |
+| `purchase` | Pago confirmado | La venta, con importe, moneda y método |
 
+### Engagement: qué se mostró y qué se tocó
+
+| Evento | Cuándo se dispara | Para qué sirve |
+|---|---|---|
+| `component_impression` | Un componente de Vio estuvo **≥50% visible durante ≥1s** | La unidad de "se mostró". Una vez por sesión y componente |
+| `component_click` | Se interactuó con ese componente | Numerador del CTR |
+| `ad_impression` | Un shoppable ad llegó a la pantalla | Cuántos ads disparados **realmente se vieron** |
+| `ad_click` | Se tocó el ad | Interés sobre el ad concreto |
+| `poll_impression` | Se mostró una encuesta | Exposición de engagement (el voto es verdad del servidor) |
+| `contest_impression` | Se mostró un concurso | Ídem |
+
+### Sesión: el ciclo de la visita
+
+| Evento | Cuándo se dispara | Para qué sirve |
+|---|---|---|
+| `session_start` | Primera actividad, o tras 30 min de inactividad | Contar visitas y usuarios únicos |
+| `session_end` | Se cierra o abandona la página | Cerrar la sesión y medir duración |
+
+### Diagnóstico: qué salió mal
+
+| Evento | Cuándo se dispara | Para qué sirve |
+|---|---|---|
+| `checkout_error` | Falla el pago (rechazo, error del proveedor) | Distinguir **"no quiso comprar"** de **"no pudo"** — son problemas opuestos |
+| `sdk_error` | Falla interna del SDK (carrito, red, render) | Distinguir "nadie miró" de "se rompió". Lleva `error_code` para agrupar |
+
+### Servidor: lo que el dispositivo no puede ver
+
+| Evento | Cuándo se dispara | Para qué sirve |
+|---|---|---|
+| `ad_activation` | El backend dispara un shoppable ad en un broadcast | El denominador real: cuántos ads se lanzaron |
+| `cart_intent` | Un espectador de TV manda un producto a su teléfono | La conversión estrella de TV. Lo emite el backend — **un cliente no puede falsificarlo** |
+
+## Parte 2 — Qué se puede medir con esto
+
+### Ventas
+
+| Métrica | Qué responde | Cómo sale |
+|---|---|---|
+| **GMV** | Cuánto se vendió | Suma del importe de los `purchase` |
+| **Unidades** | Cuántos productos | Suma de cantidades |
+| **Ticket promedio (AOV)** | Cuánto gasta cada comprador | GMV ÷ compras |
+| **Conversión de sesión** | De cada 100 visitas, cuántas compran | Sesiones con compra ÷ sesiones totales |
+| **Top productos** | Qué se vende de verdad | Ranking por unidades e importe |
+| **Ventas por producto** | Qué producto genera qué | Corte por `product_id` |
+| **Método de pago** | Con qué pagan | Corte por `payment_method` |
+| **Moneda / mercado** | Dónde se vende | Corte por `currency` |
+
+### Rendimiento del contenido y de los componentes
+
+| Métrica | Qué responde |
+|---|---|
+| **CTR** | De los que vieron, cuántos tocaron |
+| **Embudo con caídas** | En qué escalón se pierde la gente: vio → tocó → carrito → checkout → compra |
+| **Ventas por artículo** | Qué contenido convierte — el argumento para un publisher |
+| **Rendimiento por componente** | Qué carousel o banner concreto vende, y cuál solo ocupa espacio |
+| **Comparación entre lugares** | El mismo producto en distintas superficies o secciones |
+| **A/B** | Corte por `variant` |
+
+### Televisión — lo que solo Vio puede medir
+
+| Métrica | Qué responde |
+|---|---|
+| **Fill rate** | De los ads disparados, cuántos llegaron a pantalla |
+| **Intent rate** | De los que vieron el ad, cuántos mandaron el producto al teléfono. **La métrica que se le vende al sponsor** |
+| **Conversión cross-device** | Cuántos de esos intents terminaron en compra en otro dispositivo, unidos por el id del partner |
+| **Rendimiento por minuto** | Qué momento del partido vendió |
+
+### Audiencia y salud
+
+| Métrica | Qué responde |
+|---|---|
+| **Sesiones y dispositivos únicos** | Volumen real |
+| **Retención D1/D7** | Cuántos vuelven (apps) |
+| **Usuarios identificados** | Qué porcentaje llegó con `identify()` |
+| **Tasa de error** | Cuántos checkouts fallan y por qué código |
+
+### Lo que estos datos NO pueden responder
+
+Honestidad para la conversación con un partner: **no hay modelo de dinero
+invertido**. Nada acá sabe cuánto se pagó por una campaña, así que **ROAS,
+presupuesto, ritmo de gasto y reparto de ingresos entre publisher y marca no
+se pueden calcular** — hasta que exista un sistema que registre esa parte.
+Lo que sí sale es el **ingreso atribuido**: cuánto vendió cada campaña,
+componente, artículo y producto.
+
+## Qué lleva cada evento
 ## Qué lleva cada evento
 
 ### Identidad — lo único que apunta a una persona
