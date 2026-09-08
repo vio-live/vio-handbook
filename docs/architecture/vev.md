@@ -61,6 +61,23 @@ Eso no lo vuelve frágil por sí solo, pero cambia el tipo de cuidado: no hay un
 donde equivocarse gratis. Las dos redes que sí existen son el sandbox personal y el
 `restore`.
 
+### ⚠️ Un `vev deploy` NO alcanza a una página ya publicada
+
+Descubierto el 2026-09-08 después de perder media hora midiendo el bundle equivocado. El
+despliegue actualiza el paquete **en el editor**, pero una página ya publicada **queda
+clavada al bundle con el que se publicó**. Hay que **republicarla** para que coja el nuevo.
+
+Se comprueba por el hash del fichero servido:
+
+```js
+const u=[...document.querySelectorAll('script[src]')].map(s=>s.src).find(s=>/pkg\/v1\//.test(s));
+fetch(u).then(r=>r.text()).then(t=>console.log({bundle:u.split('/').pop(), tiene:t.includes('<algo del cambio>')}));
+```
+
+Si el hash no cambia tras un deploy, la página no se republicó. Esto es la mitad de por qué
+el ciclo de prueba es caro — ver
+[`lessons/reproducir-antes-de-desplegar-una-hipotesis.md`](../lessons/reproducir-antes-de-desplegar-una-hipotesis.md).
+
 ### Marcha atrás
 
 ```bash

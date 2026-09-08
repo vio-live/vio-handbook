@@ -274,6 +274,51 @@ rama `feature/klarna-per-seller-keys`).
   `reencrypt-all` interno para migrar lo existente. decrypt en todos los
   lectores DB-directos. Ver journal 2026-08-29-payment-hardening.
 
+## Cómo llega la venta al sistema del vendedor
+
+**Los PSP sólo avisan a quien creó el pedido: nosotros.** Nada le cuenta la venta al ERP
+del vendedor, que para él es la única pregunta que importa.
+
+El camino es el **webhook de órdenes** (`vio-orders-microservice`): en cada orden pagada
+hace POST a `settings.orderWebhookUrl` del reseller y de cada supplier que lo tenga puesto.
+
+```
+POST <su-url>
+Content-Type: application/json
+X-Vio-Event: order.paid
+X-Vio-Signature: sha256=<hmac-hex del cuerpo>     ← sólo si hay secreto
+```
+
+El cuerpo lleva `orderId`, `paymentProcessor`, moneda, cliente con dirección, envío, y los
+ítems con **el SKU del vendedor** — que es lo que necesitan para casarlo con su sistema.
+
+**Se configura** en el dashboard, Settings → API & SDK → *Order webhook* (webapp#12).
+⚠️ Se escribe por `PATCH /users/:id { settings }`, que guarda el objeto entero. **No** por
+`PATCH /settings/:id`: ése destructura cuatro campos conocidos y descarta el resto en
+silencio.
+
+El otro camino, el fanout de plugins (`order:paid` → extensions), **sólo cubre productos
+con origen de tienda conectada** (Woo, Shopify). Un producto `NATIVE` no pasa por ahí.
+
+⚠️ **El envío hace un solo reintento inmediato y se rinde.** Si el endpoint del vendedor
+está caído dos segundos, esa orden se pierde: queda en nuestro log y nada más. El propio
+código lo reconoce (*"durable retries = outbox follow-up"*). Para demo vale; antes de
+producción con dinero real, no.
+
+## Probar Qliro: números de identidad, no tarjetas
+
+En el sandbox de Qliro **no se prueba con tarjeta**: el flujo nórdico identifica por número
+personal. Noruega:
+
+| Flujo | Aprobado | En espera | Rechazado |
+|---|---|---|---|
+| B2C | `22034149589` | `23034114714` | `23034114986` |
+| B2B | `123456785` | `123123123` | `987654325` |
+
+Suecia, Finlandia y Dinamarca en su
+[página de Testing](https://developers.qliro.com/docs/qliro-checkout/get-started/testing).
+Su documentación avisa: **sólo contra el entorno de pruebas**.
+
 ## El SDK web y el artículo
 
 Los tres métodos embebidos llegan al artículo por el **paquete de Vev**, que vendorea un
