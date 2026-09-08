@@ -148,6 +148,47 @@ que hay que repetir en cualquier E2E: el checkout exige
 pago (si no, 500 con "Is required that customer accepted purchase conditions"), y el envío
 viaja como línea `Type: Shipping` dentro de `OrderItems`.
 
+### El flujo de credenciales de Qliro, en orden
+
+Escrito el 2026-09-08 porque la pantalla decía lo contrario de lo que hace el backend, y
+eso costó un día de pruebas manuales.
+
+1. **De entrada, funciona con la cuenta de test de Vio.** El seller no pone nada: el
+   fallback de plataforma (`QLIRO_API_KEY` / `QLIRO_API_SECRET` del entorno) cobra. Es lo
+   que hay hoy en QA, con credenciales de sandbox.
+2. **El seller pone las suyas de test** — con el toggle **Sandbox encendido**.
+3. **El seller pone las suyas de producción** — Sandbox apagado.
+4. **Más adelante Vio tendrá las suyas de producción**, para el seller que prefiera cobrar
+   con nuestra cuenta. No hace falta tocar la UI: es la misma variable de entorno con otro
+   valor.
+
+En cuanto el seller guarda clave **y** secreto propios, deja de usar la configuración de
+plataforma **por completo** — el fallback de `getConfig()` sólo salta si falta una de las
+dos. Esa es la trampa de la que salieron los tres defectos del 2026-09-08.
+
+### ⚠️ Tres trampas de esta pantalla (todas arregladas el 2026-09-08)
+
+**El sondeo de credenciales va a producción salvo que Sandbox esté encendido.** Con claves
+de test devuelve 401, y el formulario decía *"Qliro rejected these credentials"*: literal
+pero inútil, porque señala a las claves cuando lo que está mal es el entorno. Medido con
+las mismas credenciales:
+
+| Host | Respuesta | Qué hacía el formulario |
+|---|---|---|
+| `pago.qit.nu` (Sandbox sí) | 404 | válido → guardaba |
+| `payments.qit.nu` (Sandbox no) | 401 | inválido → **bloqueaba** |
+
+Ahora el mensaje nombra producción y señala el toggle.
+
+**La Terms URL era opcional en el formulario y obligatoria en el backend.** Un seller con
+credenciales propias y sin Terms URL no podía vender: `createPayment` lanzaba, no había
+`html_snippet`, y el checkout no renderizaba sin nada en el navegador que lo explicara.
+Ahora el backend cae a los términos de la plataforma en vez de negar la venta —avisando a
+nivel WARN, porque el comprador ve términos ajenos— y el formulario exige el campo.
+
+**Qliro figuraba como proveedor sin fallback** (`fallback: false` en el dashboard), así que
+la fila decía *"Not available"* para un método que sí cobra con la cuenta de Vio. Corregido.
+
 ### ⚠️ Qliro firma el body: los bytes firmados tienen que ser los enviados
 
 `Authorization: Qliro base64(sha256(body + apiSecret))`. El conector serializa el payload una
