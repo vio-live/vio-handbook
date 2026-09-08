@@ -81,6 +81,25 @@ verdes · `next build` OK. Los 2 errores de lint que quedan
   Inter + lucide). Ojo: el `design_guidelines.md` de socket-server está
   desactualizado (describe un tema morado que no existe).
 
+## Estado: STAND BY (2026-09-08)
+
+Angelo pausó la fusión: el modelo channel/sponsor todavía tiene que decantar y
+hay otras prioridades. Lo que quedó decidido y sirve cuando se retome:
+
+- La fusión va **vista por vista** del console a commerce, nunca de golpe; el
+  console sigue vivo hasta que su reemplazo funciona. Monorepo sí, incremental.
+- **El modelo channel/sponsor ya existe en vio-backend**: `userRoleEnum` tiene
+  `sponsor`, la matriz de ADR-0007 le da solo `sponsor:read-own`, existe
+  `/api/sponsor/me` auto-scopeado a `users.sponsor_id`, y la query de "campañas
+  donde participo" está en `server/storage.ts:480-493`. El "usuario channel" de
+  Angelo es hoy el rol `admin` (dueño de sus apps + sponsors + campañas).
+- **Tres tensiones sin resolver**: (a) no hay rol llamado `channel`, el que hace
+  eso es `admin`; (b) `viewer` y `sponsor` se pisan; (c) vio-backend scopea por
+  `users.role` y commerce por claims de Firebase (`{channel:true}` /
+  `{business:true}` del signup) — dos ejes que hoy no se hablan.
+- Pendiente de Angelo: si un sponsor es **la misma cuenta** que un seller de
+  commerce ("hay un temita ahí", sin desarrollar).
+
 ## Next session
 
 Fases 1–2 del plan de fusión, ahora desbloqueadas:
