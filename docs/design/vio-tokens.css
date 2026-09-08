@@ -1,0 +1,386 @@
+/* ───────────────────────────────────────────────────────────
+   VIO DESIGN SYSTEM — Tokens (fuente: design_handoff_auth/tokens.css)
+   Dark (default) + Light vía [data-theme] en <html>.
+   Solo variables, clases utilitarias namespaced y keyframes:
+   las reglas globales de elemento (html/body/a/focus) viven en
+   @layer base de tailwind.css para no pisar el SPA legacy.
+   `color-scheme` va scoped a .vio-app (si viviera en :root, los
+   form controls y scrollbars del legacy se renderizarían dark).
+   ─────────────────────────────────────────────────────────── */
+:root, [data-theme="dark"] {
+
+  /* ── Surface ──────────────────────────────────────────── */
+  --surface-0: #000000;
+  --surface-1: #0A0A0A;
+  --surface-2: #111111;
+  --surface-3: #161616;
+  --surface-4: #1C1C1C;
+
+  /* ── Border ───────────────────────────────────────────── */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.10);
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --border-emphasis: rgba(255, 255, 255, 0.30);
+  --border-focus: rgba(255, 255, 255, 0.85);
+
+  /* ── Foreground ───────────────────────────────────────── */
+  --fg-primary: #FFFFFF;
+  --fg-secondary: #B4B4B4;
+  --fg-muted: #707070;
+  --fg-subtle: #4A4A4A;
+  --fg-disabled: #2E2E2E;
+  --fg-inverse: #000000;
+
+  /* ── Action ───────────────────────────────────────────── */
+  /* primary = maximum-contrast solid. Also used for selected pills,
+     toggles, checkboxes, active tabs and nav — never hardcode #fff. */
+  --action-primary-bg: #FFFFFF;
+  --action-primary-bg-hover: #E8E8E8;
+  --action-primary-fg: #000000;
+
+  --action-secondary-bg: transparent;
+  --action-secondary-bg-hover: rgba(255, 255, 255, 0.05);
+  --action-secondary-fg: #FFFFFF;
+  --action-secondary-border: rgba(255, 255, 255, 0.18);
+  --action-secondary-border-hover: rgba(255, 255, 255, 0.40);
+
+  --action-ghost-bg-hover: rgba(255, 255, 255, 0.06);
+  --action-ghost-fg: #B4B4B4;
+  --action-ghost-fg-hover: #FFFFFF;
+
+  --action-danger-border: rgba(255, 255, 255, 0.18);
+
+  /* ── Status ───────────────────────────────────────────── */
+  --status-live: #FF3366;
+  --status-live-fg: #FFFFFF;
+  --status-live-tint: rgba(255, 51, 102, 0.09);
+  --status-live-border: rgba(255, 51, 102, 0.30);
+  --status-upcoming: #B4B4B4;
+  --status-ended: #4A4A4A;
+  --status-error: #FF6B6B;
+
+  /* ── Cue types ────────────────────────────────────────── */
+  /* -fill = chip/solid background (paired with --fg-inverse text)
+     -text = same hue tuned for legible text/icons on the app surface */
+  --cue-product-fill: #7DD3FC; --cue-product-text: #7DD3FC;
+  --cue-poll-fill:    #A78BFA; --cue-poll-text:    #A78BFA;
+  --cue-contest-fill: #FBBF24; --cue-contest-text: #FBBF24;
+  --cue-banner-fill:  #34D399; --cue-banner-text:  #34D399;
+  --cue-message-fill: #F472B6; --cue-message-text: #F472B6;
+  --cue-segment-fill: #FF3366; --cue-segment-text: #FF7799;
+
+  /* ── Nav chrome (handoff shell + ajuste: theme-aware) ──── */
+  --nav-bg: #000000;
+  --nav-surface: #141414;
+  --nav-border: rgba(255, 255, 255, 0.08);
+  --nav-fg: #FFFFFF;
+  --nav-fg-idle: #A6A6A6;
+  --nav-fg-hover: #FFFFFF;
+  --nav-active-bg: #FFFFFF;
+  --nav-active-fg: #000000;
+  --nav-w: 236px;
+  --nav-w-rail: 64px;
+
+  /* ── Product accents ─────────────────────────────── */
+  /* Vio Commerce = green (shoppable media). Vio Broadcast = live pink. */
+  --commerce: #10B981;
+  --commerce-strong: #34D399;
+  --commerce-text: #34D399;
+  --commerce-fg: #04231A;
+  --commerce-tint: rgba(16, 185, 129, 0.12);
+  --commerce-tint-strong: rgba(16, 185, 129, 0.22);
+  --commerce-border: rgba(16, 185, 129, 0.35);
+
+  /* ── Timeline (deliberately lighter than the operator panels) ── */
+  --tl-bg: #161616;
+  --tl-surface: #1F1F1F;
+  --tl-border: #2A2A2A;
+  --tl-text: #9A9A9A;
+  --tl-lane-accent: #404040;
+  --tl-chip-idle: #3A3A3A;
+  --tl-chip-past: #2A2A2A;
+
+  /* ── Charts (Plotly reads these via getChartTheme) ─────── */
+  --chart-line: #FFFFFF;
+  --chart-fill: rgba(255, 255, 255, 0.06);
+  --chart-grid: rgba(255, 255, 255, 0.06);
+  --chart-tick: #707070;
+  --chart-axis: #B4B4B4;
+  --chart-hover-bg: #111111;
+  --chart-hover-border: #333333;
+  --chart-scale-1: #FFFFFF;
+  --chart-scale-2: #D4D4D4;
+  --chart-scale-3: #A0A0A0;
+  --chart-scale-4: #707070;
+  --chart-scale-5: #4A4A4A;
+
+  /* ── Video preview ────────────────────────────────────── */
+  --video-bg: linear-gradient(135deg, #1A1A1A 0%, #050505 60%, #000000 100%);
+  --video-line: rgba(255, 255, 255, 0.08);
+  --video-glow: rgba(255, 255, 255, 0.05);
+  --video-chrome-bg: rgba(0, 0, 0, 0.78);
+  --video-chrome-border: rgba(255, 255, 255, 0.10);
+  --video-chrome-fg: #FFFFFF;
+  --video-chrome-muted: rgba(255, 255, 255, 0.55);
+
+  /* ── Elevation ────────────────────────────────────────── */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.4);
+  --shadow-modal: 0 24px 60px rgba(0, 0, 0, 0.8);
+  --scrim: rgba(0, 0, 0, 0.70);
+}
+
+[data-theme="light"] {
+
+  /* nav theme-aware: light = nav clara */
+  --nav-bg: #FFFFFF;
+  --nav-surface: #F4F4F5;
+  --nav-border: rgba(0, 0, 0, 0.08);
+  --nav-fg: #0A0A0A;
+  --nav-fg-idle: #71717A;
+  --nav-fg-hover: #0A0A0A;
+  --nav-active-bg: #0A0A0A;
+  --nav-active-fg: #FFFFFF;
+
+  --surface-0: #FFFFFF;
+  --surface-1: #FAFAFA;
+  --surface-2: #F4F4F5;
+  --surface-3: #EDEDF0;
+  --surface-4: #E4E4E7;
+
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-default: rgba(0, 0, 0, 0.11);
+  --border-strong: rgba(0, 0, 0, 0.18);
+  --border-emphasis: rgba(0, 0, 0, 0.32);
+  --border-focus: rgba(0, 0, 0, 0.85);
+
+  --fg-primary: #0A0A0A;
+  --fg-secondary: #52525B;
+  --fg-muted: #79797F;
+  --fg-subtle: #A1A1AA;
+  --fg-disabled: #C9C9CE;
+  --fg-inverse: #FFFFFF;
+
+  --action-primary-bg: #0A0A0A;
+  --action-primary-bg-hover: #2A2A2A;
+  --action-primary-fg: #FFFFFF;
+
+  --action-secondary-bg: transparent;
+  --action-secondary-bg-hover: rgba(0, 0, 0, 0.04);
+  --action-secondary-fg: #0A0A0A;
+  --action-secondary-border: rgba(0, 0, 0, 0.16);
+  --action-secondary-border-hover: rgba(0, 0, 0, 0.38);
+
+  --action-ghost-bg-hover: rgba(0, 0, 0, 0.05);
+  --action-ghost-fg: #52525B;
+  --action-ghost-fg-hover: #0A0A0A;
+
+  --action-danger-border: rgba(0, 0, 0, 0.16);
+
+  --status-live: #E11D48;
+  --status-live-fg: #FFFFFF;
+  --status-live-tint: rgba(225, 29, 72, 0.08);
+  --status-live-border: rgba(225, 29, 72, 0.28);
+  --status-upcoming: #52525B;
+  --status-ended: #A1A1AA;
+  --status-error: #DC2626;
+
+  /* Fills stay vivid (they carry inverse text); text variants darken for contrast */
+  --cue-product-fill: #38BDF8; --cue-product-text: #0369A1;
+  --cue-poll-fill:    #A78BFA; --cue-poll-text:    #6D28D9;
+  --cue-contest-fill: #FBBF24; --cue-contest-text: #A16207;
+  --cue-banner-fill:  #34D399; --cue-banner-text:  #047857;
+  --cue-message-fill: #F472B6; --cue-message-text: #BE185D;
+  --cue-segment-fill: #E11D48; --cue-segment-text: #BE123C;
+
+  --commerce: #059669;
+  --commerce-strong: #047857;
+  --commerce-text: #047857;
+  --commerce-fg: #FFFFFF;
+  --commerce-tint: rgba(5, 150, 105, 0.10);
+  --commerce-tint-strong: rgba(5, 150, 105, 0.18);
+  --commerce-border: rgba(5, 150, 105, 0.30);
+
+  --tl-bg: #F4F4F5;
+  --tl-surface: #FFFFFF;
+  --tl-border: #E1E1E5;
+  --tl-text: #79797F;
+  --tl-lane-accent: #C9C9CE;
+  --tl-chip-idle: #D4D4D8;
+  --tl-chip-past: #EDEDF0;
+
+  --chart-line: #0A0A0A;
+  --chart-fill: rgba(0, 0, 0, 0.06);
+  --chart-grid: rgba(0, 0, 0, 0.08);
+  --chart-tick: #79797F;
+  --chart-axis: #52525B;
+  --chart-hover-bg: #FFFFFF;
+  --chart-hover-border: #D4D4D8;
+  --chart-scale-1: #0A0A0A;
+  --chart-scale-2: #45454C;
+  --chart-scale-3: #79797F;
+  --chart-scale-4: #A1A1AA;
+  --chart-scale-5: #C9C9CE;
+
+  /* The stream preview stays dark in both themes — it is video, not chrome */
+  --video-bg: linear-gradient(135deg, #23232A 0%, #0E0E12 60%, #050507 100%);
+  --video-line: rgba(255, 255, 255, 0.10);
+  --video-glow: rgba(255, 255, 255, 0.06);
+  --video-chrome-bg: rgba(0, 0, 0, 0.72);
+  --video-chrome-border: rgba(255, 255, 255, 0.14);
+  --video-chrome-fg: #FFFFFF;
+  --video-chrome-muted: rgba(255, 255, 255, 0.6);
+
+  --shadow-sm: 0 1px 2px rgba(16, 16, 20, 0.06);
+  --shadow-md: 0 4px 12px rgba(16, 16, 20, 0.08), 0 1px 2px rgba(16, 16, 20, 0.05);
+  --shadow-lg: 0 12px 32px rgba(16, 16, 20, 0.12), 0 2px 6px rgba(16, 16, 20, 0.06);
+  --shadow-modal: 0 24px 60px rgba(16, 16, 20, 0.22);
+  --scrim: rgba(24, 24, 27, 0.45);
+}
+
+:root {
+  /* ── Typography ───────────────────────────────────────── */
+  --font-sans: var(--font-geist-sans, "Geist", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif);
+  --font-mono: var(--font-geist-mono, "Geist Mono", ui-monospace, "SF Mono", "Roboto Mono", monospace);
+
+  --text-2xs: 10px;
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-md: 15px;
+  --text-lg: 18px;
+  --text-xl: 22px;
+  --text-2xl: 28px;
+  --text-3xl: 36px;
+  --text-4xl: 48px;
+
+  --leading-tight: 1.15;
+  --leading-snug: 1.35;
+  --leading-normal: 1.55;
+
+  --tracking-tight: -0.02em;
+  --tracking-base: -0.01em;
+  --tracking-wide: 0.06em;
+  --tracking-wider: 0.12em;
+
+  /* ── Space (4pt grid) ─────────────────────────────────── */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+  --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-10: 40px;
+  --space-12: 48px; --space-16: 64px;
+
+  /* ── Radius ───────────────────────────────────────────── */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* ── Layout ───────────────────────────────────────────── */
+  --sidebar-w: 64px;
+  --header-h: 64px;
+  --pageheader-h: 80px;
+
+  /* ── Motion ───────────────────────────────────────────── */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
+  --duration-slow: 280ms;
+}
+
+.scroll-hidden::-webkit-scrollbar { display: none; }
+.scroll-hidden { scrollbar-width: none; }
+
+.scroll-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+.scroll-thin::-webkit-scrollbar-track { background: transparent; }
+.scroll-thin::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+.scroll-thin::-webkit-scrollbar-thumb:hover { background: var(--border-emphasis); }
+
+.mono { font-family: var(--font-mono); font-feature-settings: "tnum"; }
+.tnum { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+.label-micro {
+  font-size: var(--text-2xs);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
+  color: var(--fg-muted);
+  font-weight: 500;
+}
+
+
+/* ── Live pulse ──────────────────────────────────────── */
+@keyframes vio-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+.dot-live {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--status-live);
+  animation: vio-pulse 1.6s var(--ease-in-out) infinite;
+}
+@keyframes pulse-dot {
+  0%   { box-shadow: 0 0 0 0 rgba(255, 51, 102, 0.55); }
+  70%  { box-shadow: 0 0 0 8px rgba(255, 51, 102, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 51, 102, 0); }
+}
+
+/* ── Animations ──────────────────────────────────────── */
+@keyframes vio-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes vio-fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.anim-fade-in { animation: vio-fade-in var(--duration-slow) var(--ease-out); }
+.anim-fade-up { animation: vio-fade-up var(--duration-slow) var(--ease-out); }
+
+/* ── Commerce showcase stage ──────────────────────────── */
+/* Product conveyors: the track holds its content twice, so translating by
+   -50% loops seamlessly. */
+@keyframes vio-marquee-l { from { transform: translateX(0); }     to { transform: translateX(-50%); } }
+@keyframes vio-marquee-r { from { transform: translateX(-50%); }  to { transform: translateX(0); } }
+@keyframes vio-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-7px); }
+}
+@keyframes vio-dock {
+  0%, 100%  { opacity: 0.3; transform: scale(0.94); border-color: transparent; }
+  12%, 30%  { opacity: 1;   transform: scale(1);    border-color: var(--commerce); }
+}
+@keyframes vio-scan {
+  0%   { transform: translateY(-40%); opacity: 0; }
+  12%  { opacity: 1; }
+  88%  { opacity: 1; }
+  100% { transform: translateY(340%); opacity: 0; }
+}
+.vio-track { display: flex; width: max-content; will-change: transform; }
+.vio-stage-mask {
+  mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
+}
+/* ── Dashboard reveal + interaction (handoff dashboard) ── */
+@keyframes vio-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.vio-reveal { animation: vio-rise 520ms var(--ease-out) both; }
+/* Lift on hover — solo en cards realmente clickeables. */
+.vio-lift { transition: transform var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out), border-color var(--duration-base) var(--ease-out); }
+.vio-lift:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--border-strong); }
+/* Filas que se iluminan sin mover el layout. */
+.vio-row { transition: background var(--duration-fast) var(--ease-out); }
+.vio-row:hover { background: var(--surface-2); }
+/* Meters que crecen desde cero en el primer paint. */
+.vio-meter > i { display: block; height: 100%; border-radius: inherit; transition: width 900ms var(--ease-out); }
+
+@media (prefers-reduced-motion: reduce) {
+  .vio-track, .dot-live { animation: none !important; }
+  [class*="anim-"] { animation: none !important; }
+  .vio-reveal { animation: none; }
+  .vio-lift:hover { transform: none; }
+  .vio-meter > i { transition: none; }
+}
