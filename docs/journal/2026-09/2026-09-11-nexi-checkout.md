@@ -174,6 +174,6 @@ kernel-first. Lo que tiene que probar está en la tarjeta y en
 - Cuenta/keys de test de Nexi (Angelo).
 - Si Vio llega a vender con su cuenta (fallback Qliro/Klarna): liquidación al
   seller, IVA, refunds y aviso en el dashboard — no existen hoy.
-- Tarjeta "auto-capture para todos los PSPs".
+- Tarjeta "auto-capture para todos los PSPs": abierta, https://trello.com/c/F2J36dZi (Qliro y Walley sin captura en Vio; Klarna/Vipps sin disparo automático; defaults OFF salvo Kustom/Nexi).
 - Release train a prod de toda la cadena de pagos/avisos (nada está en prod).
 - `PAYMENT_SECRETS_KEY` provisionada + `reencrypt-all`; scheduler del sweep.
