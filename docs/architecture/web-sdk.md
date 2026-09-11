@@ -126,6 +126,8 @@ Notes worth keeping:
 
 ## Checkout embebido — Kustom, Qliro, Walley
 
+> **Nexi (2026-09-11, rama `feature/nexi-payment`)**: cuarto embebido y la excepción a la regla del snippet — no hay `html_snippet`; el manager carga `checkout.js` de Nexi y monta `Dibs.Checkout` con la checkout key pública en el mismo contenedor light-DOM. Éxito por evento `payment-completed` (sin redirect ni recibo → confirmación de Vio), envío re-cotizado en `address-changed`, retorno de Vipps/Swish/MobilePay con `?paymentId=` retomado desde `sessionStorage`. Detalle en [payments.md](./payments.md#nexi-checkout-en-el-checkout--en-ramas-featurenexi-sin-e2e-2026-09-11).
+
 Tres proveedores de la misma familia: **el widget hace todo** (dirección, envío y pago), así
 que el checkout de Vio les cede la pantalla y no muestra su propio formulario. El contrato es
 idéntico para los tres — el backend normaliza cada API a `{ order_id, status, html_snippet }`

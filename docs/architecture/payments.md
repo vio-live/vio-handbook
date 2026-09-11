@@ -25,8 +25,9 @@ los conectores — **el casing importa**:
 | Stripe | `STRIPE` | `publishKey`, `secretKey` | **Sí** |
 | Klarna | `Klarna` | `apiKey` | **Sí** |
 | Kustom | `Kustom` | `apiKey` (`kco_(test\|live)_api_…`), `autoCapture?`, `termsUrl?` | **No** — sin clave propia no se ofrece |
-| Qliro | `Qliro` | `apiKey` (MerchantApiKey), `apiSecret` (firma), `sandbox?` (elige host), `termsUrl?` | **No** — sin credenciales no se ofrece |
+| Qliro | `Qliro` | `apiKey` (MerchantApiKey), `apiSecret` (firma), `sandbox?` (elige host), `termsUrl?`, `notifyUrl?` (opción A, en rama) | **Sí desde el 2026-09-03** (`QLIRO_API_KEY/SECRET/SANDBOX/TERMS_URL`, commit `179dab4` de una sesión de agente) — el dinero de un seller sin claves liquida en la cuenta de Vio. **Pendiente de quitar** (decisión de Angelo 2026-09-11, falta su OK explícito) |
 | Walley | `Walley` | `clientId` + `clientSecret` (OAuth2, scope fijo por entorno), `storeId?`, `sandbox?` (elige host), `termsUrl?` | **No** — sin credenciales no se ofrece |
+| Nexi Checkout | `Nexi` | `secretKey` (server, cifrada), `checkoutKey` (pública, va al navegador), `sandbox?` (elige host; default por prefijo `test-`/`live-`), `termsUrl` (**obligatorio**), `privacyUrl?`, `autoCapture?` (default true), `notifyUrl?` + `notifyAuthorization?` (opción A) | **No** — sin claves propias no se ofrece (decisión 2026-09-11) |
 | Vipps | `VIPPS` | `clientId`, `clientSecret`, `subscriptionKey`, `merchantSerialNumber` | **No** |
 
 - Apple Pay y Google Pay **corren sobre las claves Stripe del seller**
@@ -225,6 +226,38 @@ seguridad); `fees.shipping` es fallback POR DISEÑO bajo el Delivery Module
 → sin flag providerShipping. Items `productId[:variantId]` (sin metadata).
 Verify = token grant. Reconciliación cubre los tres embebidos.
 
+### Nexi Checkout en el checkout — **en ramas `feature/nexi-*`, sin E2E (2026-09-11)**
+
+Cuarto embebido (ex Nets Easy). Lo que lo hace distinto de los otros tres, y por qué
+el código se aparta del molde en tres sitios — detalle en
+[el journal](../journal/2026-09/2026-09-11-nexi-checkout.md):
+
+- **Sin `html_snippet`**: el pago se crea server-side (`POST /v1/payments`, secret key
+  del seller como header `Authorization` a secas) y el SDK monta **el JS de Nexi**
+  (`checkout.js` + `Dibs.Checkout`) con la **checkout key pública** + `paymentId`, en
+  el contenedor light-DOM que ya existía por Qliro/Walley. `checkout.url` tiene que
+  ser la página que carga el script (protocolo + host + path).
+- **Montos enteros en minor units**, `unitPrice` **sin IVA**, `taxRate` ×100
+  (`nexi-amounts.ts` mantiene las invariantes `net = unit×qty`, `gross = net+tax`,
+  gross exacto al øre). Países en **alpha-3** (`nexi-country.ts`).
+- **El envío es de Vio, por dirección**: `merchantHandlesShippingCost` retiene el botón
+  de pago; en `address-changed` el SDK congela el widget, `UpdateNexiShipping` cotiza
+  por país y hace `PUT /orderitems` con la línea SHIPPING + `costSpecified`, y
+  descongela. Sin tarifa → `NO_SHIPPING`, botón retenido. `shipping.countries` =
+  países con tarifa para todos los productos del carrito.
+- **Sin recibo ni redirect**: `payment-completed` → confirmación de Vio. Vipps/Swish/
+  MobilePay dentro de Nexi vuelven a la misma URL con `?paymentId=` y el SDK retoma la
+  sesión guardada en `sessionStorage`.
+- **Webhook por pago** (`payment.checkout.completed`) con token derivado
+  `HMAC(secretKey, checkoutId)` que Nexi devuelve en `Authorization`
+  (`nexi-webhook-token.ts`); relay `base-api /nexi/webhooks` → shopcart, que lee
+  `GET /v1/payments/{id}` (`summary.reservedAmount|chargedAmount > 0` = pagado) y crea
+  la orden **desde el snapshot** guardado en `checkout.origin_payment_body`
+  (`NexiCheckoutMeta`), porque el GET de Nexi no trae las líneas. Sweep cubre Nexi.
+- **Captura**: `checkout.charge = autoCapture` (default true; una reserva sin cobrar
+  se libera a los ~7 días). Verify: `GET /v1/payments/<32 ceros>` (404 = clave buena,
+  401 = mala).
+
 ### Kustom en el checkout — mergeado
 
 El camino KCO legacy de shopcart se **parametrizó** con
@@ -300,6 +333,28 @@ silencio.
 El otro camino, el fanout de plugins (`order:paid` → extensions), **sólo cubre productos
 con origen de tienda conectada** (Woo, Shopify). Un producto `NATIVE` no pasa por ahí.
 
+### Los tres caminos, tal como los fijó Angelo el 2026-09-11
+
+1. **Productos de feed + el vendedor tiene una URL** → dos opciones por seller:
+   - **A — el push del PSP, en su formato** (en ramas `feature/nexi-payment`): Nexi
+     admite hasta 32 webhooks por pago, así que shopcart registra la URL del vendedor
+     (`notifyUrl` + `notifyAuthorization`) y **Nexi mismo** le pega
+     `payment.checkout.completed` con la orden completa. Qliro sólo pushea a la URL que
+     registra quien crea la orden (nosotros) y el push no lleva la orden sino
+     `{OrderId, MerchantReference, Status, Timestamp}` → shopcart lo **reenvía tal cual**
+     a `notifyUrl` (`forwardPspPush`) y el sistema del vendedor lee la orden de Qliro con
+     sus propias claves.
+   - **B — nuestra orden**: el webhook `order.paid` de arriba.
+2. **Feed sin URL** → la orden queda en Vio, el pago en su cuenta, y la información se
+   entrega como la pidan. Manual; es el caso que menos queremos.
+3. **Tienda conectada** (Shopify/Woo/Magento) → creamos la orden en su tienda al recibir
+   el pago (el fanout).
+
+⚠️ En A y en B **el receptor decide**: los plugins oficiales de Qliro/Nets para
+Magento, Woo o Shopify sólo finalizan órdenes que ellos iniciaron (buscan su carrito
+por `MerchantReference` y descartan el resto). Un OMS/ERP con integración propia sí
+registra la orden. La URL entrega; no garantiza el registro.
+
 ⚠️ **El envío hace un solo reintento inmediato y se rinde.** Si el endpoint del vendedor
 está caído dos segundos, esa orden se pierde: queda en nuestro log y nada más. El propio
 código lo reconoce (*"durable retries = outbox follow-up"*). Para demo vale; antes de
@@ -321,7 +376,7 @@ Su documentación avisa: **sólo contra el entorno de pruebas**.
 
 ## El SDK web y el artículo
 
-Los tres métodos embebidos llegan al artículo por el **paquete de Vev**, que vendorea un
+Los métodos embebidos (Kustom, Qliro, Walley y, en rama, Nexi — el único **sin snippet**: monta el JS de Nexi) llegan al artículo por el **paquete de Vev**, que vendorea un
 bundle del SDK generado desde el código (no desde npm). Cómo funcionan del lado del cliente,
 y las dos reglas que hay que respetar para agregar un cuarto proveedor, están en
 [`web-sdk.md`](./web-sdk.md#checkout-embebido--kustom-qliro-walley).
@@ -334,6 +389,11 @@ en npm es para el resto de los consumidores y es un paso aparte.
 - Dashboard: `src/lib/payments.js` (contratos + helpers),
   `src/views/settings/sections/payments.jsx`,
   `src/views/settings/payment-icons.jsx`.
+- Nexi Checkout: [Payment API](https://developer.nexigroup.com/nexi-checkout/en-EU/api/payment-v1/),
+  [Checkout JS SDK](https://developer.nexigroup.com/nexi-checkout/en-EU/api/checkout-js-sdk/),
+  [webhooks](https://developer.nexigroup.com/nexi-checkout/en-EU/docs/track-events-using-webhooks/),
+  [shipping](https://developer.nexigroup.com/nexi-checkout/en-EU/docs/add-shipping-cost/),
+  [test](https://developer.nexigroup.com/nexi-checkout/en-EU/docs/test-environment/).
 - Backend: `vio-api-microservice/src/modules/paymentMethod`,
   `vio-base-api/src/router/paymentMethodRouter.js`,
   `vio-shopcart-microservice/src/modules/checkout/providers/*`.
