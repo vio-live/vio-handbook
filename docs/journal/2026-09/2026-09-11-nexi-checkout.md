@@ -46,9 +46,11 @@ styler del portal.
    en el entorno (`QLIRO_API_KEY/SECRET`), con las que un seller sin claves
    vende igual **y el dinero liquida en la cuenta de Vio**. Lo añadió a Qliro
    una sesión de agente el 09-03 (`179dab4`, co-authored Claude, identidad
-   git de Angelo — no lo hizo Angelo a mano). Angelo: "está mezclando y es
-   fallo mío" → **quitar el de Qliro** queda pendiente de una confirmación
-   explícita (connector, `qliroOffered`, `QLIRO_*`, fallback de terms).
+   git de Angelo — no lo hizo Angelo a mano). Angelo, tras la explicación: **el de Qliro se queda** — "la idea es evitar
+   estar como vendedores nosotros, pero por ahora dejémoslo y, en caso de
+   [usarlo], añadir las cosas que falten para que nosotros seamos los
+   vendedores" (liquidación al seller, IVA, refunds, aviso en el dashboard).
+   Nexi sigue sin fallback.
 3. **Envío V2**: recálculo por dirección (`address-changed` → freeze →
    `UpdateNexiShipping` → `PUT /orderitems` → thaw). `shipping.countries` =
    intersección de países con tarifa para todos los productos del carrito
@@ -170,7 +172,8 @@ kernel-first. Lo que tiene que probar está en la tarjeta y en
 ## Pendientes
 
 - Cuenta/keys de test de Nexi (Angelo).
-- Quitar el fallback de plataforma de Qliro (Angelo confirma con una línea).
+- Si Vio llega a vender con su cuenta (fallback Qliro/Klarna): liquidación al
+  seller, IVA, refunds y aviso en el dashboard — no existen hoy.
 - Tarjeta "auto-capture para todos los PSPs".
 - Release train a prod de toda la cadena de pagos/avisos (nada está en prod).
 - `PAYMENT_SECRETS_KEY` provisionada + `reencrypt-all`; scheduler del sweep.
