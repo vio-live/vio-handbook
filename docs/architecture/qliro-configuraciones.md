@@ -75,6 +75,35 @@ su API se cae.
 - ⚠️ Con Ingrid, `MerchantOrderAvailableShippingMethodsUrl` **no se manda** — Qliro lo
   prohíbe explícitamente cuando Ingrid está activo.
 
+### 2026-09-14 — el cliente no podía elegir el envío dentro de Qliro (arreglado en ramas)
+
+Angelo en QA: producto con dos tarifas (200 y 100 kr) y el widget ofrecía **una**, la más
+cara. Verificado con los logs de QA de ese día:
+
+- El SDK, al abrir el checkout, preselecciona y **guarda en el carrito** la primera tarifa de
+  la lista, que llega en orden de base de datos (no por precio).
+- `resolveShippingOptions`, con una tarifa guardada en las líneas, devuelve **una sola**, así
+  que `AvailableShippingMethods` salía con un elemento.
+
+Arreglo, sin mergear:
+
+- **shopcart** `fix/qliro-shipping-choices` (`4449a65`): en `vio-methods`, `nshift` e
+  `ingrid`, `resolveShippingChoices` manda **todas** las tarifas del proveedor para el país
+  del pedido: primero la guardada (la que el cliente eligió en nuestro formulario pagando
+  con otro método), luego de más barata a más cara. Aplica al crear el pedido, al
+  sincronizar y en el callback de dirección. `vio-line` queda igual. Con varios
+  proveedores sigue una sola tarifa agregada, como antes.
+- **SDK** `fix/qliro-checkout-shipping-and-close` (`573d2ae`): las tarifas se listan de
+  más barata a más cara (la preseleccionada es la más barata), el resumen de Vev sigue lo
+  que el cliente elige en Qliro (`onShippingMethodChanged` / `onShippingPriceChanged`), y
+  cerrar el checkout quita los widgets embebidos (hallazgo de Alan: X, cambio de carrito,
+  y Qliro seguía con el total viejo).
+- Lo elegido en Qliro ya llegaba a la orden: `paymentQliroOk` toma la línea
+  `Type: Shipping` del pedido de Qliro.
+
+Para que el cliente elija dentro de Qliro, el seller tiene que estar en `vio-methods` (y en
+`nshift` cuando funcione). En `vio-line` Qliro no muestra selector, por diseño.
+
 ### Lo que hoy se pierde: el envío que elige el cliente
 
 En los tres modos que no son `vio-line`, el cliente elige el envío **dentro del iframe** y
