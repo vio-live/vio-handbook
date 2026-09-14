@@ -1,16 +1,15 @@
 ---
-title: "Handoff — encender el puente de stats del dashboard de Commerce (QA)"
-last-updated: 2026-09-07
+title: "Handoff — encender el puente de stats del dashboard de Commerce (QA + prod)"
+last-updated: 2026-09-14
 owner: angelo
 status: live
 ---
 
-# Encender el puente de stats — QA
+# Encender el puente de stats — QA + prod
 
 > **Actualización 2026-09-14:** staging ya pinta datos reales (webapp#20 —
 > el host sale de `API_HOST`, sin variable aparte). El Paso 3 quedó obsoleto.
-> Prod pendiente del release (colector + puente de base-api antes que el
-> webapp a `master`).
+> Prod: ver [Release a producción](#release-a-producción-2026-09-14) al final.
 
 El dashboard de Commerce muestra **datos de demo** porque `STATS_API_HOST`
 está vacío. El colector de analytics ya computa los datos reales y expone las
@@ -99,6 +98,13 @@ curl -H "authorization: <ID_TOKEN>" https://<base-api-qa>/api/stats/overview?ran
 
 ## ⚠️ Riesgo conocido: puede dar 200 con todo en cero
 
+> **Resuelto 2026-09-14** (colector #11 + base-api #8): el sponsor se resuelve
+> primero por el **hash SHA-256 de la api key del canal** contra
+> `sponsors.commerce_api_key` (obligatorio para que commerce funcione);
+> `commerce_channel_id` quedó solo como fallback. Ceros hoy = el business no
+> tiene su api key cargada en ningún sponsor, o no tiene tráfico. Texto
+> original abajo.
+
 El colector mapea canal→sponsor por **`sponsors.commerce_channel_id`** (en el
 Postgres de vio-backend). Ese campo es **opcional**, se tipea a mano en el
 formulario de sponsors, y **nadie más lo consume** (el web SDK lo declara en
@@ -129,3 +135,31 @@ SELECT id, name, commerce_channel_id FROM sponsors WHERE commerce_api_key IS NOT
 Por qué existe el puente y la división quién-ve-qué:
 [`architecture/vio-analytics-metrics.md`](../architecture/vio-analytics-metrics.md)
 y [ADR-0009](../decisions/0009-analytics-independent-collector-closed-contract.md).
+
+## Release a producción (2026-09-14)
+
+**El orden no es negociable**: cada pieza depende de la anterior, y el webapp
+es el último porque es lo único que ve el cliente.
+
+| # | Pieza | Estado | Quién |
+|---|---|---|---|
+| 1 | Colector `vio-analytics` en prod → `b13d04b` (#9–#12: tokens por rol, sponsor por hash de api key, top-products, ceros) | ✅ desplegado 2026-09-14 (`ca-analytics-vio-production--0000005`) | agente |
+| 2 | `.env` de prod de base-api: `ANALYTICS_STATS_URL=https://events.vio.live` + `ANALYTICS_INTERNAL_TOKEN=<token de producción del colector>` en `containerproduction2` / `env-file-microservices` / `base-api/.env` (respaldar antes, como en QA) | ⬜ | Miguel |
+| 3 | Merge de [`vio-base-api#9`](https://github.com/vio-live/vio-base-api/pull/9) a `master` → build+deploy de prod (el `.env` se hornea en el build: por eso va **después** del 2) | ⬜ | Miguel / Angelo |
+| 4 | Verificar: `curl https://api-ecom.vio.live/api/stats/overview` → **401** (hoy 404; 503 = falta el 2) | ⬜ | cualquiera |
+| 5 | Merge de [`webapp-vio-commerce#21`](https://github.com/vio-live/webapp-vio-commerce/pull/21) (`develop`→`master`) → Vercel publica `dashboard.ecom.vio.live` | ⬜ | Angelo |
+| 6 | Login real en `dashboard.ecom.vio.live`: sin badge "Demo data", números reales o 0 | ⬜ | Angelo |
+
+**base-api#9 es un cherry-pick, no `develop`→`master`.** `develop` de base-api
+tiene otros 7 commits (relays de Qliro/Walley, paymentmethod, listings) que
+no son parte de este release; mergear `develop` entero los habría llevado a
+prod de rebote. El release lleva solo los commits del puente (#7 + #8).
+
+**Qué se va a ver en prod**: el colector resuelve el sponsor de Vio por el
+hash de la api key del canal del usuario (`sponsors.commerce_api_key` en el
+Postgres de prod de vio-backend). Un business cuya api key no esté cargada en
+un sponsor de prod ve **0** — correcto por diseño ("0 si es 0"), no un error.
+
+Pendiente de higiene (no bloquea): tokens de solo lectura en prod
+(`internal_read_tokens` vía TF) y pasar base-api a usar ese token en vez del
+completo — hoy staging y prod usan el token completo.

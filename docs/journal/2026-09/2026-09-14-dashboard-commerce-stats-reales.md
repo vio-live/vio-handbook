@@ -25,6 +25,15 @@ Angelo cuestionó que existiera una variable aparte si el dominio ya se conoce: 
 ### Pendiente
 
 - Prueba logueada en `dashboard-staging` (necesita sesión Firebase): sin badge "Demo data", números reales o 0.
-- **Prod — orden obligatorio**: colector (PRs #9–#12 + tokens por rol) → puente de base-api a `master` + `.env` de prod → recién ahí webapp a `master`. Si el webapp llega antes, prod deja el demo y muestra bloques sin datos (hoy `api-ecom.vio.live/api/stats/*` da 404).
 - El cluster QA ahora corre L-V 09:00–19:00 (journal de Miguel de hoy): fuera de ese horario el dashboard de staging no va a tener stats.
 - `STATS_API_HOST` en `Preview(develop)` se puede borrar de Vercel (inofensiva).
+
+### Release a prod (misma sesión, pedido de Angelo: "lleva a prod y cerramos esta etapa")
+
+Checklist vivo con el orden y dueños: [`handoff/analytics-stats-bridge.md` → Release a producción](../../handoff/analytics-stats-bridge.md#release-a-producción-2026-09-14).
+
+- **Colector a prod — hecho.** `ca-analytics-vio-production` pasó de `4d32366` (#8) a `b13d04b` (#9–#12), revisión `--0000005`, `/health` ok, `/v1/commerce-stats/*` pide token interno (401). Deploy por `workflow_dispatch` `environment=production`.
+- **base-api — PR [#9](https://github.com/vio-live/vio-base-api/pull/9) a `master`, sin mergear.** Es un **cherry-pick** de solo #7 + #8 sobre `master`, no `develop`→`master`: `develop` de base-api trae otros 7 commits de pagos (Qliro/Walley relays, paymentmethod verify, listings `origin`) que no son de este release. Conflictos en `app.ts`/`controller/index.ts`/`router/index.js` resueltos dejando solo las líneas `stats*` (en `develop` esas listas también traen `campaign*`/`components*`). Tests del puente 6/6, `tsc` 0 errores en `src`.
+- **`.env` de prod de base-api — bloqueado para el agente** (el clasificador no deja leer/escribir blobs con secretos de prod). Lo hace Miguel: `containerproduction2` / `env-file-microservices` / `base-api/.env`, agregar `ANALYTICS_STATS_URL=https://events.vio.live` + el token de producción del colector (ya lo tiene del set del 2026-09-07). **Antes** del merge de #9, porque se hornea en el build.
+- **webapp — PR [#21](https://github.com/vio-live/webapp-vio-commerce/pull/21) `develop`→`master`, sin mergear.** Solo trae #18 + #20. Se mergea cuando `api-ecom.vio.live/api/stats/overview` dé 401.
+- En prod, un business sin su api key cargada en un sponsor de prod ve 0 (por diseño).
