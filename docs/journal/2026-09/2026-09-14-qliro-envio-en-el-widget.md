@@ -1,6 +1,6 @@
 # 2026-09-14 — Qliro: elegir el envío dentro del widget, y el widget viejo al cerrar
 
-Dos hallazgos de QA del mismo día, arreglados en ramas **sin mergear**.
+Dos hallazgos de QA del mismo día. Arreglados, mergeados a QA y publicados en Vev (ver abajo).
 
 ## Alan — cerrar con la X deja el pedido viejo
 
@@ -34,6 +34,20 @@ el arreglo principal está en shopcart: el SDK no puede meterle opciones a Qliro
 Para verlo en QA: merge de shopcart a `develop`, publicar el SDK, rebundle de Vev y
 **republicar la página** (una página ya publicada queda clavada a su bundle). El seller en
 modo `vio-methods`.
+
+## Mergeado y publicado (Angelo: "mergea y publica")
+
+| Qué | Dónde | Resultado |
+|---|---|---|
+| shopcart → `develop` (QA) | [vio-shopcart-microservice#20](https://github.com/vio-live/vio-shopcart-microservice/pull/20) | merge `9b98897`; CI/CD run `34871250200` |
+| SDK → `main`, **0.11.2** | [vio-web-sdk#47](https://github.com/vio-live/vio-web-sdk/pull/47) | merge `5a3a6f8` (bump en el mismo PR: `package.json` + `SDK_VERSION`) |
+| Rebundle Vev | [vev#28](https://github.com/vio-live/vev/pull/28) | merge `4804781`; bundle verificado con `grep` + `vev build` |
+| Paquete Vev `cq1lXld-TA9` | `vev deploy -m …` | **0.296** (antes 0.295 — `vev restore` si hubiera que volver) |
+
+**npm no publicado**: pide 2FA de Angelo, y Vev no lo necesita (vendorea el bundle desde
+el código). Queda para cuando lo corra él: `npm publish` desde `vio-web-sdk` en `main`.
+
+Angelo lo prueba en su página de Vev (hay que **republicarla** para que coja la 0.296).
 
 ## Para probar
 
