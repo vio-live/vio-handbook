@@ -38,7 +38,7 @@ otro nombre.
 | `FIREBASE_MESSAGING_SENDER_ID` | ✅ | — | — | ✅ (Secret) | ✅ | Config (Secret sólo en staging) |
 | `FIREBASE_PROJECT_ID` | ✅ | ✅ | — | — | ✅ | Config |
 | `FIREBASE_STORAGE_BUCKET` | ✅ | ✅ | — | — | ✅ | Config |
-| `STATS_API_HOST` | — | — | ✅ | — | — | Config |
+| `STATS_API_HOST` | — | — | ✅ | — | — | Config — **obsoleta desde 2026-09-14** (webapp#20: el host sale de `${API_HOST}/api`); override opcional, se puede borrar |
 | `LOGROCKET_API_KEY` | — | — | — | ✅ (Secret) | — | Secret |
 | `REACT_APP_TIPIO_ADMIN_API` | — | — | — | ✅ (Secret) | — | Secret |
 

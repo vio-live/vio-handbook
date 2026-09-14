@@ -7,6 +7,11 @@ status: live
 
 # Encender el puente de stats — QA
 
+> **Actualización 2026-09-14:** staging ya pinta datos reales (webapp#20 —
+> el host sale de `API_HOST`, sin variable aparte). El Paso 3 quedó obsoleto.
+> Prod pendiente del release (colector + puente de base-api antes que el
+> webapp a `master`).
+
 El dashboard de Commerce muestra **datos de demo** porque `STATS_API_HOST`
 está vacío. El colector de analytics ya computa los datos reales y expone las
 formas exactas del contrato congelado del webapp; el puente en base-api ya
@@ -58,9 +63,20 @@ download` en el Dockerfile). Reiniciar pods no cambia nada: hay que
 **redesplegar** para que se construya una imagen nueva con el `.env`
 actualizado. Merge del PR a `develop` → el workflow buildea y despliega a QA.
 
-## Paso 3 — La env var del webapp (Vercel)
+## Paso 3 — La env var del webapp (Vercel) — ⚠️ OBSOLETO desde 2026-09-14
 
-En el proyecto del webapp de Commerce, entorno QA/preview:
+**Ya no hace falta.** Desde [`webapp-vio-commerce#20`](https://github.com/vio-live/webapp-vio-commerce/pull/20)
+el webapp arma el host de stats solo: `${API_HOST}/api` (el puente vive en
+base-api, que es el mismo host que ya usa todo el webapp). `STATS_API_HOST`
+queda como override opcional; si está vacía no pasa nada.
+
+Por qué se cambió: la variable se cargó el 2026-09-07 en `Preview(develop)`,
+pero `dashboard-staging` se construye con el entorno custom `staging` de
+Vercel (el chunk desplegado resolvió el `API_HOST` de ese entorno), así que
+nunca entró al build y el dashboard siguió en "Demo data". Una variable
+redundante con `API_HOST` era una trampa de config.
+
+Texto original, solo como referencia:
 
 ```
 STATS_API_HOST=https://<host-de-base-api-qa>/api
