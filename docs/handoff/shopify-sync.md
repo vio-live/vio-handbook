@@ -24,6 +24,11 @@ vuelven a la tienda atribuidas al canal (`source_name: channel:<handle>`).
 - **Auth a Vio**: el merchant pega su **API key de Vio** (no Firebase). Se guarda en un
   metafield app-owned.
 
+Vio **no es un marketplace** propio: los productos se compran dentro de apps y artículos de
+terceros (diarios como VG o Dagbladet; artículos armados en Vev), sin salir de la lectura.
+Por eso el checkout no "se salta" uno de Shopify: el comprador nunca estuvo en la tienda →
+[lección](../lessons/verify-product-model-before-compliance-copy.md).
+
 ⚠️ No confundir con **`vio-shopify`** (el legacy Koa + Next, sin CLI, otra org) →
 [lección](../lessons/vio-sync-not-vio-shopify.md).
 
