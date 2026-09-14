@@ -49,6 +49,33 @@ el código). Queda para cuando lo corra él: `npm publish` desde `vio-web-sdk` e
 
 Angelo lo prueba en su página de Vev (hay que **republicarla** para que coja la 0.296).
 
+## Segunda vuelta: el mismo pedido viejo sin cerrar nada (0.11.3)
+
+Probando en su página, Angelo subió cantidades en la **vista del carrito**, volvió con
+"Til kassen" y Qliro seguía con el total inicial. El arreglo del cierre no lo cubría porque
+**nada cerraba el checkout**: en Vev (`vio-config.tsx`) la vista del carrito se abre encima,
+y "Til kassen" llama a `Vio.checkout.open()`, que **reemplaza** el estado sin pasar por
+`null`, así que el reset del cierre nunca corría.
+
+Arreglo: cada widget embebido (Kustom, Qliro, Walley) recuerda el carrito para el que se
+creó (`cartFingerprint`: sponsor, moneda, subtotal y líneas). Si al volver a mostrarse no
+coincide, se desmonta y se crea un pedido nuevo; con el mismo carrito se conserva. Tests que
+reproducen el flujo de Vev (fallan sin el cambio).
+
+| Qué | Dónde | Resultado |
+|---|---|---|
+| SDK → `main`, **0.11.3** | [vio-web-sdk#48](https://github.com/vio-live/vio-web-sdk/pull/48) | merge `1977053`; 123/123 tests |
+| Rebundle Vev | [vev#29](https://github.com/vio-live/vev/pull/29) | merge `f6df165` |
+| Paquete Vev `cq1lXld-TA9` | `vev deploy -m …` | **0.297** |
+
+El envío dentro de Qliro quedó **confirmado por Angelo en su página**: aparecen las dos
+tarifas y se elige en el widget. (Su primer intento se trabó en el paso de identificación
+de Qliro por poner el número de identidad en el campo "E-postadresse eller mobil": ahí va un
+email o móvil.)
+
+Aviso a Alan en [IW0OSJp7](https://trello.com/c/IW0OSJp7): qué se hizo, por qué el envío se
+elige en Qliro (nShift) y qué volver a probar.
+
 ## Para probar
 
 - La edición masiva de productos con "Shipping class" **reemplaza** las tarifas del
