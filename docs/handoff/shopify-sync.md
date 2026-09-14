@@ -1,130 +1,131 @@
-# Handoff — Vio Sync (app de Shopify)
+---
+title: "Handoff — Vio Sync (app de Shopify, Sales Channel)"
+last-updated: 2026-09-14
+owner: angelo
+status: live
+---
 
-> Estado al **2026-06-23**. App embebida de Shopify reescrita de cero (legacy Next.js → React Router 7).
-> Repo: **`vio-live/vio-shopify-sync`**, rama **`rewrite/react-router-app`** (HEAD `d0452d4`).
-> Local: `/Users/angelo/vio-sync`.
+# Handoff — Vio Sync (app de Shopify, Sales Channel)
 
-## Qué es (dirección del flujo)
+> Estado al **2026-09-14**. **Cuarta submission al Shopify App Store enviada el 2026-09-10**
+> (status "Submitted — assigning a reviewer"), esperando reviewer. Reemplaza las versiones
+> del 2026-06-23 y del 2026-08-18. La historia está en el journal (links al final).
 
-La app es de **EXPORTACIÓN**: empuja productos de **Shopify → Vio**. El merchant es un **supplier**: sus productos de Shopify se listan y se venden en Vio.
+## Qué es
 
-```
-Productos:   Shopify ──(export / "Export selected")──▶ Vio   (se venden en Vio)
-Una venta:                              ocurre en Vio
-La orden:    Shopify ◀──(webhook)──── Vio   (para que el merchant la despache)
-El pago:     lo cobra el merchant
-```
+Una **Sales Channel app**: el merchant publica productos desde su admin de Shopify al canal
+"Vio", y Vio los vende en su red nórdica (apps y artículos de publishers). El checkout es de
+Vio (`merchantOfRecord = "channel"`, confirmado con Shopify el 2026-08-21) y las órdenes
+vuelven a la tienda atribuidas al canal (`source_name: channel:<handle>`).
 
-Ojo con la terminología: el legacy usaba **"import"** desde la perspectiva de **Vio** ("imported as drafts to Vio") = traer productos *hacia* Vio = lo que para el merchant es **exportar**. El endpoint legacy lo confirma: `connectionType=export`. En la app nueva la UI dice **"Export"** sin ambigüedad.
+- **Cobro**: suscripción mensual del app **vía Shopify App Pricing** — Starter 99 USD
+  (10 SKUs), Growth 499 (500), Unlimited 999 (sin límite), 90 días de trial, **0% de
+  comisión** ([ADR-0017](../decisions/0017-cobro-canal-shopify-via-app-pricing.md)).
+- **Auth a Vio**: el merchant pega su **API key de Vio** (no Firebase). Se guarda en un
+  metafield app-owned.
 
-**Decisión del producto (2026-06-23):** la app es **solo exportar, gratis, sin review**. Se sacó del scope: import masivo del catálogo, pagos/cuenta bancaria, publishing/review.
+⚠️ No confundir con **`vio-shopify`** (el legacy Koa + Next, sin CLI, otra org) →
+[lección](../lessons/vio-sync-not-vio-shopify.md).
 
 ## Dónde vive
 
 | | |
 |---|---|
-| Repo | `vio-live/vio-shopify-sync`, rama **`rewrite/react-router-app`** (el legacy Next.js sigue en `master`/`develop` del mismo repo) |
-| Local | `/Users/angelo/vio-sync` — rama `main-cli`; remotes: `vio` → vio-shopify-sync, `origin` → template de Shopify (no se puede pushear) |
-| HEAD | `d0452d4` |
-| Nota git | El repo es un **clone shallow** del template → para pushear a `vio` hizo falta `git fetch --unshallow origin` una vez |
+| Repo | `vio-live/vio-shopify-sync` — ramas **`master`** (prod) y **`staging`** (paridad con master) |
+| Local | `/Users/angelo/vio-sync` (remote `vio`) |
+| Deploy web | Vercel `tipio-2/vio-sync`: master → **`sync.vio.live`**, staging → **`sync-staging.vio.live`** |
+| Apps de Shopify | prod "Vio Sync" (Partner org `4993457`, app `386969239553`, `shopify.app.vio-sync.toml`); staging (`shopify.app.vio-sync-staging.toml`); dev (`shopify.app.vio-sync-dev.toml`, túnel `shopify-dev.vio.live`) |
+| Deploy de config/extensiones | `shopify app deploy --config vio-sync` (lo corre un humano) |
+| Documentación de submission | `docs/SUBMISSION.md` del repo — la sección 3 tiene el texto **real** de las testing instructions |
 
-## Stack
+**Flujo de trabajo**: rama corta → PR a `master` → CI (14 checks: typecheck, vitest con
+**coverage 100% obligatorio en las 4 métricas**, lint y build en Node 22/24/26 × npm/pnpm) →
+merge → `git merge master -X theirs` en `staging` → push. Vercel despliega solo.
 
-- **React Router 7** + `@shopify/shopify-app-react-router@1.1` + **App Bridge 4** + **Polaris web components** (`s-page`, `s-table`, `s-button`, `s-select`, `s-search-field`, `s-thumbnail`, `s-badge`, …). **NO** Polaris React, **NO** antd.
-- `flatRoutes()`; loaders/actions; tipado por `@shopify/polaris-types` (`polaris.d.ts`, ~7k líneas — ahí están los props válidos de cada `s-*`).
-- Sesiones: **Prisma + SQLite** (template default) → **a migrar a Redis** (ver Pendientes).
-- API Admin de Shopify: **October25** (`2025-10`).
+## Cómo funciona
 
-## Auth a Vio: **API KEY** (no Firebase)
+**Canal y productos**
 
-El merchant pega su **API key de Vio** en la pantalla de conexión.
+- Extensión `channel_config` (spec `vio`): países NO/DK/SE/FI, `productFeedManagement =
+  "manual"`, ícono SVG 20×20. El app crea los ProductFeeds al conectar, con **inglés como
+  idioma de respaldo**. Si un país no tiene feed: metafield `feeds_pending` + banner en el
+  Home + reintento en cada carga.
+- Publicar desde la ficha nativa → webhooks `product_feeds/*` → `app/lib/productFeeds.server.ts`
+  → API de Vio. Publicar desde la página **Products** del app → directo al API de Vio.
+- Conectar no publica nada (se apaga el `autoPublish` de Shopify).
+- Problemas por producto → ResourceFeedback API.
 
-- La key va **CRUDA** en el header **`Authorization`** (sin `Bearer`, sin transformar) — tal como espera el backend (visto en el plugin de Woo: `Authorization: get_option('vio_apikey')`).
-- Se guarda **por-tienda** en un **metafield app-owned** (`$app:vio` / `apikey`), vía `metafieldsSet` sobre la `currentAppInstallation` (no requiere scope extra: la app es dueña de sus metafields `$app`).
-- **Connect**: valida la key con `GET me` → si OK, la guarda → muestra productos.
-- **Disconnect**: borra la key (`metafieldsDelete`) + avisa al backend (`DELETE sales-channel`, best-effort) → vuelve a la pantalla de conexión.
-- **Gating**: sin key guardada NO se ven productos — la pantalla principal es "Connect to Vio".
+**Planes (App Pricing)**
 
-Quedó **afuera** todo lo del legacy: Firebase (signInWithCustomToken/Password), login email/password, y el metafield-uid. **Cero llamadas a Google/Firebase ahora.** Server-side en `app/lib/vio.server.ts`.
+- El loader del Home (`app/routes/app._index.tsx`) lee el plan con `getVioPlanState`: las
+  **`activeSubscriptions` de Shopify son la fuente de verdad**, más los metafields
+  `plan_handle` (elegido) y `plan_synced` (replicado a Vio). Sin plan → redirect a
+  `admin.shopify.com/store/{tienda}/charges/{VIO_APP_HANDLE}/pricing_plans` (`target _top`).
+- Al volver, Shopify agrega `?plan_handle=`; `syncVioPlanByHandle` lo guarda y lo manda a
+  Vio (`POST /api/users/create/subscription`, `codePlan` por env `VIO_CODEPLAN_*`: 5/6/7).
+- Si la cuenta de Vio se conecta después (el orden normal), `syncStoredVioPlan` replica el
+  plan guardado. Si el backend falla, el Home **reintenta en cada carga** hasta que
+  `plan_synced` alcance a `plan_handle`.
+- App Pricing **no manda webhooks** desde abril de 2026. El webhook
+  `app_subscriptions/update` queda como respaldo y responde siempre 200. Al desinstalar se
+  limpian los metafields del plan.
+- Link **"Change plan"** en el Home (requisito 1.2.3).
 
-## Rutas y endpoints que usa
+**Dashboard de Vio** (`webapp-vio-commerce`): las cuentas del canal Shopify no ven precios
+ni Stripe ("Managed through Shopify"). El gate (`useShopifyManaged`) enciende si hay una
+conexión SHOPIFY en `/ecom-user`, una credencial SHOPIFY pendiente en el navegador del alta,
+o una suscripción viva en plan 5/6/7.
 
-**Shopify Admin GraphQL** (`https://{shop}/admin/api/2025-10/graphql.json`):
-- `query VioProducts` — lista de productos (con paginación cursor + filtro)
-- `query VioApiKey` — lee la API key guardada (metafield `$app:vio`)
-- `query VioAppInstallation` — id de la AppInstallation (owner del metafield)
-- `mutation SetVioApiKey` / `mutation ClearVioApiKey` — guarda / borra la key
+**Envs** (Vercel, prod y staging): `VIO_API_HOST`, `VIO_CODEPLAN_STARTER|GROWTH|UNLIMITED`,
+`VIO_APP_HANDLE` (staging tiene el suyo), `VIO_DASHBOARD_SIGNUP_URL`, `VIO_TERMS_URL`,
+`REDIS_URL` (sesiones en Redis en prod; Prisma/SQLite es solo de dev).
 
-**Backend Vio** (`${VIO_API_HOST}` + path, header `Authorization: <apikey>`):
-| método | path | uso |
-|---|---|---|
-| GET | `/api/users/me/sales-channel?channel=SHOPIFY` | valida la key / "me" |
-| GET | `/api/listings?page=0&size=1000` | productos ya exportados |
-| POST | `/api/products/shopify-sqs` | export (sync) |
-| DELETE | `/api/products/shopify` | quitar de Vio |
-| DELETE | `/api/users/me/sales-channel` | disconnect (best-effort) |
+## La review en curso
 
-**Rutas propias** (servidas en la URL del entorno): `/` (landing) · `/app` (conexión/productos) · `/app/additional` (Connection & log) · `/auth/*` · `/webhooks/app/uninstalled` · `/webhooks/app/scopes_update`.
+- **Cuenta demo** del listing: `shopify-user-to-submit@test.no` (user 1299), password = la
+  API key demo (vive solo en el formulario del listing, nunca en un repo). Suscripción
+  `trialing` en Starter, **vence ~2026-10-09**: si la review se alarga, extender el trial en
+  Stripe. **No rotar la key ni la contraseña** hasta que termine.
+- Los reviewers eligen un plan privado "shopify-test" a $0 que no está mapeado a Vio: no
+  dispara ninguna llamada al backend.
+- Riesgos conocidos, no bloqueantes: 5.7.14 (checkout propio, excepción confirmada), 5.7.18
+  (ícono de navegación de 16px, no verificable en el dashboard actual), 5.7.1
+  (`read_only_own_orders` lo agrega Shopify; decir que estamos listos si preguntan).
+- El listing no se puede editar durante la review. Correcciones para después:
+  [SUBMISSION.md §3](https://github.com/vio-live/vio-shopify-sync/blob/master/docs/SUBMISSION.md).
 
-## Cómo correr en local
+## Deuda abierta (backend, Alan — Trello `WJ7SPrQJ`)
 
-> ⚠️ **Los quick tunnels de Shopify (`*.trycloudflare.com`) están ROTOS en la red de Angelo** — devuelven 404 a TODO (probado hasta con un server trivial). Hay que usar un túnel cloudflared **NAMED**. Esto costó horas de debug; no volver a intentar con el quick tunnel.
+- **`vio-users-microservice` PR #10** (sin mergear): cambio de plan seguro, trial 90 real,
+  barrido de huérfanas → [lección](../lessons/suscripcion-vive-en-stripe-y-en-la-fila.md).
+- **Self-heal de middleware-ms muerto**: con él roto, cualquier cuenta cuyo espejo pase a
+  canceled (día ~31) queda bloqueada.
+- `POST /users/create/subscription` **sin auth** en base-api.
+- Suscripciones huérfanas EUR en Stripe (la cuenta 1309 de Angelo, aparcada hasta el PR #10).
+- Test del PlanLimitModal con la cuenta demo, pendiente.
+- Decisión de negocio: qué pasa con la cuenta de Vio al desinstalar.
 
-```bash
-# 1) túnel named (shopify-dev.vio.live → localhost:8082) — dejarlo corriendo
-cloudflared tunnel --config ~/.cloudflared/config-shopify-dev.yml run
+## Gotchas
 
-# 2) dev apuntando al túnel
-cd /Users/angelo/vio-sync
-npm run dev -- --tunnel-url=https://shopify-dev.vio.live:8082
-```
+- Los **handles de plan son inmutables** en el Partner Dashboard.
+- "Manual pricing" **no cobra**: es solo texto del listing.
+- En dev stores del Partner, cualquier plan se cobra $0.
+- Instalar para probar **desde el listing**, no con una URL directa de `oauth/install`.
+- Ningún flujo de cobro u onboarding está listo sin recorrerlo como el merchant real →
+  [lección](../lessons/recorrer-el-flujo-real-antes-de-dar-por-listo.md).
 
-- Dev store: `development-jox88zjn.myshopify.com`.
-- El `.env` (gitignored) sólo necesita **`VIO_API_HOST`** (la API key la pone el merchant en la UI, no va en env).
-- `npm run typecheck` antes de dar por hecho un cambio de UI (valida los props de los `s-*`).
+## Historia (journal)
 
-## Multi-entorno
-
-| Entorno | App URL | Config file | Backend |
-|---|---|---|---|
-| Dev | `shopify-dev.vio.live` (túnel) | `shopify.app.toml` / `shopify.app.vio-sync.toml` | `VIO_API_HOST` |
-| Staging | `shopify-sync-staging.vio.live` | `shopify.app.staging.toml` (client_id a completar) | idem |
-| Prod | `shopify-sync.vio.live` | `shopify.app.production.toml` (client_id a completar) | idem |
-
-- Cada entorno = **una app de Shopify** (client_id distinto) + su `application_url`. CLI multi-config: `shopify app config use <env>` / `deploy --config <env>`.
-- **Lío a ordenar**: hay 2 configs de dev — `shopify.app.toml` (`dfb8ce59…`) y `shopify.app.vio-sync.toml` (`8994c429…`, la **activa**). Consolidar a una.
-
-## Estado — hecho ✅
-
-- Conexión por **API key** + **gating** (no productos hasta conectar) + **Disconnect**.
-- **My products**: tabla `s-table` con búsqueda, filtro de status, filtro exported/not, columna **Type** (Single / N variants), badge **✓ Exported**, selección múltiple + **Export / Remove**, **paginación** por cursor (20/pág).
-- **Connection & log**: estado (Connected / API reachable / nº exportados) + log de exportados + Disconnect.
-- **Rebrand total a Vio**: cero `outshifter`/`reachu` en el código (valores de contrato por env).
-
-## Pendiente 🔜
-
-1. **Session storage Redis** — reusar `lib/redis-store.js` del legacy (ioredis + Sentinel). **Ojo:** los hosts de sentinel son **internos de K8s** (`*.svc.cluster.local`) → **no se alcanzan desde Vercel**. Decisión de deploy atada a esto:
-   - **Deploy en K8s** (mismo cluster) → reuso directo del Redis.
-   - **Vercel** → hay que exponer el Redis externamente.
-2. **`VIO_API_HOST` + una API key real** → probar connect / export / disconnect en vivo.
-3. **`client_id`** de las apps de Shopify de staging/prod → completar los `.toml`.
-4. **Confirmar contra el backend** (`vio-shopify-sync` backend / `vio-*-microservice`): (a) endpoint exacto para **validar la key**; (b) cómo asocia el backend **tienda ↔ key** (el plugin de Woo sólo manda `Authorization`; en Shopify, ¿la key implica la tienda o hay que mandar el `shop`?).
-5. Consolidar las 2 configs de dev.
-
-## Gap vs legacy (decidido)
-
-| Legacy tenía | Decisión |
-|---|---|
-| Login Firebase (email/password) | ❌ reemplazado por **API key** |
-| Import masivo del catálogo (`importing` + `congrats` + `markImported`) | ❌ fuera de scope (solo export por selección) |
-| Estado "connected vs imported" (`shopifySupplier.importedProducts`) | colapsado → **connected = listo para exportar** |
-| Payments / cuenta bancaria | ❌ fuera (app gratis; vive en el dashboard de Vio) |
-| Publishing / review (Vio revisa ~3 días) | ❌ fuera (sin review) |
-| Disconnect / unregister | ✅ **agregado** |
-
-## Decisiones clave
-
-- **API key en vez de Firebase** — más simple, sin Firebase client, sin email/password.
-- **Reescritura React Router** del legacy Next.js — el legacy (Next 10 + Koa) no corre en Node moderno (Next 10 pide Node ≤16; postcss `ERR_PACKAGE_PATH_NOT_EXPORTED`).
-- **Túnel cloudflared named** — los quick tunnels están rotos en la red.
-- **Solo exportar, gratis, sin review** — scope del producto (2026-06-23).
+[2026-06-23](../journal/2026-06/2026-06-23-shopify.md) reescritura ·
+[08-11 (2)](../journal/2026-08/2026-08-11-2.md) push a prod ·
+[08-18 (2)](../journal/2026-08/2026-08-18-2.md) primera submission ·
+[08-19](../journal/2026-08/2026-08-19-shopify-public-docs.md) guía pública ·
+[08-21→24](../journal/2026-08/2026-08-24-vio-sync-conversion-sales-channel.md) conversión a Sales Channel ·
+[08-25](../journal/2026-08/2026-08-25-vio-sync-segunda-submission.md) segunda submission ·
+[08-26](../journal/2026-08/2026-08-26-vio-sync-root-cause-product-feeds.md) root cause del sync ·
+[08-28](../journal/2026-08/2026-08-28-vio-sync-tercera-submission.md) tercera submission ·
+[09-08](../journal/2026-09/2026-09-08-vio-sync-rechazo-121-modelo-pago.md) rechazo 1.2.1 ·
+[09-09](../journal/2026-09/2026-09-09-vio-sync-runbook-cuarta-submission.md) cuarta submission ·
+[09-10](../journal/2026-09/2026-09-10-vio-sync-review-backend-alan.md) review del backend ·
+[09-11](../journal/2026-09/2026-09-11-vio-sync-app-pricing-e-incidente-suscripciones.md) App Pricing e incidente ·
+[09-14](../journal/2026-09/2026-09-14-vio-sync-revision-final-submission.md) revisión final.
