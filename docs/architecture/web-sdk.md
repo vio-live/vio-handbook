@@ -1,6 +1,6 @@
 ---
 title: "Vio Web SDK — architecture, structure & status"
-last-updated: 2026-09-07
+last-updated: 2026-09-15
 owner: angelo
 status: live
 ---
@@ -156,6 +156,34 @@ Las dos salieron de defectos reales, corregidos en 0.9.1 — ver la
    root del componente; el snippet se inyecta, el script corre y no aparece nada, sin error.
    Kustom resuelve el padre de su propio `<script>` y funciona de las dos formas.
 
+### El ciclo de vida del widget (2026-09-10 → 0.11.5)
+
+Cuatro reglas que salieron de defectos reales en QA. Un cuarto proveedor (Nexi) tiene que
+cumplirlas también:
+
+1. **Volver de pagar no monta nada** (2026-09-10). Al volver del proveedor, el SDK marca
+   `returningFrom` antes de emitir nada, y `mayStartEmbeddedPayment()` impide montar
+   mientras esté puesto. Antes, cada vuelta creaba un pedido nuevo para un carrito ya pagado.
+2. **Cerrar el checkout desmonta todos los embebidos** (0.11.2). Antes solo se quitaba el de
+   Klarna, y al reabrir se reutilizaba el widget con el total del carrito anterior.
+3. **El widget pertenece a la sesión del checkout** (0.11.4). Cada `Vio.checkout.open()` es
+   una sesión nueva (`CheckoutState.session`), y el montaje compara `sponsorId|session`. La
+   0.11.3 comparaba las líneas del carrito, pero el backend las reescribe durante la compra
+   (al guardar la tarifa se relee el carrito), y desmontaba el widget en plena elección de
+   envío.
+4. **Tras pagar, el recibo es el del proveedor** (0.11.5). Qliro muestra su propio recibo
+   (el `html_snippet` de la orden completada) y Walley su confirmación, con un botón "Lukk".
+   El SDK emite `vio:payment-success` y vacía el carrito. Si el proveedor no da recibo, sale
+   la confirmación de Vio. Kustom sigue con su camino anterior. Nexi no tiene recibo propio y
+   usa el de Vio.
+
+Además, desde la 0.11.2 la tarifa por defecto es la más barata, y con Qliro el resumen de Vev
+("Frakt" y "Totalt") sigue lo que el cliente elige dentro del widget: el SDK reemite
+`onShippingMethodChanged` y `onShippingPriceChanged` como `qliro-event`.
+
+Al agregar un proveedor: sumar su `unmount*` al reset del cierre, guardar para qué sesión se
+montó (`*MountedFor`) y comprobar `mayStartEmbeddedPayment()` antes de montar.
+
 ## Backend wiring
 
 - **socket-server** (`tipiodevelopment/socket-server`, `api-staging.vio.live`) = the SDK gateway:
@@ -181,7 +209,13 @@ Las dos salieron de defectos reales, corregidos en 0.9.1 — ver la
   *Always validate by installing the tarball/version in the demo and rendering it BEFORE
   publishing — that's how the two build bugs were caught on 0.1.0.*
 
-## Status (2026-09-07)
+## Status
+
+- **Al 2026-09-15:** `main` está en la **0.11.5**, y el paquete de Vev **0.299** la lleva. En
+  npm sigue la **0.11.1** (publicada el 2026-09-07): publicar la 0.11.5 necesita el 2FA de
+  Angelo. De la 0.11.2 a la 0.11.5 cambió el ciclo de vida de los embebidos (ver arriba).
+
+**Al 2026-09-07:**
 
 - ✅ `@vio-live/web-sdk@0.9.1` publicado. Trae los tres métodos embebidos y los dos arreglos
   que impedían pagar con ellos. El paquete de Vev (`cq1lXld-TA9`) vendorea un bundle

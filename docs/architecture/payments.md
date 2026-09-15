@@ -59,9 +59,9 @@ DELETE /api/paymentmethod/:id      (softDelete)
 ## Activación por canal (`channel_user_settings`)
 
 Columnas booleanas: `stripePaymentIntent`, `stripePaymentLink`, `klarna`,
-`vipps`, `googlePay`, `applePay`, `kustom`, `qliro` (+ `markets`, `purchaseConditions`,
+`vipps`, `googlePay`, `applePay`, `kustom`, `qliro`, `walley` (+ `markets`, `purchaseConditions`,
 `orderConfirmationEmail`, que no son de pago). `kustom` y `qliro` llegaron con el kernel
-1.0.245 (2026-09-03); `walley` sigue en `feature/walley-channel-toggle`, sin mergear.
+1.0.245 (2026-09-03), y `walley` está en el kernel desde el 2026-09-03 (package-database PR #8).
 
 - Se escriben con `POST /api/channel/update/settings/:channelUserId`.
 - `api-ms channel.service.getAvailablePaymentMethods(channelUserId)` las
@@ -148,6 +148,14 @@ que hay que repetir en cualquier E2E: el checkout exige
 `buyer_accepts_purchase_conditions` y `buyer_accepts_terms_conditions` antes de iniciar el
 pago (si no, 500 con "Is required that customer accepted purchase conditions"), y el envío
 viaja como línea `Type: Shipping` dentro de `OrderItems`.
+
+**Desde entonces (2026-09-10 a 15):** en los modos donde elige el cliente, Qliro recibe todas
+nuestras tarifas del país del pedido y el cliente elige dentro del widget (shopcart #20,
+2026-09-14; ver [qliro-configuraciones.md](./qliro-configuraciones.md)). Del lado del
+navegador, el SDK 0.11.2 a 0.11.5 cambió el ciclo de vida del widget: cerrar lo desmonta,
+pertenece a la sesión del checkout y, tras pagar, se muestra el recibo de Qliro (ver
+[web-sdk.md](./web-sdk.md)). QA a mano en Trello: #388 (terminada) y #397 (en curso). Nada
+de Qliro está en producción.
 
 ### El flujo de credenciales de Qliro, en orden
 

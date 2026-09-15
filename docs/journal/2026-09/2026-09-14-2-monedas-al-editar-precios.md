@@ -94,3 +94,23 @@ al día en sus dos tarjetas:
   `cleanData` en el precio base para clientes de API, su prueba original), y checklist nueva
   "Probar: edición masiva de envíos".
 - [exYKjx3h](https://trello.com/c/exYKjx3h) (moneda en envíos): sin cambios.
+
+### Trello al día (15/09, tarde)
+
+Angelo vio una tarjeta que mostraba una propuesta en vez de lo hecho, y pidió que no quedara
+nada desactualizado. Quedó así, con copia de los textos anteriores:
+
+- **Tarjeta nueva [#408](https://trello.com/c/ASZSvu1H)** para probar la edición masiva de
+  envíos, con Alan. Sus pruebas salieron de #401, donde estaban mezcladas con la moneda.
+- **#401** y **#402**: estado al principio de la descripción. En #401, arreglado y qué queda;
+  el comentario del 14/09 marcado como propuesta superada. En #402, que sigue sin arreglar y
+  no es lo de la edición masiva.
+- **#397** (QA de Qliro): **Alan la había archivado el 14/09** (entre dos adjuntos de su
+  comentario, parece un clic sin querer) y se había quitado de miembro. Desarchivada y con
+  Alan otra vez. Descripción al día: versión 0.11.5, qué se arregló, qué probó Angelo, la
+  parte D reescrita (la carrera se arregló el 10/09) y notas en los comentarios viejos.
+- **#371** (Qliro), **#373** (Walley), **#372** (hardening) y **#404** (Nexi): estado al
+  principio. En #371, dos frases viejas señaladas: "sin fallback" y "shipping de una sola
+  línea". En #372, los PR se mergearon el 03/09 a las 12:25, minutos después del comentario
+  que decía "sin mergear".
+- Handbook: `qliro-configuraciones.md`, `web-sdk.md` y `payments.md` actualizados el mismo día.

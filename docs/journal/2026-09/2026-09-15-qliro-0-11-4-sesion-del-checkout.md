@@ -47,3 +47,22 @@ test que simula el montaje tiene que simular también lo que el montaje real pro
 - Probar en la página (Angelo + claude) y Alan en la suya, tras **republicar**.
 - `npm publish` de la 0.11.4 (2FA de Angelo) cuando esté validado; npm sigue en 0.11.1.
 - Nexi: al rebasar `feature/nexi-payment`, aplicar `unmountNexi` al cierre y la sesión al montaje.
+
+## Actualización (15/09, tarde): validado, 0.11.5 y lo que queda
+
+- **Validado en bohus-demo con Angelo.** Con la 0.11.4: elegir Express dentro de Qliro (el
+  total pasó a 6 998), y cerrar con la X y añadir un producto (la orden salió con los 3
+  productos y Express). Con la 0.11.5: subir cantidades en la vista del carrito, y el recibo.
+- **0.11.5** ([vio-web-sdk#50](https://github.com/vio-live/vio-web-sdk/pull/50), paquete de Vev
+  **0.299**). Angelo vio nuestra confirmación en el centro de la pantalla, en desktop, y pidió
+  que se mostrara la de Qliro. Tras pagar, el panel muestra el recibo del proveedor (Qliro: el
+  `html_snippet` de la orden completada; Walley: su confirmación) con un botón "Lukk".
+  `vio:payment-success` y carrito vacío como antes. Si el proveedor no da recibo, sale el de
+  Vio. `mayStartEmbeddedPayment()` también mira `providerReceipt`, para no montar nada debajo.
+- **Pendiente, al día:**
+  - Alan repite sus casos en su página con la 0.11.5 (checklist en [#397](https://trello.com/c/IW0OSJp7)).
+  - `npm publish` de la **0.11.5** (2FA de Angelo); npm sigue en 0.11.1.
+  - Nexi: al rebasar, además de `unmountNexi` y la sesión, respetar `providerReceipt`
+    ([#404](https://trello.com/c/QN7Vno6f)).
+  - Kustom: su camino del recibo no cambió. Puede tener el mismo problema de carrito sin
+    vaciar; sin verificar.
