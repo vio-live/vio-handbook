@@ -78,3 +78,19 @@ re-vincula sólo esos), así que asignar "Express" a 16 productos el 2026-09-14 
 `shippingIds` conserva su significado (reemplazar) para otros clientes de la API. Orden de
 despliegue respetado: products primero (si no, el dashboard nuevo mandaría un campo que el
 backend viejo ignora). Tests: 9 casos en `shipping-ids.spec.ts`.
+
+### Estado en Trello (15/09, tras la validación de Angelo)
+
+Angelo repitió la prueba con variantes después del arreglo de moneda: todo bien. Alan quedó
+al día en sus dos tarjetas:
+
+- [IW0OSJp7](https://trello.com/c/IW0OSJp7) (QA de Qliro): sus hallazgos cerrados (0.11.2 y 0.11.4,
+  probados con Angelo), la 0.11.5 con el recibo de Qliro, la corrección de que la edición masiva ya
+  no reemplaza, y la aclaración de la parte D (reabrir el checkout deja pedidos de Qliro sin pagar:
+  lo que sería fallo es un pago duplicado). Marcado lo que cubrió Angelo (modo 2 y cantidad > 1);
+  checklist nueva "Repetir en tu página con la 0.11.5".
+- [u26VTiSD](https://trello.com/c/u26VTiSD) (moneda en variantes): qué se hizo (products #15, webapp #23),
+  checklist del plan al día (queda: productos ya afectados, ficha con la moneda de la cuenta, EUR de
+  `cleanData` en el precio base para clientes de API, su prueba original), y checklist nueva
+  "Probar: edición masiva de envíos".
+- [exYKjx3h](https://trello.com/c/exYKjx3h) (moneda en envíos): sin cambios.
