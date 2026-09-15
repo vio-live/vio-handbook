@@ -60,3 +60,21 @@ guardados mal no se corrigen solos: hay que volver a teclearlos (411725: 1 000 y
 
 Sigue pendiente del plan de Alan: buscar productos ya afectados en la base, mostrar en la
 ficha la moneda guardada del producto, y la tarjeta de **envíos** (`exYKjx3h`).
+
+## 2026-09-15 — edición masiva de envíos: añadir y quitar, ya no reemplazar
+
+Pedido de Angelo tras ver productos que "perdían" sus envíos: la edición masiva mandaba
+`shippingIds` y products lo trata como la lista completa (borra todos los vínculos y
+re-vincula sólo esos), así que asignar "Express" a 16 productos el 2026-09-14 les quitó
+"Standard" a todos. Guardar sólo precios de variantes, en cambio, no toca los envíos
+(verificado: es el único camino del backend que desvincula).
+
+| Repo | PR | Qué |
+|---|---|---|
+| products | [#16](https://github.com/vio-live/vio-products-microservice/pull/16) (`5dcf220`) | `bulkUpdate` acepta `addShippingIds`: clases actuales + nuevas (`mergeShippingIds`) |
+| products | [#17](https://github.com/vio-live/vio-products-microservice/pull/17) (`4de536a`) | `removeShippingIds`: actuales + añadidas − quitadas (`applyShippingChange`); **nunca quita la última clase** (sin clase no hay tarifa en el checkout) → `shippingSkipped: true` en el resultado de ese producto; sin nada que escribir, no se re-guarda |
+| webapp | [#24](https://github.com/vio-live/webapp-vio-commerce/pull/24) (`78b6255`) | filas "Add shipping class" / "Remove shipping class", no deja añadir y quitar la misma, toast con cuántos conservaron su única clase; digitales fuera como antes |
+
+`shippingIds` conserva su significado (reemplazar) para otros clientes de la API. Orden de
+despliegue respetado: products primero (si no, el dashboard nuevo mandaría un campo que el
+backend viejo ignora). Tests: 9 casos en `shipping-ids.spec.ts`.
