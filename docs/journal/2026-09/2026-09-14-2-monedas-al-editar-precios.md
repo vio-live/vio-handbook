@@ -39,3 +39,24 @@ Angelo).
 
 **Pendiente de Angelo:** confirmar que editar un precio lo guarda en la moneda actual de la
 cuenta y que lo no editado queda en su moneda original.
+
+## Actualización 2026-09-15 — variantes: arreglado y en QA
+
+Angelo lo reprodujo sin cambiar la moneda de la cuenta: en el producto 411725 (QA) creó dos
+variantes con 1 000 y 2 000 y el dashboard y Vev las mostraron como **11 033,8** y
+**22 067,6 kr** (= × 11,0338, el cambio EUR→NOK): el backend las guardó en EUR. O sea, **pasa
+en cualquier edición de solo variantes** en una cuenta que no sea EUR, no sólo tras cambiar
+la moneda. Y cada re-guardado de los precios mostrados los habría vuelto a multiplicar.
+
+Arreglado por claude a pedido de Angelo (la tarjeta era de Alan):
+
+| Repo | PR | Qué |
+|---|---|---|
+| products | [#15](https://github.com/vio-live/vio-products-microservice/pull/15) (`0dd0f2a`) | `resolveVariantCurrency` (puro, 6 casos en `variant-currency.spec.ts`): moneda de las variantes → la del precio del request → la guardada del producto → la de la cuenta → EUR solo si nada más. Los dos sitios de `newUpdate`. `doUpdate` (importaciones) sin tocar |
+| webapp | [#23](https://github.com/vio-live/webapp-vio-commerce/pull/23) (`646a577`) | `formToDto` pone `currencyCode` también a nivel variante (lo que leía el backend viejo); sigue sin mandar `price` del producto en una edición de solo variantes |
+
+Desplegado: products en QA (CI/CD `34961130382`), dashboard en Vercel. Los precios ya
+guardados mal no se corrigen solos: hay que volver a teclearlos (411725: 1 000 y 2 000).
+
+Sigue pendiente del plan de Alan: buscar productos ya afectados en la base, mostrar en la
+ficha la moneda guardada del producto, y la tarjeta de **envíos** (`exYKjx3h`).
