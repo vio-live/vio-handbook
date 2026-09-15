@@ -37,3 +37,9 @@ Checklist vivo con el orden y dueños: [`handoff/analytics-stats-bridge.md` → 
 - **`.env` de prod de base-api — bloqueado para el agente** (el clasificador no deja leer/escribir blobs con secretos de prod). Lo hace Miguel: `containerproduction2` / `env-file-microservices` / `base-api/.env`, agregar `ANALYTICS_STATS_URL=https://events.vio.live` + el token de producción del colector (ya lo tiene del set del 2026-09-07). **Antes** del merge de #9, porque se hornea en el build.
 - **webapp — PR [#21](https://github.com/vio-live/webapp-vio-commerce/pull/21) `develop`→`master`, sin mergear.** Solo trae #18 + #20. Se mergea cuando `api-ecom.vio.live/api/stats/overview` dé 401.
 - En prod, un business sin su api key cargada en un sponsor de prod ve 0 (por diseño).
+
+### 2026-09-15 — status verificado y traspaso a Alan
+
+- Status re-verificado (sin cambios desde el 09-14): base-api#9 y webapp#21 abiertos; `api-ecom.vio.live/api/stats/overview` → 404; staging → 401; el chunk de `dashboard.ecom.vio.live` todavía no tiene host de stats (demo), con `API_HOST` de prod = `api-ecom.vio.live`.
+- **Base de eventos de prod: 0 eventos desde que existe** (staging 1.373; en los últimos 7 días, 947 de `web`/`vev` y 1 de `web`/`custom`). En los logs del colector de prod solo hay health checks. **No verificado**: el environment de cada página de Vev publicada (el default del código es `staging`) y si el espejo del backend de Vio en prod está encendido (sin acceso a esa config). → Qué superficies pasan a Production lo decide Angelo; hasta entonces el dashboard de prod mostrará 0.
+- El paso de Miguel (`.env` de prod + merge de #9 + curl 401) lo toma **Alan**: tarjeta [`7AH1NJRD`](https://trello.com/c/7AH1NJRD) (To do, ALTA). El token se lo pasa Angelo por fuera. El blob `base-api/.env` sale del Dockerfile; que la cuenta de `AZ_STORAGE_PROD` sea `containerproduction2` viene del inventario del handbook, no verificado por el agente (quedó como paso 1 de la tarjeta).

@@ -144,9 +144,9 @@ es el último porque es lo único que ve el cliente.
 | # | Pieza | Estado | Quién |
 |---|---|---|---|
 | 1 | Colector `vio-analytics` en prod → `b13d04b` (#9–#12: tokens por rol, sponsor por hash de api key, top-products, ceros) | ✅ desplegado 2026-09-14 (`ca-analytics-vio-production--0000005`) | agente |
-| 2 | `.env` de prod de base-api: `ANALYTICS_STATS_URL=https://events.vio.live` + `ANALYTICS_INTERNAL_TOKEN=<token de producción del colector>` en `containerproduction2` / `env-file-microservices` / `base-api/.env` (respaldar antes, como en QA) | ⬜ | Miguel |
-| 3 | Merge de [`vio-base-api#9`](https://github.com/vio-live/vio-base-api/pull/9) a `master` → build+deploy de prod (el `.env` se hornea en el build: por eso va **después** del 2) | ⬜ | Miguel / Angelo |
-| 4 | Verificar: `curl https://api-ecom.vio.live/api/stats/overview` → **401** (hoy 404; 503 = falta el 2) | ⬜ | cualquiera |
+| 2 | `.env` de prod de base-api: `ANALYTICS_STATS_URL=https://events.vio.live` + `ANALYTICS_INTERNAL_TOKEN=<token de producción del colector>` en `containerproduction2` / `env-file-microservices` / `base-api/.env` (respaldar antes, como en QA) | ⬜ | Alan — [Trello `7AH1NJRD`](https://trello.com/c/7AH1NJRD) |
+| 3 | Merge de [`vio-base-api#9`](https://github.com/vio-live/vio-base-api/pull/9) a `master` → build+deploy de prod (el `.env` se hornea en el build: por eso va **después** del 2) | ⬜ | Alan — misma tarjeta |
+| 4 | Verificar: `curl https://api-ecom.vio.live/api/stats/overview` → **401** (hoy 404; 503 = falta el 2) | ⬜ | Alan (evidencia en la tarjeta) |
 | 5 | Merge de [`webapp-vio-commerce#21`](https://github.com/vio-live/webapp-vio-commerce/pull/21) (`develop`→`master`) → Vercel publica `dashboard.ecom.vio.live` | ⬜ | Angelo |
 | 6 | Login real en `dashboard.ecom.vio.live`: sin badge "Demo data", números reales o 0 | ⬜ | Angelo |
 
