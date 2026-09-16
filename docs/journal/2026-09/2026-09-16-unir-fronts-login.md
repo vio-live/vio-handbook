@@ -49,3 +49,9 @@
 - Riesgo a resolver antes de prod: los sponsors que ya existen (creados a mano, con `commerce_api_key`) no tienen `commerce_user_uid`; cuando su business entre por el webapp, el alta automática le crea **otro** sponsor. Hace falta el script de enlace (fase 4) antes de encender prod. En staging puede pasar ya (p. ej. sponsor 4).
 - El upload de logo de vio-backend (`/api/objects/upload`) cae en `campaigns:write`, que el sponsor no tiene → por ahora el logo va por URL.
 - Build del webapp en un worktree con `node_modules` symlinkeado falla en "collect page data" (`c(...) is not a function`) también sin cambios; con `npm ci` propio compila. Usar dependencias propias en worktrees.
+
+### Reclamo de sponsors, upload y webapp en staging (misma sesión)
+
+- `webapp-vio-commerce#27` mergeado. ⚠️ Supuse que `FIREBASE_PROJECT_ID` existía en el entorno `staging` de Vercel (mi `.env` local lo tiene): **no existe** — el build sale con `projectId:""` — y el host de Vio quedaba vacío (sin error, sin Brand). `#28` deriva el proyecto de `FIREBASE_AUTH_DOMAIN` (`reachu-qa.firebaseapp.com`); verificado en el chunk desplegado de `dashboard-staging`.
+- En vez de un script de migración, **el business reclama su sponsor en el primer login** (`vio-backend#64`, en staging `staging-95ebf43`): Commerce devuelve sus api keys con su token (`/api/channel/user`), y si un sponsor sin enlazar tiene una → se enlaza ese; si varias coinciden → 403 sin adivinar. Probado contra Postgres real (reclamo, key ya reclamada, carrera, ambiguo). En staging, los sponsors 1 y 2 comparten key → su business va a recibir 403 hasta limpiar ese dato.
+- `uploads:write`: el sponsor puede pedir URL de subida (antes solo admin). **Falta CORS** en el blob de `saapivio`: hoy solo permite los orígenes de vio-backend; desde `dashboard-staging.ecom.vio.live` el preflight da 403. Cambio de config en cuenta compartida → pendiente de OK de Angelo. Hasta entonces el logo va por URL.
