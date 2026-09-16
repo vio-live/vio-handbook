@@ -12,3 +12,7 @@
   - Bajar los CPU requests (~50 m, products ~100 m) y poner min=2: ahorro ~$180/mes.
   - O migrar a 3 × E2as_v5 (nuevo node pool): ~$354/mes y 3 nodos.
   - Bajar las MySQL a Burstable (cada una requiere un reinicio).
+
+## Después: audit exhaustivo de costos
+
+A pedido de Angelo se revisaron las 4 suscripciones y los 141 recursos. Los resultados están en [cost-audit-2026-09-16](../../infrastructure/cost-audit-2026-09-16.md): ~$550–750/mes identificados. No se cambió nada; todo queda a la espera de decisión.
