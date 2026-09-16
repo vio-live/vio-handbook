@@ -154,8 +154,18 @@ nuestras tarifas del país del pedido y el cliente elige dentro del widget (shop
 2026-09-14; ver [qliro-configuraciones.md](./qliro-configuraciones.md)). Del lado del
 navegador, el SDK 0.11.2 a 0.11.5 cambió el ciclo de vida del widget: cerrar lo desmonta,
 pertenece a la sesión del checkout y, tras pagar, se muestra el recibo de Qliro (ver
-[web-sdk.md](./web-sdk.md)). QA a mano en Trello: #388 (terminada) y #397 (en curso). Nada
-de Qliro está en producción.
+[web-sdk.md](./web-sdk.md)). QA a mano en Trello: #388 (terminada) y #397 (en curso).
+
+**16/09:** el cliente siempre elige el envío dentro de Qliro, porque `vio-line` se retiró.
+Además, un carrito cuyos productos físicos no comparten clase no se puede pagar: shopcart
+rechaza el pedido de Qliro y el checkout de Vev bloquea todos los métodos (shopcart #21,
+webapp #25, SDK 0.11.6). Detalle en
+[qliro-configuraciones.md](./qliro-configuraciones.md#2026-09-16--se-retira-vio-line-y-se-bloquea-el-carrito-que-no-se-puede-enviar).
+
+**Producción:** el código de Qliro llegó a las ramas de producción y se desplegó el 15/09,
+con el release completo de Alan. Las migraciones del kernel, los toggles y las credenciales
+de producción están sin verificar; ver el
+[journal del 16/09](../journal/2026-09/2026-09-16-revision-alan-qa-qliro-y-release.md).
 
 ### El flujo de credenciales de Qliro, en orden
 

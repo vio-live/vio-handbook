@@ -1,6 +1,6 @@
 ---
 title: "Vio Web SDK — architecture, structure & status"
-last-updated: 2026-09-15
+last-updated: 2026-09-16
 owner: angelo
 status: live
 ---
@@ -156,9 +156,9 @@ Las dos salieron de defectos reales, corregidos en 0.9.1 — ver la
    root del componente; el snippet se inyecta, el script corre y no aparece nada, sin error.
    Kustom resuelve el padre de su propio `<script>` y funciona de las dos formas.
 
-### El ciclo de vida del widget (2026-09-10 → 0.11.5)
+### El ciclo de vida del widget (2026-09-10 → 0.11.6)
 
-Cuatro reglas que salieron de defectos reales en QA. Un cuarto proveedor (Nexi) tiene que
+Cinco reglas que salieron de defectos reales en QA. Un cuarto proveedor (Nexi) tiene que
 cumplirlas también:
 
 1. **Volver de pagar no monta nada** (2026-09-10). Al volver del proveedor, el SDK marca
@@ -177,12 +177,23 @@ cumplirlas también:
    la confirmación de Vio. Kustom sigue con su camino anterior. Nexi no tiene recibo propio y
    usa el de Vio.
 
+5. **Un carrito que no se puede enviar no se paga** (0.11.6). Si el backend responde sin
+   tarifa compartida y alguna línea tiene tarifas propias (`someLineShipsOnItsOwn`), se
+   activa `shippingBlocked`. El paso de pago muestra el motivo en lugar de los métodos, los
+   manejadores de pago no hacen nada, y un widget ya montado se desmonta. Un carrito sin
+   tarifas en ninguna línea no se bloquea: los productos digitales no tienen, y shopcart
+   rechaza el caso físico. Un fallo de la consulta tampoco bloquea:
+   `CheckoutManager.lastShippingsResolved` distingue un fallo de una respuesta vacía.
+   **En la primera apertura, los embebidos esperan la respuesta de tarifas** antes de crear
+   el pedido (`shippingsSettled`).
+
 Además, desde la 0.11.2 la tarifa por defecto es la más barata, y con Qliro el resumen de Vev
 ("Frakt" y "Totalt") sigue lo que el cliente elige dentro del widget: el SDK reemite
 `onShippingMethodChanged` y `onShippingPriceChanged` como `qliro-event`.
 
 Al agregar un proveedor: sumar su `unmount*` al reset del cierre, guardar para qué sesión se
-montó (`*MountedFor`) y comprobar `mayStartEmbeddedPayment()` antes de montar.
+montó (`*MountedFor`), comprobar `mayStartEmbeddedPayment()` antes de montar, que ya incluye
+el bloqueo y la espera de tarifas, y desmontarlo cuando se activa `shippingBlocked`.
 
 ## Backend wiring
 
@@ -211,9 +222,9 @@ montó (`*MountedFor`) y comprobar `mayStartEmbeddedPayment()` antes de montar.
 
 ## Status
 
-- **Al 2026-09-15:** `main` está en la **0.11.5**, y el paquete de Vev **0.299** la lleva. En
-  npm sigue la **0.11.1** (publicada el 2026-09-07): publicar la 0.11.5 necesita el 2FA de
-  Angelo. De la 0.11.2 a la 0.11.5 cambió el ciclo de vida de los embebidos (ver arriba).
+- **Al 2026-09-16:** `main` está en la **0.11.6**, y el paquete de Vev **0.300** la lleva. En
+  npm sigue la **0.11.1**, publicada el 2026-09-07; publicar necesita el 2FA de Angelo. De la
+  0.11.2 a la 0.11.6 cambió el ciclo de vida de los embebidos (ver arriba).
 
 **Al 2026-09-07:**
 

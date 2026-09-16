@@ -74,3 +74,42 @@ fragmento visible de la clave de Firebase es solo la cabecera y no sirve para us
 - **Angelo:** confirmar si autorizó el release completo; borrar la captura y rotar las
   credenciales; permiso para revisar producción (migraciones y logs); decidir sobre `vio-line`.
 - **Alan:** evidencia de C, D y E; checklist de la 0.11.5; #408.
+
+## Decisión de Angelo y cambio desplegado (16/09)
+
+Angelo pidió que el modo de línea funcionara como `vio-methods`, que con una sola clase
+compartida se mostrara solo esa, y que se bloqueara la compra si los productos no comparten
+clase. Los carritos con varios vendedores quedan fuera por ahora.
+
+| Repo | PR | Merge | Estado |
+|---|---|---|---|
+| shopcart | [#21](https://github.com/vio-live/vio-shopcart-microservice/pull/21) | `bd89010` | QA: CI/CD 35080435606, build y deploy en verde |
+| webapp | [#25](https://github.com/vio-live/webapp-vio-commerce/pull/25) | `dd505a5` | Vercel staging en verde; `dashboard-staging` sirve el formulario nuevo |
+| web-sdk | [#51](https://github.com/vio-live/vio-web-sdk/pull/51) | `1857b75` | 0.11.6 en `main`; npm sigue en 0.11.1 |
+| vev | [#32](https://github.com/vio-live/vev/pull/32) | `cf94868` | paquete **0.300** publicado; `vio-vev` devuelto a `feat/real-impressions` |
+
+Qué cambió, en corto (detalle en `architecture/qliro-configuraciones.md`, sección del 16/09):
+- Qliro siempre recibe la lista de nuestras tarifas. `vio-line` se lee como `vio-methods`,
+  también en la cuenta de respaldo, y el dashboard ya no lo ofrece.
+- Las clases compartidas se calculan solo entre productos físicos.
+- **Bloqueo:** shopcart rechaza el pedido de Qliro en `vio-methods` con
+  `NO_SHARED_SHIPPING`, y el checkout de Vev muestra el motivo y no deja pagar con ningún
+  método. Los embebidos esperan la respuesta de tarifas antes de crear el pedido.
+
+Pruebas:
+- **shopcart:** 120 tests unitarios (15 nuevos o cambiados) y `tsc` limpio.
+- **webapp:** 264 tests, 4 nuevos, y ESLint limpio.
+- **SDK:** 135 tests, 8 nuevos. Quitando el bloqueo fallan 4; quitando la espera, 2.
+
+Sin probar a mano todavía. Queda para Angelo, o con él, tras republicar la página:
+1. Qliro con un seller sin modo, con uno con el modo antiguo guardado y con la cuenta de
+   respaldo.
+2. Dos productos con una sola clase en común.
+3. Dos productos sin clase en común, con Qliro y con otro método.
+
+Límites: si el bloqueo salta solo en shopcart, el checkout muestra el error genérico de
+Qliro, porque el gateway no propaga el mensaje. Kustom y Walley no tienen el bloqueo en su
+backend.
+
+Nota: los commits del handbook de esta sesión llevaban la firma `Co-Authored-By` de Claude,
+que la regla de Angelo prohíbe. Los de hoy en adelante van sin ella.

@@ -1,6 +1,6 @@
 ---
 title: "Qliro — modos de configuración: shipping, métodos de pago y apariencia"
-last-updated: 2026-09-15
+last-updated: 2026-09-16
 owner: angelo
 status: live
 ---
@@ -11,12 +11,18 @@ Diseño para soportar las distintas formas en que un seller puede tener configur
 en vez del único camino que soportamos hoy. Escrito el 2026-09-07 leyendo el devportal de
 Qliro de punta a punta ([fuentes](#fuentes)).
 
-> **Estado al 2026-09-15:** el diseño está implementado y en QA. Las fases 1 a 5 están hechas
-> (ver [Plan por fases](#plan-por-fases)), y desde el 2026-09-14 el cliente elige el envío
-> dentro de Qliro entre todas nuestras tarifas del país. nShift e Ingrid están implementados
-> pero no habilitados en la cuenta de Qliro de QA, y el filtro de métodos de pago se manda
-> pero la regla todavía no existe del lado de Qliro. Nada de Qliro está en producción. El
-> resto del documento conserva el punto de partida del 2026-09-07.
+> **Estado al 2026-09-16:** el diseño está implementado y en QA. Las fases 1 a 5 están hechas
+> (ver [Plan por fases](#plan-por-fases)).
+> - **El cliente siempre elige el envío dentro de Qliro**, entre las clases que comparten los
+>   productos del carrito. `vio-line` se retiró el 16/09 (ver
+>   [la sección de ese día](#2026-09-16--se-retira-vio-line-y-se-bloquea-el-carrito-que-no-se-puede-enviar)).
+> - **Un carrito cuyos productos no comparten clase no se puede pagar.**
+> - nShift e Ingrid están implementados, pero no habilitados en la cuenta de Qliro de QA.
+> - El filtro de métodos de pago se manda, pero la regla todavía no existe del lado de Qliro.
+> - **El código llegó a producción el 15/09** con el release completo de Alan. Las
+>   migraciones y los toggles de producción están sin verificar; ver el
+>   [journal del 16/09](../journal/2026-09/2026-09-16-revision-alan-qa-qliro-y-release.md).
+> - El resto del documento conserva el punto de partida del 2026-09-07.
 
 El 2026-09-07 funcionaba **un solo modo**: inyectábamos nuestra tarifa de envío como una línea
 más del pedido y Qliro no mostraba selector. Todo lo demás que Qliro ofrece —selector de
@@ -54,6 +60,8 @@ inyecto". La realidad son cuatro configuraciones distintas, cada una con reglas 
 | **`nshift`** | nShift, hablado por Qliro | `ShippingConfiguration.Unifaun` + fallback |
 | **`ingrid`** | Ingrid, hablado por Qliro | `ShippingConfiguration.Ingrid` + fallback **obligatorio** |
 
+> **16/09:** `vio-line` ya no existe. Una fila que lo tenga guardado se lee como `vio-methods`.
+
 **Propuesta:** reemplazar el booleano por `shipping.mode` con esos cuatro valores, y que
 `providerShipping: true` se lea como `ingrid` para no romper lo ya configurado.
 
@@ -67,6 +75,8 @@ recomienda, así que queda como regla única:
   Ingrid la propia documentación lo llama *strongly recommended*.
 - Si el seller no tiene envíos configurados de ningún lado, degradamos a `vio-line` con
   nuestra tarifa; si tampoco hay tarifa, sin línea de envío en vez de fallar.
+  **Reemplazado el 16/09:** sin `vio-line`, nuestras tarifas van siempre como lista, y si los
+  productos físicos no comparten ninguna, Qliro no se abre.
 
 **Verificado contra la sandbox el 2026-09-07.** Su documentación dice que el respaldo se usa
 "si la API de Ingrid no responde", pero no dice qué pasa si el proveedor **no está
@@ -122,6 +132,40 @@ líneas del carrito, y lo desmontaba al elegir envío porque el backend reescrib
 durante la compra. La 0.11.4 (#49) ata el widget a la sesión del checkout, y la 0.11.5 (#50)
 muestra el recibo de Qliro tras pagar. Detalle en [web-sdk.md](./web-sdk.md) y en el
 [journal del 2026-09-15](../journal/2026-09/2026-09-15-qliro-0-11-4-sesion-del-checkout.md).
+
+### 2026-09-16 — se retira `vio-line` y se bloquea el carrito que no se puede enviar
+
+**Por qué.** En la QA del 15/09, Alan vio que con "Vio rate as an order line" no se podía
+elegir el envío. Qliro no muestra selector en ese modo, y nuestro «Fraktmetode» se oculta
+mientras Qliro es el método. En un canal con solo Qliro, además, Qliro se selecciona al
+abrir. Era el modo por defecto y el único de la cuenta de respaldo de Vio. Decisión de
+Angelo: que funcione como `vio-methods`, y bloquear la compra si los productos no comparten
+clase.
+
+**Qué se hizo** (shopcart #21, webapp #25, SDK 0.11.6 #51, Vev 0.300):
+- **Qliro siempre recibe la lista de nuestras tarifas.** Con una sola clase compartida, esa
+  es la única opción. Una fila con `vio-line`, sin modo o con un modo desconocido se lee como
+  `vio-methods`. `providerShipping: true` sigue siendo Ingrid. La cuenta de respaldo usa
+  `vio-methods`, y el dashboard ya no ofrece la opción.
+- **Clases compartidas, solo entre productos físicos** (`sharedShippingClasses`). Antes, un
+  producto digital, que no tiene clases, vaciaba la lista del resto.
+- **Bloqueo en shopcart.** En `vio-methods`, si los productos físicos no comparten ninguna
+  tarifa para el país del pedido, `resolveShippingChoices` lanza `NoSharedShippingError` y
+  el pedido de Qliro no se crea. Antes caía a las tarifas guardadas en las líneas, y
+  `defaultShipping` guarda en cada línea la clase de su producto, así que se cobraba una
+  tarifa que no servía para todos, o ninguna. nShift e Ingrid no se bloquean: el TMS puede
+  enviarlo igual.
+- **Bloqueo en el checkout de Vev**, para todos los métodos. Si el backend responde sin
+  tarifa compartida y alguna línea tiene tarifas propias, el paso de pago muestra
+  "Produktene i handlekurven kan ikke sendes sammen. Fjern ett av dem for å fullføre
+  kjøpet." y no se puede pagar.
+- **Carritos con varios vendedores:** fuera de alcance, sin cambios.
+
+**Límites conocidos:**
+- Si el bloqueo salta solo en shopcart, el checkout muestra el error genérico de Qliro. Pasa
+  cuando ninguna línea tiene tarifas para el país del carrito. El gateway no propaga el
+  mensaje de shopcart en `CreatePaymentQliro`.
+- Kustom y Walley no tienen el bloqueo en su backend; los frena el checkout de Vev.
 
 ### El envío que elige el cliente (resuelto en la fase 2)
 
@@ -184,7 +228,7 @@ En `payment_method.options` del seller (donde ya viven `apiKey`, `apiSecret`, `s
   "apiKey": "…", "apiSecret": "…", "sandbox": true, "termsUrl": "https://…",
 
   "shipping": {
-    "mode": "vio-line | vio-methods | nshift | ingrid",   // default: vio-line
+    "mode": "vio-methods | nshift | ingrid",   // default: vio-methods ("vio-line" se lee así)
     "unifaunCheckoutId": "…",        // sólo nshift
     "ingridExternalId": "…",         // sólo ingrid, opcional
     "refreshOnAddressChange": true   // sólo vio-methods → manda la URL de callback
