@@ -53,3 +53,14 @@
 
 A pedido de Angelo ("¿podrías hacer para apagar y encender todo bajo necesidad?"): script `scripts/prod-power.sh` y cron diario `prod-power-guard` (06:30). Ver [playbook](../../playbooks/prod-power-on-demand.md). Probado solo con `status` y `guard` (sin tags, no hizo nada). **Todavía no se apagó nada**: se espera el OK de Angelo y avisar a Alan.
 Uso real de Commerce prod, verificado en la DB: 5 órdenes (todas del 19/08), 28 users, 0 canales nuevos en 30 días.
+
+## 18:48–18:58 — Prod apagado (commerce + backend)
+
+Angelo: "Apaga". Se corrió `prod-power.sh all stop`:
+- 18:53: backend apagado (`ca-api-vio-production` y `ca-analytics-vio-production` en Stopped, `pg-api-vio-production` en Stopped).
+- 18:58: commerce apagado (AKS `vio-commerce-prod` y MySQL `vio-ecom-db-prod` en Stopped).
+- Todos con tag `vio-power=off`, así que el guard diario de las 06:30 los mantiene apagados.
+
+Verificación: `api-ecom` y `graph-ql` no responden (000); `api` y `events` dan 404 (apps paradas); `api-staging` y `api-ecom-staging` siguen en 200.
+Para encender: `prod-power.sh <commerce|backend|all> start` ([playbook](../../playbooks/prod-power-on-demand.md)).
+**No se avisó a Alan todavía:** queda a decisión de Angelo.
