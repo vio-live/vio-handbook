@@ -51,3 +51,19 @@ En `containerproduction2` (RG `prod-reachu`):
 - Números (Retail Prices API): el cambio de tier cuesta ~$0,11 cada 10.000 blobs, **~$68 de una vez** para 6,16 M; ahorra ~$15/mes (Hot $0,0207 → Cool $0,011 por GB). Se paga en ~4,5 meses. Se descartó Cold: $158 de una vez, lecturas ×30 y un mínimo de 90 días.
 - Para revertir: `az storage account management-policy delete --account-name containerproduction2 -g prod-reachu`. Los blobs que ya estén en Cool vuelven a Hot al leerlos, o con un Set Blob Tier.
 - Verificar en noviembre: métrica `BlobCapacity` por dimensión `Tier`.
+
+## Punto 6b — borrar uploads sin uso (en análisis, 2026-09-16 11:30)
+
+Angelo preguntó si se podían borrar directamente. Lo que se sabe hasta ahora:
+- `outshifter-uploads-production`: nombres planos (logos de tiendas, hashes) y todos con `Last-Modified` del 2025-05-22 (la copia de la migración). **0 referencias** en la MySQL de prod (`image`, `user`, `collection`, `product_digital`, `custom_product_image`). En staging solo aparece en `product_digital.file_url` de datos de prueba, que apuntan a la cuenta vieja `containerproduction` (sin el 2).
+- `reachu-uploads-production`: es el que **usa Commerce hoy** (`product-images/`, `products/`, `collection/`, `digital/`, `user-avatar/`, con subidas de 2026). La MySQL de prod referencia **~29.250** URLs (`image.url`, 4 en `custom_product_image`, 1 en `collection`), contra 6,16 M blobs en toda la cuenta.
+- `others/`: `product_digital` de prod referencia `others/files-demo/dummy1.pdf`. Se mantiene.
+- El `user.avatar` de prod apunta a `containerqa.reachu.io/outshifter-uploads-qa/default-placeholder.png`, en la cuenta de QA. Si se limpia QA, ese archivo no se toca.
+- Se creó un **blob inventory** semanal (`inventario-uploads-2026-09`, CSV en el container privado `inventory-reports`) para medir el tamaño por carpeta y la antigüedad. El primer reporte llega en ≤24 h. Se borra la regla después de usarla.
+
+Plan propuesto (pendiente del OK de Angelo):
+1. Con el inventario, medir cuánto ocupa `outshifter-uploads-production` y cuánto de `reachu-uploads-production` no está referenciado.
+2. Conjunto a conservar = URLs de la MySQL de prod, conservando también las variantes del mismo nombre base (`…Thumbnail`, tamaños), todo lo de los últimos 30 días y `others/` completo.
+3. Subir el soft delete de 7 a 30 días antes de borrar: es la red de seguridad (se cobra como dato activo durante esos 30 días).
+4. Borrar primero `outshifter-uploads-production` y, en una segunda tanda, los huérfanos de `reachu-uploads-production`. Guardar la lista de lo borrado.
+5. Hacerlo antes del 2026-10-16, para no pagar el paso a Cool de blobs que se van a borrar.
