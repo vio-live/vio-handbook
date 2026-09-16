@@ -7,7 +7,7 @@ status: live
 
 # Encender el puente de stats — QA + prod
 
-> **2026-09-16:** puente vivo en prod y dashboard de prod fuera de demo. Falta el login real (paso 6). ⚠️ Ver "Incidente 2026-09-15" al final.
+> **2026-09-16:** release a prod cerrado — puente vivo y dashboard de prod con datos reales (login comprobado por Angelo). ⚠️ Ver "Incidente 2026-09-15" al final.
 
 > **Actualización 2026-09-14:** staging ya pinta datos reales (webapp#20 —
 > el host sale de `API_HOST`, sin variable aparte). El Paso 3 quedó obsoleto.
@@ -150,7 +150,7 @@ es el último porque es lo único que ve el cliente.
 | 3 | Puente en `master` de base-api → deploy de prod | ✅ 2026-09-15 — **no** vía #9: Alan pasó `develop` entero a `master` (`246ba1f`, CI verde). #9 quedó abierto y redundante | Alan |
 | 4 | `curl https://api-ecom.vio.live/api/stats/overview` → **401** | ✅ verificado por el agente 2026-09-16 | agente |
 | 5 | webapp#21 → `master` → `dashboard.ecom.vio.live` | ✅ mergeado por Alan 2026-09-15; build del 2026-09-16 08:02 apunta a `https://api-ecom.vio.live/api` (literal → viene de `STATS_API_HOST` en Production, inferido del build) | Alan |
-| 6 | Login real en `dashboard.ecom.vio.live`: sin badge "Demo data", números reales o 0 | ⬜ | Angelo |
+| 6 | Login real en `dashboard.ecom.vio.live`: sin badge "Demo data", números reales o 0 | ✅ comprobado por Angelo 2026-09-16 | Angelo |
 
 **base-api#9 es un cherry-pick, no `develop`→`master`.** `develop` de base-api
 tiene otros 7 commits (relays de Qliro/Walley, paymentmethod, listings) que
