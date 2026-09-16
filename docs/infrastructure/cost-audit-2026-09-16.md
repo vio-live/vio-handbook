@@ -25,7 +25,7 @@ Se hizo el día en que se acabaron los créditos del Sponsorship. No se cambió 
 | 5 | App Service plan `ASP-prodreachu-96fd` (B1 **Windows**) | ~$56 | Aloja las funciones legacy `prod-functions-code2` y `qa-functions-code2` (Service Bus de Reachu) | Confirmar con Alan si siguen en uso. Si siguen, pasarlas a Consumption (Y1); si no, borrarlas | ~$56 |
 | 6 | Blob `containerproduction2` (1,56 TB, 6,16 M blobs, Hot) y `containerqa2` (171 GB, 2,4 M blobs, Hot) | ~$36 | Uploads legacy (`outshifter-*`, `reachu-*`) servidos por Front Door | **Aplicado en prod el 2026-09-16** (ver abajo). En QA no se aplica: costaría $26 de una vez para ahorrar $1,7/mes | ~$15 |
 | 7 | `claude-trader-rg` (App Service B1 Linux, West Europe, más storage) | ~$14 | App personal (`claude-trader-angelo`) en la factura de Vio | Moverla o borrarla (lo decide Angelo) | ~$14 |
-| 8 | Job `pg-stop-api-vio-staging` | — | Su cron es `0 3 1 1 *` (solo el 1 de enero), así que la PG de staging (B1ms) no se apaga nunca. El de development sí (`0 18 * * 1-5`) | Corregir a `0 18 * * 1-5` | ~$7 |
+| 8 | ~~Job `pg-stop-api-vio-staging`~~ | — | **Corrección:** que `0 3 1 1 *` no la apague probablemente es a propósito. Staging es la demo 24/7 (`vio-demo.vercel.app`, journal 2026-06-03) | No tocar | — |
 | 9 | ACR `reachuprod2` / `reachuqa2` (Standard, 112 / 116 GB) | ~$42 | Superan los 100 GB incluidos | Purgar tags viejos | ~$2 |
 
 **Total identificado: ~$550–750/mes**, frente a un gasto estimado de ~$1.550/mes.
@@ -67,3 +67,15 @@ Plan propuesto (pendiente del OK de Angelo):
 3. Subir el soft delete de 7 a 30 días antes de borrar: es la red de seguridad (se cobra como dato activo durante esos 30 días).
 4. Borrar primero `outshifter-uploads-production` y, en una segunda tanda, los huérfanos de `reachu-uploads-production`. Guardar la lista de lo borrado.
 5. Hacerlo antes del 2026-10-16, para no pagar el paso a Cool de blobs que se van a borrar.
+
+## Development de Vio Backend eliminado (2026-09-16, ~11:40–12:00)
+
+Lo decidió Angelo: "dejemos solo staging, elimina development".
+1. Backup de `pg-api-vio-development` (base `socket_server`) con un job temporal dentro de la VNet (`pg_dump -Fc`, postgres:17-alpine): `saapivio/backups/pg-api-vio-development/socket_server-2026-09-16.dump` (177 KB, 39 tablas, cabecera `PGDMP` verificada).
+2. `api-dev.vio.live` y `events-dev.vio.live` se desvincularon de las apps de dev, sus CNAME de Cloudflare pasaron a las apps de staging y se vincularon a `ca-api-vio-staging` / `ca-analytics-vio-staging` con certificado managed (los TXT `asuid` ya servían: el verification ID es el mismo para toda la suscripción). Los dos responden 200 con TLS válido.
+3. `az group delete -n rg-api-vio-development`: 16 recursos, más el RG gestionado `ME_cae-api-vio-development_…`, con su IP pública y su load balancer.
+4. PRs (sin merge automático):
+   - despliegue a staging por defecto: tipiodevelopment/vio-backend#60, vio-live/vio-analytics#13;
+   - URLs dev → staging en los SDKs: vio-web-sdk#52 (135/135 tests), react-native-sdk#3 (195/195), VioKotlinSDK#2, VioSwiftSDK#16 (Kotlin y Swift sin build local; solo cambian literales).
+5. Riesgo abierto: por la regla de emparejamiento, una app que use una **api key creada en el Postgres de dev** ahora recibirá 401 en staging si esa key no existe ahí. Con el backup se pueden comparar y, si hace falta, copiar las client apps que falten.
+6. Queda por limpiar: la base `vio_development` en ClickHouse, la app OIDC/CI si tenía federación por entorno, e `infra/` de vio-analytics (TF con `development`).

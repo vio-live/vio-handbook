@@ -1,6 +1,6 @@
 ---
 title: "Playbook — operar Vio Analytics"
-last-updated: 2026-08-20
+last-updated: 2026-09-16
 owner: angelo
 status: live
 ---
@@ -15,14 +15,14 @@ El runbook del pipeline de analytics. Arquitectura y porqués: [ADR-0009](../dec
 
 | Pieza | Recurso | Repo/código |
 |---|---|---|
-| Colector (×3 envs) | `ca-analytics-vio-{development,staging,production}` en `rg-api-vio-*` / `cae-api-vio-*` | `vio-live/vio-analytics` |
+| Colector (×2 envs; development eliminado el 2026-09-16) | `ca-analytics-vio-{staging,production}` en `rg-api-vio-*` / `cae-api-vio-*` | `vio-live/vio-analytics` |
 | Dominios | `events-dev.vio.live` · `events-staging.vio.live` · `events.vio.live` (Cloudflare, nube gris + TXT `asuid.*`; certs managed de Azure) | — |
 | Store | VM `vm-clickhouse-vio` (rg-vio-shared) · bases `vio_{development,staging,production}` | `infra/clickhouse.tf` |
 | Vendors | Mixpanel: "Vio Analytics" (prod, id 4055947) · "Vio Analytics - Staging" (id 4055964) · dev sin Mixpanel a propósito | `src/sinks/mixpanel.ts` |
 | Espejo server | módulo `analytics` del outbox de vio-backend | `server/events/analytics-mirror.ts` |
 | Proxy dashboards | `/api/analytics/vio/*` en vio-backend | `server/analytics-proxy.ts` |
 | Identity pull | `id-analytics-vio` (user-assigned, AcrPull en `acrvioapi`) | `infra/main.tf` |
-| CI/CD | push a main → dev · staging/prod por `workflow_dispatch` · OIDC app `vio-analytics-cicd` | `.github/workflows/deploy.yml` |
+| CI/CD | push a main → dev (→ staging con el PR vio-analytics#13) · staging/prod por `workflow_dispatch` · OIDC app `vio-analytics-cicd` | `.github/workflows/deploy.yml` |
 | IaC state | `viotfstate` (rg `vio-tools`) / container `tfstate` / key `vio-analytics.tfstate` | `infra/` (OpenTofu ok) |
 
 ## Dónde vive cada secret/config
@@ -43,7 +43,7 @@ nunca cruzar (api-local + events-dev = 401 garantizado, fue el caso Replit):
 
 | Si la app habla con… | los eventos van a… |
 |---|---|
-| `api-dev.vio.live` | `events-dev.vio.live` |
+| `api-dev.vio.live` | `events-dev.vio.live` (desde el 2026-09-16 ambos son alias de staging, así que la pareja se mantiene) |
 | `api-staging.vio.live` | `events-staging.vio.live` |
 | `api.vio.live` | `events.vio.live` |
 | `api-local-angelo.vio.live` (túnel) | `events-local-angelo.vio.live` (túnel → colector local, que guarda en `vio_development` de la VM) |

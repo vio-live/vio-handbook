@@ -20,3 +20,7 @@ A pedido de Angelo se revisaron las 4 suscripciones y los 141 recursos. Los resu
 ## 11:15 — Punto 6 aplicado (Angelo dio el OK)
 
 Lifecycle a Cool en `containerproduction2` tras 30 días sin acceso, con vuelta automática a Hot. Detalle, costos y cómo revertirlo en [cost-audit-2026-09-16](../../infrastructure/cost-audit-2026-09-16.md#cambio-aplicado--punto-6-2026-09-16-1115). QA quedó fuera porque no compensa.
+
+## ~11:40–12:00 — Development de Vio Backend eliminado
+
+Detalle completo, con backup, redirección de dominios, PRs y riesgos, en [cost-audit-2026-09-16](../../infrastructure/cost-audit-2026-09-16.md#development-de-vio-backend-eliminado-2026-09-16-1140-1200). Se actualizaron environments-and-endpoints, azure-overview, overview y el playbook de vio-analytics. Corrección al audit: el cron del stop de la PG de staging no era un bug (staging es la demo 24/7).

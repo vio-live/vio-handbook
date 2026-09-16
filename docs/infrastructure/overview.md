@@ -1,6 +1,6 @@
 ---
 title: "Infrastructure overview"
-last-updated: 2026-06-04
+last-updated: 2026-09-16
 owner: angelo
 status: live
 ---
@@ -39,7 +39,7 @@ Tres servidores independientes, todos en VNet privada (sin acceso público). El 
 | Entorno | Host | SKU | RG |
 |---------|------|-----|----|
 | local | `localhost:5432` (Docker) | — | — |
-| development | `pg-api-vio-development.postgres.database.azure.com` | B_Standard_B1ms | `rg-api-vio-development` |
+| ~~development~~ | eliminado el 2026-09-16 (backup en `saapivio/backups/pg-api-vio-development/`) | — | — |
 | staging | `pg-api-vio-staging.postgres.database.azure.com` | B_Standard_B1ms | `rg-api-vio-staging` |
 | production | `pg-api-vio-production.postgres.database.azure.com` | GP_Standard_D2s_v3 | `rg-api-vio-production` |
 
@@ -57,7 +57,7 @@ Ver [`playbooks/socket-server-db.md`](../playbooks/socket-server-db.md) para sna
 
 | URL | What | Source | Notes |
 |-----|------|--------|-------|
-| `https://api-dev.vio.live` | Backend (REST + WS) — development env | `socket-server/main` → `ca-api-vio-development` | Push a `main` autodeploya aquí. iOS demos apuntan aquí por defecto. |
+| `https://api-dev.vio.live` | **Alias de staging** desde el 2026-09-16 (development eliminado) | → `ca-api-vio-staging` | Push a `main` desplegará a staging cuando se mergee el PR vio-backend#60. Los SDKs dejan de usar este host con los PRs del 2026-09-16. |
 | `wss://api-dev.vio.live` | WebSocket for cart_intent + placement events | Same as above | Used by SDK after `discoverCampaigns` |
 | `https://api-staging.vio.live` | Backend — staging env (demo 24/7) | `workflow_dispatch` → `ca-api-vio-staging` | Snapshot `angelo-sepulveda-2026-06-03-1725.sql` restaurado. `vio-demo.vercel.app` apunta aquí. |
 | `https://api.vio.live` | Backend — production | `workflow_dispatch` → `ca-api-vio-production` | Mismo código que staging/dev. Cutover de tráfico real pendiente. |

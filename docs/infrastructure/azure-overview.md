@@ -1,6 +1,6 @@
 ---
 title: "Azure Infrastructure Overview"
-last-updated: 2026-07-02
+last-updated: 2026-09-16
 owner: angelo
 status: live
 ---
@@ -120,7 +120,7 @@ Infraestructura independiente de AKS. Módulo Terraform `socket-server-env` en `
 |---|---|
 | `rg-api-vio-production` | Production |
 | `rg-api-vio-staging` | Staging |
-| `rg-api-vio-development` | Development |
+| ~~`rg-api-vio-development`~~ | Development: **eliminado el 2026-09-16** |
 
 ### Container Apps
 
@@ -128,7 +128,7 @@ Infraestructura independiente de AKS. Módulo Terraform `socket-server-env` en `
 |---|---|---|
 | production | `ca-api-vio-production` | `api.vio.live` ✅ |
 | staging | `ca-api-vio-staging` | `api-staging.vio.live` ✅ |
-| development | `ca-api-vio-development` | `api-dev.vio.live` ✅ |
+| ~~development~~ | eliminado el 2026-09-16 | `api-dev.vio.live` → alias de `ca-api-vio-staging` |
 
 ACR: `acrvioapi.azurecr.io` (imagen: `acrvioapi.azurecr.io/socket-server`)
 

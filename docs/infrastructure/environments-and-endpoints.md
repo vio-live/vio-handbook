@@ -1,6 +1,6 @@
 ---
 title: "Environments & Endpoints — Vio Commerce + Backend"
-last-updated: 2026-09-03
+last-updated: 2026-09-16
 owner: miguel
 status: live
 ---
@@ -54,9 +54,9 @@ Routing real (Istio, `istio-system`, no hay `Ingress` — todo es `VirtualServic
 |---|---|---|
 | Prod | `rg-api-vio-production` | `api.vio.live` → `ca-api-vio-production...azurecontainerapps.io` |
 | Staging | `rg-api-vio-staging` | `api-staging.vio.live` → `ca-api-vio-staging...azurecontainerapps.io` |
-| Dev | `rg-api-vio-development` | `api-dev.vio.live` → `ca-api-vio-development...azurecontainerapps.io` |
+| ~~Dev~~ | ~~`rg-api-vio-development`~~ (eliminado 2026-09-16) | `api-dev.vio.live` → **alias de staging** (`ca-api-vio-staging`) |
 
-Estos SÍ son 3 entornos físicamente separados (3 Container Apps distintas, 3 RG distintos) — a diferencia de Commerce. No confundir los dos sistemas.
+Desde el 2026-09-16 son **2 entornos** separados físicamente (prod y staging), a diferencia de Commerce. No confundir los dos sistemas. **Development eliminado el 2026-09-16** (Miguel, decisión de Angelo): se borró `rg-api-vio-development` completo. `api-dev.vio.live` y `events-dev.vio.live` son ahora **alias de las apps de staging** (CNAME en Cloudflare + dominio y certificado managed en `cae-api-vio-staging`), para no romper los SDKs publicados que los usan por defecto. Backup de la base: `saapivio/backups/pg-api-vio-development/socket_server-2026-09-16.dump`.
 
 > Frontend legacy del monolito de Vio Backend: `staging.vio.live`, corre en `kubernetesqa` (mismo cluster que Commerce QA). Sin prod propio todavía.
 
@@ -69,5 +69,5 @@ Estos SÍ son 3 entornos físicamente separados (3 Container Apps distintas, 3 R
 
 ## Notas
 
-- `reachu-prod` (cluster viejo) sigue operativo, separado de `vio-commerce-prod`.
+- ~~`reachu-prod` (cluster viejo) sigue operativo~~: corregido el 2026-09-16. Hoy solo existen dos clusters AKS: `vio-commerce-prod` y `kubernetesqa`.
 - Si en algún momento `pre-develop` empieza a usarse de verdad, esta tabla queda desactualizada — volver a verificar `AZ_KUB_NAME_STAGING` contra el real antes de asumir que sigue siendo el mismo cluster que QA.
