@@ -39,3 +39,13 @@
 - Staging: revisión `ca-api-vio-staging--0000024` con la imagen `staging-6c26d00`; migración `0011` aplicada al arrancar; `/health` 200; `/api/auth/me` sin token → 401.
 - `COMMERCE_API_URL=https://api-ecom-staging.vio.live` cargada en `ca-api-vio-staging` (se mantiene en la revisión nueva).
 - Prod sin cambios (`production-96a91ae`).
+
+### Capacidades, #62/#63 en staging y primer paso del webapp (misma sesión)
+
+- Decisiones de capacidades por tipo: [`architecture/cuentas-y-capacidades.md`](../../architecture/cuentas-y-capacidades.md).
+- `vio-backend#62` (seller solo por claim `channel` — los business también conectan channels) y `#63` (`/api/auth/me` con `accountType` + `features`; `PATCH /api/sponsor/me` con `sponsor:write-own`) mergeados.
+- ⚠️ Los dos merges seguidos dispararon dos deploys a staging en paralelo; el de #63 falló con `ContainerAppOperationInProgress`. Se re-ejecutó el job fallido (la imagen ya estaba publicada) → staging en `staging-345e656`, sano, `COMMERCE_API_URL` intacta. Arreglo sugerido: `concurrency` en `.github/workflows/deploy.yml` para encolar deploys al mismo entorno.
+- `webapp-vio-commerce#27` (sin mergear): `src/lib/vio.js` (cliente Bearer, `useVioAccount`, `hasFeature`, marca) y Settings › Brand (nombre, logo por URL, colores; solo con `brand:manage`). Host: `VIO_API_HOST`; sin valor, staging se deriva de `FIREBASE_PROJECT_ID=reachu-qa` y **prod queda apagado a propósito**. Build y lint OK; preflight CORS de staging OK. **No probado con login real.**
+- Riesgo a resolver antes de prod: los sponsors que ya existen (creados a mano, con `commerce_api_key`) no tienen `commerce_user_uid`; cuando su business entre por el webapp, el alta automática le crea **otro** sponsor. Hace falta el script de enlace (fase 4) antes de encender prod. En staging puede pasar ya (p. ej. sponsor 4).
+- El upload de logo de vio-backend (`/api/objects/upload`) cae en `campaigns:write`, que el sponsor no tiene → por ahora el logo va por URL.
+- Build del webapp en un worktree con `node_modules` symlinkeado falla en "collect page data" (`c(...) is not a function`) también sin cambios; con `npm ci` propio compila. Usar dependencias propias en worktrees.
