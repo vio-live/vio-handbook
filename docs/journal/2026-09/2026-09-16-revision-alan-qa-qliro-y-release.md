@@ -102,8 +102,11 @@ Pruebas:
 - **SDK:** 135 tests, 8 nuevos. Quitando el bloqueo fallan 4; quitando la espera, 2.
 
 Sin probar a mano todavía. Queda para Angelo, o con él, tras republicar la página:
-1. Qliro con un seller sin modo, con uno con el modo antiguo guardado y con la cuenta de
-   respaldo.
+1. Con el seller de Alan, que tenía guardado «Vio rate as an order line»: sin cambiar nada,
+   un producto con dos clases muestra las dos dentro de Qliro. Opcional: lo mismo con un
+   seller sin credenciales de Qliro propias, que paga con la cuenta de prueba de Vio. El caso
+   «seller sin modo» no se puede preparar desde el dashboard, porque al guardar siempre se
+   guarda un modo, y lo cubren los tests.
 2. Dos productos con una sola clase en común.
 3. Dos productos sin clase en común, con Qliro y con otro método.
 
