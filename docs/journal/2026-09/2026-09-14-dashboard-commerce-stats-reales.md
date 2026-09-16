@@ -52,3 +52,4 @@ Checklist vivo con el orden y dueños: [`handoff/analytics-stats-bridge.md` → 
 - 🔴 La captura expone secretos de prod en Trello (ver "Incidente 2026-09-15" en el handoff). Pendiente de decisión de Angelo: borrar adjunto, rotar token del colector (+ read token para base-api), evaluar rotación de MySQL/Firebase.
 - Falta: login real de Angelo en el dashboard de prod (se esperan ceros: la base de eventos de prod tenía 0 al 09-15).
 - 2026-09-16: Angelo comprobó el login real en el dashboard de prod → **etapa cerrada**.
+- 2026-09-16: base-api#9 cerrado sin mergear (redundante) y tarjeta `7AH1NJRD` movida a Done.

@@ -147,7 +147,7 @@ es el último porque es lo único que ve el cliente.
 |---|---|---|---|
 | 1 | Colector `vio-analytics` en prod → `b13d04b` (#9–#12: tokens por rol, sponsor por hash de api key, top-products, ceros) | ✅ desplegado 2026-09-14 (`ca-analytics-vio-production--0000005`) | agente |
 | 2 | `.env` de prod de base-api (`containerproduction2` / `env-file-microservices` / `base-api/.env`): `ANALYTICS_STATS_URL` + `ANALYTICS_INTERNAL_TOKEN` | ✅ 2026-09-15 (captura de Alan en la tarjeta, antes del merge) | Alan — [Trello `7AH1NJRD`](https://trello.com/c/7AH1NJRD) |
-| 3 | Puente en `master` de base-api → deploy de prod | ✅ 2026-09-15 — **no** vía #9: Alan pasó `develop` entero a `master` (`246ba1f`, CI verde). #9 quedó abierto y redundante | Alan |
+| 3 | Puente en `master` de base-api → deploy de prod | ✅ 2026-09-15 — **no** vía #9: Alan pasó `develop` entero a `master` (`246ba1f`, CI verde). #9 cerrado sin mergear el 2026-09-16 | Alan |
 | 4 | `curl https://api-ecom.vio.live/api/stats/overview` → **401** | ✅ verificado por el agente 2026-09-16 | agente |
 | 5 | webapp#21 → `master` → `dashboard.ecom.vio.live` | ✅ mergeado por Alan 2026-09-15; build del 2026-09-16 08:02 apunta a `https://api-ecom.vio.live/api` (literal → viene de `STATS_API_HOST` en Production, inferido del build) | Alan |
 | 6 | Login real en `dashboard.ecom.vio.live`: sin badge "Demo data", números reales o 0 | ✅ comprobado por Angelo 2026-09-16 | Angelo |
