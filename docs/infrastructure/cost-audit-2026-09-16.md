@@ -80,3 +80,10 @@ Lo decidió Angelo: "dejemos solo staging, elimina development".
 5. Riesgo de api keys revisado (12:30): el backup de dev tenía **1 client app** (`Vev-test`, id 21, creada el 2026-06-04), 1 campaña de prueba ("Campaign vet test"), 2 sponsors, 2 users, **0 events y 0 end_users**. Su key da 401 en staging y en prod, así que era una app de prueba sin tráfico registrado. No se copió nada a staging. Si alguien la necesita, se puede recrear en staging desde el dashboard.
    El borrado del RG terminó (`az group exists` → false).
 6. Queda por limpiar: la base `vio_development` en ClickHouse, la app OIDC/CI si tenía federación por entorno, e `infra/` de vio-analytics (TF con `development`).
+
+### 12:35 — PRs mergeados (por Miguel, con autorización explícita de Angelo: "lo puedes hacer tú?")
+
+Squash merge: vio-backend#60 (`9e6ab6d`), vio-analytics#13 (`3f1a5f6`), vio-web-sdk#52 (`5536b2c`), react-native-sdk#3 (`cc96333`), VioKotlinSDK#2 (`aa1ec28`), VioSwiftSDK#16 (`1837796`).
+- Los merges de vio-backend y vio-analytics dispararon el primer deploy automático **main → staging**, y los dos terminaron bien. Staging corre ahora `staging-9e6ab6d` (backend: incluye el fix de uploads #59, que ya estaba en main y no tiene migraciones) y `staging-3f1a5f6` (analytics). `api-staging`, `api-dev`, `events-staging`, `events-dev` y `api` responden 200.
+- **Nuevo comportamiento:** cada push a `main` de vio-backend y vio-analytics actualiza la demo de staging. Antes staging solo se tocaba a mano.
+- Los SDKs no se publicaron (npm, Maven y SPM siguen en sus versiones anteriores). Las URLs nuevas entran en la próxima release de cada uno.
