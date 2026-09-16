@@ -7,6 +7,8 @@ status: live
 
 # Encender el puente de stats — QA + prod
 
+> **2026-09-16:** puente vivo en prod y dashboard de prod fuera de demo. Falta el login real (paso 6). ⚠️ Ver "Incidente 2026-09-15" al final.
+
 > **Actualización 2026-09-14:** staging ya pinta datos reales (webapp#20 —
 > el host sale de `API_HOST`, sin variable aparte). El Paso 3 quedó obsoleto.
 > Prod: ver [Release a producción](#release-a-producción-2026-09-14) al final.
@@ -144,10 +146,10 @@ es el último porque es lo único que ve el cliente.
 | # | Pieza | Estado | Quién |
 |---|---|---|---|
 | 1 | Colector `vio-analytics` en prod → `b13d04b` (#9–#12: tokens por rol, sponsor por hash de api key, top-products, ceros) | ✅ desplegado 2026-09-14 (`ca-analytics-vio-production--0000005`) | agente |
-| 2 | `.env` de prod de base-api: `ANALYTICS_STATS_URL=https://events.vio.live` + `ANALYTICS_INTERNAL_TOKEN=<token de producción del colector>` en `containerproduction2` / `env-file-microservices` / `base-api/.env` (respaldar antes, como en QA) | ⬜ | Alan — [Trello `7AH1NJRD`](https://trello.com/c/7AH1NJRD) |
-| 3 | Merge de [`vio-base-api#9`](https://github.com/vio-live/vio-base-api/pull/9) a `master` → build+deploy de prod (el `.env` se hornea en el build: por eso va **después** del 2) | ⬜ | Alan — misma tarjeta |
-| 4 | Verificar: `curl https://api-ecom.vio.live/api/stats/overview` → **401** (hoy 404; 503 = falta el 2) | ⬜ | Alan (evidencia en la tarjeta) |
-| 5 | Merge de [`webapp-vio-commerce#21`](https://github.com/vio-live/webapp-vio-commerce/pull/21) (`develop`→`master`) → Vercel publica `dashboard.ecom.vio.live` | ⬜ | Angelo |
+| 2 | `.env` de prod de base-api (`containerproduction2` / `env-file-microservices` / `base-api/.env`): `ANALYTICS_STATS_URL` + `ANALYTICS_INTERNAL_TOKEN` | ✅ 2026-09-15 (captura de Alan en la tarjeta, antes del merge) | Alan — [Trello `7AH1NJRD`](https://trello.com/c/7AH1NJRD) |
+| 3 | Puente en `master` de base-api → deploy de prod | ✅ 2026-09-15 — **no** vía #9: Alan pasó `develop` entero a `master` (`246ba1f`, CI verde). #9 quedó abierto y redundante | Alan |
+| 4 | `curl https://api-ecom.vio.live/api/stats/overview` → **401** | ✅ verificado por el agente 2026-09-16 | agente |
+| 5 | webapp#21 → `master` → `dashboard.ecom.vio.live` | ✅ mergeado por Alan 2026-09-15; build del 2026-09-16 08:02 apunta a `https://api-ecom.vio.live/api` (literal → viene de `STATS_API_HOST` en Production, inferido del build) | Alan |
 | 6 | Login real en `dashboard.ecom.vio.live`: sin badge "Demo data", números reales o 0 | ⬜ | Angelo |
 
 **base-api#9 es un cherry-pick, no `develop`→`master`.** `develop` de base-api
@@ -163,3 +165,18 @@ un sponsor de prod ve **0** — correcto por diseño ("0 si es 0"), no un error.
 Pendiente de higiene (no bloquea): tokens de solo lectura en prod
 (`internal_read_tokens` vía TF) y pasar base-api a usar ese token en vez del
 completo — hoy staging y prod usan el token completo.
+
+## Incidente 2026-09-15 — secretos de prod en una captura de Trello
+
+La evidencia del paso 2 se subió como captura del editor del blob y dejó
+legibles credenciales de prod (password de MySQL, `ANALYTICS_INTERNAL_TOKEN`,
+parte de `FIREBASE_PRIVATE_KEY`, `RACHU_API_KEY`). La tarjeta pedía pegar
+**solo** la línea de `ANALYTICS_STATS_URL`.
+
+Acciones propuestas (pendientes de decisión de Angelo): borrar el adjunto;
+rotar el token del colector de prod (aprovechando para darle a base-api un
+token de solo lectura); evaluar rotación de la password de MySQL y de la
+clave de Firebase (el `.env` compartido lo consumen los 13 servicios).
+
+**Regla para próximas tarjetas**: la evidencia de config se pega como texto
+filtrado (`grep NOMBRE_VAR`), nunca como captura del archivo.
