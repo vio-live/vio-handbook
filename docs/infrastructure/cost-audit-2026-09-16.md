@@ -77,5 +77,6 @@ Lo decidió Angelo: "dejemos solo staging, elimina development".
 4. PRs (sin merge automático):
    - despliegue a staging por defecto: tipiodevelopment/vio-backend#60, vio-live/vio-analytics#13;
    - URLs dev → staging en los SDKs: vio-web-sdk#52 (135/135 tests), react-native-sdk#3 (195/195), VioKotlinSDK#2, VioSwiftSDK#16 (Kotlin y Swift sin build local; solo cambian literales).
-5. Riesgo abierto: por la regla de emparejamiento, una app que use una **api key creada en el Postgres de dev** ahora recibirá 401 en staging si esa key no existe ahí. Con el backup se pueden comparar y, si hace falta, copiar las client apps que falten.
+5. Riesgo de api keys revisado (12:30): el backup de dev tenía **1 client app** (`Vev-test`, id 21, creada el 2026-06-04), 1 campaña de prueba ("Campaign vet test"), 2 sponsors, 2 users, **0 events y 0 end_users**. Su key da 401 en staging y en prod, así que era una app de prueba sin tráfico registrado. No se copió nada a staging. Si alguien la necesita, se puede recrear en staging desde el dashboard.
+   El borrado del RG terminó (`az group exists` → false).
 6. Queda por limpiar: la base `vio_development` en ClickHouse, la app OIDC/CI si tenía federación por entorno, e `infra/` de vio-analytics (TF con `development`).
