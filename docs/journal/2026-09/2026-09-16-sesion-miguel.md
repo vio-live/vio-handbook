@@ -39,3 +39,12 @@
   - `infra/` de vio-analytics (Terraform con `development`);
   - retirar los alias `api-dev` y `events-dev` cuando los SDKs nuevos estén publicados y adoptados.
 - **Releases de los SDKs** con las URLs nuevas (Kotlin sigue en pausa).
+
+## 14:05 — Migración `nexi` en QA
+
+- Quién: Miguel, a pedido de Angelo (para el toggle de Nexi por canal)
+- Dónde: MySQL de QA `vio-ecom-db-staging` / `outshifter`, desde `vio-live/package-database` (rama `develop`, `f5ced5f`; migración del PR #15)
+- Antes: se verificó que la columna `nexi` no existía, que la última migración aplicada era `titlesUtf8mb41789058220001` (id 227) y que hay backup FULL automático de hoy (`daily-20260916t082008`, 08:20 UTC).
+- Hecho: `DB_MIGRATION_FILE=1789158220001-nexi-channel-toggle.ts yarn migration:execute`. Con esa variable TypeORM carga solo esa migración, así que no corrió ninguna otra. Resultado: `channel_user_settings.nexi` `tinyint NOT NULL DEFAULT 0` y registro id 228 `nexiChannelToggle1789158220001`. Las 99 filas quedan con `nexi=0`.
+- Clon temporal y `.env` borrados al terminar. Revertir: `yarn migration:revert` (el `down` hace DROP COLUMN).
+- Pendiente: aplicarla en prod cuando se libere el toggle.
