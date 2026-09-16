@@ -74,6 +74,14 @@ aplicarlo) en Commerce.
 
 Vio team: editar sponsors, channels y cualquier usuario. No se define ahora.
 
+## Implementación
+
+- `vio-backend#61` (en staging): login por token + alta automática.
+- `vio-backend#62`: seller solo por claim `channel`.
+- `vio-backend#63`: `/api/auth/me` devuelve `accountType` + `features`
+  (tabla en el PR) y `PATCH /api/sponsor/me` (la marca edita nombre, logo,
+  colores; capability `sponsor:write-own`).
+
 ## Qué implica en vio-backend (business)
 
 - `/api/auth/me` devuelve tipo de cuenta + lista de capacidades; el menú
