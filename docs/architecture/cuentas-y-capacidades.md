@@ -65,9 +65,10 @@ En su primera llamada a vio-backend, la cuenta se enlaza sola:
 | Broadcasts | **No, por ahora** |
 | Analytics | De sus surfaces |
 
-⚠️ "Solo lectura" de productos y órdenes se aplica **en el front**; el
-backend de Commerce hoy no distingue seller de business para escribir.
-Si hace falta que sea una garantía, hay que aplicarlo también en Commerce.
+⚠️ "Solo lectura" de productos y órdenes se aplica **en el front**. Si el
+backend de Commerce impide o no que un seller escriba productos u órdenes
+**no está verificado**; si tiene que ser una garantía, hay que revisarlo (y
+aplicarlo) en Commerce.
 
 ### Super admin — después
 
