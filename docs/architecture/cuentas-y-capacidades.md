@@ -54,11 +54,20 @@ En su primera llamada a vio-backend, la cuenta se enlaza sola:
 | Mi marca | **Sí**: nombre, logo, colores (edita) |
 | Analytics | **Solo lo que se decida explícitamente** que puede ver (lista cerrada, a definir) |
 
-### Seller — pendiente
+### Seller — decidido
 
-Propuesto: surfaces, campañas y broadcasts completos, channels y
-conexiones, analytics de sus surfaces. Abierto: ¿maneja productos u
-órdenes propias, o solo vende los de las marcas?
+| Sección | Qué ve / hace |
+|---|---|
+| Productos y órdenes de Commerce | **Solo lectura** |
+| Channels / conexiones | Sí |
+| Surfaces | **Sí, completo** (las suyas) |
+| Campañas | **Sí, completo** (crea y gestiona, en sus surfaces) |
+| Broadcasts | **No, por ahora** |
+| Analytics | De sus surfaces |
+
+⚠️ "Solo lectura" de productos y órdenes se aplica **en el front**; el
+backend de Commerce hoy no distingue seller de business para escribir.
+Si hace falta que sea una garantía, hay que aplicarlo también en Commerce.
 
 ### Super admin — después
 
