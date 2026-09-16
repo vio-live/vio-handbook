@@ -32,3 +32,10 @@
 - **Fase 1 en `vio-backend#61`** (segundo commit): seller → `admin`; business/supplier → `sponsor` + sponsor (transacción, `sponsors.commerce_user_uid`, migración 0011); ambos/ninguno → 403. Tipo desde claims, y si faltan, desde base-api con el mismo token (`COMMERCE_API_URL`, opcional). Vincular por email y `ADMIN_EMAILS` exigen email verificado. Probado contra Postgres 16 real (alta, idempotencia, concurrencia, rollback).
 - Hallazgo: la cadena de migraciones de `vio-backend` no arranca desde una base vacía (`0010` falla por `tv_platforms`); los entornos existentes no están afectados.
 - Siguiente: apagar la creación de usuarios desde Vio (`/users`, `ensureFirebaseUser`, bandeja de pendientes), luego channel ↔ surface, y el cliente del webapp.
+
+### Merge y deploy de #61 (misma sesión)
+
+- `vio-backend#61` mergeado (`6c26d00`). ⚠️ Ya **no existe entorno development** para `vio-backend`: el workflow despliega un push a `main` directo a **staging** (`workflow_dispatch` solo ofrece staging/production) y `api-dev.vio.live` resuelve a la misma IP que `api-staging.vio.live`. El `CLAUDE.md` del repo todavía dice "push a main → development" (desactualizado).
+- Staging: revisión `ca-api-vio-staging--0000024` con la imagen `staging-6c26d00`; migración `0011` aplicada al arrancar; `/health` 200; `/api/auth/me` sin token → 401.
+- `COMMERCE_API_URL=https://api-ecom-staging.vio.live` cargada en `ca-api-vio-staging` (se mantiene en la revisión nueva).
+- Prod sin cambios (`production-96a91ae`).
