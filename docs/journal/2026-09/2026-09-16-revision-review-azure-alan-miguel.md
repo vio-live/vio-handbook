@@ -16,3 +16,7 @@
 ## Después: audit exhaustivo de costos
 
 A pedido de Angelo se revisaron las 4 suscripciones y los 141 recursos. Los resultados están en [cost-audit-2026-09-16](../../infrastructure/cost-audit-2026-09-16.md): ~$550–750/mes identificados. No se cambió nada; todo queda a la espera de decisión.
+
+## 11:15 — Punto 6 aplicado (Angelo dio el OK)
+
+Lifecycle a Cool en `containerproduction2` tras 30 días sin acceso, con vuelta automática a Hot. Detalle, costos y cómo revertirlo en [cost-audit-2026-09-16](../../infrastructure/cost-audit-2026-09-16.md#cambio-aplicado--punto-6-2026-09-16-1115). QA quedó fuera porque no compensa.
