@@ -48,3 +48,8 @@
 - Hecho: `DB_MIGRATION_FILE=1789158220001-nexi-channel-toggle.ts yarn migration:execute`. Con esa variable TypeORM carga solo esa migración, así que no corrió ninguna otra. Resultado: `channel_user_settings.nexi` `tinyint NOT NULL DEFAULT 0` y registro id 228 `nexiChannelToggle1789158220001`. Las 99 filas quedan con `nexi=0`.
 - Clon temporal y `.env` borrados al terminar. Revertir: `yarn migration:revert` (el `down` hace DROP COLUMN).
 - Pendiente: aplicarla en prod cuando se libere el toggle.
+
+## ~16:00 — Apagar y encender prod bajo demanda
+
+A pedido de Angelo ("¿podrías hacer para apagar y encender todo bajo necesidad?"): script `scripts/prod-power.sh` y cron diario `prod-power-guard` (06:30). Ver [playbook](../../playbooks/prod-power-on-demand.md). Probado solo con `status` y `guard` (sin tags, no hizo nada). **Todavía no se apagó nada**: se espera el OK de Angelo y avisar a Alan.
+Uso real de Commerce prod, verificado en la DB: 5 órdenes (todas del 19/08), 28 users, 0 canales nuevos en 30 días.
