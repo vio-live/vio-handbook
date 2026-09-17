@@ -28,6 +28,7 @@ los conectores — **el casing importa**:
 | Qliro | `Qliro` | `apiKey` (MerchantApiKey), `apiSecret` (firma), `sandbox?` (elige host), `termsUrl?`, `notifyUrl?` (opción A, en rama) | **Sí desde el 2026-09-03** (`QLIRO_API_KEY/SECRET/SANDBOX/TERMS_URL`, commit `179dab4` de una sesión de agente) — el dinero de un seller sin claves liquida en la cuenta de Vio. **Se queda** (Angelo, 2026-09-11): la intención es no ser vendedores, pero si se usa hay que añadir lo que falta para serlo (liquidación al seller, IVA, refunds, aviso en el dashboard) |
 | Walley | `Walley` | `clientId` + `clientSecret` (OAuth2, scope fijo por entorno), `storeId?`, `sandbox?` (elige host), `termsUrl?` | **No** — sin credenciales no se ofrece |
 | Nexi Checkout | `Nexi` | `secretKey` (server, cifrada), `checkoutKey` (pública, va al navegador), `sandbox?` (elige host; default por prefijo `test-`/`live-`), `termsUrl` (**obligatorio**), `privacyUrl?`, `autoCapture?` (default true), `notifyUrl?` + `notifyAuthorization?` (opción A) | **No** — sin claves propias no se ofrece (decisión 2026-09-11) |
+| Adyen | `Adyen` | `apiKey` (cifrada), `clientKey` (pública; **decide el entorno**: `test_`/`live_`), `merchantAccount`, `liveUrlPrefix` (sólo live), `hmacKey` (cifrada), `captureMode?`, `shopperStatement?`, `merchantAccounts?` (por market); `webhookToken` lo gestiona el servidor | **Sí** (decisión de Angelo, 2026-09-17): `ADYEN_*` del entorno, para cualquier seller sin fila propia. Una fila del seller **incompleta es un error**, nunca un fallback; cada sesión registra qué cuenta cobró. En ramas, sin desplegar — ver [`adyen.md`](./adyen.md) |
 | Vipps | `VIPPS` | `clientId`, `clientSecret`, `subscriptionKey`, `merchantSerialNumber` | **No** |
 
 - Apple Pay y Google Pay **corren sobre las claves Stripe del seller**
@@ -59,8 +60,9 @@ DELETE /api/paymentmethod/:id      (softDelete)
 ## Activación por canal (`channel_user_settings`)
 
 Columnas booleanas: `stripePaymentIntent`, `stripePaymentLink`, `klarna`,
-`vipps`, `googlePay`, `applePay`, `kustom`, `qliro`, `walley` (+ `markets`, `purchaseConditions`,
-`orderConfirmationEmail`, que no son de pago). `kustom` y `qliro` llegaron con el kernel
+`vipps`, `googlePay`, `applePay`, `kustom`, `qliro`, `walley`, `nexi` (+ `markets`, `purchaseConditions`,
+`orderConfirmationEmail`, que no son de pago). `adyen` está en el kernel en rama
+(`feature/adyen-channel-toggle`, migración `1789643151000`), sin publicar. `kustom` y `qliro` llegaron con el kernel
 1.0.245 (2026-09-03), y `walley` está en el kernel desde el 2026-09-03 (package-database PR #8).
 
 - Se escriben con `POST /api/channel/update/settings/:channelUserId`.
@@ -299,6 +301,27 @@ otros tres:
   se libera a los ~7 días). Verify: `GET /v1/payments/<32 ceros>` (404 = clave buena,
   401 = mala).
 
+### Adyen en el checkout — **en ramas, sin desplegar (2026-09-17)**
+
+Quinto proveedor, y el primero que **no es un checkout embebido**: Drop-in lista métodos
+(tarjeta, Vipps, Klarna, Swish, Trustly…) y cobra, pero no pide email, dirección ni envío. Va
+con el formulario de Vio primero (como Stripe y Klarna Payments), sobre una sesión creada con el
+importe final. Todo el detalle —flujo, credenciales, webhook, markets, métodos, lo que le llega
+al vendedor— está en [`adyen.md`](./adyen.md); las decisiones, en
+[ADR-0019](../decisions/0019-adyen-sesiones-form-first.md). Lo que lo distingue de los otros cuatro:
+
+- **El webhook es de la cuenta, no del pago**: `{API_HOST}/adyen/webhooks/{ref}/{token}`, una
+  URL por credencial, verificada por token + HMAC + merchant account + entorno. Con su propia
+  cuenta, **lo registra el seller** en su Adyen; el dashboard le da la URL.
+- **La sesión es una foto inmutable**: cualquier cambio crea otra. Al pagar sólo se verifica
+  (`ConfirmAdyenPayment`), y el webhook sólo crea la orden si el pago coincide con la foto de
+  **su** sesión.
+- **El entorno sale de la client key**; no hay interruptor de sandbox.
+- **Mismo contrato para todos los clientes**: `CreatePaymentAdyen` devuelve lo que necesita el
+  Drop-in de web, iOS, Android o React Native (`channel` y `return_url` los manda el cliente).
+- **Limitación por market**: sólo se crea sesión para un país que esté en el catálogo de Vio,
+  en los markets del canal y en los habilitados para Adyen (hoy `NO`).
+
 ### Kustom en el checkout — mergeado
 
 El camino KCO legacy de shopcart se **parametrizó** con
@@ -417,7 +440,7 @@ Su documentación avisa: **sólo contra el entorno de pruebas**.
 
 ## El SDK web y el artículo
 
-Los métodos embebidos (Kustom, Qliro, Walley y Nexi — el único **sin snippet**: monta el JS de Nexi) llegan al artículo por el **paquete de Vev**, que vendorea un
+Los métodos embebidos (Kustom, Qliro, Walley y Nexi — el único **sin snippet**: monta el JS de Nexi) y Adyen (que **no** es embebido: mantiene el formulario de entrega y carga Adyen Web de su CDN) llegan al artículo por el **paquete de Vev**, que vendorea un
 bundle del SDK generado desde el código (no desde npm). Cómo funcionan del lado del cliente,
 y las dos reglas que hay que respetar para agregar un cuarto proveedor, están en
 [`web-sdk.md`](./web-sdk.md#checkout-embebido--kustom-qliro-walley).
@@ -430,6 +453,7 @@ en npm es para el resto de los consumidores y es un paso aparte.
 - Dashboard: `src/lib/payments.js` (contratos + helpers),
   `src/views/settings/sections/payments.jsx`,
   `src/views/settings/payment-icons.jsx`.
+- Adyen: [`adyen.md`](./adyen.md) (fuentes al final).
 - Nexi Checkout: [Payment API](https://developer.nexigroup.com/nexi-checkout/en-EU/api/payment-v1/),
   [Checkout JS SDK](https://developer.nexigroup.com/nexi-checkout/en-EU/api/checkout-js-sdk/),
   [webhooks](https://developer.nexigroup.com/nexi-checkout/en-EU/docs/track-events-using-webhooks/),
