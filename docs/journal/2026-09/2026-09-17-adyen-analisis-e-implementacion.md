@@ -40,8 +40,9 @@ key sólo funciona en los *allowed origins* registrados. Todo en
 - *Dinero directo:* con su API key, el pago cae en su merchant account y lo ve en su Customer
   Area con nuestra referencia, las líneas con **su** `g:id`/SKU y la metadata.
 
-**Implementación**, toda en ramas locales `feature/adyen-payment` (kernel:
-`feature/adyen-channel-toggle`), **sin pushear** (ADR-0001):
+**Implementación**, en ramas `feature/adyen-payment` (kernel: `feature/adyen-channel-toggle`).
+Al cierre del análisis estaban sin pushear; por la tarde se abrieron los PRs y empezó el
+despliegue a QA (ver *Rollout a QA* más abajo):
 
 | Repo | Commit | Qué |
 |---|---|---|
@@ -65,6 +66,53 @@ de salir: el tope de 1024 caracteres del `returnUrl` no se aplicaba en `localhos
 comprueba la credencial, lista los métodos para NO/NOK, prueba `payable:false` y levanta una
 página local con el Drop-in real. Lee `~/.config/vio/adyen-test.env`; la API key nunca se imprime.
 
+## Rollout a QA (tarde del 17/09)
+
+Angelo: *"te paso las credenciales y ya tiras tú; lo deployamos y seguimos desde ahí"* — OK
+acotado a `develop`/QA ([ADR-0015](../../decisions/0015-merge-delegado-con-ok-explicito.md)).
+
+| PR | Estado | Verificado después |
+|---|---|---|
+| [package-database#16](https://github.com/vio-live/package-database/pull/16) | mergeado `eaf4aebd` | el release publicó **sólo `@vio-/database` 1.0.266** y **paró en el gate de migración** (sin bump a los micros), como está diseñado |
+| [shopcart#31](https://github.com/vio-live/vio-shopcart-microservice/pull/31) | mergeado `6fa4e4e9` | pod 2/2, 0 reinicios, Nest arranca, las 4 rutas de Adyen mapeadas, sin errores en el log |
+| [base-api#11](https://github.com/vio-live/vio-base-api/pull/11) | mergeado `1a7d78f0` | `POST /adyen/webhooks/platform/<token malo>` → **401** de punta a punta (base-api → shopcart) en 0,2 s |
+| [graphql#12](https://github.com/vio-live/graphql/pull/12) | mergeado `2228b175` | DI resuelta en runtime antes del merge; los 3 campos de Adyen validan contra el schema desplegado; la página real `a-vio-dev.vev.site/bohus-demo` sigue cargando su carrito |
+| [api#22](https://github.com/vio-live/vio-api-microservice/pull/22) | **abierto** | necesita el kernel con la columna: va **después** de la migración y del `pkg=all` |
+| [webapp#29](https://github.com/vio-live/webapp-vio-commerce/pull/29) | **abierto** | después de api |
+| [vio-web-sdk#61](https://github.com/vio-live/vio-web-sdk/pull/61), [vev#41](https://github.com/vio-live/vev/pull/41) | **abiertos** | base `main`: los mergea Angelo o con su OK explícito; después `vev deploy` |
+
+Sin las `ADYEN_*` en el entorno, Adyen queda **dormido**: el `ConfigService` devuelve
+`undefined`, no hay validación al arrancar y el gate no lo ofrece.
+
+> ⚠️ **Ventana de riesgo hasta que corra la migración.** `package-database` `develop` ya declara
+> `channel_user_settings.adyen`. Un push a `develop` de **cualquier** `package-*` dispararía un
+> release que ya no ve la migración en su diff, haría el bump de los 11 micros y QA daría
+> `Unknown column 'adyen'`. **No relanzar el kernel hasta correr**
+> `DB_MIGRATION_FILE=1789643151000-adyen-channel-toggle.ts yarn migration:execute` en
+> `vio-ecom-db-staging`/`outshifter`. Después: `gh workflow run kernel-release.yml -f pkg=all`
+> ([lección](../../lessons/release-parcial-del-kernel.md)).
+
+**Defecto propio atrapado antes del merge** (shopcart `8f96bbf`): dos regex que limpian
+caracteres de control llevaban los **bytes crudos** (NUL, 0x1F, 0x7F) en vez de los escapes, y
+git trataba `adyen-amounts.ts` y `adyen-sanitize.ts` como binarios: el PR no mostraba su diff.
+Mismo comportamiento, ahora revisable, con un test que falla si vuelven los bytes crudos.
+
+**Credencial de test:** las claves que Angelo dejó en el archivo local tienen buena forma pero
+Adyen TEST responde **401** en Checkout y en Management. Mirando el Customer Area (sólo
+lectura): ninguna de las dos credenciales (`ws_513405`, `ws_413265`) tiene client key ni
+allowed origins guardados → la página no llegó a guardarse (Adyen exige al menos un origin para
+guardar una client key). Origins: `https://*.vev.site`, `https://vio-demo.vercel.app`,
+`http://localhost:5173`, `http://localhost:5174`.
+
+**Hallazgos de paso:**
+- **Nada llama a `POST /checkout/payments/reconcile`**: no hay CronJob en QA ni ningún llamador
+  en la org. El barrido que cubre los avisos perdidos de Kustom, Qliro, Walley, Nexi y ahora
+  Adyen no corre. `payments.md` lo da por hecho ("scheduler externo ~10 min").
+- Tras el encendido de las 08:00, 4 pods (`api`, `payment-processors`, `templates`, `users`)
+  llevan 14 h en `PodInitializing` en el nodo `vmss000004`; cada uno tiene un hermano sano.
+- El cluster de QA se recreó: el kubeconfig viejo no resolvía. `az aks get-credentials -g qa -n
+  kubernetesqa --overwrite-existing`.
+
 ## Decisions
 
 - [ADR-0019](../../decisions/0019-adyen-sesiones-form-first.md): Sessions flow, formulario propio
@@ -79,9 +127,12 @@ página local con el Drop-in real. Lee `~/.config/vio/adyen-test.env`; la API ke
 
 ## Blockers
 
-- **Credencial de test sin terminar:** la credencial `ws_513405@Company.TipioAS` existe, pero al
-  mirarla no tenía API key generada. Los *allowed origins* están en **Client settings**, no en
-  "Allowed IP range". Falta dejar las claves en `~/.config/vio/adyen-test.env` y en el blob de QA.
+- **Migración de `adyen` en QA sin correr** (la corre Angelo o Miguel): bloquea el `pkg=all`, el
+  bump de los micros, api#22 y webapp#29.
+- **Credencial de test sin guardar en Adyen** (401): ver *Rollout a QA*. Los *allowed origins*
+  están en **Client settings**, no en "Allowed IP range".
+- **`ADYEN_*` en el `.env.local` compartido de QA**: pendiente del OK de Angelo (se hornea en el
+  build: después hay que reconstruir shopcart y api).
 - **El webhook no se crea hasta desplegar el relay**: antes, Adyen marca el endpoint como
   *Failing* y encola.
 - Dos contradicciones de la documentación por probar en TEST: `payable` en `POST /sessions`, y
