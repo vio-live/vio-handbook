@@ -1,6 +1,6 @@
 ---
 title: "Lesson: en la sub Sponsorship no hay costo por recurso y las métricas de uso engañan"
-last-updated: 2026-09-16
+last-updated: 2026-09-17
 owner: miguel
 status: live
 ---
@@ -16,3 +16,5 @@ status: live
 - **No declarar "sin uso" solo por una métrica.** Buscar evidencia en la configuración (qué referencia el recurso, DNS, la DB), en los logs o en una request real.
 - Métricas que sí sirvieron: CPU y memoria de MySQL y PostgreSQL, `connectedclients` de Redis, capacidad de blob por tier, tokens de Azure OpenAI.
 - Para medir storage con millones de blobs: blob inventory (CSV) en vez de listar con `az`. Ojo: cambiar de tier cuesta una operación de escritura por blob (6,16 M a Cool ≈ $68).
+
+**Actualización 2026-09-17:** tras acabarse los créditos, la sub ya aparece con `quotaId=PayAsYouGo_2014-09-01` (aunque el nombre sigue siendo "Microsoft Azure Sponsorship"). Aun así, ni Cost Management (`ActualCost`, MonthToDate y 14–16/09) ni `Microsoft.Consumption/usageDetails` devuelven filas todavía. El gasto real del día sigue viéndose solo en el portal o en microsoftazuresponsorships.com. Hay que volver a probar la API en unos días: al ser PAYG, los datos deberían empezar a aparecer.
