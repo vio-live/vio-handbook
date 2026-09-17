@@ -244,11 +244,14 @@ seguridad); `fees.shipping` es fallback POR DISEÑO bajo el Delivery Module
 → sin flag providerShipping. Items `productId[:variantId]` (sin metadata).
 Verify = token grant. Reconciliación cubre los tres embebidos.
 
-### Nexi Checkout en el checkout — **en ramas `feature/nexi-*`, sin E2E (2026-09-11)**
+### Nexi Checkout en el checkout — **mergeado, en QA, primera compra real el 2026-09-17**
 
-Cuarto embebido (ex Nets Easy). Lo que lo hace distinto de los otros tres, y por qué
-el código se aparta del molde en tres sitios — detalle en
-[el journal](../journal/2026-09/2026-09-11-nexi-checkout.md):
+Cuarto embebido (ex Nets Easy). Diseño original en
+[el journal del 11/09](../journal/2026-09/2026-09-11-nexi-checkout.md); llegada a QA,
+defectos y cambios de diseño en
+[el del 17/09](../journal/2026-09/2026-09-17-nexi-checkout-en-qa.md). Primera compra:
+pago `ea474afb25884ee6bb191b2242786068` → orden **4272**. Lo que lo hace distinto de los
+otros tres:
 
 - **Sin `html_snippet`**: el pago se crea server-side (`POST /v1/payments`, secret key
   del seller como header `Authorization` a secas) y el SDK monta **el JS de Nexi**
@@ -258,14 +261,34 @@ el código se aparta del molde en tres sitios — detalle en
 - **Montos enteros en minor units**, `unitPrice` **sin IVA**, `taxRate` ×100
   (`nexi-amounts.ts` mantiene las invariantes `net = unit×qty`, `gross = net+tax`,
   gross exacto al øre). Países en **alpha-3** (`nexi-country.ts`).
-- **El envío es de Vio, por dirección**: `merchantHandlesShippingCost` retiene el botón
-  de pago; en `address-changed` el SDK congela el widget, `UpdateNexiShipping` cotiza
-  por país y hace `PUT /orderitems` con la línea SHIPPING + `costSpecified`, y
-  descongela. Sin tarifa → `NO_SHIPPING`, botón retenido. `shipping.countries` =
-  países con tarifa para todos los productos del carrito.
-- **Sin recibo ni redirect**: `payment-completed` → confirmación de Vio. Vipps/Swish/
-  MobilePay dentro de Nexi vuelven a la misma URL con `?paymentId=` y el SDK retoma la
-  sesión guardada en `sessionStorage`.
+- **El envío es de Vio y Nexi no tiene selector** (verificado en su doc: `checkout.shipping`
+  sólo tiene `countries`, `merchantHandlesShippingCost`, `enableBillingAddress`). Por eso:
+  - **El importe es definitivo antes de poder pagar.** Al crear el pago, shopcart ya hace
+    `PUT /orderitems` con la tarifa sugerida del país del checkout
+    (`address_source: market`, `costSpecified: true`). Cambiar el importe *mientras* Nexi
+    cobra hizo fallar dos pagos (16–17/09).
+  - **Las tarifas se muestran fuera del widget, encima**, desde el principio. Son las
+    clases que comparten todos los productos físicos del proveedor y que llegan al país
+    (la misma lista que Qliro enseña dentro del suyo). Una elección o un
+    `address-changed` / `applepay-contact-updated` recalcula con el widget congelado
+    (`UpdateNexiShipping(shipping_id)`), y la respuesta trae `options`, `shipping_id`,
+    `changed` y la dirección.
+  - **Al pulsar Pagar** (`pay-initialized`) el SDK sólo confirma. Si el widget no anunció
+    la dirección (Nexi la rellena en silencio para un comprador que reconoce), shopcart
+    usa la que guarda el pago. Si eso cambia el importe, se responde
+    `payment-order-finalized: false` y se recarga el widget; si no, `true`.
+  - **Regla de clases compartidas**, como Qliro (#21): un carrito de un proveedor cuyos
+    productos físicos no comparten clase **no se vende** (`NO_SHARED_SHIPPING` al crear).
+    Sin tarifa al país → `NO_SHIPPING`, botón retenido.
+- **Sin recibo ni redirect**: `payment-completed` → **confirmación de Vio** (en desktop,
+  dentro del panel lateral) con productos, envío, total, el ID del pago de Nexi y, cuando
+  Nexi los tiene, método, últimos 4 dígitos y email (`GetNexiOrder.payment_method |
+  card_last4 | email`). Vipps/Swish/MobilePay dentro de Nexi vuelven con `?paymentId=` y
+  el SDK retoma la sesión de `sessionStorage` **sólo en esa vuelta**. Retomarla en
+  cualquier apertura ponía la compra siguiente sobre el pago del carrito anterior
+  (0.12.2). El pago retomado trae su envío (`GetNexiOrder.shipping`).
+- **IVA**: el carrito da `tax_rate` en **porcentaje** (25); todo pasa por
+  `taxRateAsFraction` antes de `buildNexiItem` y al crear la orden.
 - **Webhook por pago** (`payment.checkout.completed`) con token derivado
   `HMAC(secretKey, checkoutId)` que Nexi devuelve en `Authorization`
   (`nexi-webhook-token.ts`); relay `base-api /nexi/webhooks` → shopcart, que lee
@@ -354,7 +377,7 @@ con origen de tienda conectada** (Woo, Shopify). Un producto `NATIVE` no pasa po
 ### Los tres caminos, tal como los fijó Angelo el 2026-09-11
 
 1. **Productos de feed + el vendedor tiene una URL** → dos opciones por seller:
-   - **A — el push del PSP, en su formato** (en ramas `feature/nexi-payment`): Nexi
+   - **A — el push del PSP, en su formato** (mergeado 2026-09-16; sin probar con un vendedor real): Nexi
      admite hasta 32 webhooks por pago, así que shopcart registra la URL del vendedor
      (`notifyUrl` + `notifyAuthorization`) y **Nexi mismo** le pega
      `payment.checkout.completed` con la orden completa. Qliro sólo pushea a la URL que
@@ -394,7 +417,7 @@ Su documentación avisa: **sólo contra el entorno de pruebas**.
 
 ## El SDK web y el artículo
 
-Los métodos embebidos (Kustom, Qliro, Walley y, en rama, Nexi — el único **sin snippet**: monta el JS de Nexi) llegan al artículo por el **paquete de Vev**, que vendorea un
+Los métodos embebidos (Kustom, Qliro, Walley y Nexi — el único **sin snippet**: monta el JS de Nexi) llegan al artículo por el **paquete de Vev**, que vendorea un
 bundle del SDK generado desde el código (no desde npm). Cómo funcionan del lado del cliente,
 y las dos reglas que hay que respetar para agregar un cuarto proveedor, están en
 [`web-sdk.md`](./web-sdk.md#checkout-embebido--kustom-qliro-walley).
