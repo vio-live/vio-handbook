@@ -24,7 +24,7 @@ los conectores — **el casing importa**:
 |---|---|---|---|
 | Stripe | `STRIPE` | `publishKey`, `secretKey` | **Sí** |
 | Klarna | `Klarna` | `apiKey` | **Sí** |
-| Kustom | `Kustom` | `apiKey` (`kco_(test\|live)_api_…`), `autoCapture?`, `termsUrl?` | **No** — sin clave propia no se ofrece |
+| Kustom | `Kustom` | `apiKey` (`kco_(test\|live)_api_…`; el entorno sale del prefijo), `autoCapture?` (default true), `termsUrl?` (fallback `KUSTOM_TERMS_URL` con WARN), `providerShipping?` (KSA del seller) | **No** — sin clave propia no se ofrece (decisión 2026-08-28, ratificada en [ADR-0020](../decisions/0020-kustom-una-orden-por-checkout.md)) |
 | Qliro | `Qliro` | `apiKey` (MerchantApiKey), `apiSecret` (firma), `sandbox?` (elige host), `termsUrl?`, `notifyUrl?` (opción A, en rama) | **Sí desde el 2026-09-03** (`QLIRO_API_KEY/SECRET/SANDBOX/TERMS_URL`, commit `179dab4` de una sesión de agente) — el dinero de un seller sin claves liquida en la cuenta de Vio. **Se queda** (Angelo, 2026-09-11): la intención es no ser vendedores, pero si se usa hay que añadir lo que falta para serlo (liquidación al seller, IVA, refunds, aviso en el dashboard) |
 | Walley | `Walley` | `clientId` + `clientSecret` (OAuth2, scope fijo por entorno), `storeId?`, `sandbox?` (elige host), `termsUrl?` | **No** — sin credenciales no se ofrece |
 | Nexi Checkout | `Nexi` | `secretKey` (server, cifrada), `checkoutKey` (pública, va al navegador), `sandbox?` (elige host; default por prefijo `test-`/`live-`), `termsUrl` (**obligatorio**), `privacyUrl?`, `autoCapture?` (default true), `notifyUrl?` + `notifyAuthorization?` (opción A) | **No** — sin claves propias no se ofrece (decisión 2026-09-11) |
@@ -322,25 +322,17 @@ al vendedor— está en [`adyen.md`](./adyen.md); las decisiones, en
 - **Limitación por market**: sólo se crea sesión para un país que esté en el catálogo de Vio,
   en los markets del canal y en los habilitados para Adyen (hoy `NO`).
 
-### Kustom en el checkout — mergeado
+### Kustom en el checkout — reescrito el 2026-09-18, en PRs
 
-El camino KCO legacy de shopcart se **parametrizó** con
-`via: 'klarna' | 'kustom'` en vez de clonarse (`klarna.service.createPayment`
-/ `cart.service.initPaymentKlarna` / `checkout.service.paymentKlarnaOk`).
-`KustomConnectorService`: key por seller sin fallback, host **derivado del
-prefijo de la key** (`kco_test_`→playground, `kco_live_`→live; env
-`KUSTOM_API_URL` solo como override), `auto_capture` y `terms` del options
-JSON. Push webhook: Kustom → `base-api POST /kustom/webhooks` →
-shopcart `pre`/`ok` → orden Commerce (`paymentProcessor:'Kustom'`, channel
-`Partner`). Gateway: `Payment { CreatePaymentKustom / GetKustomOrder }`
-(DTOs heredan `InitPaymentKlarnaDTO`). SDK: `mountKustomCheckout` embebe el
-`html_snippet` (widget-does-everything) y el retorno
-`?order_id=…&payment_processor=KUSTOM` re-lee la orden y muestra el recibo
-KCO. El refund programático de órdenes `Partner` NO existe para ningún
-procesador (orders-ms solo despacha WORDPRESS) — refunds por Merchant
-Portal hasta diseñar ese dispatch. En payment-processors, capture/refund de
-Klarna resuelve ahora la key por orden (seller primero, fallback global;
-rama `feature/klarna-per-seller-keys`).
+Lo del 28/08 era el camino KCO legado de shopcart parametrizado con `via: 'klarna' | 'kustom'`, y
+nunca corrió contra Kustom. Con las credenciales de test (2026-09-18) se leyó la doc cruda y se
+reescribió: una orden de Kustom por checkout **actualizada en su sitio**, un solo camino de
+completado (retorno, push, barrido) con Order Management como verdad y `acknowledge`, callback de
+validación, seller desde el checkout, light DOM y `_klarnaCheckout` en el SDK. Todo en
+[`architecture/kustom.md`](./kustom.md) y [ADR-0020](../decisions/0020-kustom-una-orden-por-checkout.md);
+estado y PRs en el [journal](../journal/2026-09/2026-09-18-kustom-terminar-integracion.md).
+Refund/captura programáticos siguen sin existir para órdenes `Partner` (refunds por el portal de
+Kustom; `auto_capture` por defecto).
 
 ## Hardening — **mergeado el 2026-09-03, dormido hasta cargar la clave**
 
