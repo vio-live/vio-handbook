@@ -57,10 +57,15 @@ necesita entrar ya. ¿Se puede, sin tocar la app que está en revisión?
 
 ## Blockers / open questions
 
-- Falta el **dominio `.myshopify.com` del cliente** para generar el link de
-  instalación (es el único paso que lo pide) y el despliegue: proyecto de Vercel
-  propio desde la rama, sus variables (incluido el client secret de la app nueva) y
-  `shopify app deploy --config vio-client`.
+- **Cliente: Villoid** (`villoid.myshopify.com`). Link de instalación **generado**
+  (queda en Partner Dashboard → app → Distribution). Se dejó activo *Allow
+  multi-store install for one Plus organization*: el diálogo avisa que **ambas
+  opciones son irreversibles**, y esta es la más amplia (stores de la misma
+  organización Plus que Villoid); si no son Plus, equivale a la tienda sola.
+- Falta el despliegue: proyecto de Vercel propio desde la rama
+  (`sync-client.vio.live`), sus variables (incluido el client secret) y
+  `shopify app deploy --config vio-client`. **El link no se manda hasta entonces**:
+  la versión publicada apunta todavía a `https://example.com`.
 - El gate del dashboard le mostrará "Managed through Shopify" sin forma de pagar,
   porque detecta la conexión Shopify. Para un cliente facturado a mano alcanza; si
   se quiere autoservicio, hay que hacer que el gate dependa del plan (codes 5/6/7)
@@ -68,6 +73,6 @@ necesita entrar ya. ¿Se puede, sin tocar la app que está en revisión?
 
 ## Next session
 
-- Con el dominio del cliente: generar el link de instalación.
-- Desplegar la rama en su propio proyecto de Vercel (`sync-client.vio.live`) y
-  correr `shopify app deploy --config vio-client`.
+- Desplegar la rama en su propio proyecto de Vercel (`sync-client.vio.live`),
+  correr `shopify app deploy --config vio-client`, y recién ahí mandarle el link a
+  Villoid.
