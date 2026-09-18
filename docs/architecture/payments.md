@@ -351,7 +351,12 @@ rama `feature/klarna-per-seller-keys`).
 > tras el deploy, un scheduler para `/payments/reconcile`, y review funcional previo.
 
 - **Reconciliación**: `POST shopcart /checkout/payments/reconcile` — barrido
-  idempotente de pushes perdidos (Kustom/Qliro); scheduler externo ~10 min.
+  idempotente de pushes perdidos (Kustom/Qliro/Walley/Nexi/Adyen). El scheduler
+  es un CronJob del chart de shopcart (`shopcart-reconcile`, cada 10 min,
+  `concurrencyPolicy: Forbid`, sin sidecar de Istio): PR
+  [shopcart#32](https://github.com/vio-live/vio-shopcart-microservice/pull/32),
+  pendiente de merge al 2026-09-18 — hasta entonces **en QA no lo llama nadie**
+  (ver [journal](../journal/2026-09/2026-09-18-reconcile-cronjob-qa.md)).
 - **Verify**: `POST /api/paymentmethod/verify` (front→base-api→api-micro)
   sondea al PSP sin crear nada (401/403=invalid, 404=valid); el front solo
   bloquea ante rechazo definitivo. Sondas: Qliro, Kustom, Stripe.

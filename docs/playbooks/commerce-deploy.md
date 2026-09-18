@@ -1,6 +1,6 @@
 ---
 title: "Cómo desplegar — Vio Commerce (microservicios + base-api + graph-ql)"
-last-updated: 2026-09-03
+last-updated: 2026-09-18
 owner: miguel
 status: live
 ---
@@ -56,3 +56,5 @@ Separadas del deploy de código — no las corre el pipeline. Ver [`playbooks/co
 
 - [SnakeNamingStrategy vs migración raw SQL](../lessons/raw-sql-migration-column-name-must-match-naming-strategy.md) — una migración mal escrita puede tumbar un servicio en producción sin que el deploy de código tenga la culpa.
 - `shopify-import` está deployado y corriendo en prod hoy pese a que otra doc vieja decía que estaba deprecado — confirmar con el equipo antes de asumir cualquiera de las dos cosas.
+- **El deploy instala el `.tgz`, no el directorio del chart.** `helm upgrade --install <APP_PREFIX> ./charts/<APP_PREFIX>-0.1.0.tgz`: un cambio en `charts/<svc>/templates/` que no se re-empaqueta (`helm package charts/<svc> -d charts/`) y se commitea junto con el tgz **no llega nunca al cluster**. La versión del chart tiene que seguir siendo `0.1.0`: el workflow referencia el tgz por nombre. (Visto al agregar el CronJob de reconciliación a shopcart, [journal 2026-09-18](../journal/2026-09/2026-09-18-reconcile-cronjob-qa.md).)
+- **CronJobs en el namespace `default` (Istio inyecta sidecar):** un pod de Job con Envoy nunca termina — anotar el pod con `sidecar.istio.io/inject: "false"` (mTLS es permisivo, HTTP plano al Service funciona). Y como QA se apaga todas las noches, poner `startingDeadlineSeconds` (p. ej. 300): sin él, pasados 100 ticks perdidos el controller deja de programar el CronJob. Ejemplo: `charts/shopcart/templates/cronjob-reconcile.yaml` ([PR shopcart#32](https://github.com/vio-live/vio-shopcart-microservice/pull/32)).
