@@ -39,8 +39,13 @@ necesita entrar ya. ¿Se puede, sin tocar la app que está en revisión?
   100%, lint y build en verde (hace falta Node ≥ 22.18 para instalar).
 - Contrato con el backend de Vio **sin cambios** desde agosto: los endpoints que
   usa esa rama son idénticos a los de master (master solo suma el de planes).
-- Añadidos en la rama: `shopify.app.vio-client.toml` (con los TODO de client id y
-  URLs) y `docs/CUSTOM-APP.md` con los pasos de punta a punta.
+- Añadidos en la rama: `shopify.app.vio-client.toml` y `docs/CUSTOM-APP.md` con los
+  pasos de punta a punta.
+- **App custom creada** en el Dev Dashboard: nombre "Vio Sync", **app id
+  `425118728193`**, **client id `bd36f14691ec80081374e40f71ad9d72`**, con
+  **distribución custom ya fijada** (el diálogo avisa "This can't be undone"). La
+  app pública `386969239553` no se tocó y sigue en review. El client id ya está en
+  el toml de la rama.
 
 ## Decisions
 
@@ -52,8 +57,10 @@ necesita entrar ya. ¿Se puede, sin tocar la app que está en revisión?
 
 ## Blockers / open questions
 
-- Falta el dominio `.myshopify.com` del cliente y las credenciales de la app nueva
-  (client id y secret) para completar el toml y el deploy.
+- Falta el **dominio `.myshopify.com` del cliente** para generar el link de
+  instalación (es el único paso que lo pide) y el despliegue: proyecto de Vercel
+  propio desde la rama, sus variables (incluido el client secret de la app nueva) y
+  `shopify app deploy --config vio-client`.
 - El gate del dashboard le mostrará "Managed through Shopify" sin forma de pagar,
   porque detecta la conexión Shopify. Para un cliente facturado a mano alcanza; si
   se quiere autoservicio, hay que hacer que el gate dependa del plan (codes 5/6/7)
@@ -61,5 +68,6 @@ necesita entrar ya. ¿Se puede, sin tocar la app que está en revisión?
 
 ## Next session
 
-- Crear la app custom en el Dev Dashboard, desplegarla en su propio proyecto de
-  Vercel desde esta rama, y mandar el link de instalación.
+- Con el dominio del cliente: generar el link de instalación.
+- Desplegar la rama en su propio proyecto de Vercel (`sync-client.vio.live`) y
+  correr `shopify app deploy --config vio-client`.
