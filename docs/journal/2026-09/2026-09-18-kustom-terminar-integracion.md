@@ -75,6 +75,10 @@ tratados como porcentaje). Decisiones en [ADR-0020](../../decisions/0020-kustom-
 
 ## Next session
 
+Angelo (cierre del 18/09): *"continuamos mañana y probamos ambos"* — Adyen y Kustom, E2E en QA.
+Antes de arrancar hacen falta, de su lado: NO/NOK en el MID de playground de Kustom, la credencial
+de Adyen guardada con sus origins, la migración de `adyen` en QA, y los merges (ver Blockers).
+
 1. Angelo: país/moneda en el Kustom Portal de playground (NO/NOK), métodos del MID.
 2. Mergear en orden y verificar en QA (pods, logs, `POST /kustom/validation` con un cuerpo
    inventado → 200 fail-open; `POST /kustom/webhooks?order_id=<uuid falso>` → 200 `[accepted]`).
