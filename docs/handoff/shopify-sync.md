@@ -1,6 +1,6 @@
 ---
 title: "Handoff — Vio Sync (app de Shopify, Sales Channel)"
-last-updated: 2026-09-14
+last-updated: 2026-09-18
 owner: angelo
 status: live
 ---
@@ -99,6 +99,21 @@ o una suscripción viva en plan 5/6/7.
 - El listing no se puede editar durante la review. Correcciones para después:
   [SUBMISSION.md §3](https://github.com/vio-live/vio-shopify-sync/blob/master/docs/SUBMISSION.md).
 
+## App custom para clientes mientras dura la review
+
+La app pública no se puede instalar en el App Store hasta que aprueben, y la
+**distribución no se puede cambiar**. Para onboardear a un cliente ya, se crea una
+**app aparte con distribución custom** (una tienda, link generado por nosotros, sin
+review, sin facturación de Shopify — se factura por fuera; los datos protegidos de
+clientes están "always available" en custom). Un sales channel, en cambio, es
+siempre una app pública, así que la del cliente no lleva canal.
+
+Rama **`custom/client-app`** (desde `a723307`, previo a la conversión a Sales
+Channel): publica productos directo al API de Vio, sin canal ni gate de planes.
+Trae `shopify.app.vio-client.toml` y `docs/CUSTOM-APP.md` con los pasos. No se
+mergea a master. Detalle y verificación contra la doc de Shopify:
+[journal 2026-09-18](../journal/2026-09/2026-09-18-vio-sync-app-custom-para-cliente.md).
+
 ## Deuda abierta (backend, Alan — Trello `WJ7SPrQJ`)
 
 - **`vio-users-microservice` PR #10** (sin mergear): cambio de plan seguro, trial 90 real,
@@ -133,4 +148,5 @@ o una suscripción viva en plan 5/6/7.
 [09-09](../journal/2026-09/2026-09-09-vio-sync-runbook-cuarta-submission.md) cuarta submission ·
 [09-10](../journal/2026-09/2026-09-10-vio-sync-review-backend-alan.md) review del backend ·
 [09-11](../journal/2026-09/2026-09-11-vio-sync-app-pricing-e-incidente-suscripciones.md) App Pricing e incidente ·
-[09-14](../journal/2026-09/2026-09-14-vio-sync-revision-final-submission.md) revisión final.
+[09-14](../journal/2026-09/2026-09-14-vio-sync-revision-final-submission.md) revisión final ·
+[09-18](../journal/2026-09/2026-09-18-vio-sync-app-custom-para-cliente.md) app custom para un cliente.
