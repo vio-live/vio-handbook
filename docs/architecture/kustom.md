@@ -115,12 +115,18 @@ nunca la orden cruda con los datos del comprador); `SyncPaymentKustom(checkout_i
    order billing country` para cualquier `purchase_country`. Sin Noruega (NOK) activa no se puede
    crear ni una orden de prueba.
 2. Métodos de pago del MID (tarjeta, Klarna, Vipps).
-3. Nada de webhooks a nivel de cuenta: `push` y `validation` van **en cada orden**. Los Webhooks
+3. **`checkout` y `confirmation` tienen que ser https**: con `http://localhost:…` Kustom responde
+   `Bad value: confirmation` antes incluso de mirar el market. Para probar el SDK en local hace
+   falta un túnel https (el mismo caso que Adyen con sus allowed origins).
+4. Nada de webhooks a nivel de cuenta: `push` y `validation` van **en cada orden**. Los Webhooks
    nuevos de Kustom (Standard Webhooks, `order.created`, `capture.created`…) son un producto aparte
    que hoy no usamos.
 
 ## Pendiente
 
+- Primer contacto con el widget real: `node ~/vio-commerce/tools/kustom-spike/spike.mjs` (crea una
+  orden en el playground y sirve una página en `:5175` con el snippet en un slot de light DOM, la API
+  JS y un botón de remontar). Sólo puede correr cuando el MID tenga NO/NOK.
 - E2E en el playground: tarjeta `4242…`, 3DS `4000002760003184`, cambio de tarifa dentro del
   widget, cambio de carrito con el widget abierto (sync), cierre y reapertura (¿re-inicializar el
   snippet sin recargar rompe algo? Kustom lo desaconseja), validación rechazada, push sin
