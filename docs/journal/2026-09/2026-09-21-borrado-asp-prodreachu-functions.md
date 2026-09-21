@@ -1,0 +1,16 @@
+## Borrado del App Service plan legacy de Reachu y sus funciones — miguel
+- Quién: miguel (lo pidió Angelo por Discord)
+- Dónde: suscripción Azure `3d276f7e…`. RG `prod-reachu`: plan `ASP-prodreachu-96fd` (B1 Windows) y Function App `prod-functions-code2`. RG `qa`: Function App `qa-functions-code2`.
+- Cuándo: 2026-09-21, ~12:40 CEST
+- Contexto: es el hallazgo 5 del audit de costos (`docs/infrastructure/cost-audit-2026-09-16.md`). Desde el 17/09 no hay créditos, y el plan costó 68 NOK entre el 17 y el 20/09 (~$56/mes).
+- Verificado antes de borrar:
+  - El plan no estaba vacío: alojaba las 2 Function Apps. Cada una tenía 2 timer triggers, `get-currency-rates` (00:00) y `cron-consolidate-images` (01:00).
+  - Las cuatro funciones solo hacían una llamada HTTP a `api.reachu.io` (`PATCH /api/currency/exchangeRate/save` y `GET /api/products/images/consolidate/all`). No tenían DB ni otras app settings.
+  - `api.reachu.io` resuelve a 20.100.59.149, una IP que no pertenece a la suscripción, y da timeout. Las funciones no hacían nada útil.
+  - El `consolidate-images-user` que usa hoy feed-sync/Shopify/Magento es un job interno de Commerce y no depende de estas funciones.
+- Hecho:
+  - Backup del código (`wwwroot` zip) en `workspace-miguel/backups/functions-code2-20260921/`.
+  - `az functionapp delete` de las 2 funciones y `az appservice plan delete` del plan. Se confirmó que ya no aparecen en `az resource list`.
+- Pendiente:
+  - `vio-infra-tf/functions.tf` todavía declara estos recursos. Hay que sacarlos cuando se arregle el Terraform (ver el audit IaC del 2026-09-09).
+  - Las storage accounts de las funciones (`prodreachua7a9`/`prodreachua371`, AzureWebJobsStorage) quedan. Evaluar si se borran.
