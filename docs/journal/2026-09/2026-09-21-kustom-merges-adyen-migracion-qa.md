@@ -1,0 +1,13 @@
+## Merges de Kustom a develop y migración adyen en QA — miguel
+- Quién: miguel (lo pidió Angelo por Discord)
+- Dónde: GitHub `vio-live`, cluster `kubernetesqa` y MySQL `vio-ecom-db-staging` (DB `outshifter`, QA)
+- Cuándo: 2026-09-21, ~13:45–13:55 CEST
+- Contexto: desbloquear el deploy de Kustom a QA y dejar la columna `adyen` para kernel-release (pkg=all).
+- Hecho:
+  - Merges en orden, con merge commit (el estilo de los repos). Los tres estaban MERGEABLE/CLEAN:
+    - `vio-shopcart-microservice#33` → `84d6b63`
+    - `vio-base-api#12` → `fc803cd`
+    - `graphql#13` → `b523e57`
+  - El CI/CD de develop terminó en success en los tres. `base-api`, `shopcart` y `graph-ql` quedaron rolled out y Running 2/2 en `kubernetesqa`.
+  - Migración en `package-database@develop` (`bd4674e`): `DB_MIGRATION_FILE=1789643151000-adyen-channel-toggle.ts yarn migration:execute`. Antes se verificó que la tabla `migrations` estaba al día hasta `nexiChannelToggle1789158220001` y que no existía la columna. Después: `channel_user_settings.adyen tinyint default 0` (99 filas) y la migración registrada.
+- Pendiente (humano): credencial de Adyen en ws_413265/ws_513405 (API key, client key, 4 origins) y Noruega en el MID de Kustom. Después, kernel-release pkg=all, api #22 y webapp #29.
