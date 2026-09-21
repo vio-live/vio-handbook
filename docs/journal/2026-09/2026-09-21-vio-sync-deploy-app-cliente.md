@@ -39,9 +39,13 @@ link de instalación.
 
 ## Blockers / open questions
 
-- Faltan dos credenciales en Vercel, que carga un humano: `SHOPIFY_API_SECRET` (client
-  secret de la app custom) y `REDIS_URL` (la misma instancia que la app pública). Hasta
-  entonces la app responde 500.
+- **Redis**: el `REDIS_URL` de la app pública es **Sensitive** (Vercel no deja leerlo). No
+  hace falta compartirlo: ninguno de nuestros repos escribe las claves `LOGIN_TOKEN_*` del
+  auto-connect (la app solo las lee), así que la app del cliente usa **su propio Upstash**
+  creado desde Vercel → `vio-sync-client` → Storage, que inyecta la variable solo. El código
+  de la rama acepta `REDIS_URL` o `KV_URL` (169 tests, coverage 100%), ya desplegado.
+- Falta que un humano: cree ese Redis (acepta los términos de Upstash) y cargue
+  `SHOPIFY_API_SECRET` (client secret de la app custom). Hasta entonces la app responde 500.
 
 ## Next session
 
