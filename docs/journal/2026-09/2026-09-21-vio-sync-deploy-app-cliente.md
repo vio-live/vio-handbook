@@ -68,6 +68,20 @@ link de instalación.
   id y secret). Procedimiento de 5 pasos en `docs/CUSTOM-APP.md` de la rama. Si dos
   clientes están en la misma organización Plus, un link multi-store sirve para los dos.
 
+## Segundo cliente: Gladkokken
+
+- Tienda `wxuxre-tf.myshopify.com` (storefront `shop.gladkokken.no`), identificada por
+  dos fuentes públicas (`/meta.json` y `Shopify.shop` en el HTML) antes de generar el
+  link, porque queda atado a esa organización.
+- App custom **`426105274369`** (client id `a372fcbd…`), distribución custom, link
+  multi-store generado. Config `shopify.app.vio-client-gladkokken.toml` (validada) y
+  publicada: versión `vio-client-gladkokken-1` activa.
+- Vercel **`vio-sync-gladkokken`** → `https://vio-sync-gladkokken.vercel.app`, build ok,
+  cuatro variables no secretas cargadas. Deploy desde una carpeta propia enlazada a ese
+  proyecto, para no cruzarlo nunca con el de Villoid.
+- Falta, como con Villoid: `SHOPIFY_API_SECRET` y un Redis propio (los carga Angelo).
+- Tabla de clientes en `docs/CUSTOM-APP.md` de la rama.
+
 ## Next session
 
 - Cuando Alan cierre la tarjeta phMU2DP0 con OK: mandar el link a Villoid (Partner
