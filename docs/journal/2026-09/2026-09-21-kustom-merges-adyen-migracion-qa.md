@@ -32,3 +32,13 @@
 - `vio-api-microservice#22` mergeado después del bump, como pide el PR (`174bc45`). CI success y `api` rolled out en `kubernetesqa`. El api lee `ADYEN_API_KEY` del mismo `.env.local` compartido que ya tiene las claves.
 - `webapp-vio-commerce#29` mergeado (`dd3acc9`). Vercel desplegó develop (READY) y el alias `dashboard-staging.ecom.vio.live` apunta a ese deploy.
 - Siguiente en el orden del set Adyen: web SDK (`vio-web-sdk#61`) → Vev (`vev#41`). `vio-api-microservice#23` (Kustom) tenía de base `feature/adyen-payment`: después del merge de #22 hay que re-apuntarlo a develop.
+
+## Update ~15:15 — webhook de Adyen conectado en QA — miguel
+- El agente de Adyen creó el webhook `WBHK42CTK22322CF5Q27C4G8ZB6HZT` (TipioASECOM, Standard, JSON) apuntando a `https://api-ecom-staging.vio.live/adyen/webhooks/platform/<token>`. Su HMAC quedó en un archivo local de otra Mac, y el clasificador de permisos no lo dejó escribir en el blob.
+- Lo resolví sin mover secretos entre máquinas:
+  - El token se sacó de la URL del webhook (Management API, `GET .../webhooks/{id}`).
+  - La HMAC se **regeneró** (`POST .../generateHmac`). El checkValue pasó de AB27A1 a 1B3AA3. **La HMAC del archivo local `~/.config/vio/adyen-qa-webhook.env` ya no vale.**
+  - `ADYEN_WEBHOOK_TOKEN` y `ADYEN_HMAC_KEY` se agregaron a `containerqa2/env-file-microservices/.env.local` (175 → 177 variables, ninguna existente cambió). Backup en `.env.local.backup-2026-09-21-1505`.
+- Re-run del CI de shopcart (35599186680): success, y el pod tiene las 2 variables.
+- Test de Adyen (`POST .../webhooks/{id}/test`, AUTHORISATION): "Event delivered successfully", HTTP 200. En shopcart: `token:true`, `accepted:1`, la HMAC validó y `testMerchantRef1` se ignoró por no ser un checkout nuestro (lo esperado).
+- Valores: `workspace-miguel/TOOLS.md`.
