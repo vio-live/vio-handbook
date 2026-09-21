@@ -39,18 +39,25 @@ link de instalación.
 
 ## Blockers / open questions
 
-- **Redis**: el `REDIS_URL` de la app pública es **Sensitive** (Vercel no deja leerlo). No
-  hace falta compartirlo: ninguno de nuestros repos escribe las claves `LOGIN_TOKEN_*` del
-  auto-connect (la app solo las lee), así que la app del cliente usa **su propio Upstash**
-  creado desde Vercel → `vio-sync-client` → Storage, que inyecta la variable solo. El código
-  de la rama acepta `REDIS_URL` o `KV_URL` (169 tests, coverage 100%), ya desplegado.
-- Falta que un humano: cree ese Redis (acepta los términos de Upstash) y cargue
-  `SHOPIFY_API_SECRET` (client secret de la app custom). Hasta entonces la app responde 500.
+- **Redis**: el `REDIS_URL` de la app pública es **Sensitive** (Vercel no deja leerlo), y
+  compartirlo no aportaba nada: ninguno de nuestros repos escribe las claves
+  `LOGIN_TOKEN_*` del auto-connect (la app solo las lee). Angelo creó un **Redis propio**
+  para esta app y cargó `REDIS_URL` y `SHOPIFY_API_SECRET`. El código acepta también
+  `KV_URL`.
+- **Versión de API**: el código de agosto usaba Admin API **2025-10**, que según la doc
+  oficial deja de estar disponible el **16-oct-2026 15:00 UTC**. Subida a **2026-04** (la
+  de master): las 6 operaciones GraphQL de la rama validadas contra el esquema 2026-04
+  con el validador de Shopify antes del cambio.
+- **Verificado en producción**: `/healthz` 200, logs con "Using RedisSessionStorage" y
+  `apiVersion: '2026-04'`, entrada con `?shop=` → 302 al login de Shopify. (Con `curl`
+  la librería responde 410: es su filtro anti-bots, no un error.)
+- Queda el E2E real, que solo puede hacer Villoid: instalar con el link y conectar con su
+  API key de Vio.
 
 ## Next session
 
-- Con las dos variables: redeploy, verificar `/healthz` y la carga embebida, y mandar el
-  link a Villoid.
+- Mandar el link de instalación a Villoid (Partner Dashboard → app → Distribution) y
+  acompañar la primera conexión: necesitan su API key de Vio.
 
 ## Update 13:15 — Redis cargado y redeploy — miguel
 
