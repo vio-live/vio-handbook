@@ -54,10 +54,25 @@ link de instalación.
 - Queda el E2E real, que solo puede hacer Villoid: instalar con el link y conectar con su
   API key de Vio.
 
+## Prueba de punta a punta y otros clientes
+
+- Angelo pidió que Alan pruebe el flujo antes de mandar el link. Como la app de Villoid
+  solo instala en su tienda, se creó una **gemela de desarrollo** con el mismo código:
+  app **`vio-client-dev`** (id `426102554625`), config `shopify.app.vio-client-dev.toml`,
+  sin los webhooks de órdenes (datos protegidos, no disponibles sin distribución). Las
+  dos configs validadas con `shopify app config validate`. Runbook para Alan en Trello
+  [phMU2DP0](https://trello.com/c/phMU2DP0) (9 pasos: instalar, conectar, exportar,
+  editar y ver el cambio en Vio, quitar, export log, desconectar, reinstalar).
+- **Otro cliente**: la app de Villoid no sirve (link atado a su organización). Cada
+  cliente nuevo necesita su propia app custom + su propio deploy (cada app tiene su client
+  id y secret). Procedimiento de 5 pasos en `docs/CUSTOM-APP.md` de la rama. Si dos
+  clientes están en la misma organización Plus, un link multi-store sirve para los dos.
+
 ## Next session
 
-- Mandar el link de instalación a Villoid (Partner Dashboard → app → Distribution) y
-  acompañar la primera conexión: necesitan su API key de Vio.
+- Cuando Alan cierre la tarjeta phMU2DP0 con OK: mandar el link a Villoid (Partner
+  Dashboard → app → Distribution) y acompañar la primera conexión (necesitan su API key
+  de Vio).
 
 ## Update 13:15 — Redis cargado y redeploy — miguel
 
