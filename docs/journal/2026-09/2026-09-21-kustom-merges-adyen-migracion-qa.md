@@ -24,3 +24,11 @@
 ## Update ~14:20 — allowed origins de Adyen — miguel
 - Se agregaron por Management API (`POST management-test.adyen.com/v3/me/allowedOrigins`) sobre `ws_339461`, con la misma API key, porque tiene permiso. Son los 4 del journal del 2026-09-17: `https://*.vev.site`, `https://vio-demo.vercel.app`, `http://localhost:5173` y `http://localhost:5174`. Se verificó con GET que aparecen los 4.
 - Queda pendiente solo el webhook (`ADYEN_HMAC_KEY` / `ADYEN_WEBHOOK_TOKEN`).
+
+## Update ~14:45 — kernel 1.0.267 (pkg=all), api #22 y webapp #29 — miguel
+- Estado previo en npm: kernel a medias. `utils`/`config`/`logger` estaban en 1.0.265 y `database`/`testing`/`definitions`/`service` en 1.0.266: el push del 17/09 (package-database #16) publicó en cascada y se frenó en el migration gate. Es el caso de `lessons/release-parcial-del-kernel.md`.
+- `gh workflow run kernel-release.yml -R vio-live/package-service -f pkg=all` (run 35598572910): success. Los 7 quedaron en **1.0.267**. No hubo migration gate (la migración ya estaba corrida y el HEAD de package-database era el bump), así que se disparó `kernel-published` a los 11 micros.
+- Los 11 micros: el Kernel bump y el CI/CD dieron success, con `@vio-/database` 1.0.267 en develop.
+- `vio-api-microservice#22` mergeado después del bump, como pide el PR (`174bc45`). CI success y `api` rolled out en `kubernetesqa`. El api lee `ADYEN_API_KEY` del mismo `.env.local` compartido que ya tiene las claves.
+- `webapp-vio-commerce#29` mergeado (`dd3acc9`). Vercel desplegó develop (READY) y el alias `dashboard-staging.ecom.vio.live` apunta a ese deploy.
+- Siguiente en el orden del set Adyen: web SDK (`vio-web-sdk#61`) → Vev (`vev#41`). `vio-api-microservice#23` (Kustom) tenía de base `feature/adyen-payment`: después del merge de #22 hay que re-apuntarlo a develop.
