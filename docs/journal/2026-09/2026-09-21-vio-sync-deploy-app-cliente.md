@@ -51,3 +51,12 @@ link de instalación.
 
 - Con las dos variables: redeploy, verificar `/healthz` y la carga embebida, y mandar el
   link a Villoid.
+
+## Update 13:15 — Redis cargado y redeploy — miguel
+
+- Angelo creó el Upstash desde Vercel → `vio-sync-client` → Storage, en el plan Free (DB `loyal-mole-289201`). La integración inyectó las variables con el prefijo `viosyncclient_`, pero el código lee `REDIS_URL`/`KV_URL` sin prefijo.
+- Se agregó `REDIS_URL` (Production, sensitive) con el mismo valor que `viosyncclient_REDIS_URL`, usando la API de Vercel.
+- `vercel redeploy` del último deploy de producción. Quedó alias en `vio-sync-client.vercel.app` (deploy `1kvda009q`).
+- Verificado: `/healthz` da 200 `ok`, `/` y `/auth/login` dan 200, ya no hay 500 y no aparecen errores de Redis en los logs.
+- Nota: la credencial de Upstash se pegó en un DM de Discord. Si hace falta, se rota desde Upstash → Reset password y se actualizan `REDIS_URL` y las `viosyncclient_*`.
+- Pendiente: generar el link de instalación (Partner Dashboard → app custom → Distribution) y mandarlo a Villoid.
