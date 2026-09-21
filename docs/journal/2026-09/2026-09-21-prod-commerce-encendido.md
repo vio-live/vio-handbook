@@ -1,0 +1,12 @@
+## Encendido de prod commerce para una sincronización de productos de un cliente — miguel
+- Quién: miguel (lo pidió Angelo por Discord)
+- Dónde: AKS `vio-commerce-prod` y MySQL `vio-ecom-db-prod`
+- Cuándo: 2026-09-21, 15:30 → 15:48 CEST
+- Contexto: un cliente va a sincronizar productos. Prod estaba apagado desde el 2026-09-16.
+- Hecho:
+  - `scripts/prod-power.sh commerce start`. Los tags `vio-power` quedaron en `on`, así que el guard de las 06:30 no lo apaga. `api-ecom.vio.live` responde 200, `graph-ql.vio.live` 400 (lo normal en un GET) y `dashboard.ecom.vio.live` 200.
+  - `products` quedó en CrashLoopBackOff (2 pods). Al arrancar hace `POST https://api-ecom.vio.live/api/users/socket/<id>`, que falló con ECONNRESET porque `users` todavía no estaba listo, y el error no está manejado: el proceso muere. Se arregló con `kubectl rollout restart deploy/products` y quedó 2/2 Running.
+  - Error inicial inofensivo del script: `ServerNotExist` en el primer `az mysql ... show` mientras la base salía de Stopped. La MySQL terminó en Ready.
+- Pendiente:
+  - Apagar de nuevo cuando termine la sincronización (`prod-power.sh commerce stop`).
+  - Bug de código: `products` no debería morir si falla esa llamada al arrancar. Pasa en cada encendido en frío.
