@@ -1,0 +1,11 @@
+## Verificación contra la infra real de los avances de Alan (semana del 14/09) — miguel
+- Quién: miguel (Angelo compartió el resumen de Alan)
+- Dónde: suscripción Azure `3d276f7e…`, `rg-vio-databases` y `rg-vio-commerce-prod`, más los CI de GitHub
+- Cuándo: 2026-09-21 ~14:50 CEST
+- Resultados:
+  - **Redis staging, correcto.** `redus-vio-staging` está en Norway West (Balanced_B1, sin HA) y cuesta 13–15 NOK/día (~450 NOK/mes), como dijo Alan. Nota: `kubernetesqa` está en Norway East, así que el tráfico a Redis cruza de región (latencia baja, pero hay que tenerlo presente).
+  - **Redis prod sigue caro.** `redus-vio-prod` sigue en Norway East con HA Enabled y cuesta 84–96 NOK/día (~2.900 NOK/mes, ~$280). Es el mismo precio que Alan dijo que se había eliminado. Con prod apagado desde el 16/09 no le da servicio a nada.
+  - **Rebuilds y pase a prod, correcto.** Los CI de master de base-api/products/api dieron success el 15/09, antes del apagado.
+  - **"BD prod al mínimo, no se puede bajar por HA", incorrecto.** `vio-ecom-db-prod` tiene HA **Disabled** (GP Standard_D2ds_v4). Se puede pasar a Burstable B2ms (ver cost-audit-2026-09-16 §3).
+  - **AKS 3→2:** el diagnóstico está bien (los requests no entran en 2 nodos), pero falta un dato: el autoscaler tiene **min=3** (agentpool D4as_v5, 3/3/5), así que nunca va a bajar a 2 aunque los pods entraran. El arreglo es bajar los CPU requests (210m pedidos contra 4–12m de uso real). Tampoco es cierto que no haya VMs más baratas: E2as_v5 cuesta ~$118 contra ~$180 de la D4as_v5 (cost-audit §2). Con prod apagado, esto queda para el relanzamiento.
+- Pendiente: decisión de Angelo sobre `redus-vio-prod` (borrarlo mientras prod está apagado, o moverlo a Norway West y sin HA).
