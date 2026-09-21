@@ -82,17 +82,30 @@ link de instalación.
 - Falta, como con Villoid: `SHOPIFY_API_SECRET` y un Redis propio (los carga Angelo).
 - Tabla de clientes en `docs/CUSTOM-APP.md` de la rama.
 
+## Cierre de sesión (estado al 2026-09-21)
+
+- **App pública**: "Submitted — assigning a reviewer" (reverificado hoy en el Partner
+  Dashboard), 11 días desde el envío. Mails del reviewer a angelo@vio.live.
+- **Villoid**: lista y verificada en producción; el link **no se mandó** todavía.
+- **Gladkokken**: link generado, config publicada y deploy creado; le faltan
+  `SHOPIFY_API_SECRET` y Redis.
+- **Prueba de Alan**: tarjeta [phMU2DP0](https://trello.com/c/phMU2DP0) en To do, 0/9.
+- **Backend** (independiente de las apps custom): `vio-users-microservice` PR #10 abierto
+  sin review; tarjeta urgente [WJ7SPrQJ](https://trello.com/c/WJ7SPrQJ) en Doing, 0/5, sin
+  actividad desde el 2026-09-14.
+- Las carpetas de deploy de esta sesión (worktrees en el scratchpad) se eliminaron después
+  de confirmar que todo estaba en el remoto (`custom/client-app` en `d11c94e`). Cómo
+  recrearlas: sección "Retomar el trabajo" del
+  [playbook](../../playbooks/shopify-app-custom-por-cliente.md).
+
 ## Next session
 
-- Cuando Alan cierre la tarjeta phMU2DP0 con OK: mandar el link a Villoid (Partner
-  Dashboard → app → Distribution) y acompañar la primera conexión (necesitan su API key
-  de Vio).
-
-## Update 13:15 — Redis cargado y redeploy — miguel
-
-- Angelo creó el Upstash desde Vercel → `vio-sync-client` → Storage, en el plan Free (DB `loyal-mole-289201`). La integración inyectó las variables con el prefijo `viosyncclient_`, pero el código lee `REDIS_URL`/`KV_URL` sin prefijo.
-- Se agregó `REDIS_URL` (Production, sensitive) con el mismo valor que `viosyncclient_REDIS_URL`, usando la API de Vercel.
-- `vercel redeploy` del último deploy de producción. Quedó alias en `vio-sync-client.vercel.app` (deploy `1kvda009q`).
-- Verificado: `/healthz` da 200 `ok`, `/` y `/auth/login` dan 200, ya no hay 500 y no aparecen errores de Redis en los logs.
-- Nota: la credencial de Upstash se pegó en un DM de Discord. Si hace falta, se rota desde Upstash → Reset password y se actualizan `REDIS_URL` y las `viosyncclient_*`.
-- Pendiente: generar el link de instalación (Partner Dashboard → app custom → Distribution) y mandarlo a Villoid.
+1. Seguir la tarjeta phMU2DP0. Cuando Alan confirme que el flujo funciona:
+   - mandarle el link a **Villoid** (Partner Dashboard → app `425118728193` →
+     Distribution);
+   - terminar **Gladkokken**: Angelo carga `SHOPIFY_API_SECRET` y el Redis → redeploy
+     desde una carpeta enlazada a `vio-sync-gladkokken` → verificar `/healthz` → mandar
+     el link.
+2. Si Alan encuentra fallos: arreglarlos en la rama `custom/client-app` y redesplegar a
+   los dos clientes.
+3. Vigilar la review de la app pública y el PR #10 de users-ms.

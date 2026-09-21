@@ -1,14 +1,16 @@
 ---
 title: "Handoff — Vio Sync (app de Shopify, Sales Channel)"
-last-updated: 2026-09-18
+last-updated: 2026-09-21
 owner: angelo
 status: live
 ---
 
 # Handoff — Vio Sync (app de Shopify, Sales Channel)
 
-> Estado al **2026-09-14**. **Cuarta submission al Shopify App Store enviada el 2026-09-10**
-> (status "Submitted — assigning a reviewer"), esperando reviewer. Reemplaza las versiones
+> Estado al **2026-09-21**. **Cuarta submission al Shopify App Store enviada el 2026-09-10**
+> (status "Submitted — assigning a reviewer", reverificado el 2026-09-21), esperando reviewer.
+> Mientras tanto, los clientes que no pueden esperar van con **apps custom**
+> ([playbook](../playbooks/shopify-app-custom-por-cliente.md)). Reemplaza las versiones
 > del 2026-06-23 y del 2026-08-18. La historia está en el journal (links al final).
 
 ## Qué es
@@ -101,18 +103,20 @@ o una suscripción viva en plan 5/6/7.
 
 ## App custom para clientes mientras dura la review
 
-La app pública no se puede instalar en el App Store hasta que aprueben, y la
-**distribución no se puede cambiar**. Para onboardear a un cliente ya, se crea una
-**app aparte con distribución custom** (una tienda, link generado por nosotros, sin
-review, sin facturación de Shopify — se factura por fuera; los datos protegidos de
-clientes están "always available" en custom). Un sales channel, en cambio, es
-siempre una app pública, así que la del cliente no lleva canal.
+La app pública no se puede instalar en el App Store hasta que aprueben, y la distribución
+no se puede cambiar. Cada cliente que no puede esperar va con **su propia app custom**
+(una tienda, link generado por nosotros, sin review, facturación por fuera de Shopify)
+desplegada desde la rama **`custom/client-app`** (código de agosto, anterior a la
+conversión a Sales Channel: un sales channel siempre es app pública).
 
-Rama **`custom/client-app`** (desde `a723307`, previo a la conversión a Sales
-Channel): publica productos directo al API de Vio, sin canal ni gate de planes.
-Trae `shopify.app.vio-client.toml` y `docs/CUSTOM-APP.md` con los pasos. No se
-mergea a master. Detalle y verificación contra la doc de Shopify:
-[journal 2026-09-18](../journal/2026-09/2026-09-18-vio-sync-app-custom-para-cliente.md).
+- **Villoid** (`villoid.myshopify.com`): desplegada y verificada, link generado, **no
+  mandado** hasta que Alan termine la prueba de punta a punta con la gemela
+  `vio-client-dev` (Trello [phMU2DP0](https://trello.com/c/phMU2DP0)).
+- **Gladkokken** (`wxuxre-tf.myshopify.com`): link generado y config publicada; faltan su
+  `SHOPIFY_API_SECRET` y su Redis. Se termina cuando Alan confirme la prueba.
+
+Procedimiento, registro de clientes con todos los ids, cómo retomar y gotchas:
+**[playbook](../playbooks/shopify-app-custom-por-cliente.md)**.
 
 ## Deuda abierta (backend, Alan — Trello `WJ7SPrQJ`)
 
@@ -149,4 +153,5 @@ mergea a master. Detalle y verificación contra la doc de Shopify:
 [09-10](../journal/2026-09/2026-09-10-vio-sync-review-backend-alan.md) review del backend ·
 [09-11](../journal/2026-09/2026-09-11-vio-sync-app-pricing-e-incidente-suscripciones.md) App Pricing e incidente ·
 [09-14](../journal/2026-09/2026-09-14-vio-sync-revision-final-submission.md) revisión final ·
-[09-18](../journal/2026-09/2026-09-18-vio-sync-app-custom-para-cliente.md) app custom para un cliente.
+[09-18](../journal/2026-09/2026-09-18-vio-sync-app-custom-para-cliente.md) app custom para un cliente ·
+[09-21](../journal/2026-09/2026-09-21-vio-sync-deploy-app-cliente.md) despliegue de Villoid y Gladkokken.
