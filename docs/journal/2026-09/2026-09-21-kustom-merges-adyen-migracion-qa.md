@@ -20,3 +20,7 @@
 - Re-run del CI/CD de shopcart en develop (run 35595646577): success. El pod nuevo tiene las 3 variables y mapea las rutas `payment-adyen`.
 - Valores: en ningún lado del handbook. Están en `workspace-miguel/TOOLS.md`.
 - Pendiente: `ADYEN_HMAC_KEY` y `ADYEN_WEBHOOK_TOKEN` (webhook en Adyen → Developers → Webhooks). Los otros servicios que comparten el blob toman las variables en su próximo deploy, pero no las usan.
+
+## Update ~14:20 — allowed origins de Adyen — miguel
+- Se agregaron por Management API (`POST management-test.adyen.com/v3/me/allowedOrigins`) sobre `ws_339461`, con la misma API key, porque tiene permiso. Son los 4 del journal del 2026-09-17: `https://*.vev.site`, `https://vio-demo.vercel.app`, `http://localhost:5173` y `http://localhost:5174`. Se verificó con GET que aparecen los 4.
+- Queda pendiente solo el webhook (`ADYEN_HMAC_KEY` / `ADYEN_WEBHOOK_TOKEN`).
