@@ -4,6 +4,12 @@
 de VG vía Vev → cobro con Qliro usando las credenciales de Lyko → la orden llega al
 ecommerce de Lyko (Optimizely) → envíos por el integrated shipping de Qliro.
 
+> [claude, 2026-09-22] Tres puntos de este plan ya no son ciertos. La UI del webhook de
+> órdenes existe (Settings → API & SDK → *Order webhook*, webapp#12, en develop y master), no
+> se carga por SQL. `feature/order-webhook` ya está mergeada. Extensions no tiene handler de
+> BigCommerce. Y el receptor del lado del comercio no lo puede hacer el plugin de su PSP: ver
+> [payments.md — Cómo llega la venta al sistema del vendedor](./payments.md#cómo-llega-la-venta-al-sistema-del-vendedor).
+
 La conclusión que ordena todo lo demás: **está casi todo escrito; lo que falta es
 mergear, no construir.** El trabajo nuevo se reduce a dos fixes (ya hechos), la UI de
 un campo, y la pieza que recibe la orden del lado de Lyko.

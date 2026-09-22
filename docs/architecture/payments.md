@@ -29,7 +29,7 @@ los conectores — **el casing importa**:
 | Walley | `Walley` | `clientId` + `clientSecret` (OAuth2, scope fijo por entorno), `storeId?`, `sandbox?` (elige host), `termsUrl?` | **No** — sin credenciales no se ofrece |
 | Nexi Checkout | `Nexi` | `secretKey` (server, cifrada), `checkoutKey` (pública, va al navegador), `sandbox?` (elige host; default por prefijo `test-`/`live-`), `termsUrl` (**obligatorio**), `privacyUrl?`, `autoCapture?` (default true), `notifyUrl?` + `notifyAuthorization?` (opción A) | **No** — sin claves propias no se ofrece (decisión 2026-09-11) |
 | Adyen | `Adyen` | `apiKey` (cifrada), `clientKey` (pública; **decide el entorno**: `test_`/`live_`), `merchantAccount`, `liveUrlPrefix` (sólo live), `hmacKey` (cifrada), `captureMode?`, `shopperStatement?`, `merchantAccounts?` (por market); `webhookToken` lo gestiona el servidor | **Sí** (decisión de Angelo, 2026-09-17): `ADYEN_*` del entorno, para cualquier seller sin fila propia. Una fila del seller **incompleta es un error**, nunca un fallback; cada sesión registra qué cuenta cobró. En ramas, sin desplegar — ver [`adyen.md`](./adyen.md) |
-| Vipps | `VIPPS` | `clientId`, `clientSecret`, `subscriptionKey`, `merchantSerialNumber` | **No** |
+| Vipps | `VIPPS` | `clientId`, `clientSecret`, `subscriptionKey`, `merchantSerialNumber` | **Sí** en código: sin fila del seller usa `VIPPS_*` del entorno (`vipps.service.ts` ~L165-180, corregido 2026-09-22) |
 
 - Apple Pay y Google Pay **corren sobre las claves Stripe del seller**
   (`apple-pay.service` / `google-pay.service` leen la fila `STRIPE`).
@@ -370,56 +370,104 @@ Kustom; `auto_capture` por defecto).
 
 ## Cómo llega la venta al sistema del vendedor
 
-**Los PSP sólo avisan a quien creó el pedido: nosotros.** Nada le cuenta la venta al ERP
-del vendedor, que para él es la única pregunta que importa.
+> Estudio del 2026-09-22: el código actual del plugin oficial de WooCommerce de cada PSP, su
+> documentación y nuestro código. Cada afirmación enlaza a la línea que la sostiene. Sesión:
+> [journal](../journal/2026-09/2026-09-22-como-llega-la-venta-al-comercio.md).
 
-El camino es el **webhook de órdenes** (`vio-orders-microservice`): en cada orden pagada
-hace POST a `settings.orderWebhookUrl` del reseller y de cada supplier que lo tenga puesto.
+### La regla
 
-```
-POST <su-url>
-Content-Type: application/json
-X-Vio-Event: order.paid
-X-Vio-Signature: sha256=<hmac-hex del cuerpo>     ← sólo si hay secreto
-```
+**Las PSP solo avisan a quien crea el pedido, y los plugins solo confirman órdenes que nacieron
+en el checkout de su propia tienda.** En los siete plugins leídos la orden de Woo existe antes
+del pago, o nace en el mismo clic antes de cobrar. El aviso de la PSP se casa con un ID que el
+plugin guardó en esa orden. Si no la encuentra, lo registra en el log y termina. **Ninguno crea
+una orden a partir de un pago que no inició.**
 
-El cuerpo lleva `orderId`, `paymentProcessor`, moneda, cliente con dirección, envío, y los
-ítems con **el SKU del vendedor** — que es lo que necesitan para casarlo con su sistema.
+**No es un descuido: la creación de respaldo existió y la quitaron.**
+- Kustom (ex Klarna Checkout) la tuvo hasta 1.11.8 y la apagó en 2.0.0, en 2020 ([commit](https://github.com/krokedil/klarna-checkout-for-woocommerce/commit/165182bebfe52ad2503d5950368480e904001c58)).
+- Nexi la quitó en 1.22 y 1.23: "la orden de Woo siempre se crea en pay-initialized" ([changelog](https://github.com/krokedil/dibs-easy-for-woocommerce/blob/78e1a98ee4d087683be6342721497405a3ebf66d/changelog.txt#L288-L297)).
+- Walley la quitó en 4.0.0, en 2023 ([3.5.6](https://github.com/krokedil/collector-checkout-for-woocommerce/blob/e6cd45c271ad931869ad163cb5d82fda781ac6e7/classes/class-collector-checkout-api-callbacks.php#L318-L362)).
 
-**Se configura** en el dashboard, Settings → API & SDK → *Order webhook* (webapp#12).
-⚠️ Se escribe por `PATCH /users/:id { settings }`, que guarda el objeto entero. **No** por
-`PATCH /settings/:id`: ése destructura cuatro campos conocidos y descarta el resto en
-silencio.
+**Consecuencia.** Darle a la PSP la URL del plugin del comercio resuelve la *entrega* del
+aviso, nunca el *registro*. Para que la venta aparezca en su tienda alguien tiene que crear la
+orden:
+- código del comercio que escuche un aviso y lea el pedido con sus propias claves, o
+- una credencial o app que nos deje crearla por la API de su tienda.
 
-El otro camino, el fanout de plugins (`order:paid` → extensions), **sólo cubre productos
-con origen de tienda conectada** (Woo, Shopify). Un producto `NATIVE` no pasa por ahí.
+El dinero sí llega a su cuenta siempre que cobremos con sus credenciales. Ojo: Qliro, Klarna,
+Adyen, Stripe y Vipps caen a la cuenta de Vio si el seller no tiene fila propia.
 
-### Los tres caminos, tal como los fijó Angelo el 2026-09-11
+### Qué pasa con una venta de Vio en cada PSP
 
-1. **Productos de feed + el vendedor tiene una URL** → dos opciones por seller:
-   - **A — el push del PSP, en su formato** (mergeado 2026-09-16; sin probar con un vendedor real): Nexi
-     admite hasta 32 webhooks por pago, así que shopcart registra la URL del vendedor
-     (`notifyUrl` + `notifyAuthorization`) y **Nexi mismo** le pega
-     `payment.checkout.completed` con la orden completa. Qliro sólo pushea a la URL que
-     registra quien crea la orden (nosotros) y el push no lleva la orden sino
-     `{OrderId, MerchantReference, Status, Timestamp}` → shopcart lo **reenvía tal cual**
-     a `notifyUrl` (`forwardPspPush`) y el sistema del vendedor lee la orden de Qliro con
-     sus propias claves.
-   - **B — nuestra orden**: el webhook `order.paid` de arriba.
-2. **Feed sin URL** → la orden queda en Vio, el pago en su cuenta, y la información se
-   entrega como la pidan. Manual; es el caso que menos queremos.
-3. **Tienda conectada** (Shopify/Woo/Magento) → creamos la orden en su tienda al recibir
-   el pago (el fanout).
+| PSP | Aviso de la PSP | ¿Le llega al comercio? | Su plugin de Woo |
+|---|---|---|---|
+| Nexi | Por pago, hasta 32 webhooks. No hay de cuenta | Solo si registramos su URL: `notifyUrl`, solo en develop | La busca por `_dibs_payment_id` y registra "No corresponding order ID was found" ([L84-93](https://github.com/krokedil/dibs-easy-for-woocommerce/blob/78e1a98ee4d087683be6342721497405a3ebf66d/classes/class-nets-easy-api-callbacks.php#L84-L93)) |
+| Qliro | Por pedido, una URL por tipo. La pone quien crea el pedido | Solo si la reenviamos: `forwardPspPush`, solo en develop | Usa solo un `qliro_one_confirm_id` que él mismo genera y que va en la URL. Registra "Could not find an order with the confirmation id" ([L454-466](https://github.com/krokedil/qliro-one-for-woocommerce/blob/461c7f5977685069901022267078e201843fc150/classes/class-qliro-one-callbacks.php#L454-L466)) |
+| Kustom | Una push URL por pedido, la nuestra. También hay webhooks de cuenta en el Portal | La push, no. El webhook de cuenta `order.created` probablemente sí (sin verificar) | La busca por `_wc_klarna_order_id` y registra "ERROR Push callback but no existing WC order found" ([L69-75](https://github.com/krokedil/klarna-checkout-for-woocommerce/blob/789cea6b35d24af0036eed6d0f0d0fa5ceb80e4a/classes/class-kco-api-callbacks.php#L69-L75)) |
+| Klarna Payments | Callback de autorización por sesión y push por pedido | No | La busca por `_kp_session_id` y calla ([L47-67](https://github.com/krokedil/klarna-payments-for-woocommerce/blob/fc806e176bf37442291e2e01738706d7e648ed9b/classes/class-kp-callbacks.php#L47-L67)) |
+| Vipps | **De cuenta**, por MSN, hasta 25 por evento | **Sí, sola**: sus webhooks reciben también nuestros pagos | Solo actúa sobre órdenes pendientes y registra "…is no longer pending". Deja el hook `woo_vipps_webhook_event` con la orden nula ([L3179-3224](https://github.com/vippsas/vipps-woocommerce/blob/c4d6b979784f7041914ba5cd48b8dce01677c8db/payment/Vipps.class.php#L3179-L3224)) |
+| Adyen | **De cuenta**, merchant o company. AUTHORISATION no se puede apagar | **Sí, sola** | No hay plugin oficial de Adyen para Woo; el recomendado es de Woosa y es comercial. Busca la orden de Woo cuyo ID sea la `merchantReference`; si no la hay, contesta `[accepted]` en silencio ([L379-382](https://github.com/common-repository/integration-adyen-woocommerce/blob/940815cccae3a9905ca3cf1f7f4bde089d479fd9/includes/rest-api/class-rest-api-hook.php#L379-L382)) |
+| Walley | `notificationUri` por checkout, la nuestra. También hay webhooks firmados por tienda | La URL, no. El webhook de tienda `walley:order:created` probablemente sí (sin verificar) | La busca por `_collector_private_id` y registra "We could NOT find Private id … Aborting" ([L229-231](https://github.com/krokedil/collector-checkout-for-woocommerce/blob/499d6d39eabb194493dff53ce96e7eb051e37457/classes/class-collector-checkout-api-callbacks.php#L229-L231)) |
+| Stripe | **De cuenta**: todos los eventos | **Sí, sola**, si cobramos con sus claves. Con la clave de Vio, nunca | La busca por `_stripe_intent_id` y registra "Could not find order via intent ID". Deja el hook `wc_stripe_webhook_received` ([L1363-1366](https://github.com/woocommerce/woocommerce-gateway-stripe/blob/85d1d0595a483040a63784ba6bd70330984a1b85/includes/class-wc-stripe-webhook-handler.php#L1363-L1366)) |
 
-⚠️ En A y en B **el receptor decide**: los plugins oficiales de Qliro/Nets para
-Magento, Woo o Shopify sólo finalizan órdenes que ellos iniciaron (buscan su carrito
-por `MerchantReference` y descartan el resto). Un OMS/ERP con integración propia sí
-registra la orden. La URL entrega; no garantiza el registro.
+Qué puede leer el comercio por su cuenta, con sus claves:
+- **Lleva la orden completa en el aviso:** solo Nexi (`payment.checkout.completed` trae ítems y consumidor, sin firma).
+- **La da por API si conoce el ID:** Qliro (`GET /v2/orders/{id}`), Kustom y Klarna (Order Management), Walley (`GET /manage/orders/{id}`), Vipps (pago y recibo con líneas), Stripe (sesión con `expand`).
+- **No la da:** Adyen no tiene consulta por pspReference y sus webhooks nunca llevan líneas. Nexi no devuelve líneas en Retrieve payment.
+- **Ninguna PSP tiene un listado o una búsqueda de pedidos por API.** Solo portales, informes y liquidaciones. Nadie puede descubrir una venta nueva preguntando.
 
-⚠️ **El envío hace un solo reintento inmediato y se rinde.** Si el endpoint del vendedor
-está caído dos segundos, esa orden se pierde: queda en nuestro log y nada más. El propio
-código lo reconoce (*"durable retries = outbox follow-up"*). Para demo vale; antes de
-producción con dinero real, no.
+### Shopify
+
+- **Una app de pago no puede registrar la venta.** Las sesiones de pago solo las inicia el checkout de Shopify, y esas apps tienen prohibido usar otras APIs ([requisitos](https://shopify.dev/docs/apps/build/payments/requirements)).
+- **La orden solo entra desde fuera con `orderCreate`,** llamada por una app con `write_orders` ([docs](https://shopify.dev/docs/api/admin-graphql/latest/mutations/orderCreate)). Hay que fijar la transacción con `gateway`, `sourceIdentifier` y `inventoryBehaviour`, porque por defecto no descuenta stock.
+- **Desde el 2026-01-01 no se pueden crear apps personalizadas desde el admin** ([changelog](https://changelog.shopify.com/posts/legacy-custom-apps-can-t-be-created-after-january-1-2026)). La vía corta es la que ya tenemos: vio-sync pide `write_orders`.
+- **Nuestra creación de órdenes en Shopify está desactualizada.** Extensions usa REST `2024-04`, una versión que Shopify ya no sirve, y manda la transacción sin `gateway`. Hay que pasarla a GraphQL `orderCreate`.
+- **Flow no tiene disparador por HTTP.**
+
+### Lo que existe de nuestro lado
+
+- **Webhook `order.paid`** (orders-ms, en develop y master).
+  - Lo dispara `processOrderPaidByCustomer` (`order.service.ts` ~L2307-2511). Va al reseller y a cada supplier, a `settings.orderWebhookUrl`, firmado con HMAC en `X-Vio-Signature`.
+  - **El SKU es el del producto**: `g:mpn`, o `g:id` si falta (`google-merchant-feed/index.js` L234). En una variante no dice qué talla se compró. En el feed de Kondomeriet solo 989 de 2.754 productos traen `mpn`, así que el receptor recibiría una mezcla de los dos identificadores.
+  - No lleva el total, la referencia de la PSP ni la dirección de facturación. `channelOrderName` nunca llega.
+  - **Un solo reintento inmediato y se rinde**: la orden queda en el log y nada más.
+- **Opción A**, el push de la PSP en su formato (shopcart, **solo develop**).
+  - Nexi registra `notifyUrl` como segundo webhook.
+  - Qliro reenvía su push re-serializado, sin reintento, también los duplicados.
+  - Visto lo anterior, solo sirve a un comercio con receptor propio, como un ERP o un OMS. Nunca sirve a un plugin de serie.
+- **Fanout a tiendas conectadas**: solo para productos con origen `SHOPIFY`, `WOOCOMMERCE` o `MAGENTO`. Los de feed son `NATIVE` y nunca pasan. No hay handler de BigCommerce.
+- **Configuración**: dashboard, Settings → API & SDK → *Order webhook* (develop y master).
+  - Se guarda con `PATCH /users/:id { settings }`.
+  - `PATCH /users/settings/:id` descarta esos campos.
+
+### Lo que tiene que hacer Vio
+
+1. **`order.paid` es el contrato**, porque es el único aviso que lleva los ítems con los IDs del comercio con cualquier PSP. Le faltan:
+   - el `g:id` del producto y de la variante comprada, y el `item_group_id`;
+   - el total, la referencia de la PSP y la facturación;
+   - reintentos durables en un outbox, y una forma de reenviar.
+2. **Referencias con espacio de nombres en cada PSP**, del tipo `VIO-…`.
+   - Nunca numéricas: Adyen/Woosa casa `merchantReference` con el ID de la orden de Woo. Hoy mandamos el UUID del checkout, que no choca.
+   - Nunca las claves que usan los plugins: `order_id`, `order_key` y `signature` en Stripe, `orderid` en Vipps. **Hoy el flujo embebido de Stripe pone `metadata.order_id` en la cuenta del comercio**, y el plugin de Woo podría marcar como fallida una orden suya que no tiene nada que ver.
+   - En Kustom, `merchant_reference1` pasa a ser el ID numérico de nuestra orden tras pagar. Mejor `VIO-<id>`.
+3. **Mandar a cada PSP las líneas con el ID del feed**: `receipt.orderLines` en Vipps, el ítem `reference` o `id` en Kustom, Walley y Nexi, y metadata en los Products de Stripe. Es lo único que el comercio ve en su portal.
+4. **Una sola parte captura.** Si el receptor del comercio guarda la orden con el método y el meta del plugin, el plugin captura o reembolsa al cambiar el estado.
+5. **Una cuenta aparte para las ventas de Vio** donde la PSP lo permita: merchant account en Adyen, unidad de venta en Vipps, store en Walley. Así los webhooks del comercio no mezclan sus ventas con las nuestras.
+6. **Del lado del comercio hace falta un receptor.**
+   - En Woo: un receptor pequeño que valide la firma de `order.paid` y cree la orden casando por SKU.
+   - En Shopify: vio-sync con `orderCreate`.
+   - En una plataforma propia, como la de Kondomeriet: su equipo.
+
+### Lo que queda por probar de verdad
+
+- Que los webhooks de cuenta del comercio en Vipps, Adyen y Stripe reciben nuestros pagos. La documentación lo implica, pero no se ha visto.
+- Que el `order.created` del Portal de Kustom y el webhook de tienda de Walley disparan con pedidos que crea otro integrador.
+- El camino completo: feed → compra en Vio con credenciales del comercio → `order.paid` → receptor → orden en Woo.
+
+### Pendientes de seguridad encontrados en el estudio
+
+- **`PATCH /api/users/:id` no comprueba que el usuario sea el dueño** (base-api y users-ms, en develop y master). Cualquier cuenta con sesión podría cambiar datos de otra, incluida la URL del webhook de órdenes.
+- **El webhook público de Stripe no verifica los eventos** (base-api `/shopcart/checkout/payment/webhook` → shopcart `WebhookPayment`, en develop y main). Un evento falso puede marcar una orden como pagada.
+- **Secretos en claro:** las claves de Stripe descifradas van a los logs de debug, y `notifyAuthorization` se guarda sin cifrar.
 
 ## Probar Qliro: números de identidad, no tarjetas
 
