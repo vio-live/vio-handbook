@@ -122,6 +122,16 @@ Qliro en el canal de Bohus.
   completarlos.
 - Los mercados los habilita Kustom. Hay que pedírselo a su soporte.
 
+**Kustom desbloqueado**:
+- El soporte de Kustom habilitó Noruega en la tienda de pruebas a pedido de Angelo.
+- La herramienta de pruebas crea pedidos NO/NOK, y el widget real funciona en un slot de light DOM,
+  con suspender, reanudar y volver a montar. Detalle en `architecture/kustom.md`.
+- Angelo mergeó [api #23](https://github.com/vio-live/vio-api-microservice/pull/23), la oferta de
+  Kustom con interruptor del canal, clave del vendedor y mercado.
+- Tarjeta para Alan: [ZgnheyI8](https://trello.com/c/ZgnheyI8), QA de Kustom de punta a punta con
+  10 escenarios. Antes, Angelo tiene que pegar la clave de Kustom en Payments de Bohus y encender el
+  interruptor del canal.
+
 **Trello (con OK de Angelo)**:
 - #405 volvió a Doing.
 - Comentarios en #394 y en #409 (dos veces: los fallos y los PRs).
