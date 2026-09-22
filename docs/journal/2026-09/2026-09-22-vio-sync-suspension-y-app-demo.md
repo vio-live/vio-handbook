@@ -88,8 +88,8 @@ cuál vio)
   2026-09-25 a las 13:42**: los links de instalación custom duran 7 días.
 - **Gladkokken**: Angelo cargó `SHOPIFY_API_SECRET`, conectó el Redis compartido y
   redesplegó `vio-sync-gladkokken`. Verificado: `/healthz` 200 (antes 500), sesiones en
-  Redis, secret presente, API 2026-04. Link listo para mandar; vence el 2026-09-28 a las
-  13:35.
+  Redis, secret presente, API 2026-04. Angelo mandó el link el mismo día; vence el
+  2026-09-28 a las 13:35.
 - [Playbook](../../playbooks/shopify-app-custom-por-cliente.md) actualizado: registro de
   apps, Redis compartido, vencimiento de los links y mensaje para el cliente en noruego.
 

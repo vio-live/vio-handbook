@@ -127,7 +127,7 @@ conversión a Sales Channel: un sales channel siempre es app pública).
   en noruego y video, después de la prueba de Alan (Trello
   [phMU2DP0](https://trello.com/c/phMU2DP0), Done). El link vence el 2026-09-25.
 - **Gladkokken** (`wxuxre-tf.myshopify.com`): desplegada y verificada el 2026-09-22
-  (secret y Redis compartido cargados). Lista para mandar el link, que vence el 2026-09-28.
+  (secret y Redis compartido cargados). Link mandado el 2026-09-22; vence el 2026-09-28.
 - **Demo** (`vio-demo.myshopify.com`, dev store de Vio): app para grabar el proceso de
   instalación (video de Angelo, 2026-09-22). Primera prueba de punta a punta contra prod.
 
