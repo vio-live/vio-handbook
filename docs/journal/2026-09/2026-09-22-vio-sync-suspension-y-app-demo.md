@@ -86,6 +86,10 @@ cuál vio)
 - **Villoid**: link, versión de Shopify, deploy y arranque verificados; Angelo mandó el
   link el 2026-09-22 con instrucciones en noruego y el video. El link **vence el
   2026-09-25 a las 13:42**: los links de instalación custom duran 7 días.
+- **Gladkokken**: Angelo cargó `SHOPIFY_API_SECRET`, conectó el Redis compartido y
+  redesplegó `vio-sync-gladkokken`. Verificado: `/healthz` 200 (antes 500), sesiones en
+  Redis, secret presente, API 2026-04. Link listo para mandar; vence el 2026-09-28 a las
+  13:35.
 - [Playbook](../../playbooks/shopify-app-custom-por-cliente.md) actualizado: registro de
   apps, Redis compartido, vencimiento de los links y mensaje para el cliente en noruego.
 
@@ -107,13 +111,11 @@ cuál vio)
   vienen por Shopify? ¿La confirmación del 2026-08-21 quedó por escrito?
 - El trial de la cuenta demo del listing vence alrededor del 2026-10-09, justo después de
   la suspensión.
-- Gladkokken: en espera de feedback del cliente; falta `SHOPIFY_API_SECRET` y conectar el
-  Redis compartido.
 - Las observaciones de Alan no tienen tarjeta propia.
 
 ## Next session
 
 - Villoid: mirar los logs de `vio-sync-client` cuando instale; si no instala antes del 25,
   generar un link nuevo.
-- Terminar Gladkokken cuando llegue el feedback.
+- Gladkokken: mirar los logs de `vio-sync-gladkokken` cuando instalen.
 - Definir el camino del App Store antes del 2026-10-05.
