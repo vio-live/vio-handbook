@@ -39,6 +39,11 @@ documentación.
   - En [vg-lyko-feed-to-checkout.md](../../architecture/vg-lyko-feed-to-checkout.md): nota fechada
     sobre la UI del webhook, la rama ya mergeada y BigCommerce.
 
+- **Mapa de qué falta por método** para entregar la orden y opciones del alta de un método de
+  pago: en la misma sección de payments.md. Lo más grave: cuatro PSP caen a la cuenta de Vio sin
+  avisar, después del pago se descartan todos los avisos, no hay captura ni devolución para los
+  cinco métodos nuevos, Vipps se queda sin capturar y Klarna manda las líneas sin SKU.
+
 ## Decisions
 
 Ninguna tomada. Propuesta para Angelo: hacer de `order.paid` el contrato. Le faltan el `g:id` de
@@ -50,6 +55,10 @@ receptor pequeño en lugar de depender del plugin de su PSP.
 - **Seguridad, en prod**, encontrado leyendo código y sin probar contra ningún entorno:
   - `PATCH /api/users/:id` no comprueba que quien llama sea el dueño.
   - El webhook público de Stripe completa órdenes sin verificar el evento.
+
+  - El endpoint de devoluciones no tiene autenticación.
+  - Marcar el envío no comprueba que quien llama sea el dueño de la orden.
+  - No verificamos la firma del webhook de Vipps, y la de Nexi se salta si no hay autorización.
 
   Quedaron como tareas aparte para arreglarlas en su propia sesión.
 - **Cuentas de prueba**: todas las que funcionan en QA son de Vio. Para ver que el dinero llega

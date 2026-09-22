@@ -457,6 +457,53 @@ Qué puede leer el comercio por su cuenta, con sus claves:
    - En Shopify: vio-sync con `orderCreate`.
    - En una plataforma propia, como la de Kondomeriet: su equipo.
 
+### Qué falta en cada método para entregar la orden
+
+Estudio del 2026-09-22 sobre nuestro código, rama develop. Nexi, Adyen y el Kustom nuevo solo
+están en develop. «Su portal» quiere decir una captura, una devolución o una cancelación que
+haga el comercio por su cuenta en la PSP.
+
+| PSP | Cobro solo con su cuenta | Datos que mandamos | Captura | Devolver o cancelar | ¿Nos enteramos de su portal? | Aviso en su formato |
+|---|---|---|---|---|---|---|
+| Nexi | Sí, falla si falta la fila | Ítems con `productId:variantId`, no su SKU. Solo el email | `autoCapture` al pagar. La función de cobrar existe y nadie la llama | Las funciones existen, sin usar | No: solo escuchamos el pago completado | Sí, segundo webhook |
+| Qliro | **No**: sin el secreto cae a la cuenta de Vio en silencio | Referencia `vio-…`, ítems con `productId\|variantId`, solo el email | No existe. La hacen ellos | No | No: el aviso llega y se ignora tras el pago | Sí, reenvío sin reintento ni firma |
+| Kustom | Sí | Línea con el SKU del feed y `merchant_data` con nuestros IDs | `auto_capture` al pagar | No | No | Falta el reenvío |
+| Klarna | **No**: cae a la clave de Vio | **Las líneas no llevan SKU**. Términos apuntando a `outshifter.com` | **La decide el navegador** en la petición | Existe, por un camino muerto | No: no mandamos URLs de aviso | Falta |
+| Walley | Sí | Ítems con `productId`, **sin datos del cliente**. IVA ×100 | No | No | No: solo la compra completada | Falta |
+| Vipps | **No**: cae a las claves de Vio | **Sin líneas, solo el importe**. Referencia aleatoria | **No capturamos**: la reserva caduca sola | Existe, por un camino muerto | No: no nos suscribimos a capturado ni devuelto, y no verificamos la firma | Falta. Su webhook de cuenta ya recibe nuestros pagos |
+| Adyen | Falla si la fila está incompleta; sin fila cobra Vio, por decisión | Lo más completo: línea con el `g:id` del feed, SKU, cliente y metadata | `captureMode`, pero no hay llamada de captura | No | **Los eventos llegan y se ignoran** | Falta. Su webhook de cuenta ya recibe nuestros pagos |
+| Stripe | **No**: el respaldo es campo a campo y puede mezclar claves | Productos solo con el nombre. `metadata.order_id` choca con su plugin de Woo | Automática | Con la clave de Vio, por un camino muerto | No: nuestro endpoint es global, sin verificar y sin registrar en su cuenta | Falta |
+
+Lo transversal:
+- **No hay interruptor de «solo mi cuenta».** Qliro, Klarna, Stripe y Vipps caen a la cuenta de
+  Vio sin avisar.
+- **Después del pago, todo aviso se descarta.** Cada manejador corta con «ya procesado» cuando el
+  checkout está en éxito, así que nada de lo que el comercio haga en su portal llega a la orden.
+- **No hay captura, devolución ni cancelación para los cinco métodos nuevos.** Lo que existe para
+  Klarna, Stripe y Vipps está detrás de un canal `Wordpress` y de nombres en mayúsculas, y
+  nuestras ventas son de canal `Partner`. Es código muerto. Capturar al despachar hoy no existe
+  para ninguno.
+- **Cada PSP recibe un identificador de producto distinto**, entre cinco formas. El comercio ve
+  algo diferente en cada portal.
+- **No hay exportación de órdenes** para el vendedor, ni email de venta nueva. El único aviso es
+  `order.paid`.
+
+### Opciones al conectar un método de pago
+
+Lo que debería preguntar el alta de cada método, además de las credenciales:
+
+1. **Cuenta.** «Cobrar solo con mi cuenta», activado por defecto, sin respaldo silencioso a la de
+   Vio. La sonda de verificación ya existe para seis de los ocho; faltan Klarna y Vipps.
+2. **Cómo recibe las órdenes**, una de tres:
+   - nuestro webhook, con URL y secreto, que hoy vive en otra pantalla;
+   - el aviso en el formato de su PSP, con URL y autorización, solo donde existe;
+   - una exportación periódica, que no existe todavía.
+3. **Quién captura:** ellos desde su portal, Vio al pagar, o Vio al despachar. La tercera necesita
+   el aviso de envío y una llamada de captura que hoy no existe.
+4. **Avisos de su cuenta.** En Vipps, Adyen y Stripe hay que decirle que sus webhooks también
+   recibirán nuestros pagos y que debe ignorar las referencias `VIO-`. En Adyen y Stripe hay que
+   registrar nuestro endpoint en su cuenta; en Adyen se puede por API.
+
 ### Lo que queda por probar de verdad
 
 - Que los webhooks de cuenta del comercio en Vipps, Adyen y Stripe reciben nuestros pagos. La documentación lo implica, pero no se ha visto.
