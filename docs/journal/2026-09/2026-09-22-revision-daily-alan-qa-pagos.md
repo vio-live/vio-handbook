@@ -73,7 +73,13 @@ Verificación:
 - [vev #27](https://github.com/vio-live/vev/pull/27), de impresiones reales, entró en main 14 s
   después, pero **no se desplegó**. Su propio PR pide probarlo antes en el paquete sandbox y
   confirmar `component_impression` en ClickHouse.
-- La página de Bohus volvió a caducar en Vev y hay que republicarla.
+- La página de Bohus había caducado en Vev. Angelo la republicó y ahora sirve el SDK 0.15.0, sin
+  rastros del 0.14.0.
+- Prueba en la página real: el canal de Bohus ofrece hoy **solo Stripe**. El checkout se salta la
+  elección al abrir y va directo al formulario, sin errores. Eso verifica en QA la autoselección
+  cuando la lista llega después de abrir y la inclusión de Stripe.
+- Se avisó a Alan en #409 con qué repetir. Para los casos de varios métodos, y para la tarjeta de
+  Adyen #411, hay que activar esos métodos en el canal de Bohus.
 
 **Trello (con OK de Angelo)**:
 - #405 volvió a Doing.
@@ -94,9 +100,8 @@ Verificación:
 
 ## Next session
 
-1. Angelo republica la página de Bohus, que caducó. Luego se comprueba que sirve el SDK 0.15.0 y
-   Alan repite en #409: Vipps con varios métodos, Nexi con métodos mezclados y un canal de un solo
-   método.
+1. Activar en el canal de Bohus los métodos para las pruebas de varios métodos: Nexi + Qliro +
+   Vipps, o Klarna/Stripe + Nexi, y Adyen para #411. Después Alan repite en #409.
 2. vev #27: probar en el sandbox (`npm run sandbox:on`) y confirmar `component_impression` con
    `host=vev` en ClickHouse. Solo después, desplegarlo en el paquete compartido.
 3. Alan: tabla de números y referencias por compra en #409; completar Walley, Klarna, Stripe,
