@@ -144,6 +144,23 @@ Con `node ~/vio-commerce/tools/kustom-spike/spike.mjs` se comprobó en el playgr
   `<script>`, así que hay que escapar los `<`, o su `</script>` cierra el nuestro. El SDK no se ve
   afectado, porque lo mete por `innerHTML`.
 
+## Datos de prueba del playground
+
+- **Métodos activos para Noruega** en la tienda `Test` (PM00876249), desde el 22/09: Visa,
+  Mastercard, Klarna, Apple Pay y Google Pay. Discover sigue solo para Australia. Los mercados y
+  métodos los habilita el soporte de Kustom; el portal no permite hacerlo.
+- **Datos de prueba oficiales:** el botón **"Test Data"** del widget, en Test Mode. Tiene tarjetas,
+  con cualquier fecha futura y CVC: Visa `4242 4242 4242 4242`, Mastercard `5555 5555 5555 4444`,
+  3DS `4000 0027 6000 3184` y rechazada `4000 0000 0000 0002`. También credenciales de PayPal y
+  Resurs, que no están activos, y la nota de Google Pay: hay que unirse al grupo de test de Google,
+  o su modo test solo admite direcciones de EE. UU.
+- **Cliente de prueba noruego** (doc de Kustom): `Edvard Munchs Plass 1, 0194 Oslo`,
+  `40 12 34 56`, nacimiento `03/09/1971`, fødselsnummer `110779-41012`.
+- **Klarna dentro del widget:** lo cobra Kustom, así que no depende de la cuenta de Klarna de la
+  plataforma.
+- **Apple Pay:** Kustom no da datos de prueba.
+- **Guía para QA:** tarjeta de Alan [ZgnheyI8](https://trello.com/c/ZgnheyI8).
+
 ## Pendiente
 - E2E en el playground: tarjeta `4242…`, 3DS `4000002760003184`, cambio de tarifa dentro del
   widget, cambio de carrito con el widget abierto (sync), cierre y reapertura (¿re-inicializar el
