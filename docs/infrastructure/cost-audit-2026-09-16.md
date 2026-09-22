@@ -96,7 +96,7 @@ Precios de la Retail Prices API (730 h/mes, USD). Uso medido en vivo.
 |---|---|---|---|---|
 | AKS `kubernetesqa` (3 × E2as_v4, $0,18/h) | $394 24/7. Con horario (08–01 L-V, ~51 %) serían ~$201 | 0,5 cores y 5,2 GB en total. Requests: 2,67 cores (default: 740m / 2,9 GB) | Pool nuevo 2 × B2as_v2 ($0,095/h) y borrar el actual | $139 24/7, ~$71 con horario |
 | **Horario QA roto** | Los crons `qa-cluster-stop/start` fallan desde el 21/09 (`claude-cli cannot enforce runtime toolsAllow`); el 19/09 no corrió. Los nodos existen desde el 18/09 08:51: **4 días 24/7** | — | Pasar el start/stop a un Container Apps Job con managed identity (como `pg-start/stop-api-vio-staging`), sin depender del LLM | — |
-| MySQL `vio-ecom-db-staging` (GP D2ds_v4, Norway West, $0,298/h + 64 GB) | ~$230, 24/7 (nunca se apaga) | 1 GB de datos, CPU media 7,8 % / máx. 28 %, máx. 77 conexiones | Burstable B2s ($0,126/h) + apagarla con el mismo horario que el cluster | ~$60 |
+| MySQL `vio-ecom-db-staging` (**pasada a Burstable B2s el 2026-09-22**; antes GP D2ds_v4, Norway West, $0,298/h + 64 GB) | ~$230, 24/7 (nunca se apaga) | 1 GB de datos, CPU media 7,8 % / máx. 28 %, máx. 77 conexiones | Burstable B2s ($0,126/h) + apagarla con el mismo horario que el cluster | ~$60 |
 | Managed Redis `redus-vio-staging` (Balanced B1, Norway West) | ~$43 (13–15 NOK/día medidos) | 1 % de memoria. La usan base-api y graph-ql de QA | Redis dentro del cluster (se apaga con él) o B0 ($22) | $0–22 |
 | APIM `OpenClawCodex` ×2 (RG `qa`, Developer) | ~$96 | No es de Vio | Borrar (decide Angelo, pendiente desde el 16/09) | $0 |
 | Backend staging (PG B1ms, Container Apps min=0) | ~$25 | Demo 24/7 | Nada, ya está al mínimo | ~$25 |
