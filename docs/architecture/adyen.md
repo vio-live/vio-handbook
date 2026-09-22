@@ -156,6 +156,24 @@ SE + SEK), así que `resolveAdyenMarket` rechaza antes de llamar a Adyen: `MARKE
 
 BankAxept online **no existe** en Adyen (sólo presencial). Riverty no cubre los nórdicos.
 
+### Datos de prueba (cuenta TEST, 2026-09-22)
+
+- **Métodos activos para NO/NOK:** según `/paymentMethods`, `scheme`, `klarna`, `klarna_account`,
+  `vipps`, `trustly` y `paysafecard`.
+- **Tarjetas:** caducidad `03/30`, CVC `737`; Amex, `7373`.
+  - Sin reto: Visa `4111 1111 1111 1111` y Mastercard `5555 3412 4444 1115`.
+  - Inscritas en 3DS2, así que **piden reto**: Visa `4917 6100 0000 0000`, Mastercard
+    `5454 5454 5454 5454` y Amex `3714 4963 5398 431`.
+- **Reto 3DS2 en web:** la contraseña `password` autentica. Cualquier otra lo hace fallar, y es la
+  única forma de provocar un rechazo desde nuestro Drop-in. Sin el campo del titular
+  (`hasHolderName`), los valores de rechazo de Adyen en el nombre no se pueden usar.
+- **Paysafecard:** código `0000 0000 0990 3417`.
+- **Trustly:** cualquier número con el formato `AAMMDD-XXXX`, en su banco de test.
+- **Klarna:** los datos de prueba de Klarna para Adyen.
+- **Vipps:** la app de test de Vipps MT, con NIN `14103524416`, teléfono `+47 99985255` y código
+  `1236`.
+- **Guía para QA:** tarjeta de Alan [kk5Qv6cv](https://trello.com/c/kk5Qv6cv).
+
 ## Qué le llega al vendedor
 
 - **En su Adyen:** `reference` = id del checkout, `merchantOrderReference`, comprador y
