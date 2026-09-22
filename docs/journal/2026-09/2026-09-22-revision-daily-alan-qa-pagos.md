@@ -96,6 +96,21 @@ Qliro en el canal de Bohus.
 - A pedido de Angelo se quitó el aviso "Pay krever Safari…":
   [vio-web-sdk #65](https://github.com/vio-live/vio-web-sdk/pull/65), SDK 0.15.1.
 
+**Análisis del 401 de Klarna en QA**:
+- Ninguna sesión de Klarna salió bien desde que arrancó el pod de shopcart, el 21/09 por la noche.
+  Fallaron dos vendedores: el 1295, el de la página de Alan, 5 veces el 21/09 (es su "cuando agrego
+  Klarna es…"), y Bohus, el 1322, 4 veces hoy. Todas con `401 PERMISSION_DENIED`.
+- shopcart usa la clave de Klarna del vendedor si tiene una fila activa con `name: 'Klarna'`, y si
+  no, la de plataforma `KLARNA_AUTH_KEY`. La manda **tal cual** como cabecera `Authorization`, y
+  payment-processors hace lo mismo. La de plataforma tiene el formato `Basic <base64>`.
+- Desacople seguro: el dashboard (Payments, desde el 28/08) pide la clave como "username:password,
+  base64", **sin** `Basic `. Una clave cargada así siempre recibe 401.
+- Queda por saber si los dos vendedores tienen clave propia (y en qué formato) o si usan la de
+  plataforma, que entonces estaría caducada. Comprobarlo toca credenciales, y el clasificador lo
+  bloqueó.
+- Aparte: hay credenciales de pruebas de Klarna comprometidas en `.env.test` y `.env.local.qa` de
+  shopcart y payment-processors. Hay que rotarlas.
+
 **Trello (con OK de Angelo)**:
 - #405 volvió a Doing.
 - Comentarios en #394 y en #409 (dos veces: los fallos y los PRs).
