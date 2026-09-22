@@ -100,6 +100,21 @@ cuál vio)
 - [Playbook](../../playbooks/shopify-app-custom-por-cliente.md) actualizado: registro de
   apps, Redis compartido, vencimiento de los links y mensaje para el cliente en noruego.
 
+**Bug del dashboard: la API key pendiente se mostraba a la cuenta siguiente**
+
+Angelo creó la cuenta de Vio de Makeup Mekka y, al ir a crear la conexión de Shopify,
+Settings → Integrations le mostró la credencial de la cuenta anterior. Causa (front):
+la espera de conexión se guarda en `localStorage` (`vio_pending_ecom_connection`, 24 h)
+sin dueño, `logout()` no la borraba, y la pantalla muestra
+`info?.apiCredential || created` — con `/ecom-user` vacío hasta que una tienda conecta,
+la cuenta nueva ve la key de la anterior. No es fuga del backend: `/ecom-user` va con el
+token de la sesión. Riesgo: conectar la tienda de un cliente a la cuenta equivocada; y el
+gate `useShopifyManaged` mira la misma clave, así que cualquier cuenta de ese navegador se
+veía "managed through Shopify" por 24 h. Arreglo en
+`webapp-vio-commerce` [#30](https://github.com/vio-live/webapp-vio-commerce/pull/30)
+(sin mergear): la espera guarda el `uid` y se descarta si no coincide, el logout la limpia,
+7 tests nuevos.
+
 ## Decisions
 
 - La demo se graba en una dev store nueva y la instala Angelo, que quería grabar todo el
@@ -119,6 +134,9 @@ cuál vio)
 - El trial de la cuenta demo del listing vence alrededor del 2026-10-09, justo después de
   la suspensión.
 - Las observaciones de Alan no tienen tarjeta propia.
+- `webapp-vio-commerce` #30 (credencial pendiente por usuario) espera review de Alan.
+  Hasta que se mergee, al cambiar de cuenta en el mismo navegador hay que borrar
+  `vio_pending_ecom_connection` a mano o usar incógnito.
 
 ## Next session
 
