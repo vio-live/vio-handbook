@@ -66,6 +66,15 @@ Verificación:
 - En el demo local se probó en el navegador: la lista primero, el formulario al elegir Stripe o
   Klarna, "Endre", Qliro sin formulario, y que Klarna no crea sesión con el formulario vacío.
 
+**Merge y deploy**:
+- Angelo mergeó #63 y #64 en vio-web-sdk. El bundle pasó a vio-vev en
+  [vev #44](https://github.com/vio-live/vev/pull/44).
+- Se desplegó el paquete compartido desde el merge de #44: versión **0.311**, con el SDK 0.15.0.
+- [vev #27](https://github.com/vio-live/vev/pull/27), de impresiones reales, entró en main 14 s
+  después, pero **no se desplegó**. Su propio PR pide probarlo antes en el paquete sandbox y
+  confirmar `component_impression` en ClickHouse.
+- La página de Bohus volvió a caducar en Vev y hay que republicarla.
+
 **Trello (con OK de Angelo)**:
 - #405 volvió a Doing.
 - Comentarios en #394 y en #409 (dos veces: los fallos y los PRs).
@@ -85,8 +94,10 @@ Verificación:
 
 ## Next session
 
-1. Merge de #63 y #64, rebundle en vio-vev (0.15.0), PR de vev, `vev deploy` y republicar la
-   página. Después Alan repite en #409: Vipps con varios métodos, Nexi con métodos mezclados y un
-   canal de un solo método.
-2. Alan: tabla de números y referencias por compra en #409; completar Walley, Klarna, Stripe,
+1. Angelo republica la página de Bohus, que caducó. Luego se comprueba que sirve el SDK 0.15.0 y
+   Alan repite en #409: Vipps con varios métodos, Nexi con métodos mezclados y un canal de un solo
+   método.
+2. vev #27: probar en el sandbox (`npm run sandbox:on`) y confirmar `component_impression` con
+   `host=vev` en ClickHouse. Solo después, desplegarlo en el paquete compartido.
+3. Alan: tabla de números y referencias por compra en #409; completar Walley, Klarna, Stripe,
    Apple Pay; la frase cortada "cuando agrego Klarna es…".
