@@ -128,6 +128,8 @@ conversión a Sales Channel: un sales channel siempre es app pública).
   [phMU2DP0](https://trello.com/c/phMU2DP0), Done). El link vence el 2026-09-25.
 - **Gladkokken** (`wxuxre-tf.myshopify.com`): desplegada y verificada el 2026-09-22
   (secret y Redis compartido cargados). Link mandado el 2026-09-22; vence el 2026-09-28.
+- **Makeup Mekka** (`makeup-mekka.myshopify.com`): app creada, link generado y config
+  publicada el 2026-09-22; faltan el secret, el Redis compartido y el deploy.
 - **Demo** (`vio-demo.myshopify.com`, dev store de Vio): app para grabar el proceso de
   instalación (video de Angelo, 2026-09-22). Primera prueba de punta a punta contra prod.
 
