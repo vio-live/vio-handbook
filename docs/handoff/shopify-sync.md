@@ -1,15 +1,18 @@
 ---
 title: "Handoff — Vio Sync (app de Shopify, Sales Channel)"
-last-updated: 2026-09-21
+last-updated: 2026-09-22
 owner: angelo
 status: live
 ---
 
 # Handoff — Vio Sync (app de Shopify, Sales Channel)
 
-> Estado al **2026-09-21**. **Cuarta submission al Shopify App Store enviada el 2026-09-10**
-> (status "Submitted — assigning a reviewer", reverificado el 2026-09-21), esperando reviewer.
-> Mientras tanto, los clientes que no pueden esperar van con **apps custom**
+> Estado al **2026-09-22**. **La cuarta submission quedó suspendida hasta el 2026-10-05**
+> (mail del 2026-09-21): otra vez 1.2.1 (cobro fuera de Shopify), "no aceptamos apps que
+> conecten a un marketplace fuera de Shopify" y 4.5.3 (screencast). Antes de reenviar hay
+> que resolver el punto del marketplace, que es de modelo de negocio →
+> [journal 2026-09-22](../journal/2026-09/2026-09-22-vio-sync-suspension-y-app-demo.md).
+> Mientras tanto, los clientes van con **apps custom**
 > ([playbook](../playbooks/shopify-app-custom-por-cliente.md)). Reemplaza las versiones
 > del 2026-06-23 y del 2026-08-18. La historia está en el journal (links al final).
 
@@ -29,7 +32,9 @@ vuelven a la tienda atribuidas al canal (`source_name: channel:<handle>`).
 Vio **no es un marketplace** propio: los productos se compran dentro de apps y artículos de
 terceros (diarios como VG o Dagbladet; artículos armados en Vev), sin salir de la lectura.
 Por eso el checkout no "se salta" uno de Shopify: el comprador nunca estuvo en la tienda →
-[lección](../lessons/verify-product-model-before-compliance-copy.md).
+[lección](../lessons/verify-product-model-before-compliance-copy.md). Aun así, el reviewer
+de la cuarta submission lo leyó como una app que conecta a un marketplace fuera de Shopify
+([journal 2026-09-22](../journal/2026-09/2026-09-22-vio-sync-suspension-y-app-demo.md)).
 
 ⚠️ No confundir con **`vio-shopify`** (el legacy Koa + Next, sin CLI, otra org) →
 [lección](../lessons/vio-sync-not-vio-shopify.md).
@@ -87,11 +92,20 @@ o una suscripción viva en plan 5/6/7.
 `VIO_APP_HANDLE` (staging tiene el suyo), `VIO_DASHBOARD_SIGNUP_URL`, `VIO_TERMS_URL`,
 `REDIS_URL` (sesiones en Redis en prod; Prisma/SQLite es solo de dev).
 
-## La review en curso
+## La review (suspendida hasta el 2026-10-05)
 
+- **Suspendida hasta el 2026-10-05**; desde esa fecha se reenvía desde el Partner Dashboard.
+  Reenviar sin resolver el punto del marketplace arriesga otra suspensión. Findings y
+  análisis: [journal 2026-09-22](../journal/2026-09/2026-09-22-vio-sync-suspension-y-app-demo.md).
+- **Candidatos del 1.2.1** (los screencasts del reviewer no se vieron): la comisión, el
+  "Channel cut" y los payouts del dashboard de Vio, que quedan fuera del gate de Shopify;
+  el link a Terms, que lleva a vio.live/pricing; y el gate de Plan & billing con una
+  cuenta nueva.
+- **Screencast (4.5.3)**: el actual es del 2026-08-28, anterior a App Pricing. Hay que
+  regrabarlo en inglés y paso a paso.
 - **Cuenta demo** del listing: `shopify-user-to-submit@test.no` (user 1299), password = la
   API key demo (vive solo en el formulario del listing, nunca en un repo). Suscripción
-  `trialing` en Starter, **vence ~2026-10-09**: si la review se alarga, extender el trial en
+  `trialing` en Starter, **vence ~2026-10-09**: si se reenvía, extender el trial en
   Stripe. **No rotar la key ni la contraseña** hasta que termine.
 - Los reviewers eligen un plan privado "shopify-test" a $0 que no está mapeado a Vio: no
   dispara ninguna llamada al backend.
@@ -109,11 +123,13 @@ no se puede cambiar. Cada cliente que no puede esperar va con **su propia app cu
 desplegada desde la rama **`custom/client-app`** (código de agosto, anterior a la
 conversión a Sales Channel: un sales channel siempre es app pública).
 
-- **Villoid** (`villoid.myshopify.com`): desplegada y verificada, link generado, **no
-  mandado** hasta que Alan termine la prueba de punta a punta con la gemela
-  `vio-client-dev` (Trello [phMU2DP0](https://trello.com/c/phMU2DP0)).
+- **Villoid** (`villoid.myshopify.com`): link **mandado el 2026-09-22** con instrucciones
+  en noruego y video, después de la prueba de Alan (Trello
+  [phMU2DP0](https://trello.com/c/phMU2DP0), Done). El link vence el 2026-09-25.
 - **Gladkokken** (`wxuxre-tf.myshopify.com`): link generado y config publicada; faltan su
-  `SHOPIFY_API_SECRET` y su Redis. Se termina cuando Alan confirme la prueba.
+  `SHOPIFY_API_SECRET` y conectar el Redis compartido. En espera de feedback del cliente.
+- **Demo** (`vio-demo.myshopify.com`, dev store de Vio): app para grabar el proceso de
+  instalación (video de Angelo, 2026-09-22). Primera prueba de punta a punta contra prod.
 
 Procedimiento, registro de clientes con todos los ids, cómo retomar y gotchas:
 **[playbook](../playbooks/shopify-app-custom-por-cliente.md)**.
@@ -154,4 +170,5 @@ Procedimiento, registro de clientes con todos los ids, cómo retomar y gotchas:
 [09-11](../journal/2026-09/2026-09-11-vio-sync-app-pricing-e-incidente-suscripciones.md) App Pricing e incidente ·
 [09-14](../journal/2026-09/2026-09-14-vio-sync-revision-final-submission.md) revisión final ·
 [09-18](../journal/2026-09/2026-09-18-vio-sync-app-custom-para-cliente.md) app custom para un cliente ·
-[09-21](../journal/2026-09/2026-09-21-vio-sync-deploy-app-cliente.md) despliegue de Villoid y Gladkokken.
+[09-21](../journal/2026-09/2026-09-21-vio-sync-deploy-app-cliente.md) despliegue de Villoid y Gladkokken ·
+[09-22](../journal/2026-09/2026-09-22-vio-sync-suspension-y-app-demo.md) suspensión y app de demo.
