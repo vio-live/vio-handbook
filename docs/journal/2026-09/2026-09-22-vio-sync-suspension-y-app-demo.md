@@ -112,8 +112,18 @@ token de la sesión. Riesgo: conectar la tienda de un cliente a la cuenta equivo
 gate `useShopifyManaged` mira la misma clave, así que cualquier cuenta de ese navegador se
 veía "managed through Shopify" por 24 h. Arreglo en
 `webapp-vio-commerce` [#30](https://github.com/vio-live/webapp-vio-commerce/pull/30)
-(sin mergear): la espera guarda el `uid` y se descarta si no coincide, el logout la limpia,
-7 tests nuevos.
+([#30](https://github.com/vio-live/webapp-vio-commerce/pull/30)): la espera guarda el `uid`
+de la sesión y se descarta si no coincide, si no hay sesión o si viene sin `uid` (versión
+anterior); 7 tests nuevos. **El logout no la borra**: conectar la tienda lleva horas y su
+dueño tiene que seguir viéndola — con el `uid` alcanza. Verificado además que la key no
+depende del navegador: vive en `apiCredential` (users-ms `createApiCredential`, que además
+no borra las anteriores) y la tienda conecta validando contra `GET /users/me`.
+
+**A prod como hotfix**: PR mergeado a `develop` (`28d6af3`) y los 2 commits llevados a
+`master` por cherry-pick (`d84ed33`), porque `develop` tenía 11 commits sin promover (Adyen,
+Nexi, cuenta de Vio y Brand, Qliro) que siguen en QA. Vercel desplegó producción y
+`dashboard.ecom.vio.live` sirve ese deploy. `master` queda con esos dos commits duplicados
+respecto de `develop`: se resuelve solo en el próximo release.
 
 ## Decisions
 
@@ -134,9 +144,6 @@ veía "managed through Shopify" por 24 h. Arreglo en
 - El trial de la cuenta demo del listing vence alrededor del 2026-10-09, justo después de
   la suspensión.
 - Las observaciones de Alan no tienen tarjeta propia.
-- `webapp-vio-commerce` #30 (credencial pendiente por usuario) espera review de Alan.
-  Hasta que se mergee, al cambiar de cuenta en el mismo navegador hay que borrar
-  `vio_pending_ecom_connection` a mano o usar incógnito.
 
 ## Next session
 
