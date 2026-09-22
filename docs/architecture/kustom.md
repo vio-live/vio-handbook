@@ -1,6 +1,6 @@
 ---
 title: "Kustom Checkout (ex Klarna Checkout) en Vio Commerce"
-last-updated: 2026-09-18
+last-updated: 2026-09-22
 owner: angelo
 status: draft
 ---
@@ -122,11 +122,29 @@ nunca la orden cruda con los datos del comprador); `SyncPaymentKustom(checkout_i
    nuevos de Kustom (Standard Webhooks, `order.created`, `capture.created`…) son un producto aparte
    que hoy no usamos.
 
-## Pendiente
+## Primer contacto con el widget real (2026-09-22)
 
-- Primer contacto con el widget real: `node ~/vio-commerce/tools/kustom-spike/spike.mjs` (crea una
-  orden en el playground y sirve una página en `:5175` con el snippet en un slot de light DOM, la API
-  JS y un botón de remontar). Sólo puede correr cuando el MID tenga NO/NOK.
+Hasta el 22/09 la tienda de pruebas `Test` (PM00876249) solo tenía Discover para Australia, y el
+portal no deja añadir métodos ni países. El soporte de Kustom habilitó Noruega a pedido de Angelo.
+Con `node ~/vio-commerce/tools/kustom-spike/spike.mjs` se comprobó en el playground:
+
+- **Pedido para NO/NOK:** `POST /checkout/v3/orders` → 201. Se actualiza en el mismo pedido → 200.
+  Gestión de pedidos responde 404 antes de pagar.
+- **Montaje:** el widget se ve montado en un contenedor de light DOM proyectado por un slot, como
+  en el SDK.
+- **API JS:** `_klarnaCheckout` existe. `load` trae el país y el envío elegido.
+  `order_total_change` trae el total en unidades menores, con el envío incluido.
+- **Suspender y reanudar:** `suspend()` deja el widget en gris y `resume()` lo reactiva.
+- **Volver a montar el mismo pedido sin recargar:** funciona, y `load` vuelve a llegar. En cambio
+  `order_total_change` **no** vuelve a llegar, así que el total tiene que salir del pedido que
+  devuelve el backend. El SDK ya lo hace así.
+- **iframe auxiliar:** Kustom añade uno oculto en `document.body` para sus capas a pantalla
+  completa. No se duplica al volver a montar.
+- **Trampa al incrustar el snippet dentro de un `<script>` propio:** trae sus propias etiquetas
+  `<script>`, así que hay que escapar los `<`, o su `</script>` cierra el nuestro. El SDK no se ve
+  afectado, porque lo mete por `innerHTML`.
+
+## Pendiente
 - E2E en el playground: tarjeta `4242…`, 3DS `4000002760003184`, cambio de tarifa dentro del
   widget, cambio de carrito con el widget abierto (sync), cierre y reapertura (¿re-inicializar el
   snippet sin recargar rompe algo? Kustom lo desaconseja), validación rechazada, push sin
