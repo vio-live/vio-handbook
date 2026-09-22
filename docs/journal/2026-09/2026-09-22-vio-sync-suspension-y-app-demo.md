@@ -122,8 +122,18 @@ no borra las anteriores) y la tienda conecta validando contra `GET /users/me`.
 **A prod como hotfix**: PR mergeado a `develop` (`28d6af3`) y los 2 commits llevados a
 `master` por cherry-pick (`d84ed33`), porque `develop` tenía 11 commits sin promover (Adyen,
 Nexi, cuenta de Vio y Brand, Qliro) que siguen en QA. Vercel desplegó producción y
-`dashboard.ecom.vio.live` sirve ese deploy. `master` queda con esos dos commits duplicados
+`dashboard.ecom.vio.live` sirve ese deploy. `master` queda con esos commits duplicados
 respecto de `develop`: se resuelve solo en el próximo release.
+
+**Regresión en prod (19:15–19:33)**: ese deploy rompió el home con
+`ReferenceError: loadPendingEcom is not defined`. `settings.js` re-exportaba los helpers con
+`export { ... } from`, que no crea el binding local, y `useShopifyManaged()` los usa en ese
+mismo módulo; los tests solo cubrían los helpers puros. Angelo lo vio y lo reportó. Rollback
+al deploy del 15-sep, arreglo con un test que ejecuta el hook
+([#31](https://github.com/vio-live/webapp-vio-commerce/pull/31), `687b535` en master),
+verificación de que el identificador suelto ya no está en el bundle, y promote del build
+nuevo. Lección actualizada:
+[recorrer-el-flujo-real-antes-de-dar-por-listo](../../lessons/recorrer-el-flujo-real-antes-de-dar-por-listo.md).
 
 ## Decisions
 

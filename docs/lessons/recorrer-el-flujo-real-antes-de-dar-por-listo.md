@@ -45,5 +45,19 @@ usuario real**, con sus datos reales y en un entorno limpio:
 - Para un arreglo de concurrencia: escribir el orden real de los eventos, incluyendo quién
   escribe cada fila y cuándo, antes de dar el fix por bueno.
 
+## Otra vez, 2026-09-22: a prod sin abrir la pantalla
+
+El arreglo de la credencial pendiente del dashboard fue a producción con 278 tests en
+verde, lint limpio y el build de Vercel en Ready — y rompió el home con
+`ReferenceError: loadPendingEcom is not defined`. `settings.js` re-exportaba el helper con
+`export { ... } from`, que **no crea el binding local**, y `useShopifyManaged()` lo llama
+dentro de ese mismo módulo. Los tests cubrían los helpers puros, no el hook, y nadie abrió
+una pantalla autenticada del build antes de promoverlo: el `/login` cargaba bien y eso se
+tomó por suficiente.
+
+Lo que faltó, en concreto: **abrir la pantalla que toca el cambio**, logueado, en el deploy
+nuevo (o al menos en staging, que sirve `develop`) antes de mover el alias de producción.
+Rollback en 2 minutos, fix con un test que ejecuta el hook, y recién entonces promover.
+
 Relacionado: [verify-alan-claims-against-code](verify-alan-claims-against-code.md),
 [ADR-0017](../decisions/0017-cobro-canal-shopify-via-app-pricing.md).
