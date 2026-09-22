@@ -21,7 +21,7 @@ Se hizo el día en que se acabaron los créditos del Sponsorship. No se cambió 
 | 1 | AKS `vio-commerce-prod` (3 × D4as_v5) | $540 | Pide 7,33 cores y usa ~0,5. El autoscaler tiene min=3 | Bajar los CPU requests y poner min=2, o pasar a 3 × E2as_v5 ($354) | ~$180 |
 | 2 | Azure Managed Redis `redus-vio-prod` y `redus-vio-staging` (Balanced B1, $144 c/u) | $288 | 1 % de memoria y máx. 4 ops/s en las dos | Bajar a B0 ($57 c/u), o como mínimo staging. Verificar antes si se puede bajar en caliente o hay que recrear | ~$87–174 |
 | 3 | MySQL `vio-ecom-db-prod` y `-staging` (GP D2ds_v4, sin HA) | ~$340–470 | CPU al 3 % y al 1 % | Pasar a Burstable B2ms (~$128 c/u). Requiere reinicio | ~$80–200 |
-| 4 | APIM `OpenClawCodex` y `OpenClawCodexRetry` (RG `qa`, Developer) | ~$96 | Los creó angelo@tipio.no el 2026-04-11. Solo tienen la `echo-api` de ejemplo; no son de Vio | Borrar (lo decide Angelo) | ~$96 |
+| 4 | APIM `OpenClawCodex` y `OpenClawCodexRetry` (RG `qa`, Developer) | ~$96 | Los creó angelo@tipio.no el 2026-04-11. Solo tienen la `echo-api` de ejemplo; no son de Vio | **Borrados el 2026-09-22** | ~$96 |
 | 5 | App Service plan `ASP-prodreachu-96fd` (B1 **Windows**) | ~$56 | Aloja las funciones legacy `prod-functions-code2` y `qa-functions-code2` (Service Bus de Reachu) | **Borrado el 2026-09-21** por pedido de Angelo, con el plan y las dos funciones. Solo llamaban a `api.reachu.io`, que ya no responde (ver journal 2026-09-21) | ~$56 |
 | 6 | Blob `containerproduction2` (1,56 TB, 6,16 M blobs, Hot) y `containerqa2` (171 GB, 2,4 M blobs, Hot) | ~$36 | Uploads legacy (`outshifter-*`, `reachu-*`) servidos por Front Door | **Aplicado en prod el 2026-09-16** (ver abajo). En QA no se aplica: costaría $26 de una vez para ahorrar $1,7/mes | ~$15 |
 | 7 | `claude-trader-rg` (App Service B1 Linux, West Europe, más storage) | ~$14 | App personal (`claude-trader-angelo`) en la factura de Vio | Moverla o borrarla (lo decide Angelo) | ~$14 |
@@ -118,4 +118,4 @@ Notas:
 - **Sin referencias**: nada en `~/.openclaw/openclaw.json` ni en la config de los agentes, ni en los repos de `vio-live` y `tipiodevelopment` (búsqueda en GitHub). Solo los mencionan los audits.
 - **Costo:** $0,0658/h por unidad, ~$48/mes cada uno, **$96/mes**. Desde abril van unos $500 (hasta el 16/09 los cubrieron los créditos). El Developer no se puede pausar: o se paga o se borra.
 - **Borrarlos:** `az apim delete` deja la instancia en soft-delete 48 h (se puede restaurar con `az apim deletedservice`). Después se pierde, aunque tampoco hay configuración que perder.
-- Recomendación: borrar los dos. Pendiente del OK de Angelo.
+- **Borrados el 2026-09-22 a las 09:55** con el OK de Angelo. Quedan en soft-delete hasta el 2026-09-24 09:55 (sin cobro) y después se purgan solos.
