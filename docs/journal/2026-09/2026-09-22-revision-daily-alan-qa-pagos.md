@@ -36,24 +36,57 @@ incompletos y sin comentario de cierre. De esas cinco, una se sostiene (#400), u
 La página de Vev `a-vio-dev.vev.site/bohus-demo` sirve hoy el SDK **0.14.0** (Adyen + Kustom):
 si Alan probó después del deploy de las 16:55 del 21/09, Nexi y Qliro pasaron sobre el SDK nuevo.
 
-**Arreglo de Vipps** (`vio-web-sdk`, rama `fix/vipps-email-multi-method`, commit `462e7f2`,
-**sin pushear**): el primer clic en Vipps selecciona el método y muestra su campo de email; el
-botón de pagar lo pide. Test DOM que reproduce el caso de Alan (falla sin el arreglo); suite
-220/220, `tsc` limpio.
+**Arreglo de Vipps**: [vio-web-sdk #63](https://github.com/vio-live/vio-web-sdk/pull/63). El
+primer clic en Vipps selecciona el método y muestra su campo de email; el botón de pagar lo pide.
+El test DOM reproduce el caso de Alan y falla sin el arreglo.
+
+**Método primero (opción a)**: [vio-web-sdk #64](https://github.com/vio-live/vio-web-sdk/pull/64),
+SDK 0.15.0, incluye #63.
+- Con varios métodos, el checkout abre en la lista, sin formulario.
+- Klarna, Adyen, Stripe y Apple Pay traen nuestro formulario al elegirlos. Nexi, Qliro, Kustom y
+  Walley nunca lo muestran, así que la dirección se escribe una sola vez.
+- Con un solo método se salta la elección. Stripe ahora también se autoselecciona: seleccionarlo
+  solo muestra "Betal … med Stripe", que lleva a su Payment Link. La exclusión anterior decía que
+  cobraba una tarjeta guardada al clic, y no es así en web.
+- Klarna se puede elegir con el formulario vacío, pero crea su sesión solo con el formulario
+  completo.
+
+En el camino salieron tres bugs, que van en un commit propio dentro de #64:
+- un checkout quitado de la página volvía a montar Klarna, Nexi o Adyen, creando sesiones de pago
+  para un elemento que nadie ve;
+- un montaje de Klarna que fallaba al instante reintentaba sin fin;
+- con un solo método, este no se seleccionaba si la lista llegaba después de abrir el checkout,
+  que es el orden normal en la primera apertura.
+
+Ver la [lección](../../lessons/un-componente-fuera-del-dom-sigue-montando-pagos.md).
+
+Verificación:
+- Suite 228/228, `tsc` limpio, build OK.
+- Cada test nuevo del ciclo de vida falla sin su arreglo.
+- En el demo local se probó en el navegador: la lista primero, el formulario al elegir Stripe o
+  Klarna, "Endre", Qliro sin formulario, y que Klarna no crea sesión con el formulario vacío.
+
+**Trello (con OK de Angelo)**:
+- #405 volvió a Doing.
+- Comentarios en #394 y en #409 (dos veces: los fallos y los PRs).
+- Tarjetas nuevas para los pedidos a Boots ([HKROhmJt](https://trello.com/c/HKROhmJt), Alan) y
+  para vio-sync ([sZ3VJopB](https://trello.com/c/sZ3VJopB)).
 
 ## Decisions
 
-Ninguna tomada. Pendientes de Angelo: flujo del paso 1 con métodos mezclados (preguntar el método
-primero, o precargar el widget de Nexi); qué hacer con #405 y #394.
+- Angelo eligió la **opción (a)**: preguntar primero el método de pago, con nuestro formulario solo
+  si el método lo necesita. Con un solo método, ese paso se salta.
+- Pendiente de Angelo: qué hacer con #394.
 
 ## Blockers
 
-- Actualizaciones de Trello (reabrir #405, comentar #394/#409, tarjetas para los pedidos a Boots y
-  para "órdenes no llegan si el proveedor es el vendedor") esperan el OK de Angelo.
-- Contraseña de prod en claro en un comentario de #398.
+- Merge de #63 y #64 (Angelo); sin eso no hay rebundle ni deploy a Vev.
+- Contraseña de prod en claro en un comentario de #398: hay que rotarla y borrar el comentario.
 
 ## Next session
 
-1. OK de Angelo → PR del arreglo de Vipps, merge, rebundle, `vev deploy`, y que Alan lo repita.
+1. Merge de #63 y #64, rebundle en vio-vev (0.15.0), PR de vev, `vev deploy` y republicar la
+   página. Después Alan repite en #409: Vipps con varios métodos, Nexi con métodos mezclados y un
+   canal de un solo método.
 2. Alan: tabla de números y referencias por compra en #409; completar Walley, Klarna, Stripe,
    Apple Pay; la frase cortada "cuando agrego Klarna es…".
