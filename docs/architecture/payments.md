@@ -210,6 +210,44 @@ nivel WARN, porque el comprador ve términos ajenos— y el formulario exige el 
 **Qliro figuraba como proveedor sin fallback** (`fallback: false` en el dashboard), así que
 la fila decía *"Not available"* para un método que sí cobra con la cuenta de Vio. Corregido.
 
+### ⚠️ El webhook de Stripe le creía al body — confirmaciones de pago forjables (arreglado 2026-09-22)
+
+`POST /checkout/payment/webhook` es público (sin auth, sin firma) y `WebhookPayment`
+hacía `switch (event.type)` sobre el body crudo, **sin `constructEvent` y sin re-fetch**:
+`payment_intent.succeeded` → `CompleteOrderFlowStripeEmb` tomaba `order_id` del
+`metadata` del body y llamaba `orders/${order_id}/processOrderPaidByCustomer` (marca
+pagada, mail al cliente, items→PROCESSING, `order.paid` del seller + fanout de tienda);
+`checkout.session.completed` confiaba en `payment_status:'paid'` igual. Un POST forjado y
+**sin firma** bastaba. Confirmado en QA (id de orden inexistente, nada real tocado): el
+evento llegó hasta `processOrderPaidByCustomer`. Encontrado leyendo código, **no explotado**.
+
+El arreglo (shopcart [#34](https://github.com/vio-live/vio-shopcart-microservice/pull/34) +
+base-api [#13](https://github.com/vio-live/vio-base-api/pull/13)) impone la misma regla que
+ya seguían Kustom/Nexi/Qliro/Walley: **el body es un PUNTERO, no un hecho.**
+
+1. El evento nombra un objeto (`pi_…`/`cs_…`), con forma validada antes de tocar la BD.
+2. Ese id tiene que ser de un checkout nuestro, o la request termina sin una sola llamada.
+3. **El checkout** decide qué cuenta Stripe cobró (el seller cobra con sus claves si las
+   tiene) — nunca el body. Por eso una sola `whsec_` de plataforma no verifica todo.
+4. Donde tenemos el `whsec_` de esa cuenta, la firma sobre los **bytes crudos** tiene que
+   verificar (base-api reenvía `Stripe-Signature` + `req.rawBody`; shopcart arranca con
+   `bodyParser:false` + `json({verify})` para conservarlos), o es 401.
+5. Se **re-lee el objeto de Stripe** y sólo `succeeded`/`paid` + match (checkout, orden,
+   moneda, monto pedido) completa. Idempotente bajo `withCheckoutLock`.
+
+Detalles que acompañan: metadata namespaced (`vio_order_id`… — un `order_id` pelado en la
+cuenta del propio seller es lo que el plugin Stripe de WooCommerce lee para encontrar una
+orden SUYA, y puede marcarla fallida); se dejó de loguear la secret key descifrada; el
+controller `throw` en vez de `return` de la excepción (un objeto retornado es 200 → Stripe
+lo toma por ack). Env nuevo opcional `STRIPE_WEBHOOK_SECRET` (sólo plataforma). **Necesita
+release a prod tras review.** Journal: `2026-09/2026-09-22-stripe-webhook-forgery-fix.md`.
+
+**Follow-up (medio): Vipps tiene el mismo anti-patrón a medias.**
+`vipps.service.ts::receivedWebhook` SÍ hace `GET /epayment/v1/payments/{reference}` pero
+**ignora el resultado**: completa según `data.name == 'AUTHORIZED'` del body. Menos expuesto
+que Stripe (base-api exige token por-orden en la URL, `verifyVippsCredential`), pero hay que
+gatear la creación de la orden en el estado que Vipps devuelve, no en el campo del body.
+
 ### ⚠️ Qliro firma el body: los bytes firmados tienen que ser los enviados
 
 `Authorization: Qliro base64(sha256(body + apiSecret))`. El conector serializa el payload una
