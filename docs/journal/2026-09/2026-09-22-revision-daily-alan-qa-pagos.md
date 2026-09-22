@@ -81,6 +81,21 @@ Verificación:
 - Se avisó a Alan en #409 con qué repetir. Para los casos de varios métodos, y para la tarjeta de
   Adyen #411, hay que activar esos métodos en el canal de Bohus.
 
+**Prueba en la página real con varios métodos**: Angelo activó Stripe, Klarna, Vipps, Apple Pay y
+Qliro en el canal de Bohus.
+- La lista sale primero, sin formulario.
+- Vipps muestra su email al primer clic.
+- Qliro carga su widget y pide el contacto una sola vez.
+- Stripe trae el formulario, y su botón se activa al completarlo.
+- "Endre" conserva lo escrito.
+- **Klarna falla por configuración**: la API de Klarna responde `401 PERMISSION_DENIED` a las
+  credenciales del vendedor de Bohus (1322) en QA, en el checkout y en el botón rápido del
+  carrito. shopcart lo muestra como "Payment Klarna Native not initialized: [object Object]".
+  Hubo dos intentos y se detuvo, sin bucle.
+- Adyen y Nexi no están activos en el canal, así que no se probaron.
+- A pedido de Angelo se quitó el aviso "Pay krever Safari…":
+  [vio-web-sdk #65](https://github.com/vio-live/vio-web-sdk/pull/65), SDK 0.15.1.
+
 **Trello (con OK de Angelo)**:
 - #405 volvió a Doing.
 - Comentarios en #394 y en #409 (dos veces: los fallos y los PRs).
