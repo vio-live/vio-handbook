@@ -109,3 +109,13 @@ Notas:
 - Antes de apagar la MySQL de noche hay que confirmar que nadie la use fuera del cluster (devs en local, túneles `dev-local`/`woo-dev`, feed-sync).
 - Los 64 GB de storage de la MySQL no se pueden achicar (~$12,5/mes); se asumen.
 - Cambiar el tamaño de las VMs obliga a crear un node pool nuevo (modo System) y borrar el viejo. Se hace con drain, sin downtime relevante para QA.
+
+## Punto 4 en detalle — APIM `OpenClawCodex` / `OpenClawCodexRetry` (2026-09-22)
+
+- Los creó angelo@tipio.no el 2026-04-11, a las 12:17 y 12:47 UTC. Publisher `ClawLive` / `admin@claw.live`. Developer, 1 unidad, Norway East, sin VNet, sin identity y sin tags.
+- **Nunca se configuraron**: `lastModifiedAt` es igual a `createdAt` en los dos. Solo tienen la `echo-api` de ejemplo (hacia `echo.playground.azure-api.net`) y los productos y suscripciones por defecto (`starter`, `unlimited`, `master`). No tienen backends, named values, loggers, certificados ni policies propias.
+- **Tráfico (métrica Requests, 30 días):** unas 25 k requests en OpenClawCodex y 52 k en Retry. El **100 %** son 4xx, sin API asociada (`ApiId` vacío) y con `BackendResponseCode=0`: nada llegó a un backend. Son scanners o bots contra `*.azure-api.net` y `*.portal.azure-api.net`, no uso real. La retención de métricas no llega a antes de agosto.
+- **Sin referencias**: nada en `~/.openclaw/openclaw.json` ni en la config de los agentes, ni en los repos de `vio-live` y `tipiodevelopment` (búsqueda en GitHub). Solo los mencionan los audits.
+- **Costo:** $0,0658/h por unidad, ~$48/mes cada uno, **$96/mes**. Desde abril van unos $500 (hasta el 16/09 los cubrieron los créditos). El Developer no se puede pausar: o se paga o se borra.
+- **Borrarlos:** `az apim delete` deja la instancia en soft-delete 48 h (se puede restaurar con `az apim deletedservice`). Después se pierde, aunque tampoco hay configuración que perder.
+- Recomendación: borrar los dos. Pendiente del OK de Angelo.
