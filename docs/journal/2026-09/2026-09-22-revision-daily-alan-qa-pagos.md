@@ -129,8 +129,9 @@ Qliro en el canal de Bohus.
 - Angelo mergeó [api #23](https://github.com/vio-live/vio-api-microservice/pull/23), la oferta de
   Kustom con interruptor del canal, clave del vendedor y mercado.
 - Tarjeta para Alan: [ZgnheyI8](https://trello.com/c/ZgnheyI8), QA de Kustom de punta a punta con
-  10 escenarios. Antes, Angelo tiene que pegar la clave de Kustom en Payments de Bohus y encender el
-  interruptor del canal.
+  10 escenarios. Alan prueba en **su propio canal**, no en Bohus. Tiene que configurar Kustom ahí:
+  la clave de pruebas se la pasa Angelo por privado, el interruptor del canal, el mercado Noruega,
+  y republicar su página con el SDK 0.15.0.
 
 **Trello (con OK de Angelo)**:
 - #405 volvió a Doing.
