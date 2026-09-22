@@ -111,6 +111,17 @@ Qliro en el canal de Bohus.
 - Aparte: hay credenciales de pruebas de Klarna comprometidas en `.env.test` y `.env.local.qa` de
   shopcart y payment-processors. Hay que rotarlas.
 
+**Kustom: por qué el playground no crea pedidos** (revisado en el portal de Angelo, sin cambiar nada):
+- La tienda "Test", PM00876249, cuyas credenciales usamos, tiene un solo método de pago
+  configurado: Discover, en Australia. Por eso cualquier país europeo da "no configured currencies
+  for order billing country".
+- Las otras tres tiendas de la cuenta, "testing vio", "Tipio" y "Tipio Test", no tienen ningún
+  método y muestran un aviso.
+- El portal no deja añadir métodos ni países: la página de métodos de pago es de solo lectura, y
+  "Business details" no tiene campos, aunque la portada dice que el checkout está deshabilitado hasta
+  completarlos.
+- Los mercados los habilita Kustom. Hay que pedírselo a su soporte.
+
 **Trello (con OK de Angelo)**:
 - #405 volvió a Doing.
 - Comentarios en #394 y en #409 (dos veces: los fallos y los PRs).
