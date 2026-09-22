@@ -94,8 +94,9 @@ cuál vio)
   y `Shopify.shop`): app `426736517121`, link generado (vence el 2026-09-29 18:39),
   config `vio-client-makeupmekka-1` publicada
   ([`a579026`](https://github.com/vio-live/vio-shopify-sync/commit/a579026)), Vercel
-  `vio-sync-makeupmekka` con las 4 variables no secretas. Faltan el secret, el Redis
-  compartido y el deploy.
+  `vio-sync-makeupmekka` con las 4 variables no secretas. Angelo cargó el secret, conectó
+  el Redis compartido y desplegó; verificado: `/healthz` 200, sesiones en Redis, secret
+  presente, API 2026-04. Lista para mandar el link.
 - [Playbook](../../playbooks/shopify-app-custom-por-cliente.md) actualizado: registro de
   apps, Redis compartido, vencimiento de los links y mensaje para el cliente en noruego.
 
