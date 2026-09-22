@@ -1,6 +1,6 @@
 ---
 title: Audit de costos Azure — 2026-09-16
-last-updated: 2026-09-21
+last-updated: 2026-09-22
 owner: miguel
 ---
 
@@ -40,7 +40,7 @@ Se hizo el día en que se acabaron los créditos del Sponsorship. No se cambió 
 - ClickHouse `vm-clickhouse-vio` (B2s): es el store de analytics (ADR-0010). Se mantiene.
 - Container Apps: entornos Consumption; dev y staging con min=0 réplicas.
 - Load Testing `vio-load-testing` (lo creó Angelo en marzo): cobra por uso y no se pudo medir.
-- Cluster QA: 2 × E2as_v5. Se apaga y enciende con cron (ver journal 2026-09-16).
+- ~~Cluster QA: 2 × E2as_v5~~ **Corrección 2026-09-22:** son 3 × E2as_v4 (pool `e2asv4pool`, sin autoscaler). Ver la sección de staging más abajo.
 
 ## Cambio aplicado — punto 6 (2026-09-16, 11:15)
 
@@ -87,3 +87,25 @@ Squash merge: vio-backend#60 (`9e6ab6d`), vio-analytics#13 (`3f1a5f6`), vio-web-
 - Los merges de vio-backend y vio-analytics dispararon el primer deploy automático **main → staging**, y los dos terminaron bien. Staging corre ahora `staging-9e6ab6d` (backend: incluye el fix de uploads #59, que ya estaba en main y no tiene migraciones) y `staging-3f1a5f6` (analytics). `api-staging`, `api-dev`, `events-staging`, `events-dev` y `api` responden 200.
 - **Nuevo comportamiento:** cada push a `main` de vio-backend y vio-analytics actualiza la demo de staging. Antes staging solo se tocaba a mano.
 - Los SDKs no se publicaron (npm, Maven y SPM siguen en sus versiones anteriores). Las URLs nuevas entran en la próxima release de cada uno.
+
+## Staging / QA — análisis 2026-09-22 (Miguel, sin cambios aplicados)
+
+Precios de la Retail Prices API (730 h/mes, USD). Uso medido en vivo.
+
+| Recurso | Hoy | Uso real | Propuesta | Costo propuesto |
+|---|---|---|---|---|
+| AKS `kubernetesqa` (3 × E2as_v4, $0,18/h) | $394 24/7. Con horario (08–01 L-V, ~51 %) serían ~$201 | 0,5 cores y 5,2 GB en total. Requests: 2,67 cores (default: 740m / 2,9 GB) | Pool nuevo 2 × B2as_v2 ($0,095/h) y borrar el actual | $139 24/7, ~$71 con horario |
+| **Horario QA roto** | Los crons `qa-cluster-stop/start` fallan desde el 21/09 (`claude-cli cannot enforce runtime toolsAllow`); el 19/09 no corrió. Los nodos existen desde el 18/09 08:51: **4 días 24/7** | — | Pasar el start/stop a un Container Apps Job con managed identity (como `pg-start/stop-api-vio-staging`), sin depender del LLM | — |
+| MySQL `vio-ecom-db-staging` (GP D2ds_v4, Norway West, $0,298/h + 64 GB) | ~$230, 24/7 (nunca se apaga) | 1 GB de datos, CPU media 7,8 % / máx. 28 %, máx. 77 conexiones | Burstable B2s ($0,126/h) + apagarla con el mismo horario que el cluster | ~$60 |
+| Managed Redis `redus-vio-staging` (Balanced B1, Norway West) | ~$43 (13–15 NOK/día medidos) | 1 % de memoria. La usan base-api y graph-ql de QA | Redis dentro del cluster (se apaga con él) o B0 ($22) | $0–22 |
+| APIM `OpenClawCodex` ×2 (RG `qa`, Developer) | ~$96 | No es de Vio | Borrar (decide Angelo, pendiente desde el 16/09) | $0 |
+| Backend staging (PG B1ms, Container Apps min=0) | ~$25 | Demo 24/7 | Nada, ya está al mínimo | ~$25 |
+| ACR `reachuqa2`, Service Bus, storage QA, partner mock (Y1) | ~$30 | — | Purgar tags viejos del ACR (poco) | ~$28 |
+
+**Total:** hoy se pagan ~$820/mes (con el horario roto), o ~$625 si el horario funcionara. Con todo lo propuesto quedaría en ~$180–200/mes, **~$600/mes menos**.
+
+Notas:
+- La MySQL y el Redis de staging están en **Norway West** y el cluster QA en **Norway East**. El egress entre regiones es despreciable, pero suma latencia. Si algún día se recrean, conviene hacerlo en Norway East.
+- Antes de apagar la MySQL de noche hay que confirmar que nadie la use fuera del cluster (devs en local, túneles `dev-local`/`woo-dev`, feed-sync).
+- Los 64 GB de storage de la MySQL no se pueden achicar (~$12,5/mes); se asumen.
+- Cambiar el tamaño de las VMs obliga a crear un node pool nuevo (modo System) y borrar el viejo. Se hace con drain, sin downtime relevante para QA.
