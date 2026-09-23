@@ -72,6 +72,18 @@ rechazo real: desde el despliegue no ha fallado ninguna orden.
 un guardado rechazado se traga el error, así que el proveedor recibe un OK y no reintenta, y el
 comprador paga sin orden. Kustom y Adyen sí lanzan, y por eso sus pagos se recuperan.
 
+**Stripe, verificado en código** (las tres observaciones de Alan, más una que salió al mirarlo):
+- Sin clave propia del vendedor no hay respaldo a la clave pública de la plataforma, así que Stripe
+  no se puede usar aunque el canal lo tenga encendido ([DrEd5upJ](https://trello.com/c/DrEd5upJ)).
+- La lista solo añade Stripe con `stripePaymentIntent`; con solo Link, no sale
+  ([3InMbKiw](https://trello.com/c/3InMbKiw)).
+- Con las claves del vendedor el flujo no termina porque la orden nace del webhook
+  `checkout.session.completed`, y nuestro endpoint solo está registrado en la cuenta de Vio
+  ([tGxeYY9k](https://trello.com/c/tGxeYY9k)).
+- **Y el webhook no verifica firma**: la ruta es pública en base-api, `WebhookPayment` confía en el
+  cuerpo y crea la orden si dice `paid`. Cualquiera con un identificador de payment link puede
+  conseguir una orden pagada ([n7EavNhD](https://trello.com/c/n7EavNhD)). Nexi y Adyen sí validan.
+
 ## Decisions
 
 Ninguna todavía: Angelo decide cuáles se toman y en qué orden.
