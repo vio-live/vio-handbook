@@ -66,7 +66,8 @@ Todas en el Dev Dashboard de la organización de Vio (`222998427`; Partner org
    vercel deploy --prod --yes
    ```
    Variables Production no secretas: `SHOPIFY_API_KEY` (client id), `SHOPIFY_APP_URL`,
-   `SCOPES` (las del toml), `VIO_API_HOST=https://api-ecom.vio.live`, con
+   `SCOPES` (las del toml), `VIO_API_HOST=https://api-ecom.vio.live`, `SHOP_DOMAIN` (la
+   tienda) y `CRON_SECRET` (uno nuevo por proyecto), con
    `printf '%s' "<valor>" | vercel env add <NOMBRE> production`.
 5. **Credenciales (humano)**: `SHOPIFY_API_SECRET` (Dev Dashboard → app → Settings) y el
    **Redis compartido** de las apps custom: Vercel → tipio-2 → Storage →
@@ -119,6 +120,33 @@ Har dere spørsmål? Kontakt oss på viosupport@vio.live.
 Vennlig hilsen
 [NAVN]
 ```
+
+## Tokens: el app se los tiene que empujar a Vio
+
+Shopify **rota** los tokens de la sesión y `vio-extensions-microservice` no los puede
+renovar: su refresh usa las credenciales globales de la app pública
+(`SHOPIFY_CLIENT_ID_EXPORT`), no las de la app custom del cliente, así que Shopify contesta
+`401 Invalid API key or access token` y el import de productos muere (Gladkokken,
+2026-09-23 → [journal](../journal/2026-09/2026-09-23-vio-sync-tokens-clientes.md)).
+
+Desde `3439dca` el app se encarga:
+
+- El **Home** reenvía los tokens vigentes a Vio en cada carga (`vioSyncTokens`).
+- **`/internal/sync-tokens`** hace lo mismo con la **sesión offline**, sin el merchant:
+  pega al Admin API para que la librería rote el token, relee la sesión y la manda.
+  `?ids=1,2,3` reencola además esos productos. Protegida por `CRON_SECRET` (o
+  `INTERNAL_SYNC_SECRET`): `curl -H "Authorization: Bearer <secreto>" https://<app>/internal/sync-tokens`.
+- **Cron de Vercel** cada 12 h contra esa ruta (`vercel.json`).
+- El vencimiento que se manda nunca queda vacío: Vio guarda
+  `Math.floor(Date.parse(expires)/1000)` y con `NaN` da el token por vencido y dispara su
+  refresh roto.
+
+Por eso cada proyecto necesita dos variables más: **`SHOP_DOMAIN`** (la tienda del cliente)
+y **`CRON_SECRET`** (uno por proyecto; lo genera quien despliega).
+
+Pendiente del backend (Alan): que no refresque en background las conexiones de apps custom,
+o que guarde `client_id`/`client_secret` por conexión. Y sacar del log de `extensions` el
+`client_secret` y los access tokens, que hoy se imprimen en texto plano.
 
 ## Retomar el trabajo en una sesión nueva
 
