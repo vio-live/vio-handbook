@@ -111,6 +111,15 @@ real: `extensions` le pasa el cuerpo del webhook a `products`, que solo usa el `
 a pedir el producto a `extensions/shopify/findProductById`. Ojo al mapear: el webhook viene
 en forma REST y el import espera la forma GraphQL.
 
+**¿Y si el goteo es el stock?** (hipótesis de Angelo, no confirmada). A favor: el ritmo es
+de máquina y sostenido (10, 10, 6, 14, 20, 18 eventos en seis minutos seguidos), se repite
+sobre pocos productos distintos (4 en 20 minutos), los payloads que llegan traen `quantity`
+como campo central, y Shopify dispara `products/update` también cuando cambia el inventario.
+Faltó atrapar el mismo producto con dos cantidades distintas: los logs no guardan tanto
+hacia atrás. Se confirma preguntándole a Gladkokken si tienen un ERP sincronizando stock.
+**Si es stock cambia la prioridad**: releer el producto entero de Shopify cada vez que se
+mueve una unidad deja de ser un detalle.
+
 Anotado para el backend sin urgencia en Trello [x4L6KDhY](https://trello.com/c/x4L6KDhY).
 
 ## Decisions
@@ -138,6 +147,14 @@ Anotado para el backend sin urgencia en Trello [x4L6KDhY](https://trello.com/c/x
 
 ## Next session
 
+- **Rediseño del token** (que Vio se lo pida al app en vez de guardar una copia) y **ahorro
+  de webhooks**, juntos: si el goteo resulta ser stock, las dos decisiones se tocan. El
+  rediseño no necesita migración si el mapa tienda → app va en variables de entorno de
+  `extensions`, pero lo despliegan ellos.
+- Confirmar con Gladkokken si tienen un ERP sincronizando stock.
+- Hay una **tarea programada** (`aviso-instalacion-villoid-makeupmekka`, cada 2 h entre las
+  8 y las 22) que avisa cuando instalen Villoid o Makeup Mekka, y también si se les vence el
+  link (25 y 29 de septiembre).
 - Mirar los logs cuando instalen Villoid y Makeup Mekka (`vercel logs --project vio-sync-client`
   y `vio-sync-makeupmekka`); si algo no entra, reencolar con `?ids=` de `/internal/sync-tokens`.
 - Confirmar con Gladkokken que ven sus productos en Vio.
