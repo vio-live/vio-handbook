@@ -1,6 +1,6 @@
 ---
 title: Audit de costos Azure — 2026-09-16
-last-updated: 2026-09-22
+last-updated: 2026-09-23
 owner: miguel
 ---
 
@@ -26,7 +26,7 @@ Se hizo el día en que se acabaron los créditos del Sponsorship. No se cambió 
 | 6 | Blob `containerproduction2` (1,56 TB, 6,16 M blobs, Hot) y `containerqa2` (171 GB, 2,4 M blobs, Hot) | ~$36 | Uploads legacy (`outshifter-*`, `reachu-*`) servidos por Front Door | **Aplicado en prod el 2026-09-16** (ver abajo). En QA no se aplica: costaría $26 de una vez para ahorrar $1,7/mes | ~$15 |
 | 7 | `claude-trader-rg` (App Service B1 Linux, West Europe, más storage) | ~$14 | App personal (`claude-trader-angelo`) en la factura de Vio | Moverla o borrarla (lo decide Angelo) | ~$14 |
 | 8 | ~~Job `pg-stop-api-vio-staging`~~ | — | **Corrección:** que `0 3 1 1 *` no la apague probablemente es a propósito. Staging es la demo 24/7 (`vio-demo.vercel.app`, journal 2026-06-03) | No tocar | — |
-| 9 | ACR `reachuprod2` / `reachuqa2` (Standard, 112 / 116 GB) | ~$42 | Superan los 100 GB incluidos | Purgar tags viejos | ~$2 |
+| 9 | ACR `reachuprod2` / `reachuqa2` (Standard, 112 / **141** GB) | ~$42 | Superan los 100 GB incluidos. `reachuqa2` crecía ~25 GB/semana con la `retentionPolicy` deshabilitada | **QA hecho el 2026-09-23**: 77 manifests sin tag borrados, 141 → 90 GB, más una ACR Task semanal `purge-untagged`. Prod sin tocar | ~$4 y subiendo |
 
 **Total identificado: ~$550–750/mes**, frente a un gasto estimado de ~$1.550/mes.
 
@@ -100,7 +100,7 @@ Precios de la Retail Prices API (730 h/mes, USD). Uso medido en vivo.
 | Managed Redis `redus-vio-staging` (Balanced B1, Norway West) | ~$43 (13–15 NOK/día medidos) | 1 % de memoria. La usan base-api y graph-ql de QA | Redis dentro del cluster (se apaga con él) o B0 ($22) | $0–22 |
 | APIM `OpenClawCodex` ×2 (RG `qa`, Developer) | ~$96 | No es de Vio | Borrar (decide Angelo, pendiente desde el 16/09) | $0 |
 | Backend staging (PG B1ms, Container Apps min=0) | ~$25 | Demo 24/7 | Nada, ya está al mínimo | ~$25 |
-| ACR `reachuqa2`, Service Bus, storage QA, partner mock (Y1) | ~$30 | — | Purgar tags viejos del ACR (poco) | ~$28 |
+| ACR `reachuqa2`, Service Bus, storage QA, partner mock (Y1) | ~$30 | ACR en 141 GB vs 100 incluidos | **ACR hecho el 2026-09-23** (ver punto 9): 90 GB, exceso $0, purga semanal automática | ~$26 |
 
 **Total:** hoy se pagan ~$820/mes (con el horario roto), o ~$625 si el horario funcionara. Con todo lo propuesto quedaría en ~$180–200/mes, **~$600/mes menos**.
 
@@ -119,3 +119,13 @@ Notas:
 - **Costo:** $0,0658/h por unidad, ~$48/mes cada uno, **$96/mes**. Desde abril van unos $500 (hasta el 16/09 los cubrieron los créditos). El Developer no se puede pausar: o se paga o se borra.
 - **Borrarlos:** `az apim delete` deja la instancia en soft-delete 48 h (se puede restaurar con `az apim deletedservice`). Después se pierde, aunque tampoco hay configuración que perder.
 - **Borrados el 2026-09-22 a las 09:55** con el OK de Angelo. Quedan en soft-delete hasta el 2026-09-24 09:55 (sin cobro) y después se purgan solos.
+
+## Punto 9 en detalle — ACR de QA (2026-09-23)
+
+- `reachuqa2` estaba en **141 GB** (100 incluidos en Standard). El 16/09 estaban medidos 116 GB: ~25 GB/semana.
+- Causa: `retentionPolicy` deshabilitada desde el 2025-05-16, así que cada build deja el manifest anterior sin tag y nadie lo limpia. Eran **77 manifests huérfanos, 69,2 GB** de 241 manifests totales.
+- Los 13 microservicios de QA corren todos con `:latest`, así que ningún tag versionado estaba en uso.
+- Borrado por digest (no con `acr purge`, ver `docs/lessons/acr-purge-untagged-tambien-borra-tags.md`): 77 borrados, 0 fallidos. Resultado **90 GB**, exceso $0.
+- Prevención: ACR Task `purge-untagged`, `0 3 * * 0` (domingos 03:00 UTC), `--ago 7d --untagged` con filtro `'<repo>:^$'` para no tocar tags. La `retentionPolicy` nativa se descartó: solo existe en Premium (~$30/mes más para ahorrar ~$4).
+- Auditoría en `workspace-miguel/backups/acr-purge-2026-09-23/` (`untagged-manifests.tsv` y `deleted.log`).
+- **Pendiente:** `reachuprod2` sigue en 112 GB. Mismo tratamiento cuando Angelo lo autorice.
