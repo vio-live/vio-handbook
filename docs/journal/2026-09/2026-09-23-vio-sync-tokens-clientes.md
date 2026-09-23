@@ -97,6 +97,22 @@ refresh roto en cada llamada.
   log de `/internal/sync-tokens`, para poder ajustar la frecuencia con datos. Desplegado en
   los cuatro proyectos y verificado que Vercel lo tiene registrado.
 
+**Webhooks de productos: qué se mide y qué se puede ahorrar** (análisis, sin tocar nada)
+
+En 15 minutos de prod: **109 webhooks `products/update`**, todos de Gladkokken (~7 por
+minuto, unos 10.000 al día: su tienda cambia productos todo el tiempo). De esos, **91 se
+descartan** en `products` porque el producto no está listado en Vio (exportaron 20 de 129),
+y **31 terminan releyendo el producto de Shopify**.
+
+En el código: el filtro por "producto listado" **ya existe**
+(`productService.receiveUpdateShopifyListing` busca por originId y corta si no está), pero
+el descarte ocurre después de cruzar `extensions` y un HTTP a `products`. Y la relectura es
+real: `extensions` le pasa el cuerpo del webhook a `products`, que solo usa el `id` y vuelve
+a pedir el producto a `extensions/shopify/findProductById`. Ojo al mapear: el webhook viene
+en forma REST y el import espera la forma GraphQL.
+
+Anotado para el backend sin urgencia en Trello [x4L6KDhY](https://trello.com/c/x4L6KDhY).
+
 ## Decisions
 
 - **El dueño del refresh es el app**, no el backend: tiene las credenciales del cliente y
