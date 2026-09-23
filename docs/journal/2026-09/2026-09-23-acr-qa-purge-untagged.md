@@ -1,5 +1,5 @@
 ---
-title: Purga de manifests huérfanos en el ACR de QA (reachuqa2)
+title: Purga de manifests huérfanos en los ACR de QA y prod (reachuqa2, reachuprod2)
 date: 2026-09-23
 owner: miguel
 ---
@@ -33,5 +33,24 @@ Al verificar el cluster aparecieron 5 pods con 8 h de antigüedad en `PodInitial
 
 ### Pendiente
 
-- `reachuprod2` está en 112 GB (12 GB de exceso). No se tocó: es prod. Mismo tratamiento aplicable cuando Angelo lo autorice.
 - Siguen sin ejecutar los puntos 1, 2 y 3 del análisis de staging/QA (node pool a 2 × B2as_v2, apagar la MySQL de staging de noche, Redis staging B1 → B0).
+
+## Segunda parte — `reachuprod2` (mismo día, 08:00–08:20 UTC)
+
+Angelo autorizó aplicar lo mismo en prod.
+
+- Estado previo: **104,5 GB** de 100 incluidos, `retentionPolicy` también deshabilitada. 244 manifests en 19 repos, **95 sin tag** (71,7 GB nominales).
+- `vio-commerce-prod` estaba Running (3 clientes sincronizando). Verificado con `kubectl` que los 13 microservicios corren con `:latest`, igual que en QA; `socket-server` usa su propio esquema (`production-latest`, `staging-latest`, `development-latest`).
+- **Verificación extra que en QA no se hizo:** se exportaron por separado los 95 digests sin tag y los 149 con tag, y se cruzaron por `repo@digest`. **Intersección 0**, o sea ningún manifest a borrar estaba referenciado por algún tag. Ambas listas quedaron en `workspace-miguel/backups/acr-purge-prod-2026-09-23/`.
+- Borrado por digest con re-consulta fresca: **95 borrados, 0 fallidos**.
+- Resultado: **104,5 GB → 64,1 GB**, 36 GB de margen bajo el límite. Los 16 `latest` y los 3 `*-latest` de socket-server verificados uno por uno. Cluster prod: 61 pods Running, ningún deployment incompleto, sin pods zombie (a diferencia de QA, prod no pasa por ciclos stop/start).
+- Prevención: ACR Task `purge-untagged` en `reachuprod2`, `0 4 * * 0` (domingos 04:00 UTC, una hora después de la de QA para no solapar) y `--ago 14d` en vez de 7d, para dejar más ventana de recuperación por digest en prod. Probada con `az acr task run`: 0 y 0.
+
+### Resultado combinado del día
+
+| Registry | Antes | Después | Exceso sobre 100 GB |
+|---|---|---|---|
+| `reachuqa2` | 141 GB | 90 GB | $0 (antes ~$4/mes y subiendo) |
+| `reachuprod2` | 104,5 GB | 64,1 GB | $0 |
+
+172 manifests huérfanos borrados en total, 0 fallidos, sin impacto en servicio en ninguno de los dos clusters. Los dos registries quedan con purga semanal automática.

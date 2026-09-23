@@ -26,7 +26,7 @@ Se hizo el día en que se acabaron los créditos del Sponsorship. No se cambió 
 | 6 | Blob `containerproduction2` (1,56 TB, 6,16 M blobs, Hot) y `containerqa2` (171 GB, 2,4 M blobs, Hot) | ~$36 | Uploads legacy (`outshifter-*`, `reachu-*`) servidos por Front Door | **Aplicado en prod el 2026-09-16** (ver abajo). En QA no se aplica: costaría $26 de una vez para ahorrar $1,7/mes | ~$15 |
 | 7 | `claude-trader-rg` (App Service B1 Linux, West Europe, más storage) | ~$14 | App personal (`claude-trader-angelo`) en la factura de Vio | Moverla o borrarla (lo decide Angelo) | ~$14 |
 | 8 | ~~Job `pg-stop-api-vio-staging`~~ | — | **Corrección:** que `0 3 1 1 *` no la apague probablemente es a propósito. Staging es la demo 24/7 (`vio-demo.vercel.app`, journal 2026-06-03) | No tocar | — |
-| 9 | ACR `reachuprod2` / `reachuqa2` (Standard, 112 / **141** GB) | ~$42 | Superan los 100 GB incluidos. `reachuqa2` crecía ~25 GB/semana con la `retentionPolicy` deshabilitada | **QA hecho el 2026-09-23**: 77 manifests sin tag borrados, 141 → 90 GB, más una ACR Task semanal `purge-untagged`. Prod sin tocar | ~$4 y subiendo |
+| 9 | ACR `reachuprod2` / `reachuqa2` (Standard, 104,5 / 141 GB) | ~$42 | Los dos superaban los 100 GB incluidos, con la `retentionPolicy` deshabilitada en ambos | **Hecho el 2026-09-23 en los dos**: 172 manifests sin tag borrados. QA 141 → 90 GB, prod 104,5 → 64,1 GB. ACR Task semanal `purge-untagged` en ambos | ~$4 y ya no crece |
 
 **Total identificado: ~$550–750/mes**, frente a un gasto estimado de ~$1.550/mes.
 
@@ -128,4 +128,5 @@ Notas:
 - Borrado por digest (no con `acr purge`, ver `docs/lessons/acr-purge-untagged-tambien-borra-tags.md`): 77 borrados, 0 fallidos. Resultado **90 GB**, exceso $0.
 - Prevención: ACR Task `purge-untagged`, `0 3 * * 0` (domingos 03:00 UTC), `--ago 7d --untagged` con filtro `'<repo>:^$'` para no tocar tags. La `retentionPolicy` nativa se descartó: solo existe en Premium (~$30/mes más para ahorrar ~$4).
 - Auditoría en `workspace-miguel/backups/acr-purge-2026-09-23/` (`untagged-manifests.tsv` y `deleted.log`).
-- **Pendiente:** `reachuprod2` sigue en 112 GB. Mismo tratamiento cuando Angelo lo autorice.
+- **`reachuprod2` hecho el mismo día** con el OK de Angelo: 104,5 GB medidos (no 112), 95 manifests huérfanos de 244, **104,5 → 64,1 GB**. Se cruzaron los digests con tag contra los huérfanos antes de borrar (intersección 0). Task `purge-untagged` con `0 4 * * 0` y `--ago 14d`. Auditoría en `workspace-miguel/backups/acr-purge-prod-2026-09-23/`.
+- Los dos registries quedan bajo el límite incluido y con purga automática. Punto 9 cerrado.
