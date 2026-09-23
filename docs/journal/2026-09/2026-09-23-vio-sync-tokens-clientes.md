@@ -79,6 +79,24 @@ refresh roto en cada llamada.
   401 de hoy, desplegar el PR en QA y repetir, revisar que los logs ya no traigan secretos y
   probar `/internal/sync-tokens`.
 
+**Cierre del día: el deploy de Alan y el cron a 30 minutos**
+
+- Alan desplegó el [#8](https://github.com/vio-live/vio-extensions-microservice/pull/8) en
+  prod: corren los mensajes nuevos de `extensions` y no queda ninguno de los viejos. Ojo,
+  ese repo **no tiene CI en los PRs**, así que la suite hay que correrla a mano.
+- **Los tokens siguen apareciendo en los logs por tres vías que el PR no tocaba**: el log de
+  queries de TypeORM (el SELECT de `shopify_connection` sale con el token), las líneas
+  `[graphGetProductById]` y `[shopifyService.getVariant]`, y el dump de
+  `getEcomUser ... FINISH => {...}`. La rotación del `client_secret` sigue siendo necesaria
+  igual; queda un PR de seguimiento para esas tres.
+- **Los 401 de Gladkokken volvieron a las ~5 h**, y no era por el deploy: el token de
+  Shopify de estas apps vive **menos de una hora** (medido: `tokenExpiresAt` a ~49 min del
+  refresh) y el cron corría cada 12 h, así que entre corridas Vio se quedaba con un token
+  muerto. Un push manual los cortó al instante.
+- Arreglado en `5980aa9`: **cron cada 30 minutos** y `tokenExpiresAt` en la respuesta y el
+  log de `/internal/sync-tokens`, para poder ajustar la frecuencia con datos. Desplegado en
+  los cuatro proyectos y verificado que Vercel lo tiene registrado.
+
 ## Decisions
 
 - **El dueño del refresh es el app**, no el backend: tiene las credenciales del cliente y
