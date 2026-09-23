@@ -84,6 +84,14 @@ comprador paga sin orden. Kustom y Adyen sí lanzan, y por eso sus pagos se recu
   cuerpo y crea la orden si dice `paid`. Cualquiera con un identificador de payment link puede
   conseguir una orden pagada ([n7EavNhD](https://trello.com/c/n7EavNhD)). Nexi y Adyen sí validan.
 
+**Regresión del arreglo de Stripe, detectada al verificar** (23/09, 12:45): con shopcart #34 y
+base-api #13 mergeados, **ningún webhook de Stripe se completa**. El relay mandaba los bytes crudos
+como **string**, y axios 0.21 vuelve a codificar un cuerpo de texto: shopcart recibía
+`"{\"id\":…}"` y respondía 400, base-api lo convertía en 500 y Stripe reintentaba sin fin.
+Comprobado en los pods de QA: string → 400, objeto → 200, Buffer → 200. Arreglo en
+[base-api #15](https://github.com/vio-live/vio-base-api/pull/15): los bytes viajan como Buffer.
+Producción no está afectada porque ese código aún no se ha liberado allí.
+
 ## Decisions
 
 Ninguna todavía: Angelo decide cuáles se toman y en qué orden.
