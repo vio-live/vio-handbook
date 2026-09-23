@@ -1,6 +1,6 @@
 ---
-title: "Lesson: en la sub Sponsorship no hay costo por recurso y las métricas de uso engañan"
-last-updated: 2026-09-17
+title: "Lesson: Cost Management tardó en dar datos tras el fin de los créditos; las métricas de uso siguen engañando"
+last-updated: 2026-09-23
 owner: miguel
 status: live
 ---
@@ -18,3 +18,23 @@ status: live
 - Para medir storage con millones de blobs: blob inventory (CSV) en vez de listar con `az`. Ojo: cambiar de tier cuesta una operación de escritura por blob (6,16 M a Cool ≈ $68).
 
 **Actualización 2026-09-17:** tras acabarse los créditos, la sub ya aparece con `quotaId=PayAsYouGo_2014-09-01` (aunque el nombre sigue siendo "Microsoft Azure Sponsorship"). Aun así, ni Cost Management (`ActualCost`, MonthToDate y 14–16/09) ni `Microsoft.Consumption/usageDetails` devuelven filas todavía. El gasto real del día sigue viéndose solo en el portal o en microsoftazuresponsorships.com. Hay que volver a probar la API en unos días: al ser PAYG, los datos deberían empezar a aparecer.
+
+**Actualización 2026-09-23 — RESUELTO.** Cost Management **ya devuelve datos reales** por recurso y por día. La espera valió: los datos empezaron a aparecer una semana después del cambio a PAYG. Consulta que funciona:
+
+```
+az rest --method post \
+  --url "https://management.azure.com/subscriptions/<sub>/providers/Microsoft.CostManagement/query?api-version=2023-11-01" \
+  --body '{"type":"ActualCost","timeframe":"Custom","timePeriod":{"from":"2026-09-18","to":"2026-09-22"},
+           "dataset":{"granularity":"Daily","aggregation":{"cost":{"name":"Cost","function":"Sum"}},
+           "grouping":[{"type":"Dimension","name":"ResourceId"}]}}'
+```
+
+Tres cosas para no tropezar:
+
+- **La moneda es NOK, no USD.** La columna `Currency` lo dice. Si no se mira, los números parecen 10 veces peores de lo que son.
+- **Sigue habiendo 429.** Conviene un reintento con backoff y guardar la respuesta a archivo; `az rest` devuelve salida vacía cuando falla y revienta cualquier pipe a `python -c`.
+- **El último día o dos vienen incompletos.** Para un run-rate fiable hay que usar el último día *cerrado*, no el de hoy.
+
+**Consecuencia para el handbook:** las estimaciones por Retail Prices API ya no son la fuente principal, y en algunos casos estaban lejos. En el ranking del 2026-09-23, `vio-ecom-db-prod` daba $221/mes por retail y factura **$124/mes** real. **Cuando haya discrepancia, mandan los datos de Cost Management.** Ver `docs/journal/2026-09/2026-09-23-cost-management-datos-reales.md`.
+
+Lo que **no** cambió: las métricas de uso de Azure Monitor siguen sin ser fiables en esta suscripción. Todo lo dicho arriba sobre no declarar "sin uso" por una métrica sola sigue vigente.
