@@ -50,6 +50,10 @@ Ninguna tomada. Propuesta para Angelo: hacer de `order.paid` el contrato. Le fal
 la variante, el total, la referencia de la PSP y reintentos durables. Al comercio se le da un
 receptor pequeño en lugar de depender del plugin de su PSP.
 
+- **Propuesta del 23/09**, escrita en payments.md como propuesta sin decidir: dos carriles, Woo y
+  Shopify por las apps y el feed para quien no quiere integrar, con tres formas de recibir la
+  orden y captura dinámica. Cinco fases y cuatro decisiones pendientes de Angelo.
+
 ## Blockers
 
 - **Seguridad, en prod**, encontrado leyendo código y sin probar contra ningún entorno:

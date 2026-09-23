@@ -526,6 +526,50 @@ Lo transversal:
 - **No hay exportación de órdenes** para el vendedor, ni email de venta nueva. El único aviso es
   `order.paid`.
 
+### Propuesta del 2026-09-23, sin decidir
+
+Angelo afinó el modelo en la conversación del 22 y 23 de septiembre. Quedan **dos carriles**,
+según cómo llegue el catálogo:
+
+1. **Woo y Shopify van por nuestras apps**, nunca por el feed. El catálogo se sincroniza y la
+   orden la creamos nosotros en su tienda. Falta que quede como una de su propio checkout: con
+   el método y la referencia del pago real, con captura y devoluciones coherentes, y en Shopify
+   pasando a `orderCreate`.
+2. **El feed de Google es para quien no quiere integrar nada.** Cobramos con sus credenciales y
+   la orden se le entrega de una de tres formas, elegida al conectar el método:
+   - **nuestro webhook**, con eventos de crear y de actualizar;
+   - **el aviso en el formato de su PSP**, solo si su sistema crea órdenes desde avisos;
+   - **una exportación periódica**, para quien no integra nada: la orden vive en Vio, nosotros
+     la gestionamos y ellos reciben un archivo con lo vendido.
+
+Y la captura es dinámica por comercio: capturan ellos en su portal, capturamos nosotros al
+pagar, o capturamos al despachar.
+
+**Orden de trabajo propuesto.**
+
+- **Fase 0, el dinero y las puertas abiertas.** Capturar en Vipps, que hoy reserva y nadie cobra.
+  Cerrar los pendientes de seguridad. Quitar el respaldo silencioso a la cuenta de Vio y añadir
+  el interruptor de «solo mi cuenta».
+- **Fase 1, que la orden sea identificable y entregable.** El ID del feed en la línea de cada
+  PSP y una referencia `VIO-…`; cliente y envío donde hoy no se mandan. `order.paid` con la
+  variante comprada, el total, la referencia del pago, versión, ID de evento y reintentos
+  durables.
+- **Fase 2, el ciclo de vida.** Dejar de descartar los avisos posteriores al pago, para que una
+  captura o una devolución hecha en su portal mueva nuestra orden. Capturar al despachar.
+  Devolver y cancelar por API en los cinco métodos nuevos.
+- **Fase 3, el alta y el que no integra.** Las opciones al conectar un método. Exportación en el
+  servidor y aviso por email de cada venta. Reenvío en formato de la PSP donde falte.
+- **Fase 4, las apps.** Que la orden creada en Woo y en Shopify quede como una de su checkout.
+
+**Antes de construir, media hora de verificación**, porque tres cosas se deducen de la
+documentación y no están vistas: que los webhooks de cuenta de Vipps, Adyen y Stripe reciban
+nuestros pagos, que el `order.created` del portal de Kustom dispare con pedidos de otro
+integrador, y lo mismo con los webhooks de tienda de Walley.
+
+**Decisiones pendientes de Angelo:** si el webhook pasa a ser un contrato versionado desde ya,
+cuál es el modo de captura por defecto, si construimos la exportación o basta con el email más
+el dashboard, y si el reenvío en formato de la PSP se queda solo en Nexi y Qliro.
+
 ### Opciones al conectar un método de pago
 
 Lo que debería preguntar el alta de cada método, además de las credenciales:
