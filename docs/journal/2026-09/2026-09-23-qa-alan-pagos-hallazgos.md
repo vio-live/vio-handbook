@@ -51,6 +51,9 @@ el SDK 0.15.0.
 - Una línea sin variante ya no manda el título del producto.
 - El pedido que se manda a Kustom lleva el título real de la variante, resuelto en una consulta.
 - Dos tests nuevos que fallan sin el arreglo; suite 268/268 y `tsc` limpio.
+- **Mergeado y verificado en QA el mismo día**: reenviando los avisos de los tres pedidos que
+  quedaron pagados sin orden, se crearon las órdenes **4325, 4326 y 4327**, con referencia y
+  acuse en Kustom. Sin rastro del error de la variante.
 
 ## Decisions
 
@@ -58,13 +61,11 @@ Ninguna todavía: Angelo decide cuáles se toman y en qué orden.
 
 ## Blockers
 
-- Los pagos de prueba de Kustom de Alan siguen sin orden en Commerce. Se crearán al arreglar el
-  título de la variante, por el reintento de Kustom o por el barrido.
 - El rechazo de Adyen necesita el motivo exacto del Customer Area y saber qué tarjeta usó Alan.
 - Vipps en móvil solo se ha visto en el vídeo de Alan; falta reproducirlo.
 
 ## Next session
 
-1. Mergear shopcart #35 y comprobar en QA que los pedidos pagados de Alan se convierten en órdenes.
+1. Que Alan repita el QA de Kustom en su canal, con productos con variantes.
 2. Elegir las demás tarjetas.
 3. Pedirle a Alan la hora de un rechazo de Adyen y la tarjeta usada.
