@@ -63,6 +63,11 @@ el SDK 0.15.0.
 - [shopcart #36](https://github.com/vio-live/vio-shopcart-microservice/pull/36): Kustom, Qliro,
   Walley, Nexi y Adyen registran el motivo del rechazo; Adyen no registraba nada. Suite 268/268.
 
+Mergeadas y verificadas en QA el mismo día: el servicio de órdenes responde **400** con el motivo
+ante un guardado rechazado, comprobado con una llamada directa que no crea nada, y la imagen
+desplegada de shopcart trae los registros de los cinco proveedores. Falta ver el mensaje con un
+rechazo real: desde el despliegue no ha fallado ninguna orden.
+
 **Encontrado de paso**, tarjeta [dBzwSnav](https://trello.com/c/dBzwSnav): con Qliro, Walley y Nexi
 un guardado rechazado se traga el error, así que el proveedor recibe un OK y no reintenta, y el
 comprador paga sin orden. Kustom y Adyen sí lanzan, y por eso sus pagos se recuperan.
