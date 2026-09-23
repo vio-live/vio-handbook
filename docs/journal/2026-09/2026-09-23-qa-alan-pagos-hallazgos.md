@@ -55,6 +55,18 @@ el SDK 0.15.0.
   quedaron pagados sin orden, se crearon las órdenes **4325, 4326 y 4327**, con referencia y
   acuse en Kustom. Sin rastro del error de la variante.
 
+**Segunda tarjeta hecha: los errores del servicio de órdenes se ven** (tarjeta
+[hxJKTPwp](https://trello.com/c/hxJKTPwp)), en dos PRs pendientes de merge:
+- [orders-ms #10](https://github.com/vio-live/vio-orders-microservice/pull/10): `/save` lanza la
+  excepción en vez de devolverla, así que responde 400 con el motivo. No se pudo probar en local
+  (sin archivo de bloqueo, kernel privado no instalable, y su CI no corre tests en PRs).
+- [shopcart #36](https://github.com/vio-live/vio-shopcart-microservice/pull/36): Kustom, Qliro,
+  Walley, Nexi y Adyen registran el motivo del rechazo; Adyen no registraba nada. Suite 268/268.
+
+**Encontrado de paso**, tarjeta [dBzwSnav](https://trello.com/c/dBzwSnav): con Qliro, Walley y Nexi
+un guardado rechazado se traga el error, así que el proveedor recibe un OK y no reintenta, y el
+comprador paga sin orden. Kustom y Adyen sí lanzan, y por eso sus pagos se recuperan.
+
 ## Decisions
 
 Ninguna todavía: Angelo decide cuáles se toman y en qué orden.
