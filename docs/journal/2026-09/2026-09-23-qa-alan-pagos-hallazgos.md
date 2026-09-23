@@ -43,6 +43,15 @@ el SDK 0.15.0.
 [Vipps móvil](https://trello.com/c/ulx3CmfX), [Stripe sin claves](https://trello.com/c/DrEd5upJ),
 [Stripe Link](https://trello.com/c/3InMbKiw), [webhook de Stripe por API](https://trello.com/c/tGxeYY9k).
 
+**Arreglo de Kustom hecho el mismo día**:
+[shopcart #35](https://github.com/vio-live/vio-shopcart-microservice/pull/35), rama
+`fix/kustom-variant-title`, pendiente de merge.
+- El cierre del pago resuelve el título de la variante **por su id**, como ya hacía `paymentQliroOk`.
+  Eso repara también los pedidos pagados antes del arreglo, que Kustom sigue reintentando.
+- Una línea sin variante ya no manda el título del producto.
+- El pedido que se manda a Kustom lleva el título real de la variante, resuelto en una consulta.
+- Dos tests nuevos que fallan sin el arreglo; suite 268/268 y `tsc` limpio.
+
 ## Decisions
 
 Ninguna todavía: Angelo decide cuáles se toman y en qué orden.
@@ -56,5 +65,6 @@ Ninguna todavía: Angelo decide cuáles se toman y en qué orden.
 
 ## Next session
 
-1. Elegir tarjetas. La de Kustom desbloquea su QA entero.
-2. Pedirle a Alan la hora de un rechazo de Adyen y la tarjeta usada.
+1. Mergear shopcart #35 y comprobar en QA que los pedidos pagados de Alan se convierten en órdenes.
+2. Elegir las demás tarjetas.
+3. Pedirle a Alan la hora de un rechazo de Adyen y la tarjeta usada.
