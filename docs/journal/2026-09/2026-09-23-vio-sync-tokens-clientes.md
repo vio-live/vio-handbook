@@ -64,6 +64,18 @@ refresh roto en cada llamada.
 - Villoid y Makeup Mekka todavía no instalaron: la ruta responde `no_session`, y el cron
   empieza a servir en cuanto instalen.
 
+**El lado del backend, listo para Alan**
+
+- `vio-extensions-microservice` [#8](https://github.com/vio-live/vio-extensions-microservice/pull/8)
+  (sin mergear): `maskSecret` en los logs que imprimían el `client_secret` de la app y los
+  access/refresh tokens de las tiendas, y `shouldRefreshToken` para no intentar renovar
+  cuando no hay refresh token o el vencimiento no es usable (con `expiresIn` nulo, la
+  comparación daba "vencido" en toda llamada). Tests puros de las dos piezas; **la suite no
+  se pudo correr en local** porque el kernel `@vio-/*` está en el npm privado.
+- Trello [XxteZiYt](https://trello.com/c/XxteZiYt) (Dev/To do, Alan) con los pasos:
+  mergear, CI verde, desplegar, y **rotar el `client_secret` de la app pública**, que quedó
+  en texto plano en los logs del cluster.
+
 ## Decisions
 
 - **El dueño del refresh es el app**, no el backend: tiene las credenciales del cliente y
@@ -72,8 +84,12 @@ refresh roto en cada llamada.
 
 ## Blockers / open questions
 
-- **Backend (Alan)**: que no refresque en background las conexiones de apps custom, o que
-  guarde `client_id`/`client_secret` por conexión. Mientras tanto, el app las mantiene vivas.
+- **Backend (Alan)**: mergear y desplegar el [#8](https://github.com/vio-live/vio-extensions-microservice/pull/8).
+  Guardar `client_id`/`client_secret` por conexión **se descartó**: con la rotación estricta
+  de Shopify, backend y app refrescando en paralelo se invalidan entre ellos, y además
+  repartiría los secrets de cada app custom. Si se quiere dejarlo explícito, la alternativa
+  es una bandera `tokens_managed_by_app` en `shopify_connection` (migración del kernel +
+  `users-ms` + `extensions`); la migración la correría Miguel.
 - **Seguridad**: `extensions` imprime en texto plano el `client_secret` de la app pública y
   los access tokens de las tiendas. Sacar esa línea y rotar el secret.
 - Los mensajes que murieron en la DLQ no se reprocesan solos: si falta algún producto, se
