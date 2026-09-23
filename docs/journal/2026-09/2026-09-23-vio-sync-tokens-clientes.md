@@ -83,7 +83,11 @@ refresh roto en cada llamada.
 
 - **El dueño del refresh es el app**, no el backend: tiene las credenciales del cliente y
   la librería ya rota la sesión. Si los dos refrescan, con rotación estricta se invalidan
-  entre ellos.
+  entre ellos → [lección](../../lessons/tokens-rotados-un-solo-dueno.md).
+- **No se guardan `client_id`/`client_secret` por conexión** en la base: repartiría los
+  secrets de cada app custom y, por la rotación, tampoco alcanzaría. Si se quiere dejar
+  explícito que el backend no refresca, la alternativa es una bandera
+  `tokens_managed_by_app` — queda anotada en la tarjeta para que Alan opine.
 
 ## Blockers / open questions
 
@@ -100,5 +104,8 @@ refresh roto en cada llamada.
 
 ## Next session
 
-- Mirar los logs cuando instalen Villoid y Makeup Mekka.
+- Mirar los logs cuando instalen Villoid y Makeup Mekka (`vercel logs --project vio-sync-client`
+  y `vio-sync-makeupmekka`); si algo no entra, reencolar con `?ids=` de `/internal/sync-tokens`.
 - Confirmar con Gladkokken que ven sus productos en Vio.
+- Seguir la tarjeta [XxteZiYt](https://trello.com/c/XxteZiYt): merge y deploy del PR #8, y
+  sobre todo la **rotación del `client_secret`** de la app pública.

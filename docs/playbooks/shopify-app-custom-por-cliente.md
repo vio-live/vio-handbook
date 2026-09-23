@@ -144,9 +144,12 @@ Desde `3439dca` el app se encarga:
 Por eso cada proyecto necesita dos variables más: **`SHOP_DOMAIN`** (la tienda del cliente)
 y **`CRON_SECRET`** (uno por proyecto; lo genera quien despliega).
 
-Pendiente del backend (Alan): que no refresque en background las conexiones de apps custom,
-o que guarde `client_id`/`client_secret` por conexión. Y sacar del log de `extensions` el
-`client_secret` y los access tokens, que hoy se imprimen en texto plano.
+Por qué el dueño del refresh es el app y no el backend:
+[lección](../lessons/tokens-rotados-un-solo-dueno.md). Pendiente del backend:
+`vio-extensions-microservice` [#8](https://github.com/vio-live/vio-extensions-microservice/pull/8)
+(enmascara los secretos de los logs y no intenta refrescos imposibles) y **rotar el
+`client_secret` de la app pública**, que quedó en texto plano en los logs — Trello
+[XxteZiYt](https://trello.com/c/XxteZiYt).
 
 ## Retomar el trabajo en una sesión nueva
 

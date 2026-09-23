@@ -1,13 +1,13 @@
 ---
 title: "Handoff — Vio Sync (app de Shopify, Sales Channel)"
-last-updated: 2026-09-22
+last-updated: 2026-09-23
 owner: angelo
 status: live
 ---
 
 # Handoff — Vio Sync (app de Shopify, Sales Channel)
 
-> Estado al **2026-09-22**. **La cuarta submission quedó suspendida hasta el 2026-10-05**
+> Estado al **2026-09-23**. **La cuarta submission quedó suspendida hasta el 2026-10-05**
 > (mail del 2026-09-21): otra vez 1.2.1 (cobro fuera de Shopify), "no aceptamos apps que
 > conecten a un marketplace fuera de Shopify" y 4.5.3 (screencast). Antes de reenviar hay
 > que resolver el punto del marketplace, que es de modelo de negocio →
@@ -132,6 +132,11 @@ conversión a Sales Channel: un sales channel siempre es app pública).
   Lista para mandar el link, que vence el 2026-09-29.
 - **Demo** (`vio-demo.myshopify.com`, dev store de Vio): app para grabar el proceso de
   instalación (video de Angelo, 2026-09-22). Primera prueba de punta a punta contra prod.
+
+Los tokens de estas apps los mantiene el app, no el backend: los empuja a Vio en cada carga
+del Home, por cron cada 12 h y por `/internal/sync-tokens`
+([lección](../lessons/tokens-rotados-un-solo-dueno.md),
+[journal 2026-09-23](../journal/2026-09/2026-09-23-vio-sync-tokens-clientes.md)).
 
 Procedimiento, registro de clientes con todos los ids, cómo retomar y gotchas:
 **[playbook](../playbooks/shopify-app-custom-por-cliente.md)**.
