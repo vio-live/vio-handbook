@@ -72,9 +72,12 @@ refresh roto en cada llamada.
   cuando no hay refresh token o el vencimiento no es usable (con `expiresIn` nulo, la
   comparación daba "vencido" en toda llamada). Tests puros de las dos piezas; **la suite no
   se pudo correr en local** porque el kernel `@vio-/*` está en el npm privado.
-- Trello [XxteZiYt](https://trello.com/c/XxteZiYt) (Dev/To do, Alan) con los pasos:
-  mergear, CI verde, desplegar, y **rotar el `client_secret` de la app pública**, que quedó
-  en texto plano en los logs del cluster.
+- Trello [XxteZiYt](https://trello.com/c/XxteZiYt) (Dev/To do, Alan), con dos checklists:
+  los pasos (mergear, CI verde, desplegar, y **rotar el `client_secret` de la app pública**,
+  que quedó en texto plano en los logs) y cómo **replicarlo y probarlo en su dev store**:
+  correr la gemela con la rama, forzar el caso poniendo `expires_in` en NULL, comprobar el
+  401 de hoy, desplegar el PR en QA y repetir, revisar que los logs ya no traigan secretos y
+  probar `/internal/sync-tokens`.
 
 ## Decisions
 
