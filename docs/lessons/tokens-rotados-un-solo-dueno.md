@@ -1,6 +1,6 @@
 ---
 title: "Lesson: con tokens que rotan, el refresh tiene un solo dueño"
-last-updated: 2026-09-23
+last-updated: 2026-09-24
 owner: angelo
 status: live
 ---
@@ -39,8 +39,12 @@ En Vio eso significa:
 
 - El **app de Shopify** (uno por cliente, con su propio `client_id`/`client_secret`) es el
   dueño: renueva y **empuja** los tokens a Vio — en cada carga del Home, por cron cada
-  12 h y por `/internal/sync-tokens`, que además sirve para destrabar sin molestar al
-  merchant.
+  10 minutos y por `/internal/sync-tokens`, que además sirve para destrabar sin molestar al
+  merchant. Y **renueva antes de que venza** (cuando quedan menos de 25 minutos, PR #107):
+  empujar "lo que haya" no alcanza, porque la librería rota recién cuando el token ya
+  murió y la copia de Vio quedaba muerta hasta el siguiente cron (~20 minutos por hora,
+  medidos el 2026-09-24 en Makeup Mekka: 401 en cadena y Pub/Sub reentregando el mismo
+  webhook 12 veces en un minuto).
 - El **backend** no refresca esas conexiones. Si lo hiciera "también", cada refresh
   invalidaría el del otro y los 401 volverían, ahora intermitentes y más difíciles de leer.
 - **No repartir secrets**: guardar el `client_secret` de cada app custom en la base para

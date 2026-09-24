@@ -35,9 +35,9 @@ pegado al código: `docs/CUSTOM-APP.md` en la rama `custom/client-app` de
 
 | Cliente | Tienda | App Shopify (id / client id) | Config (rama) | Vercel | Estado al 2026-09-22 |
 |---|---|---|---|---|---|
-| Villoid | `villoid.myshopify.com` | `425118728193` / `bd36f14691ec80081374e40f71ad9d72` | `shopify.app.vio-client.toml` | `vio-sync-client` → `https://vio-sync-client.vercel.app` | Verificada (healthz 200, Redis, API 2026-04). **Link mandado el 2026-09-22** con el mensaje en noruego y el video; vence el 2026-09-25 13:42 |
+| Villoid | `villoid.myshopify.com` | `425118728193` / `bd36f14691ec80081374e40f71ad9d72` | `shopify.app.vio-client.toml` | `vio-sync-client` → `https://vio-sync-client.vercel.app` | Verificada (healthz 200, Redis, API 2026-04). **Link mandado el 2026-09-22** con el mensaje en noruego y el video; vence el 2026-09-25 13:42. **Al 2026-09-24 sigue en 0 installs** (Dev Dashboard), aunque dijeron que instalaron: preguntar desde qué tienda abrieron el link |
 | Gladkokken | `wxuxre-tf.myshopify.com` (`shop.gladkokken.no`) | `426105274369` / `a372fcbd6348fc847e4f6a547518350b` | `shopify.app.vio-client-gladkokken.toml` | `vio-sync-gladkokken` → `https://vio-sync-gladkokken.vercel.app` | Verificada el 2026-09-22 (healthz 200, secret, Redis compartido, API 2026-04; config `vio-client-gladkokken-1`). **Link mandado el 2026-09-22**; vence el 2026-09-28 13:35 |
-| Makeup Mekka | `makeup-mekka.myshopify.com` (`makeupmekka.com`) | `426736517121` / `5287ee98f0381e1200754c5f16c9c914` | `shopify.app.vio-client-makeupmekka.toml` | `vio-sync-makeupmekka` → `https://vio-sync-makeupmekka.vercel.app` | Verificada el 2026-09-22 (healthz 200, secret, Redis compartido, API 2026-04; config `vio-client-makeupmekka-1`). **Lista para mandar el link**; vence el 2026-09-29 18:39 |
+| Makeup Mekka | `makeup-mekka.myshopify.com` (`makeupmekka.com`) | `426736517121` / `5287ee98f0381e1200754c5f16c9c914` | `shopify.app.vio-client-makeupmekka.toml` | `vio-sync-makeupmekka` → `https://vio-sync-makeupmekka.vercel.app` | Verificada el 2026-09-22 (healthz 200, secret, Redis compartido, API 2026-04; config `vio-client-makeupmekka-1`). **Instalaron el 2026-09-24 13:10 Oslo** (usuario Vio 1325, conexión Shopify 540) y conectaron a los 2 minutos; al cierre del día **sin exportar** (tildaron productos sin apretar "Export selected") |
 | (demo) | `vio-demo.myshopify.com` (dev store de Vio, datos de prueba) | `426319511553` / `2f1d046a49f1322e4b0990e47da955a1` | `shopify.app.vio-client-demo.toml` | `vio-sync-demo` → `https://vio-sync-demo.vercel.app` | Para grabar el proceso de instalación (video de Angelo, 2026-09-22). Primera prueba de punta a punta contra prod. Link vence el 2026-09-29 |
 | (gemela QA) | dev store de Alan | `426102554625` / `31f8416cbe5ec1d605c8dc29618636f1` | `shopify.app.vio-client-dev.toml` | — (corre local con `shopify app dev`) | Prueba de Alan OK contra staging (Trello [phMU2DP0](https://trello.com/c/phMU2DP0), Done el 2026-09-22) |
 
@@ -140,13 +140,30 @@ Desde `3439dca` el app se encarga:
   vigente y su vencimiento a quien lo pida con el mismo secreto, en vez de empujarlo. Está
   para que `extensions` pueda pedirlo cuando lo necesite y Vio deje de guardar una copia;
   **hoy no la llama nadie** (Trello [u2MfJLCf](https://trello.com/c/u2MfJLCf)).
-- **Cron de Vercel cada 30 minutos** contra la ruta de sync (`vercel.json`). No es capricho: el
-  token de Shopify de estas apps vive **menos de una hora** (`tokenExpiresAt` en la
-  respuesta de la ruta lo dice), y con un cron más lento Vio se queda con un token
-  muerto entre corridas.
+- **Cron de Vercel cada 10 minutos** contra la ruta de sync (`vercel.json`; era 30 hasta el
+  PR #107). No es capricho: el token de Shopify de estas apps vive **una hora**
+  (`tokenExpiresAt` en la respuesta de la ruta lo dice), y con un cron más lento Vio se
+  queda con un token muerto entre corridas.
+- **Renovación anticipada** (PR [#107](https://github.com/vio-live/vio-shopify-sync/pull/107),
+  2026-09-24 — *en review de Alan; actualizar acá cuando esté desplegado*): empujar "lo que
+  haya" no alcanzaba, porque la librería rota recién cuando el token ya venció, y entre el
+  vencimiento y el siguiente cron Vio tenía un token muerto (~20 minutos por hora, medidos
+  en Makeup Mekka: 401 en cadena y Pub/Sub reentregando el mismo webhook). Ahora, si a la
+  sesión le quedan menos de 25 minutos, el app hace el grant `refresh_token` con las
+  credenciales de *su* app, guarda la sesión nueva y esa es la que empuja (y la que entrega
+  `/internal/token`).
+- **`/internal/audit?shop=`** (mismo PR): últimas 50 acciones de la tienda — `connect` /
+  `sync` / `remove` del merchant, reencolados y renovaciones — con ids, respuesta de Vio y
+  vencimiento del token en ese momento. También salen como líneas `[vio-audit]` en los logs.
+  Es la respuesta a "¿le dieron a Export?": los logs de Vercel duran menos de un día.
 - El vencimiento que se manda nunca queda vacío: Vio guarda
   `Math.floor(Date.parse(expires)/1000)` y con `NaN` da el token por vencido y dispara su
   refresh roto.
+- **Ruido conocido del backend**: en cada upsert de la conexión, `extensions.createExportWebhook`
+  intenta registrar los webhooks con el ARN de EventBridge de la app pública
+  (`api_client_id 4479607`) y Shopify responde 422 para las apps custom; el log dice
+  `created` igual. No rompe nada — los webhooks de las apps custom entran por Pub/Sub,
+  declarados en el `toml` — pero es de Alan (tarjeta [5Z5djEt5](https://trello.com/c/5Z5djEt5)).
 
 Por eso cada proyecto necesita dos variables más: **`SHOP_DOMAIN`** (la tienda del cliente)
 y **`CRON_SECRET`** (uno por proyecto; lo genera quien despliega).
@@ -157,6 +174,19 @@ Por qué el dueño del refresh es el app y no el backend:
 (enmascara los secretos de los logs y no intenta refrescos imposibles) y **rotar el
 `client_secret` de la app pública**, que quedó en texto plano en los logs — Trello
 [XxteZiYt](https://trello.com/c/XxteZiYt).
+
+## Cómo saber si instalaron y qué apretaron
+
+- **Instalación**: Dev Dashboard de la org `222998427`
+  (`https://dev.shopify.com/dashboard/222998427/apps`) — cada app dice "N installs". Es la
+  fuente de verdad de Shopify; los logs de Vercel duran menos de un día y un cliente que
+  "instaló" desde otra tienda no deja rastro en nuestro lado.
+- **Conexión**: `users-ms` → `saveShopifyExportConnection … userId=<id>` con la tienda; ahí
+  sale el usuario de Vio y el id de la conexión.
+- **Exportación**: `GET /internal/audit` del proyecto (con `CRON_SECRET`) o, en el backend,
+  `POST /api/products/shopify-sqs` en `base-api` y `importShopifyProduct to user <id>` en
+  `products`. Tildar productos en el app no manda nada: la exportación es el botón **"Export
+  selected"**, y termina con el toast "N products exported to Vio".
 
 ## Retomar el trabajo en una sesión nueva
 
