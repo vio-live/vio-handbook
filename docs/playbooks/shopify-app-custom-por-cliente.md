@@ -139,9 +139,12 @@ Desde `3439dca` el app se encarga:
 - **`/internal/token`** (desde 2026-09-24, `16bbebd`): la otra mitad — devuelve el token
   vigente y su vencimiento a quien lo pida con el mismo secreto, en vez de empujarlo. La
   llama `extensions` para las tiendas de `VIO_CUSTOM_APPS`
-  ([PR #9](https://github.com/vio-live/vio-extensions-microservice/pull/9), *en review de
-  Alan; actualizar acá cuando esté desplegado*): JSON tienda → `{url, secret}` en el `.env`
-  del microservicio, el secreto es el `CRON_SECRET` del proyecto. Con eso el backend no
+  ([PR #9](https://github.com/vio-live/vio-extensions-microservice/pull/9), **en producción
+  desde el 2026-09-24 20:28**): JSON tienda → `{url, secret}` en el `.env` del
+  microservicio — que se hornea en la imagen desde el secreto de GitHub `ENV_FILE_PROD`
+  (`deploy.yml`); para editarlo hay que reconstruir el archivo (por ejemplo desde el pod) y
+  volver a pegarlo entero, porque los secretos de GitHub no se leen de vuelta. El secreto de
+  cada tienda es el `CRON_SECRET` de su proyecto de Vercel. Con eso el backend no
   refresca nunca esas conexiones: pide el token, lo cachea en Redis hasta dos minutos antes
   de vencer y reintenta una vez ante un 401. **Al dar de alta un cliente nuevo hay que
   agregar su tienda a `VIO_CUSTOM_APPS`** (o queda en el modelo de copia empujada, que

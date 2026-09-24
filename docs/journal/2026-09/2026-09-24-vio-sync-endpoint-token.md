@@ -192,3 +192,22 @@ necesita: si el app deja de empujar, sigue funcionando; y el refresh con credenc
 ajenas queda inalcanzable para esas tiendas. La tarjeta [5Z5djEt5](https://trello.com/c/5Z5djEt5)
 tiene los pasos de Alan (review, suite, `VIO_CUSTOM_APPS`, deploy, prueba del 401 forzado,
 prueba en la demo).
+
+### Cierre de la noche: la mitad del backend en producción, verificada
+
+- Alan mergeó el #9 a `develop` (16:47) y el #108 a `custom/client-app` (16:49). Angelo hizo
+  los pasos del backend: `VIO_CUSTOM_APPS` en el secreto `ENV_FILE_PROD` (el `.env` se hornea
+  en la imagen), `develop → master` a las 20:21, CI/CD verde 20:28, pods nuevos. Claude
+  redesplegó los cuatro proyectos de Vercel con el #108 (`491a282`).
+- Verificado en los **dos** pods nuevos de `extensions` (20:28–20:45): `apps custom
+  configuradas` con las cuatro tiendas; tokens **tomados del app** (Gladkokken 12, Makeup
+  Mekka 1, demo 1: la caché funciona); **0** `no entregó token`, **0** `Invalid API key`,
+  **0** intentos del refresh viejo, **36** registros por EventBridge saltados y **0**
+  `api_client_id`; dos filas de `shopify_connection` actualizadas con el token del app; sin
+  errores de arranque.
+- Tarjeta [5Z5djEt5](https://trello.com/c/5Z5djEt5) reescrita como plan de pruebas de Alan:
+  10 escenarios con evidencia obligatoria (camino feliz, copia vieja forzada en la base,
+  renovación anticipada/cron caído, webhooks, alta sin EventBridge, remove, orden,
+  reinstalación en la demo, las dos réplicas, remedición del goteo) y un Go/No-Go de cinco
+  condiciones para pedirle a Makeup Mekka que exporte. Angelo pidió además que Alan fuerce
+  el app con escenarios propios por si se nos pasó algo.
