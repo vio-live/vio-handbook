@@ -174,6 +174,32 @@ resuelve la pregunta de si un comercio puede enterarse de una venta que creamos 
   nada. Arreglarlo es leer el cuerpo cuando no hay query, verificar la firma con el secreto del
   destino y enrutar por `type`.
 
+## Guía para el comercio: pasos en su portal de Kustom
+
+Recorrido hecho el 2026-09-24 en el playground. Faltan las capturas de pantalla, que hay que
+tomar desde el portal; el texto ya está verificado paso a paso.
+
+1. **Clave de API.** Developers → API. Es la clave `kco_test_api_…` o `kco_live_api_…` que se
+   carga en el dashboard de Vio, en Settings → Payments → Kustom. Sin fila propia del comercio no
+   cobramos: Kustom nunca cae a la cuenta de Vio.
+2. **País y moneda del MID.** El portal no deja añadirlos: lo hace el soporte de Kustom. En el MID
+   de pruebas hubo que pedir Noruega, y hasta entonces cualquier intento de crear un pedido
+   respondía `no configured currencies for order billing country`.
+3. **Webhook para enterarse de las ventas.** Developers → Webhooks → *Start listening to webhooks*.
+   - Paso 1: marcar los eventos. Para recibir las ventas basta con `order.created`; añadir
+     `capture.created` y `refund.created` si su sistema también quiere el cobro y las devoluciones.
+   - Paso 2: un nombre y la URL, que tiene que ser https.
+   - Paso 3: confirmar con *Create destination*.
+   - El secreto de firma sale en el detalle del destino, y desde ahí se rota.
+   - Admite varios destinos: el del comercio convive con el nuestro y los dos reciben lo mismo.
+4. **Comprobar que llega.** En el detalle del destino, la pestaña *Event deliveries* lista cada
+   entrega con su estado, el tiempo de respuesta y la carga completa, y deja reenviarla.
+5. **Ver la venta y gestionarla.** Menú Orders. Desde ahí el comercio captura, devuelve y cancela.
+   ⚠️ Pendiente de recorrer con el portal delante: estas pantallas todavía no se han visto.
+
+Lo que Vio necesita del comercio para conectarlo: la clave de API, su URL de términos, el modo de
+captura y, si quiere el aviso directo de Kustom, la URL de su sistema.
+
 ## Primer contacto con el widget real (2026-09-22)
 
 Hasta el 22/09 la tienda de pruebas `Test` (PM00876249) solo tenía Discover para Australia, y el
