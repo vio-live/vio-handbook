@@ -62,9 +62,9 @@ vendedor de QA.
 
 ## Next session
 
-- Mergear [api#27](https://github.com/vio-live/vio-api-microservice/pull/27) ·
+- Subirlo a producción junto con lo de Kustom ([api#27](https://github.com/vio-live/vio-api-microservice/pull/27) ·
   [base-api#17](https://github.com/vio-live/vio-base-api/pull/17) ·
-  [webapp#37](https://github.com/vio-live/webapp-vio-commerce/pull/37) y probarlo en QA.
+  [webapp#37](https://github.com/vio-live/webapp-vio-commerce/pull/37) están solo en `develop`).
 - Kustom de punta a punta en QA sigue esperando la clave del playground en un vendedor, el
   secreto del destino y el interruptor del canal.
 - Después, Vipps: dinero reservado que nunca se captura.
