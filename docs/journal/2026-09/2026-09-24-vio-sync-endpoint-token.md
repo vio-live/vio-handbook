@@ -148,3 +148,21 @@ que reexporten, Alan revisa y probamos el flujo completo nosotros.
   desde qué tienda lo abrieron.
 - Remedir el volumen de webhooks de Gladkokken y Makeup Mekka con los tokens sanos, antes de
   la hipótesis del stock.
+
+### Cierre de la tarde: mergeado y desplegado
+
+- Alan mergeó el PR #107 a las 16:02 (`5908260`), sin comentarios de review. Angelo pidió
+  que el deploy lo disparara Claude: los cuatro proyectos quedaron en producción entre las
+  16:08 y las 16:12 (Villoid necesitó un segundo intento: "Not authorized" al asignar el
+  alias; el segundo lo dejó bien). Sondas: `/internal/audit` responde 401 en los cuatro,
+  `vercel crons ls` muestra `*/10`.
+- Primer cron completo (16:20): la demo y Gladkokken empujaron con 40–41 minutos de vida;
+  **Makeup Mekka disparó la renovación anticipada** ("token renovado antes de vencer") y
+  empujó un token con **60 minutos**. `extensions`: **cero** `Invalid API key` en los 10
+  minutos siguientes.
+- Gotcha que casi da una falsa alarma: `kubectl logs deploy/users` lee una sola réplica; el
+  push de Makeup Mekka estaba en la otra. Quedó en el playbook.
+- Seguimiento automático `seguimiento-pr107-alan` (cada 30 minutos): PR, tarjeta de Alan,
+  código desplegado y salud de los tokens. Le toca a Alan la checklist "Después del deploy"
+  (verificación en el backend y prueba del export en la demo); después Angelo le pide a
+  Makeup Mekka que reexporte.

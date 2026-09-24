@@ -145,7 +145,8 @@ Desde `3439dca` el app se encarga:
   (`tokenExpiresAt` en la respuesta de la ruta lo dice), y con un cron más lento Vio se
   queda con un token muerto entre corridas.
 - **Renovación anticipada** (PR [#107](https://github.com/vio-live/vio-shopify-sync/pull/107),
-  2026-09-24 — *en review de Alan; actualizar acá cuando esté desplegado*): empujar "lo que
+  mergeado por Alan y **desplegado en los cuatro proyectos el 2026-09-24 a las 16:10**;
+  primer cron: Makeup Mekka renovada con 60 minutos de vida, cero 401): empujar "lo que
   haya" no alcanzaba, porque la librería rota recién cuando el token ya venció, y entre el
   vencimiento y el siguiente cron Vio tenía un token muerto (~20 minutos por hora, medidos
   en Makeup Mekka: 401 en cadena y Pub/Sub reentregando el mismo webhook). Ahora, si a la
@@ -182,7 +183,11 @@ Por qué el dueño del refresh es el app y no el backend:
   fuente de verdad de Shopify; los logs de Vercel duran menos de un día y un cliente que
   "instaló" desde otra tienda no deja rastro en nuestro lado.
 - **Conexión**: `users-ms` → `saveShopifyExportConnection … userId=<id>` con la tienda; ahí
-  sale el usuario de Vio y el id de la conexión.
+  sale el usuario de Vio y el id de la conexión. **Ojo con `kubectl logs deploy/<svc>`: lee
+  una sola réplica.** `users`, `extensions` y `products` corren con varias; para no perder
+  líneas hay que recorrer los pods (`kubectl get pods -n default | grep '^users-'`) o usar
+  `base-api`, que registra `CALL OK POST to http://users/me/<userId>/sales-channel/create`
+  en cada push.
 - **Exportación**: `GET /internal/audit` del proyecto (con `CRON_SECRET`) o, en el backend,
   `POST /api/products/shopify-sqs` en `base-api` y `importShopifyProduct to user <id>` en
   `products`. Tildar productos en el app no manda nada: la exportación es el botón **"Export
