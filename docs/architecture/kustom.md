@@ -118,9 +118,61 @@ nunca la orden cruda con los datos del comprador); `SyncPaymentKustom(checkout_i
 3. **`checkout` y `confirmation` tienen que ser https**: con `http://localhost:…` Kustom responde
    `Bad value: confirmation` antes incluso de mirar el market. Para probar el SDK en local hace
    falta un túnel https (el mismo caso que Adyen con sus allowed origins).
-4. Nada de webhooks a nivel de cuenta: `push` y `validation` van **en cada orden**. Los Webhooks
-   nuevos de Kustom (Standard Webhooks, `order.created`, `capture.created`…) son un producto aparte
-   que hoy no usamos.
+4. `push` y `validation` van **en cada orden**. Además existen los webhooks **de cuenta**, que sí
+   sirven para avisar al comercio y hoy no aprovechamos: ver la sección siguiente.
+
+## Webhooks de cuenta: probados el 2026-09-24
+
+Probado en el playground con el portal delante y contrastado con
+[su documentación](https://docs.kustom.co/contents/api/api-basics/webhooks). Esto es lo que
+resuelve la pregunta de si un comercio puede enterarse de una venta que creamos nosotros.
+
+**Cómo son.**
+
+- Se configuran **solo en el portal**, en Developers → Webhooks, con *Start listening to webhooks*.
+  No hay API documentada para crearlos, así que el destino lo añade el comercio.
+- **Admiten varios destinos a la vez.** Se creó uno de prueba junto al que ya existía y **los dos
+  recibieron los mismos eventos**.
+- Eventos: `order.created`, `capture.created`, `refund.created`, `dispute.created`,
+  `dispute.updated` y cinco de pagos presenciales.
+- Firma estándar de webhooks: cabeceras `webhook-id`, `webhook-timestamp` y `webhook-signature`,
+  con secreto propio por destino, rotable desde el portal. Reintentos hasta tres días.
+- El portal muestra cada entrega, con estado, tiempo de respuesta y la carga completa, y permite
+  reenviarla.
+
+**Qué llega, y cuándo.**
+
+- Crear el pedido de checkout **no dispara nada**: se comprobó creando uno por API y esperando un
+  minuto sin recibir ningún evento. El aviso sale **al pagarse**.
+- Al completar una compra de prueba llegaron dos eventos a la vez, `order.created` y
+  `capture.created`, unos tres segundos después del pago:
+
+```json
+{
+  "id": "kevt_HUy6wPdmeermNgDWhYSSC",
+  "merchant_id": "PM00876249",
+  "timestamp": "2026-09-24T09:32:15.654707826Z",
+  "type": "order.created",
+  "data": { "order_id": "360fb676-…", "created_at": "2026-09-24T09:32:12.487493Z" }
+}
+```
+
+- Solo identificadores. Quien lo reciba tiene que leer el pedido completo con su propia clave, por
+  `GET /ordermanagement/v1/orders/{id}`.
+
+**Lo que esto significa.**
+
+- **Un comercio con plataforma propia se entera de nuestras ventas sin que construyamos nada**: le
+  basta con añadir su URL como destino en su portal. El pedido lo crea nuestra integración con su
+  clave, y aun así el evento le llega a él.
+- Sirve igual para lo contrario: **enterarnos de lo que hace el comercio**. Si captura o devuelve
+  desde su portal, salen `capture.created` y `refund.created`.
+- ⚠️ **Hoy los tiramos.** Ya existe un destino «Vio Webhook» apuntando a
+  `https://api-ecom-staging.vio.live/kustom/webhooks`, creado el 22/09, con 46 entregas y todas en
+  200. Pero ese relay lee el id del pedido de la **query string**, que es como lo manda el `push`
+  por orden, y el webhook de cuenta lo manda **en el cuerpo**. Así que contestamos 200 y no hacemos
+  nada. Arreglarlo es leer el cuerpo cuando no hay query, verificar la firma con el secreto del
+  destino y enrutar por `type`.
 
 ## Primer contacto con el widget real (2026-09-22)
 
