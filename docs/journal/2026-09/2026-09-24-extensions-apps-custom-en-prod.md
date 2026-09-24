@@ -55,6 +55,26 @@ completo de las dos réplicas. Verificado en ambas:
 - `token de wxuxre-tf.myshopify.com tomado del app ... vence 19:28`
 - cero `Invalid API key`, cero líneas `[ERROR]`
 
+**Paso 4: PR #108 de `vio-shopify-sync` a las cuatro apps.** El PR (umbral de renovación del
+token de 25 → 35 minutos) ya estaba mergeado a `custom/client-app` desde las 14:49Z, pero los
+deployments de producción eran del build de las 14:11 y mis redeploys de la tarde reusaron ese
+build, así que el cambio no estaba vivo. Se desplegaron los cuatro proyectos desde un clone
+limpio de `custom/client-app` (`491a282`), con `vercel deploy --prod` y el `project.json`
+apuntado a cada proyecto. Antes: `npx vitest run` → **240 de 240 en verde**.
+
+Verificado después del deploy: `GET /internal/token` sigue dando 200 con el `CRON_SECRET`
+rotado en demo, gladkokken y makeupmekka —o sea que el secreto nuevo sobrevive al build— y
+villoid sigue en 409 `no_session`, que es lo esperado hasta que instalen.
+
+Dos notas de operación:
+
+- `npm ci` falla en local con `EBADENGINE` porque el repo tiene `engine-strict=true` en su
+  `.npmrc` y `jsdom@30` pide Node `^22.22.2` (acá hay 22.22.0). Para correr los tests,
+  `npm ci --engine-strict=false`. En Vercel no pasa: construye con Node 24.
+- `vio-sync-demo` quedó con dos deployments de producción seguidos (18:35:30 y 18:36:05) porque
+  repetí el comando para leer la salida completa. Gana el último y el estado es correcto, pero
+  es ruido en el historial del proyecto.
+
 ## Pendiente
 
 - **Villoid tiene que instalar la app.** Hasta entonces sus llamadas loguean `el app de
