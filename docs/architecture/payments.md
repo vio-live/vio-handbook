@@ -505,7 +505,7 @@ haga el comercio por su cuenta en la PSP.
 |---|---|---|---|---|---|---|
 | Nexi | Sí, falla si falta la fila | Ítems con `productId:variantId`, no su SKU. Solo el email | `autoCapture` al pagar. La función de cobrar existe y nadie la llama | Las funciones existen, sin usar | No: solo escuchamos el pago completado | Sí, segundo webhook |
 | Qliro | **No**: sin el secreto cae a la cuenta de Vio en silencio | Referencia `vio-…`, ítems con `productId\|variantId`, solo el email | No existe. La hacen ellos | No | No: el aviso llega y se ignora tras el pago | Sí, reenvío sin reintento ni firma |
-| Kustom | Sí | Línea con el SKU del feed y `merchant_data` con nuestros IDs | `auto_capture` al pagar | No | No | Falta el reenvío |
+| Kustom | Sí | Línea con el SKU del feed y `merchant_data` con nuestros IDs | `auto_capture` al pagar | No | **Los eventos llegan y se ignoran**: su webhook de cuenta entrega en nuestro endpoint de QA, pero el relay lee el id de la query y viene en el cuerpo ([detalle](./kustom.md#webhooks-de-cuenta-probados-el-2026-09-24)) | No hace falta: su portal admite varios destinos y el comercio pone el suyo |
 | Klarna | **No**: cae a la clave de Vio | **Las líneas no llevan SKU**. Términos apuntando a `outshifter.com` | **La decide el navegador** en la petición | Existe, por un camino muerto | No: no mandamos URLs de aviso | Falta |
 | Walley | Sí | Ítems con `productId`, **sin datos del cliente**. IVA ×100 | No | No | No: solo la compra completada | Falta |
 | Vipps | **No**: cae a las claves de Vio | **Sin líneas, solo el importe**. Referencia aleatoria | **No capturamos**: la reserva caduca sola | Existe, por un camino muerto | No: no nos suscribimos a capturado ni devuelto, y no verificamos la firma | Falta. Su webhook de cuenta ya recibe nuestros pagos |
@@ -589,7 +589,7 @@ Lo que debería preguntar el alta de cada método, además de las credenciales:
 ### Lo que queda por probar de verdad
 
 - Que los webhooks de cuenta del comercio en Vipps, Adyen y Stripe reciben nuestros pagos. La documentación lo implica, pero no se ha visto.
-- Que el `order.created` del Portal de Kustom y el webhook de tienda de Walley disparan con pedidos que crea otro integrador.
+- ~~El `order.created` del portal de Kustom~~: **probado el 2026-09-24**, dispara con un pedido creado por nosotros y llega a todos los destinos del comercio a la vez ([detalle](./kustom.md#webhooks-de-cuenta-probados-el-2026-09-24)). Queda por ver lo mismo en el webhook de tienda de Walley.
 - El camino completo: feed → compra en Vio con credenciales del comercio → `order.paid` → receptor → orden en Woo.
 
 ### Pendientes de seguridad encontrados en el estudio
