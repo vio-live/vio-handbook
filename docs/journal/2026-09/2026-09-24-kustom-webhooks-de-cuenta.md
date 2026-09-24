@@ -29,6 +29,14 @@ propio se entere de nuestras ventas sin que construyamos nada.
   Noruega de su documentación.
 - Limpieza: el destino de prueba se borró y el portal quedó como estaba.
 
+- **Implementado el mismo día**, en cuatro PR contra develop, ninguno mergeado:
+  [shopcart#37](https://github.com/vio-live/vio-shopcart-microservice/pull/37),
+  [base-api#16](https://github.com/vio-live/vio-base-api/pull/16),
+  [api#25](https://github.com/vio-live/vio-api-microservice/pull/25) y
+  [webapp#33](https://github.com/vio-live/webapp-vio-commerce/pull/33). shopcart queda con 326
+  tests en verde. Hasta que un vendedor tenga secreto, el comportamiento es el de hoy: se acepta
+  y se descarta.
+
 ## Decisions
 
 Ninguna nueva. Confirma la propuesta del 23/09: para Kustom no hace falta construir el reenvío del

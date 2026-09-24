@@ -167,12 +167,23 @@ resuelve la pregunta de si un comercio puede enterarse de una venta que creamos 
   clave, y aun así el evento le llega a él.
 - Sirve igual para lo contrario: **enterarnos de lo que hace el comercio**. Si captura o devuelve
   desde su portal, salen `capture.created` y `refund.created`.
-- ⚠️ **Hoy los tiramos.** Ya existe un destino «Vio Webhook» apuntando a
+- ⚠️ **Hasta el 2026-09-24 los tirábamos.** Ya existe un destino «Vio Webhook» apuntando a
   `https://api-ecom-staging.vio.live/kustom/webhooks`, creado el 22/09, con 46 entregas y todas en
   200. Pero ese relay lee el id del pedido de la **query string**, que es como lo manda el `push`
   por orden, y el webhook de cuenta lo manda **en el cuerpo**. Así que contestamos 200 y no hacemos
-  nada. Arreglarlo es leer el cuerpo cuando no hay query, verificar la firma con el secreto del
-  destino y enrutar por `type`.
+  nada. Arreglado en cuatro PR, pendientes de merge:
+  [shopcart#37](https://github.com/vio-live/vio-shopcart-microservice/pull/37) verifica la firma
+  y enruta el evento, [base-api#16](https://github.com/vio-live/vio-base-api/pull/16) distingue
+  las dos notificaciones y reenvía los bytes firmados,
+  [api#25](https://github.com/vio-live/vio-api-microservice/pull/25) cifra el secreto y
+  [webapp#33](https://github.com/vio-live/webapp-vio-commerce/pull/33) lo pide en el alta del
+  método, junto al identificador de comercio.
+
+  Lo que hace ahora: `order.created` entra por el mismo camino idempotente que el push, y
+  `capture.created` y `refund.created` se anotan en la foto del checkout. La firma es la
+  autenticación; un pedido que no es nuestro se ignora en silencio, porque en esa cuenta la
+  mayoría de los eventos son ventas de la propia tienda del comercio; y mientras ningún vendedor
+  tenga secreto, los eventos se aceptan y se descartan, para no comprar tres días de reintentos.
 
 ## Guía para el comercio: pasos en su portal de Kustom
 
