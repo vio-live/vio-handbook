@@ -136,7 +136,11 @@ Desde `3439dca` el app se encarga:
   pega al Admin API para que la librería rote el token, relee la sesión y la manda.
   `?ids=1,2,3` reencola además esos productos. Protegida por `CRON_SECRET` (o
   `INTERNAL_SYNC_SECRET`): `curl -H "Authorization: Bearer <secreto>" https://<app>/internal/sync-tokens`.
-- **Cron de Vercel cada 30 minutos** contra esa ruta (`vercel.json`). No es capricho: el
+- **`/internal/token`** (desde 2026-09-24, `16bbebd`): la otra mitad — devuelve el token
+  vigente y su vencimiento a quien lo pida con el mismo secreto, en vez de empujarlo. Está
+  para que `extensions` pueda pedirlo cuando lo necesite y Vio deje de guardar una copia;
+  **hoy no la llama nadie** (Trello [u2MfJLCf](https://trello.com/c/u2MfJLCf)).
+- **Cron de Vercel cada 30 minutos** contra la ruta de sync (`vercel.json`). No es capricho: el
   token de Shopify de estas apps vive **menos de una hora** (`tokenExpiresAt` en la
   respuesta de la ruta lo dice), y con un cron más lento Vio se queda con un token
   muerto entre corridas.
