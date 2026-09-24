@@ -47,11 +47,13 @@ se borraron. Se le pidió repetir una vez y dar la hora.
 
 ## Decisions
 
-Ninguna nueva.
+- **Todo se queda en develop por ahora** (Angelo). La promoción a producción de shopcart y base-api,
+  que es lo que cierra de verdad el webhook de Stripe, **se coordina con Alan cuando esté**.
 
 ## Blockers
 
-- Release a producción de shopcart y base-api, para cerrar de verdad el webhook de Stripe.
+- Producción sigue con el webhook de Stripe sin verificar, por decisión de esperar a coordinar la
+  release con Alan.
 - Un intento nuevo de Adyen, con hora, para leer el motivo del rechazo.
 
 ## Next session
