@@ -389,7 +389,9 @@ Kustom; `auto_capture` por defecto).
   (ver [journal](../journal/2026-09/2026-09-18-reconcile-cronjob-qa.md)).
 - **Verify**: `POST /api/paymentmethod/verify` (front→base-api→api-micro)
   sondea al PSP sin crear nada (401/403=invalid, 404=valid); el front solo
-  bloquea ante rechazo definitivo. Sondas: Qliro, Kustom, Stripe.
+  bloquea ante rechazo definitivo. Sondas para los ocho métodos: Qliro,
+  Kustom, Stripe, Walley, Nexi, Adyen, y desde el 2026-09-24 Klarna y Vipps,
+  que prueban los dos entornos porque sus claves no dicen a cuál pertenecen.
 - **Envíos por el PSP** (`providerShipping` en options, default false):
   Kustom+KSA no manda `shipping_options`; Qliro+integrated no inyecta la
   línea Shipping y pasa el fallback `AvailableShippingMethods`. La vuelta
@@ -612,7 +614,8 @@ transportista.
 Lo que debería preguntar el alta de cada método, además de las credenciales:
 
 1. **Cuenta.** «Cobrar solo con mi cuenta», activado por defecto, sin respaldo silencioso a la de
-   Vio. La sonda de verificación ya existe para seis de los ocho; faltan Klarna y Vipps.
+   Vio. La sonda de verificación existe para los ocho: las de
+   Klarna y Vipps se añadieron el 2026-09-24 ([api#27](https://github.com/vio-live/vio-api-microservice/pull/27)).
 2. **Cómo recibe las órdenes**, una de tres:
    - nuestro webhook, con URL y secreto, que hoy vive en otra pantalla;
    - el aviso en el formato de su PSP, con URL y autorización, solo donde existe;
