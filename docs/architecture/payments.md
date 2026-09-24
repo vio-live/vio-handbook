@@ -526,49 +526,73 @@ Lo transversal:
 - **No hay exportación de órdenes** para el vendedor, ni email de venta nueva. El único aviso es
   `order.paid`.
 
-### Propuesta del 2026-09-23, sin decidir
+### Propuesta del 2026-09-23, ampliada el 2026-09-24, sin decidir
 
-Angelo afinó el modelo en la conversación del 22 y 23 de septiembre. Quedan **dos carriles**,
-según cómo llegue el catálogo:
+Angelo la afinó en la conversación del 22 al 24 de septiembre. El principio que la ordena:
+**Vio es invisible para el comprador.** La venta tiene que parecer del comercio, así que el
+recibo, los emails, los términos y la referencia son suyos. Hoy en Kustom no le mandamos ningún
+email al comprador, y en los demás métodos solo sale si el vendedor configuró su plantilla.
 
-1. **Woo y Shopify van por nuestras apps**, nunca por el feed. El catálogo se sincroniza y la
-   orden la creamos nosotros en su tienda. Falta que quede como una de su propio checkout: con
-   el método y la referencia del pago real, con captura y devoluciones coherentes, y en Shopify
-   pasando a `orderCreate`.
-2. **El feed de Google es para quien no quiere integrar nada.** Cobramos con sus credenciales y
-   la orden se le entrega de una de tres formas, elegida al conectar el método:
-   - **nuestro webhook**, con eventos de crear y de actualizar;
-   - **el aviso en el formato de su PSP**, solo si su sistema crea órdenes desde avisos;
-   - **una exportación periódica**, para quien no integra nada: la orden vive en Vio, nosotros
-     la gestionamos y ellos reciben un archivo con lo vendido.
+**Tres carriles, según hasta dónde deje entrar el comercio.**
 
-Y la captura es dinámica por comercio: capturan ellos en su portal, capturamos nosotros al
-pagar, o capturamos al despachar.
+1. **Nuestras apps de Woo y Shopify.** Catálogo sincronizado y la orden creada por nosotros en su
+   tienda. Nunca por feed.
+2. **Solo permiso para crear órdenes.** El catálogo entra por su feed de Google y cobramos con sus
+   credenciales; lo único que nos da es acceso a crear la orden en su sistema, con claves de la API
+   de su tienda, una app con permiso de órdenes, o su propio endpoint. **Creamos la orden allí con
+   los datos que su plataforma necesita, y su maquinaria hace el resto**: su email de
+   confirmación, su stock, su preparación de envío.
+   - **Shopify:** hay que pedir explícitamente el recibo al comprador y el del envío, y el
+     descuento de stock. Los tres vienen apagados por defecto.
+   - **WooCommerce:** sus emails cuelgan del cambio de estado, así que crearla ya pagada dispara
+     el suyo. Confirmar contra una tienda real.
+   - **Plataforma propia:** lo decide su endpoint.
+3. **Sin integración.** La orden vive en Vio, la venta la ve en su portal de la PSP, y le llega
+   una exportación o un aviso. Sus emails no se disparan, porque la orden nunca existe en su
+   sistema: o mandamos nosotros uno con su marca y su dominio, que es trabajo de verdad, o ese
+   comercio no manda confirmación de pedido. **Decisión pendiente.**
+
+**Lo que hay que mandarle, en los carriles 2 y 3**, para que su email salga completo y su
+contabilidad cuadre: el identificador de producto de su feed con la variante comprada, el
+comprador con sus dos direcciones, el método y el precio del envío, los totales con impuestos, el
+nombre de la PSP con la referencia del pago, y nuestro identificador de orden como referencia
+externa. Antes de crear nada hay que buscar por esa referencia, porque los avisos se reintentan.
+
+**Envíos.** Si el comercio tiene activo el servicio de envíos de su PSP, se muestran sus tarifas y
+no las nuestras; si no, las de sus clases de envío en Vio. En Kustom ya existe ese interruptor por
+vendedor. Falta que alguien compruebe que dice la verdad.
+
+**El dinero después del pago es opcional por vendedor.** Una pregunta con tres respuestas, quién
+captura: él desde su portal, Vio al pagar, o Vio al despachar. Y debajo, interruptores para
+devolver y cancelar, porque hay quien quiere capturar él y dejarnos las devoluciones. En los dos
+sentidos nos enteramos: los eventos de cuenta de la PSP cuentan lo que hizo él.
+
+⚠️ **Capturar al despachar no lo puede disparar la PSP.** En Kustom se verificó: su asistente de
+envíos reserva el envío en el checkout, pero su API de envíos no dice si el pedido se completó y
+no hay ningún evento de envío. La señal sale de su sistema, de nuestro dashboard, o del
+transportista.
 
 **Orden de trabajo propuesto.**
 
 - **Fase 0, el dinero y las puertas abiertas.** Capturar en Vipps, que hoy reserva y nadie cobra.
   Cerrar los pendientes de seguridad. Quitar el respaldo silencioso a la cuenta de Vio y añadir
   el interruptor de «solo mi cuenta».
-- **Fase 1, que la orden sea identificable y entregable.** El ID del feed en la línea de cada
-  PSP y una referencia `VIO-…`; cliente y envío donde hoy no se mandan. `order.paid` con la
-  variante comprada, el total, la referencia del pago, versión, ID de evento y reintentos
-  durables.
+- **Fase 1, que la orden sea identificable y entregable.** El ID del feed en la línea de cada PSP
+  y una referencia `VIO-…`; cliente y envío donde hoy no se mandan. `order.paid` con la variante
+  comprada, el total, la referencia del pago, versión y reintentos durables.
 - **Fase 2, el ciclo de vida.** Dejar de descartar los avisos posteriores al pago, para que una
-  captura o una devolución hecha en su portal mueva nuestra orden. Capturar al despachar.
-  Devolver y cancelar por API en los cinco métodos nuevos.
-- **Fase 3, el alta y el que no integra.** Las opciones al conectar un método. Exportación en el
-  servidor y aviso por email de cada venta. Reenvío en formato de la PSP donde falte.
-- **Fase 4, las apps.** Que la orden creada en Woo y en Shopify quede como una de su checkout.
+  captura o una devolución hecha en su portal mueva nuestra orden. Capturar al despachar. Devolver
+  y cancelar por API en los cinco métodos nuevos, y que cada acción sea opcional por vendedor.
+- **Fase 3, el carril 2.** Escribir la orden en su sistema por plataforma, con los interruptores
+  que disparan sus emails y el control de duplicados. Es el fanout que ya existe, liberado de la
+  condición de que el producto venga de una tienda conectada.
+- **Fase 4, el alta y el que no integra.** Las opciones al conectar un método. Exportación en el
+  servidor y aviso por email de cada venta.
+- **Fase 5, las apps.** Que la orden que creamos en Woo y en Shopify quede como una de su checkout.
 
-**Antes de construir, media hora de verificación**, porque tres cosas se deducen de la
-documentación y no están vistas: que los webhooks de cuenta de Vipps, Adyen y Stripe reciban
-nuestros pagos, que el `order.created` del portal de Kustom dispare con pedidos de otro
-integrador, y lo mismo con los webhooks de tienda de Walley.
-
-**Decisiones pendientes de Angelo:** si el webhook pasa a ser un contrato versionado desde ya,
-cuál es el modo de captura por defecto, si construimos la exportación o basta con el email más
-el dashboard, y si el reenvío en formato de la PSP se queda solo en Nexi y Qliro.
+**Decisiones pendientes de Angelo:** el formato de la referencia, si el webhook pasa a ser un
+contrato versionado desde ya, el modo de captura por defecto, quién manda el email del carril 3, y
+si construimos la exportación o basta con el email más el dashboard.
 
 ### Opciones al conectar un método de pago
 
