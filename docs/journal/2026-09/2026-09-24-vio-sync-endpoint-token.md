@@ -166,3 +166,29 @@ que reexporten, Alan revisa y probamos el flujo completo nosotros.
   código desplegado y salud de los tokens. Le toca a Alan la checklist "Después del deploy"
   (verificación en el backend y prueba del export en la demo); después Angelo le pide a
   Makeup Mekka que reexporte.
+
+### "Te dije que hiciéramos todo bien": la mitad del backend, escrita
+
+Angelo no aceptó "robusto para operar, no por diseño". Así que la otra mitad quedó escrita
+la misma tarde, para que Alan la revise y despliegue:
+
+- **`vio-extensions-microservice` [#9](https://github.com/vio-live/vio-extensions-microservice/pull/9)**
+  (`feature/token-desde-el-app` → `develop`): para las tiendas del mapa `VIO_CUSTOM_APPS`
+  (JSON tienda → `{url, secret}` del app en Vercel), `asyncrefreshTokenIfApply` **no refresca
+  nunca**: pide `GET /internal/token` al app, cachea el token en Redis hasta dos minutos
+  antes de su vencimiento, actualiza `shopify_connection` de paso, y `call()` reintenta una
+  vez ante un 401 después de volver a pedirlo. `createWebhook` deja de registrar por
+  EventBridge esas tiendas (el 422 del ARN de la app pública) y ya no loguea "created" sobre
+  un error. Sin la variable, todo sigue igual. Specs puras para los dos módulos nuevos;
+  la suite entera no corre en mi máquina (el kernel privado), la corre Alan como con el #8.
+  El secreto de cada app es el `CRON_SECRET` de su proyecto de Vercel: **Angelo se los tiene
+  que pasar a Alan**.
+- **`vio-shopify-sync` [#108](https://github.com/vio-live/vio-shopify-sync/pull/108)**: umbral
+  de renovación de 25 a 35 minutos; la copia llega siempre con más de 25 y aguanta dos crons
+  perdidos. Redeploy de los cuatro proyectos cuando se mergee.
+
+Con los dos desplegados, el token vive en un solo lugar (el app) y Vio lo pide cuando lo
+necesita: si el app deja de empujar, sigue funcionando; y el refresh con credenciales
+ajenas queda inalcanzable para esas tiendas. La tarjeta [5Z5djEt5](https://trello.com/c/5Z5djEt5)
+tiene los pasos de Alan (review, suite, `VIO_CUSTOM_APPS`, deploy, prueba del 401 forzado,
+prueba en la demo).

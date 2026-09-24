@@ -137,9 +137,15 @@ Desde `3439dca` el app se encarga:
   `?ids=1,2,3` reencola además esos productos. Protegida por `CRON_SECRET` (o
   `INTERNAL_SYNC_SECRET`): `curl -H "Authorization: Bearer <secreto>" https://<app>/internal/sync-tokens`.
 - **`/internal/token`** (desde 2026-09-24, `16bbebd`): la otra mitad — devuelve el token
-  vigente y su vencimiento a quien lo pida con el mismo secreto, en vez de empujarlo. Está
-  para que `extensions` pueda pedirlo cuando lo necesite y Vio deje de guardar una copia;
-  **hoy no la llama nadie** (Trello [u2MfJLCf](https://trello.com/c/u2MfJLCf)).
+  vigente y su vencimiento a quien lo pida con el mismo secreto, en vez de empujarlo. La
+  llama `extensions` para las tiendas de `VIO_CUSTOM_APPS`
+  ([PR #9](https://github.com/vio-live/vio-extensions-microservice/pull/9), *en review de
+  Alan; actualizar acá cuando esté desplegado*): JSON tienda → `{url, secret}` en el `.env`
+  del microservicio, el secreto es el `CRON_SECRET` del proyecto. Con eso el backend no
+  refresca nunca esas conexiones: pide el token, lo cachea en Redis hasta dos minutos antes
+  de vencer y reintenta una vez ante un 401. **Al dar de alta un cliente nuevo hay que
+  agregar su tienda a `VIO_CUSTOM_APPS`** (o queda en el modelo de copia empujada, que
+  funciona pero depende del cron).
 - **Cron de Vercel cada 10 minutos** contra la ruta de sync (`vercel.json`; era 30 hasta el
   PR #107). No es capricho: el token de Shopify de estas apps vive **una hora**
   (`tokenExpiresAt` en la respuesta de la ruta lo dice), y con un cron más lento Vio se
@@ -150,7 +156,7 @@ Desde `3439dca` el app se encarga:
   haya" no alcanzaba, porque la librería rota recién cuando el token ya venció, y entre el
   vencimiento y el siguiente cron Vio tenía un token muerto (~20 minutos por hora, medidos
   en Makeup Mekka: 401 en cadena y Pub/Sub reentregando el mismo webhook). Ahora, si a la
-  sesión le quedan menos de 25 minutos, el app hace el grant `refresh_token` con las
+  sesión le quedan menos de 35 minutos (25 hasta el PR #108), el app hace el grant `refresh_token` con las
   credenciales de *su* app, guarda la sesión nueva y esa es la que empuja (y la que entrega
   `/internal/token`).
 - **`/internal/audit?shop=`** (mismo PR): últimas 50 acciones de la tienda — `connect` /
