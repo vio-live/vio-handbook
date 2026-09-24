@@ -42,6 +42,11 @@ propio se entere de nuestras ventas sin que construyamos nada.
   [webapp#34](https://github.com/vio-live/webapp-vio-commerce/pull/34)). Suite 331 en verde. Lo que
   falta es quién dispara la captura al despachar.
 
+- **Mergeado y desplegado en QA** el mismo día, los ocho PR (shopcart #37/#38/#39, base-api #16,
+  api #25, webapp #33/#34/#35). Sin migración ni release del kernel. Probado contra
+  `api-ecom-staging`: el relay distingue el aviso por pedido del evento de cuenta, y el evento
+  entra en shopcart, que lo acepta y lo descarta porque ningún vendedor tiene secreto todavía.
+
 ## Decisions
 
 - **Por defecto captura el comercio**, desde su portal de Kustom, como ya hace con sus propias
@@ -60,6 +65,9 @@ propio se entere de nuestras ventas sin que construyamos nada.
 
 ## Next session
 
-1. Leer el cuerpo en el relay de Kustom, verificar la firma y enrutar por tipo, para no tirar
-   capturas y devoluciones.
-2. Repetir la prueba en Walley.
+1. Prueba de punta a punta de Kustom en QA. Angelo tiene que cargar tres cosas: la clave del
+   playground en un vendedor, el secreto de firma del destino que ya existe en el portal, y el
+   método activo en el canal.
+2. Subir a prod lo de Kustom cuando la prueba pase.
+3. Vipps: hoy reserva el dinero y nadie lo cobra.
+4. Repetir la prueba del webhook de cuenta en Walley.
