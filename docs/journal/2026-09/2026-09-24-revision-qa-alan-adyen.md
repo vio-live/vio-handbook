@@ -45,6 +45,27 @@ El motivo **sí** llega al backend en el aviso, y shopcart ya lo registra:
 `[adyenWebhook] payment refused for <ref>: <motivo>`. Los intentos de Alan fueron anoche y esos logs
 se borraron. Se le pidió repetir una vez y dar la hora.
 
+**Stripe: claves y interruptores, a pedido de Angelo.** Quiere el pago con tarjeta en web lo más
+nativo posible, sin sacar al comprador de la página ([a0JpeBJd](https://trello.com/c/a0JpeBJd)), y
+para poder avanzar pidió arreglar antes las claves y consolidar los interruptores. Tres PRs:
+
+- [shopcart #40](https://github.com/vio-live/vio-shopcart-microservice/pull/40) y
+  [api-ms #26](https://github.com/vio-live/vio-api-microservice/pull/26): **las dos claves de Stripe
+  viajan juntas**. Cada mitad caía a la plataforma por su cuenta, así que un vendedor con solo la
+  clave pública dejaba al navegador confirmando con una cuenta lo que se cobró con otra. Corrección
+  a lo escrito el 23/09: el respaldo a la plataforma **sí existía**; lo que faltaba era la regla del
+  par. Hoy no se nota porque el navegador aún no usa esa clave, pero el pago embebido la necesita.
+- [api-ms #26](https://github.com/vio-live/vio-api-microservice/pull/26): **un solo Stripe con dos
+  flujos**. `stripePaymentIntent` es pagar en nuestra página y `stripePaymentLink` es la página
+  alojada. Solo se leía el primero, así que un canal con solo Payment Links no ofrecía Stripe. Ahora
+  se ofrece con cualquiera de los dos y la configuración lleva `mode: native | link`.
+- [webapp #36](https://github.com/vio-live/webapp-vio-commerce/pull/36): los interruptores pasan a
+  llamarse **Stripe** y **Stripe · Payment Links**, y la nota de claves dice que hacen falta las dos.
+
+Lo que ya existe para el pago embebido: el endpoint de shopcart por PaymentIntent, la mutación del
+gateway que devuelve el `client_secret`, Stripe.js ya cargado en la página para Apple Pay, y la
+orden naciendo del aviso `payment_intent.succeeded`, ya firmado. Falta solo la pieza de navegador.
+
 ## Decisions
 
 - **Todo se queda en develop por ahora** (Angelo). La promoción a producción de shopcart y base-api,
