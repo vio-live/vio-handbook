@@ -626,6 +626,29 @@ Lo que debería preguntar el alta de cada método, además de las credenciales:
    recibirán nuestros pagos y que debe ignorar las referencias `VIO-`. En Adyen y Stripe hay que
    registrar nuestro endpoint en su cuenta; en Adyen se puede por API.
 
+### Verificar las claves no es lo mismo que poder vender
+
+La sonda contesta una sola pregunta: si podemos cobrar con esas credenciales. Hay otras tres
+formas de conectar un método y no vender nada, y las tres eran silenciosas hasta el 2026-09-24:
+
+| Comprobación | De dónde sale | Qué pasa si falla |
+|---|---|---|
+| **Canal** | `channel_user_settings.<toggle>` | La credencial es del vendedor, el interruptor es del canal. Se conecta Kustom, se lee «verified» y el botón no aparece nunca. |
+| **Mercado** | `KUSTOM_ENABLED_MARKETS` / `ADYEN_ENABLED_MARKETS` (importadas, no copiadas) | Kustom y Adyen solo están habilitados en Noruega; un canal que vende en otro sitio no los ofrece. Un canal sin mercados guardados vale `NO, GB, NL`, igual que en `channel.service`. |
+| **Términos** | `options.termsUrl` | Sin él **Nexi rechaza el pago**; Kustom y Qliro caen a los términos de **Vio** en una venta que legalmente es del comercio; Walley apunta a `<canal>/terms`, que puede no existir. |
+
+`POST /paymentmethod/verify` las devuelve como `checks` junto al veredicto
+(`api-ms/modules/paymentMethod/providers/payment-readiness.ts`). **Son avisos, nunca un veto**:
+la que decide si el guardado pasa sigue siendo la sonda, y si las comprobaciones fallan se
+registra y se sigue. El `userId` sale de la **sesión** en base-api, nunca del body — con uno del
+body se leería el setup de otro.
+
+En el dashboard, al guardar unas claves buenas con algo pendiente, el diálogo **se queda abierto**
+con la lista en vez de cerrarse con un toast.
+[api#27](https://github.com/vio-live/vio-api-microservice/pull/27) ·
+[base-api#17](https://github.com/vio-live/vio-base-api/pull/17) ·
+[webapp#37](https://github.com/vio-live/webapp-vio-commerce/pull/37).
+
 ### Lo que queda por probar de verdad
 
 - Que los webhooks de cuenta del comercio en Vipps, Adyen y Stripe reciben nuestros pagos. La documentación lo implica, pero no se ha visto.
