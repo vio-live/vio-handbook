@@ -37,6 +37,11 @@ propio se entere de nuestras ventas sin que construyamos nada.
   tests en verde. Hasta que un vendedor tenga secreto, el comportamiento es el de hoy: se acepta
   y se descarta.
 
+- **Segunda pieza el mismo día**: capturar, devolver y cancelar contra Order Management, cada
+  acción opcional por vendedor ([shopcart#38](https://github.com/vio-live/vio-shopcart-microservice/pull/38),
+  [webapp#34](https://github.com/vio-live/webapp-vio-commerce/pull/34)). Suite 331 en verde. Lo que
+  falta es quién dispara la captura al despachar.
+
 ## Decisions
 
 Ninguna nueva. Confirma la propuesta del 23/09: para Kustom no hace falta construir el reenvío del

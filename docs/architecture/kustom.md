@@ -185,6 +185,30 @@ resuelve la pregunta de si un comercio puede enterarse de una venta que creamos 
   mayoría de los eventos son ventas de la propia tienda del comercio; y mientras ningún vendedor
   tenga secreto, los eventos se aceptan y se descartan, para no comprar tres días de reintentos.
 
+## El dinero después del pago (en PR, 2026-09-24)
+
+Hasta ahora el conector sabía crear, leer, confirmar y poner referencias, y lo único que decidía
+el dinero era el cobro automático al pagar. En
+[shopcart#38](https://github.com/vio-live/vio-shopcart-microservice/pull/38) y
+[webapp#34](https://github.com/vio-live/webapp-vio-commerce/pull/34):
+
+- **Capturar** (total o parcial, con el seguimiento pegado a su captura), **devolver** y
+  **cancelar** contra Order Management.
+- **Cada acción es opcional por vendedor**, porque dos partes capturando el mismo pedido le cobran
+  dos veces al comprador:
+  - `captureMode`: `account` (decide su cuenta y captura él, nosotros nunca), `payment` (lo de hoy)
+    o `shipment` (se autoriza y se cobra al despachar);
+  - `manageRefunds` y `manageCancellations`, apagados por defecto.
+  - Un vendedor que ya existe conserva su conducta: si no hay `captureMode`, se lee el booleano
+    `autoCapture` de antes.
+- Lo que pedimos nosotros se anota en la foto del checkout como `*.requested`; lo que Kustom hizo
+  llega como evento de su cuenta y se anota al lado.
+
+⚠️ **Capturar al despachar todavía no tiene quien lo dispare.** La señal de envío no llega hasta
+el pago: ese camino está detrás de un canal que nuestras ventas nunca usan. Y Kustom no ayuda: su
+asistente de envíos reserva el envío en el checkout, pero su API de envíos no dice si el pedido se
+completó y no hay ningún evento de envío entre los suyos.
+
 ## Guía para el comercio: pasos en su portal de Kustom
 
 Recorrido hecho el 2026-09-24 en el playground. Faltan las capturas de pantalla, que hay que
