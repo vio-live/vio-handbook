@@ -547,10 +547,10 @@ email al comprador, y en los demás métodos solo sale si el vendedor configuró
    - **WooCommerce:** sus emails cuelgan del cambio de estado, así que crearla ya pagada dispara
      el suyo. Confirmar contra una tienda real.
    - **Plataforma propia:** lo decide su endpoint.
-3. **Sin integración.** La orden vive en Vio, la venta la ve en su portal de la PSP, y le llega
-   una exportación o un aviso. Sus emails no se disparan, porque la orden nunca existe en su
-   sistema: o mandamos nosotros uno con su marca y su dominio, que es trabajo de verdad, o ese
-   comercio no manda confirmación de pedido. **Decisión pendiente.**
+3. **Sin integración.** La orden vive en Vio y la venta la ve en el portal de su PSP y en nuestro
+   dashboard. Sus emails no se disparan, porque la orden nunca existe en su sistema, y **nosotros
+   tampoco mandamos ninguno** (Angelo, 2026-09-24): el comprador recibe el correo de pago de la
+   PSP, a nombre del comercio. Si algún comercio lo pide, se revisa.
 
 **Lo que hay que mandarle, en los carriles 2 y 3**, para que su email salga completo y su
 contabilidad cuadre: el identificador de producto de su feed con la variante comprada, el
@@ -593,9 +593,19 @@ transportista.
   servidor y aviso por email de cada venta.
 - **Fase 5, las apps.** Que la orden que creamos en Woo y en Shopify quede como una de su checkout.
 
-**Decisiones pendientes de Angelo:** el formato de la referencia, si el webhook pasa a ser un
-contrato versionado desde ya, quién manda el email del carril 3, y si construimos la exportación o
-basta con el email más el dashboard.
+**Decidido el 2026-09-24 (Angelo).**
+
+- **La referencia la nombra el comercio.** Una plantilla suya, con `{order}` y `{checkout}`; por
+  defecto `VIO-{order}`, para que un número nuestro no parezca uno suyo en su portal ni en su
+  liquidación. Implementado en Kustom
+  ([shopcart#39](https://github.com/vio-live/vio-shopcart-microservice/pull/39),
+  [webapp#35](https://github.com/vio-live/webapp-vio-commerce/pull/35)); el resto de PSP, igual.
+  Y la puerta queda abierta a mandarle los metadatos que pida, sin hacerlo todavía.
+- **El webhook pasa a contrato versionado ya**, y se evoluciona sumando: campos nuevos sí, cambiar
+  o quitar solo con versión nueva. Cabe también añadir datos que pida un comercio concreto.
+- **Nosotros no le mandamos email a nadie**, hasta que alguien lo pida. El comprador recibe el
+  correo de pago de la PSP, que ya va a nombre del comercio.
+- **Sin exportación por ahora.** La venta se ve en el portal de la PSP y en nuestro dashboard.
 
 ### Opciones al conectar un método de pago
 

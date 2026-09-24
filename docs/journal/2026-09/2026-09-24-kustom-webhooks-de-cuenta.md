@@ -45,7 +45,11 @@ propio se entere de nuestras ventas sin que construyamos nada.
 ## Decisions
 
 - **Por defecto captura el comercio**, desde su portal de Kustom, como ya hace con sus propias
-  ventas. Cobrar al pagar queda como opción. Angelo, 2026-09-24. Y confirma la propuesta del 23/09: para Kustom no hace falta construir el reenvío
+  ventas. Cobrar al pagar queda como opción. Angelo, 2026-09-24.
+- **La referencia la nombra el comercio**, con una plantilla; por defecto `VIO-{order}`.
+- **El webhook pasa a contrato versionado ya**, evolucionando por suma.
+- **Vio no manda emails al comprador** hasta que alguien lo pida, y **no hay exportación** por
+  ahora. Y confirma la propuesta del 23/09: para Kustom no hace falta construir el reenvío
   del aviso, porque su portal ya admite el destino del comercio.
 
 ## Blockers
