@@ -44,8 +44,9 @@ propio se entere de nuestras ventas sin que construyamos nada.
 
 ## Decisions
 
-Ninguna nueva. Confirma la propuesta del 23/09: para Kustom no hace falta construir el reenvío del
-aviso, porque su portal ya admite el destino del comercio.
+- **Por defecto captura el comercio**, desde su portal de Kustom, como ya hace con sus propias
+  ventas. Cobrar al pagar queda como opción. Angelo, 2026-09-24. Y confirma la propuesta del 23/09: para Kustom no hace falta construir el reenvío
+  del aviso, porque su portal ya admite el destino del comercio.
 
 ## Blockers
 

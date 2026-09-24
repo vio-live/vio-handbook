@@ -563,7 +563,10 @@ no las nuestras; si no, las de sus clases de envío en Vio. En Kustom ya existe 
 vendedor. Falta que alguien compruebe que dice la verdad.
 
 **El dinero después del pago es opcional por vendedor.** Una pregunta con tres respuestas, quién
-captura: él desde su portal, Vio al pagar, o Vio al despachar. Y debajo, interruptores para
+captura: él desde su portal, Vio al pagar, o Vio al despachar. **Por defecto captura él** (Angelo,
+2026-09-24): es lo que ya hace con sus propias ventas, y cobrar antes de enviar convierte
+cualquier cancelación en una devolución. Con eso hay que decirle algo en el alta: una autorización
+que nadie captura caduca, y la venta se pierde. Y debajo, interruptores para
 devolver y cancelar, porque hay quien quiere capturar él y dejarnos las devoluciones. En los dos
 sentidos nos enteramos: los eventos de cuenta de la PSP cuentan lo que hizo él.
 
@@ -591,8 +594,8 @@ transportista.
 - **Fase 5, las apps.** Que la orden que creamos en Woo y en Shopify quede como una de su checkout.
 
 **Decisiones pendientes de Angelo:** el formato de la referencia, si el webhook pasa a ser un
-contrato versionado desde ya, el modo de captura por defecto, quién manda el email del carril 3, y
-si construimos la exportación o basta con el email más el dashboard.
+contrato versionado desde ya, quién manda el email del carril 3, y si construimos la exportación o
+basta con el email más el dashboard.
 
 ### Opciones al conectar un método de pago
 

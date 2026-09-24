@@ -196,8 +196,9 @@ el dinero era el cobro automático al pagar. En
   **cancelar** contra Order Management.
 - **Cada acción es opcional por vendedor**, porque dos partes capturando el mismo pedido le cobran
   dos veces al comprador:
-  - `captureMode`: `account` (decide su cuenta y captura él, nosotros nunca), `payment` (lo de hoy)
-    o `shipment` (se autoriza y se cobra al despachar);
+  - `captureMode`: `account` (decide su cuenta y captura él, nosotros nunca), `payment` o
+    `shipment`. **El valor por defecto es `account`**: captura él al despachar, como ya hace con
+    sus ventas;
   - `manageRefunds` y `manageCancellations`, apagados por defecto.
   - Un vendedor que ya existe conserva su conducta: si no hay `captureMode`, se lee el booleano
     `autoCapture` de antes.
