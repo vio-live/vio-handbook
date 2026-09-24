@@ -48,6 +48,18 @@ claves buenas tampoco garantizan una venta.
   dependencias y se verificó compilándolos sueltos: el spec real de las comprobaciones corrió con
   un harness mínimo, **16 passed**.
 
+## Desplegado y verificado en QA (mismo día)
+
+Los tres PR mergeados a `develop` a las 11:52 UTC. `api` y `base-api` rodaron en `kubernetesqa`;
+`POST /paymentmethod/verify` contestado desde dentro del clúster con una clave enmascarada
+devuelve `status: unknown` **y las tres comprobaciones** con su texto. El dashboard de QA
+(`dashboard-staging.ecom.vio.live`, Vercel — el repo ya no tiene workflow de GitHub) se
+reconstruyó y su bundle trae el bloque nuevo.
+
+Queda sin ejercitar la rama **ok** contra un vendedor que sí tenga canales: los usuarios de QA
+que se probaron no tienen ninguno. Sale sola la primera vez que se guarde una clave en el
+vendedor de QA.
+
 ## Next session
 
 - Mergear [api#27](https://github.com/vio-live/vio-api-microservice/pull/27) ·
