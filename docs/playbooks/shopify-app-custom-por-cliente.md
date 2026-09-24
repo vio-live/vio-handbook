@@ -188,6 +188,24 @@ Por qué el dueño del refresh es el app y no el backend:
   `products`. Tildar productos en el app no manda nada: la exportación es el botón **"Export
   selected"**, y termina con el toast "N products exported to Vio".
 
+## Desplegar sin las carpetas de Angelo
+
+Los cuatro proyectos corren el **mismo código** de `custom/client-app`; lo que cambia por
+cliente son las variables de cada proyecto de Vercel. Desde cualquier máquina con acceso al
+team `tipio-2`:
+
+```bash
+git clone https://github.com/vio-live/vio-shopify-sync.git && cd vio-shopify-sync
+git checkout custom/client-app && npm ci && npm test
+for p in vio-sync-demo vio-sync-gladkokken vio-sync-makeupmekka vio-sync-client; do
+  rm -rf .vercel && vercel link --yes --scope tipio-2 --project $p && vercel deploy --prod --yes --scope tipio-2
+done
+```
+
+Después de cada deploy: `healthz` → `ok`, `/internal/sync-tokens` con el `CRON_SECRET` del
+proyecto → `ok:true` y `tokenExpiresAt` con más de 25 minutos, y `vercel crons ls`. Nada de
+`shopify app deploy` salvo que cambie el `toml`.
+
 ## Retomar el trabajo en una sesión nueva
 
 Las carpetas de deploy de la sesión del 2026-09-21 se borraron (vivían en un scratchpad).

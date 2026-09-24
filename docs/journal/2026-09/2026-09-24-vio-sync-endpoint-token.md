@@ -131,11 +131,15 @@ que reexporten, Alan revisa y probamos el flujo completo nosotros.
 ### Secuencia acordada
 
 1. Alan revisa y aprueba el PR #107.
-2. Angelo despliega los cuatro proyectos (`git checkout <sha>` en cada `~/vio-deploy-*` +
-   `vercel deploy --prod`).
-3. Probamos el export completo en la tienda demo (`vio-demo`, usuario Vio 1322): dos
+2. **Alan mergea y despliega los cuatro proyectos** (decisión de Angelo: "que Alan tome mi
+   parte también"): clon limpio de `custom/client-app`, `vercel link` a cada proyecto y
+   `vercel deploy --prod`; los pasos exactos y la verificación están en la tarjeta
+   [5Z5djEt5](https://trello.com/c/5Z5djEt5). Prerrequisito: acceso al team de Vercel
+   `tipio-2`, que Angelo tiene que confirmar o darle.
+3. Alan prueba el export completo en la tienda demo (`vio-demo`, usuario Vio 1322): dos
    productos → "Export selected" → `importShopifyProduct to user 1322`, cero 401, DLQ vacía,
-   y la acción visible en `/internal/audit`.
+   y la acción visible en `/internal/audit`. Si no tiene acceso a la tienda, el click lo da
+   Angelo.
 4. Recién ahí se le pide a Makeup Mekka que vuelva a exportar.
 
 ### Pendientes
