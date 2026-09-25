@@ -74,6 +74,15 @@ El grueso del backend commerce se pusheó el **2026-06-30** (los "fix timeout" /
 | **vio-template-microservice** | `/templates` | auth (creds de tienda externa), **data-mapping**, webhook — motor de mapeo de integraciones (plantillas JSON en S3 → esquema canónico) |
 | **vio-middleware-microservice** | `/middleware` | ⚠️ **NO es un proxy** — es el **gate de auth central** (forward-auth): valida API key / Firebase token / suscripción activa → 200/401 |
 
+> **Tokens de Shopify de las apps custom (desde 2026-09-24).** Para las tiendas listadas en
+> `VIO_CUSTOM_APPS` (`.env` de `extensions`, blob de Azure), `extensions` **no guarda ni
+> renueva** el token: se lo pide al app custom del cliente (`GET /internal/token`, secreto
+> `CRON_SECRET` del proyecto de Vercel), lo cachea en Redis hasta dos minutos antes de vencer
+> y reintenta una vez ante un 401. El app renueva el suyo cuando le quedan < 35 min y además
+> lo empuja cada 10 min (copia de respaldo en `shopify_connection`). Contrato y alta de
+> clientes: [playbook](../playbooks/shopify-app-custom-por-cliente.md); por qué:
+> [lección](../lessons/robusto-por-diseno-no-por-cadencia.md).
+
 > **⚠️ extensions ≠ payment-processors (resuelto 2026-07-01).** Son **dos repos distintos**.
 > `vio-extensions-microservice` = conectores de **canal** (bigcommerce/magento/shopify/woo).
 > `vio-payment-processors-microservice` = **pagos** (stripe/klarna/vipps). OJO: el

@@ -1,213 +1,159 @@
 ---
 date: 2026-09-24
-session: vio-sync-endpoint-token
+session: vio-sync-apps-custom-tokens
 participants: [angelo, claude]
 status: live
 ---
 
-# Session — 2026-09-24 — La noche aguantó, tarjetas al día y la mitad del app del rediseño
+# Session — 2026-09-24 — Makeup Mekka instaló, el agujero del token y el arreglo completo (app y backend)
 
 ## Goal
 
-Status de la mañana después del arreglo de tokens, dejar las tarjetas de Alan reflejando
-la realidad, y preparar la parte del app del rediseño del token.
+Empezó como un status de la mañana (¿aguantó la noche el arreglo de tokens del 23?) y
+terminó siendo el día en que el token de las apps custom dejó de ser una copia que se
+muere: Makeup Mekka instaló, dijo que había exportado dos productos que nunca salieron, y al
+buscar por qué apareció un agujero de ~20 minutos por hora que había que cerrar **por
+diseño**, no por cadencia. Regla de Angelo para todo el día: son clientes reales, la
+instalación actual se mantiene, y antes de pedirles que reexporten, Alan prueba y deja
+evidencia.
 
 ## Done
 
-**Status de la noche**: el cron corrió **24 veces en 12 h** (cada 30 minutos), **cero 401**
-de Shopify y Gladkokken siguió importando; la última llamada a su tienda fue un 200. Villoid
-y Makeup Mekka **siguen sin instalar** (cero señales en 20 h). Decisión de Angelo: no
-regenerar el link de Villoid antes de tiempo — Michael los está empujando, y si vence el
-2026-09-25 13:42 se manda uno nuevo ese día.
+**Mañana — la noche aguantó, y la mitad del app del rediseño**
 
-**Alan cerró su tarjeta** ([XxteZiYt](https://trello.com/c/XxteZiYt), Done, 17/17): mergeó y
-desplegó el PR #8, lo probó forzando `expires_in = null` en una cuenta de prueba, y votó por
-**quedarse con la heurística** — sin bandera ni migración, porque las apps custom son
-temporales. Coincide con lo que habíamos propuesto.
+- El cron corrió 24 veces en 12 h, cero 401, Gladkokken siguió importando.
+- Alan cerró [XxteZiYt](https://trello.com/c/XxteZiYt) (PR #8 de `extensions` desplegado y
+  probado; votó por la heurística sin bandera ni migración). Tarjetas al día para que tuviera
+  el cuadro completo: [J7E6j9dM](https://trello.com/c/J7E6j9dM) (tokens en logs por tres
+  vías), [u2MfJLCf](https://trello.com/c/u2MfJLCf) (rediseño del token),
+  [x4L6KDhY](https://trello.com/c/x4L6KDhY) (webhooks / hipótesis del stock, aparcada).
+- `GET /internal/token` en el app (`16bbebd`, los cuatro proyectos): devuelve el token
+  vigente ya rotado y su vencimiento con el mismo secreto que la ruta de sync. Aditiva.
 
-**Tarjetas al día**, para que tenga el cuadro completo de lo que pasó mientras no estaba:
-- Comentario de cierre en `XxteZiYt` separando lo hecho, lo decidido y lo que sigue abierto.
-- [J7E6j9dM](https://trello.com/c/J7E6j9dM): los logs de `extensions` siguen imprimiendo
-  tokens de las tiendas por tres vías que el PR #8 no tocaba (queries de TypeORM,
-  `graphGetProductById`/`getVariant`, dump de `getEcomUser`). No urgente: esos tokens
-  caducan solos a los ~50 minutos.
-- [u2MfJLCf](https://trello.com/c/u2MfJLCf): el rediseño del token, **preparar sin
-  desplegar**, con la implementación sin migración (mapa tienda → app en variables de
-  entorno de `extensions` + caché corto en Redis).
-- [x4L6KDhY](https://trello.com/c/x4L6KDhY): la hipótesis del stock quedó anotada; Angelo
-  la aparca por ahora.
+**Makeup Mekka instaló; Villoid no**
 
-**La mitad del app del rediseño** (`16bbebd`, desplegado en los cuatro proyectos):
-`GET /internal/token` devuelve el token vigente ya rotado y su vencimiento, con el mismo
-secreto que la ruta de sync. Es **aditiva**: nadie la llama hasta que `extensions` la use,
-así que no toca a los clientes. Las guardas y la lectura de la sesión offline quedaron
-compartidas entre las dos rutas. 205 tests, 100 % de cobertura, typecheck, lint y build
-limpios. Verificada en prod: sin credencial 401; con el secreto devuelve el token y su
-vencimiento (~45 minutos por delante).
+- Makeup Mekka instaló a las 13:10 Oslo (usuario Vio **1325**, conexión **540**) y conectó
+  a los dos minutos. A las 14:00 dijeron que habían "exportado dos productos": **no llegó
+  nada** — cero POST de sync en el app, cero llamadas a `POST /api/products/shopify-sqs`
+  en `base-api` (de ninguna tienda, en 8 h), cero `importShopifyProduct` para 1325, y el bus
+  de Azure con 0 activas y 0 en DLQ. Lo más probable, dado el UI: tildaron dos productos
+  (solo cliente) y no apretaron **"Export selected"**. Angelo les mandó las instrucciones
+  en noruego.
+- Villoid "instaló" y no instaló: el Dev Dashboard de la org marca **0 installs** para
+  `vio-client-1` (1 en cada una de las otras tres apps). Fuente de verdad para esto: la
+  lista de apps del Dev Dashboard, no los logs. Hipótesis: abrieron el link desde otra
+  tienda (el link custom está atado a `villoid.myshopify.com`).
 
-## Decisions
+**Lo que apareció buscando eso**
 
-- La app pública queda **aparcada hasta el 2026-10-05**; no se retoma el tema hasta entonces.
-- Prioridad del día: que los clientes instalen y sientan que funciona. Si algo falla, se
-  recuperan los productos con `?ids=` como se hizo con Gladkokken.
-- El rediseño del token se **prepara**, no se despliega, hasta decidir la ventana.
-
-## Blockers / open questions
-
-- Villoid y Makeup Mekka sin instalar; el link de Villoid vence el 2026-09-25 13:42.
-- La mitad de `extensions` del rediseño depende de Alan y de cuándo puedan desplegar.
-
-## Next session
-
-- Si Villoid no instaló, generar link nuevo el 25.
-- Retomar la hipótesis del stock y el ahorro de webhooks cuando Angelo lo pida.
-
----
-
-## Tarde — Makeup Mekka instaló, "exportaron dos productos" que nunca salieron, y el arreglo completo
-
-### Lo que pasó
-
-- **Makeup Mekka instaló** a las 13:10 Oslo (usuario Vio **1325**, conexión Shopify **540**) y
-  conectó a las 13:12. Toda su sesión con el app duró 1 min 54 s y terminó en el connect.
-- A las 14:00 dijeron que habían "exportado dos productos de prueba". **No llegó nada**: cero
-  POST de sync en el app, cero llamadas a `POST /api/products/shopify-sqs` en `base-api` (de
-  cualquier tienda, en 8 h), cero `importShopifyProduct` para 1325, y sus webhooks
-  `products/update` terminaban todos en `Product with origin … not found`. Tampoco había
-  nada en el bus: Azure Service Bus (`az servicebus queue list`) con **0 activas, 0 en DLQ**
-  en producto y en órdenes. Lo más probable, dado el UI: **tildaron dos productos** (solo
-  cliente) y no apretaron **"Export selected"** (el POST que nunca existió); si lo hubieran
-  apretado habrían visto el toast "2 products exported to Vio" o un error. Angelo les mandó
-  las instrucciones en noruego.
-- **Villoid dijo que instaló y no instaló**: el Dev Dashboard de la org (`222998427`) marca
-  **0 installs** para `vio-client-1`, contra 1 de cada una de las otras tres apps; el
-  proyecto de Vercel solo recibió crons en 24 h. Lección práctica: para saber si una tienda
-  instaló, mirar "N installs" en el Dev Dashboard, no rastrear logs. Hipótesis: abrieron el
-  link desde otra tienda (el link custom está atado a `villoid.myshopify.com`).
-
-### Lo que apareció buscando eso
-
-1. **El agujero del token, medido.** El token de Makeup Mekka venció a las 14:10:56 y el cron
-   lo repuso a las 14:30:16. En esa ventana, cada webhook de su tienda falló con
+1. **El agujero del token, medido.** El token de Makeup Mekka venció a las 14:10:56 y el
+   cron lo repuso a las 14:30:16. En esa ventana cada webhook de su tienda falló con
    `401 Invalid API key`, y como en `extensions` el error del refresh sube, **Pub/Sub
    reentregó el mismo mensaje una y otra vez**: la orden `7199057707139` llegó 12 veces en
    un minuto; 75 `orders/fulfilled` para 11 órdenes; 577 `products/update` para 85
-   productos. Desde el push de las 14:30, cero 401. Consecuencia: **buena parte del "goteo"
-   de webhooks que atribuíamos a un ERP o al stock son reintentos por fallo**; hay que
-   volver a medirlo con los tokens sanos antes de concluir nada (`x4L6KDhY`).
-2. **Un bug viejo del backend**: en cada upsert de la conexión (`saveShopifyExportConnection`
-   → `createExportWebhook`), `extensions` intenta registrar los webhooks de la tienda con el
-   ARN de EventBridge **de la app pública** (`aws.partner/shopify.com/4479607/webhooks-export-prod`)
-   y Shopify responde `422 "is an AWS ARN and includes api_client_id '4479607' instead of
-   '426736517121'"` para las apps custom; el código loguea `Webhook products/update created`
-   igual. No rompe nada (los webhooks de las apps custom entran por Pub/Sub, declarados en
-   el `toml`), pero son 4 llamadas fallidas por tienda en cada push y un log que miente.
-3. **Lo conocido, verificado uno por uno**: el lock de Redis del refresh (julio, `pmsXD6wr`)
-   ya es atómico con TTL — descartado; `expires` NaN — descartado (el app manda fecha real);
-   la key de otro usuario en el dashboard — arreglada en prod; cola/DLQ — vacías. Quedaba un
-   solo problema real: el token.
+   productos. Buena parte del "goteo" de webhooks que atribuíamos a un ERP o al stock eran
+   reintentos por fallo.
+2. **Un bug viejo del backend**: en cada upsert de la conexión, `extensions` intentaba
+   registrar los webhooks con el ARN de EventBridge de la app pública (`api_client_id
+   4479607`) y Shopify respondía `422 ... instead of '426736517121'` para las apps custom;
+   el código logueaba `created` igual. Los webhooks reales de esas apps entran por Pub/Sub
+   (declarados en el `toml`).
+3. **Lo conocido, verificado uno por uno**: el lock de Redis del refresh (julio,
+   `pmsXD6wr`) ya es atómico con TTL; `expires` NaN, arreglado el 23; la key de otro usuario
+   en el dashboard, arreglada en prod; cola y DLQ vacías. Quedaba un solo problema real: el
+   token.
 
-### El arreglo — PR [#107](https://github.com/vio-live/vio-shopify-sync/pull/107) (`feature/token-anticipado-y-auditoria` → `custom/client-app`)
+**El arreglo en el app** — `vio-shopify-sync`
+[#107](https://github.com/vio-live/vio-shopify-sync/pull/107) y
+[#108](https://github.com/vio-live/vio-shopify-sync/pull/108), rama `custom/client-app`
 
-Regla de Angelo: son clientes reales, la instalación actual se mantiene, y antes de pedirles
-que reexporten, Alan revisa y probamos el flujo completo nosotros.
-
-- **Renovación anticipada**: si a la sesión offline le quedan menos de 25 minutos, el app
-  hace el grant `refresh_token` contra Shopify con las credenciales de *su* app, guarda la
-  sesión nueva (`sessionStorage.storeSession`) y esa es la que empuja a Vio y la que entrega
-  `GET /internal/token`. Si Shopify no lo da, sigue con la que había y queda auditado.
-- **Cron cada 10 minutos** (antes 30). Con el umbral de 25, Vio nunca tiene un token con
-  menos de ~15 minutos de vida.
+- **Renovación anticipada**: si a la sesión offline le quedan menos de 35 minutos (25 en el
+  #107, 35 desde el #108), el app hace el grant `refresh_token` contra Shopify con las
+  credenciales de *su* app, guarda la sesión nueva y esa es la que empuja a Vio y la que
+  entrega `/internal/token`. Si Shopify no lo da, sigue con la que había y queda auditado.
+- **Cron cada 10 minutos** (antes 30).
 - **Auditoría**: cada `connect` / `sync` / `remove` del merchant, cada reencolado y cada
-  renovación queda en una línea `[vio-audit] {…}` y en una lista en Redis por tienda
-  (últimas 50), con ids, respuesta de Vio y vencimiento del token en ese momento.
-  `GET /internal/audit?shop=` (mismo secreto) la devuelve. Angelo descartó el aviso a Slack.
-- Sin variables nuevas, sin `shopify app deploy`: solo `vercel deploy --prod` en los cuatro
-  proyectos. 240 tests, cobertura 100 %, typecheck, lint y build limpios.
-- Tarjeta de review para Alan: [5Z5djEt5](https://trello.com/c/5Z5djEt5) (Dev/To do), con
-  los dos puntos del backend que siguen siendo suyos: pedir el token a `/internal/token`
-  (`u2MfJLCf`) y no registrar por EventBridge en apps custom (el 422).
+  renovación queda en `[vio-audit] {...}` y en Redis por tienda (últimas 50), con ids,
+  respuesta de Vio y vencimiento del token en ese momento; `GET /internal/audit?shop=`
+  lo devuelve. Angelo descartó el aviso a Slack.
+- Sin variables nuevas ni `shopify app deploy`. 240 tests, cobertura 100 %.
+- Alan mergeó el #107 a las 16:02 y el #108 a las 16:49. Deploys de Vercel: el #107 lo
+  disparó Claude a pedido de Angelo (16:08–16:12, Villoid al segundo intento por un "Not
+  authorized" al asignar el alias); el #108 lo desplegaron **las dos sesiones** sin
+  saberlo (Claude 20:25, Miguel 20:35 — mismo commit `491a282`, sin daño, pero es ruido:
+  coordinar por el journal antes de repetir un deploy).
+- Primer cron después del deploy (16:20): Makeup Mekka disparó la renovación anticipada y
+  empujó un token con 60 minutos; cero `Invalid API key` desde entonces.
 
-### Secuencia acordada
+**La mitad del backend** — `vio-extensions-microservice`
+[#9](https://github.com/vio-live/vio-extensions-microservice/pull/9)
 
-1. Alan revisa y aprueba el PR #107.
-2. Alan mergea a `custom/client-app` y avisa; **Angelo despliega los cuatro proyectos** desde
-   sus carpetas enlazadas (`git fetch` del repo + `git checkout FETCH_HEAD` +
-   `vercel deploy --prod` en cada `~/vio-deploy-*`). Fue y volvió en la misma tarde: primero
-   "que Alan tome mi parte también", después "yo hago lo de Vercel". La tarjeta
-   [5Z5djEt5](https://trello.com/c/5Z5djEt5) quedó con la versión final.
-3. Alan verifica en el backend que los 401 desaparecen y prueba el export completo en la
-   tienda demo (`vio-demo`, usuario Vio 1322): dos productos → "Export selected" →
-   `importShopifyProduct to user 1322`, cero 401, DLQ vacía, y la acción visible en
-   `/internal/audit`. Si no tiene acceso a la tienda, el click lo da Angelo.
-4. Recién ahí se le pide a Makeup Mekka que vuelva a exportar.
+Angelo no aceptó "robusto para operar, no por diseño" ("te dije que hiciéramos todo bien"),
+así que la otra mitad quedó escrita la misma tarde:
 
-### Pendientes
+- `VIO_CUSTOM_APPS` (JSON tienda → `{url, secret}` del app en Vercel; el secreto es el
+  `CRON_SECRET` del proyecto). Para esas tiendas `asyncrefreshTokenIfApply` **no refresca
+  nunca**: pide `GET /internal/token`, cachea el token en Redis hasta dos minutos antes de su
+  vencimiento, actualiza `shopify_connection` de paso, y `call()` reintenta una vez ante un
+  401 después de volver a pedirlo. `createWebhook` salta el registro por EventBridge para
+  esas tiendas y ya no loguea "created" sobre un error. Sin la variable, todo sigue igual.
+- Specs puras para los dos módulos nuevos; la suite entera no corre sin MySQL y Redis
+  (lección de Miguel, abajo). Alan mergeó a `develop` a las 16:47.
+- **Rollout a producción** (Miguel con Angelo, 19:00–22:30): rotación de los cuatro
+  `CRON_SECRET` (estaban `sensitive` en Vercel y nadie tenía copia), `VIO_CUSTOM_APPS` en el
+  blob `.env` de Azure, `develop → master`, CI verde 20:28. Todo eso está en
+  [su entry](2026-09-24-extensions-apps-custom-en-prod.md); acá solo la verificación de
+  Claude en los dos pods nuevos (20:28–20:45): `apps custom configuradas` con las cuatro
+  tiendas en ambos; tokens tomados del app (Gladkokken 12, Makeup Mekka 1, demo 1); **0**
+  `no entregó token`, **0** `Invalid API key`, **0** intentos del refresh viejo, **36**
+  registros por EventBridge saltados y **0** `api_client_id`; dos filas de
+  `shopify_connection` actualizadas con el token del app; sin errores de arranque.
 
-- Villoid: el link vence el 25 a las 13:42; si no instalaron, link nuevo ese día. Preguntar
-  desde qué tienda lo abrieron.
-- Remedir el volumen de webhooks de Gladkokken y Makeup Mekka con los tokens sanos, antes de
-  la hipótesis del stock.
+**Tarjetas y seguimiento**
 
-### Cierre de la tarde: mergeado y desplegado
+- [5Z5djEt5](https://trello.com/c/5Z5djEt5) (Dev, Alan): nació como "revisá el #107" y
+  terminó como el **plan de pruebas con evidencia obligatoria**: 10 escenarios (camino
+  feliz, copia vieja forzada en la base, renovación anticipada con el cron caído, webhooks,
+  alta sin EventBridge, remove, orden, reinstalación en la demo, las dos réplicas,
+  remedición del goteo) y un **Go/No-Go de cinco condiciones** para pedirle a Makeup Mekka
+  que exporte. Angelo pidió además que Alan fuerce el app con escenarios propios.
+- Tarea programada `seguimiento-pr107-alan` (cada 30 min, 8–22): la tarjeta, el código
+  desplegado en los cuatro proyectos y la salud de los tokens en prod; avisa solo cuando
+  algo cambia y dice "Go" cuando el Go/No-Go esté completo.
 
-- Alan mergeó el PR #107 a las 16:02 (`5908260`), sin comentarios de review. Angelo pidió
-  que el deploy lo disparara Claude: los cuatro proyectos quedaron en producción entre las
-  16:08 y las 16:12 (Villoid necesitó un segundo intento: "Not authorized" al asignar el
-  alias; el segundo lo dejó bien). Sondas: `/internal/audit` responde 401 en los cuatro,
-  `vercel crons ls` muestra `*/10`.
-- Primer cron completo (16:20): la demo y Gladkokken empujaron con 40–41 minutos de vida;
-  **Makeup Mekka disparó la renovación anticipada** ("token renovado antes de vencer") y
-  empujó un token con **60 minutos**. `extensions`: **cero** `Invalid API key` en los 10
-  minutos siguientes.
-- Gotcha que casi da una falsa alarma: `kubectl logs deploy/users` lee una sola réplica; el
-  push de Makeup Mekka estaba en la otra. Quedó en el playbook.
-- Seguimiento automático `seguimiento-pr107-alan` (cada 30 minutos): PR, tarjeta de Alan,
-  código desplegado y salud de los tokens. Le toca a Alan la checklist "Después del deploy"
-  (verificación en el backend y prueba del export en la demo); después Angelo le pide a
-  Makeup Mekka que reexporte.
+## Decisions
 
-### "Te dije que hiciéramos todo bien": la mitad del backend, escrita
+- La app pública sigue **aparcada hasta el 2026-10-05**.
+- Villoid: no regenerar el link antes de que venza (25/09 13:42); si vence sin instalar,
+  link nuevo ese día.
+- Sin Slack para la auditoría; alcanza con el log y `/internal/audit`.
+- **Nada de pedirle a Makeup Mekka que reexporte hasta que el Go/No-Go de Alan esté verde.**
+- El deploy de Vercel lo hace Angelo (o Claude a pedido); el backend lo despliega el equipo
+  por CI/CD (`develop → master`).
 
-Angelo no aceptó "robusto para operar, no por diseño". Así que la otra mitad quedó escrita
-la misma tarde, para que Alan la revise y despliegue:
+## Blockers / open questions
 
-- **`vio-extensions-microservice` [#9](https://github.com/vio-live/vio-extensions-microservice/pull/9)**
-  (`feature/token-desde-el-app` → `develop`): para las tiendas del mapa `VIO_CUSTOM_APPS`
-  (JSON tienda → `{url, secret}` del app en Vercel), `asyncrefreshTokenIfApply` **no refresca
-  nunca**: pide `GET /internal/token` al app, cachea el token en Redis hasta dos minutos
-  antes de su vencimiento, actualiza `shopify_connection` de paso, y `call()` reintenta una
-  vez ante un 401 después de volver a pedirlo. `createWebhook` deja de registrar por
-  EventBridge esas tiendas (el 422 del ARN de la app pública) y ya no loguea "created" sobre
-  un error. Sin la variable, todo sigue igual. Specs puras para los dos módulos nuevos;
-  la suite entera no corre en mi máquina (el kernel privado), la corre Alan como con el #8.
-  El secreto de cada app es el `CRON_SECRET` de su proyecto de Vercel: **Angelo se los tiene
-  que pasar a Alan**.
-- **`vio-shopify-sync` [#108](https://github.com/vio-live/vio-shopify-sync/pull/108)**: umbral
-  de renovación de 25 a 35 minutos; la copia llega siempre con más de 25 y aguanta dos crons
-  perdidos. Redeploy de los cuatro proyectos cuando se mergee.
+- Villoid sin instalar (0 installs en el Dev Dashboard); preguntar desde qué tienda abrieron
+  el link.
+- Los reintentos de Pub/Sub inflaron el volumen de webhooks: la hipótesis del stock
+  (`x4L6KDhY`) hay que remedirla con los tokens sanos antes de concluir nada.
+- Ruido residual en los logs de `extensions` (tarjeta `J7E6j9dM`) y el `STRIPE_WEBHOOK_SECRET`
+  divergente en el blob `.env` que encontró Miguel (no es de esta sesión, pero va a saltar en
+  el próximo deploy de `payment-processors`).
 
-Con los dos desplegados, el token vive en un solo lugar (el app) y Vio lo pide cuando lo
-necesita: si el app deja de empujar, sigue funcionando; y el refresh con credenciales
-ajenas queda inalcanzable para esas tiendas. La tarjeta [5Z5djEt5](https://trello.com/c/5Z5djEt5)
-tiene los pasos de Alan (review, suite, `VIO_CUSTOM_APPS`, deploy, prueba del 401 forzado,
-prueba en la demo).
+## Next session
 
-### Cierre de la noche: la mitad del backend en producción, verificada
+- Seguir a Alan por la tarjeta; con el Go/No-Go verde, Angelo manda el mensaje a Makeup
+  Mekka y Claude confirma el import del usuario 1325.
+- 25/09: link nuevo a Villoid si no instalaron.
+- Al dar de alta un cliente nuevo: sumar su tienda a `VIO_CUSTOM_APPS` (blob `.env` de
+  Azure) además de los pasos del playbook.
 
-- Alan mergeó el #9 a `develop` (16:47) y el #108 a `custom/client-app` (16:49). Angelo hizo
-  los pasos del backend: `VIO_CUSTOM_APPS` en el secreto `ENV_FILE_PROD` (el `.env` se hornea
-  en la imagen), `develop → master` a las 20:21, CI/CD verde 20:28, pods nuevos. Claude
-  redesplegó los cuatro proyectos de Vercel con el #108 (`491a282`).
-- Verificado en los **dos** pods nuevos de `extensions` (20:28–20:45): `apps custom
-  configuradas` con las cuatro tiendas; tokens **tomados del app** (Gladkokken 12, Makeup
-  Mekka 1, demo 1: la caché funciona); **0** `no entregó token`, **0** `Invalid API key`,
-  **0** intentos del refresh viejo, **36** registros por EventBridge saltados y **0**
-  `api_client_id`; dos filas de `shopify_connection` actualizadas con el token del app; sin
-  errores de arranque.
-- Tarjeta [5Z5djEt5](https://trello.com/c/5Z5djEt5) reescrita como plan de pruebas de Alan:
-  10 escenarios con evidencia obligatoria (camino feliz, copia vieja forzada en la base,
-  renovación anticipada/cron caído, webhooks, alta sin EventBridge, remove, orden,
-  reinstalación en la demo, las dos réplicas, remedición del goteo) y un Go/No-Go de cinco
-  condiciones para pedirle a Makeup Mekka que exporte. Angelo pidió además que Alan fuerce
-  el app con escenarios propios por si se nos pasó algo.
+## Ver también
+
+- [Lección: robusto por diseño, no por cadencia](../../lessons/robusto-por-diseno-no-por-cadencia.md)
+- [Lección: con tokens que rotan, el refresh tiene un solo dueño](../../lessons/tokens-rotados-un-solo-dueno.md)
+- [Playbook: app custom por cliente](../../playbooks/shopify-app-custom-por-cliente.md)
+- [Entry de Miguel: `VIO_CUSTOM_APPS` en producción](2026-09-24-extensions-apps-custom-en-prod.md),
+  [`ENV_FILE_*` es el nombre del blob](../../lessons/env-file-es-el-nombre-del-blob.md),
+  [la suite de Commerce necesita MySQL y Redis](../../lessons/tests-commerce-necesitan-db-local.md)

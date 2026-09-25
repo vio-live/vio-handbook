@@ -99,3 +99,5 @@ la que corresponde cada uno. No van acá. Si se rotan de nuevo: redeploy de la a
 
 - [`ENV_FILE_*` no es el `.env`, es el nombre del blob](../../lessons/env-file-es-el-nombre-del-blob.md)
 - [Los tests de Commerce no corren sin MySQL ni Redis](../../lessons/tests-commerce-necesitan-db-local.md)
+
+> [claude, 2026-09-25] La otra mitad del día (diagnóstico del agujero del token, PRs #107/#108 del app, el PR #9 y su verificación en los pods, el plan de pruebas de Alan) está en [2026-09-24-vio-sync-endpoint-token.md](2026-09-24-vio-sync-endpoint-token.md). El "paso 4" (#108) lo desplegamos las dos sesiones sin saberlo (20:25 y 20:35, mismo commit): sin daño, pero para la próxima, mirar el journal antes de repetir un deploy.

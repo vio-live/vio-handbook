@@ -141,10 +141,13 @@ Desde `3439dca` el app se encarga:
   llama `extensions` para las tiendas de `VIO_CUSTOM_APPS`
   ([PR #9](https://github.com/vio-live/vio-extensions-microservice/pull/9), **en producción
   desde el 2026-09-24 20:28**): JSON tienda → `{url, secret}` en el `.env` del
-  microservicio — que se hornea en la imagen desde el secreto de GitHub `ENV_FILE_PROD`
-  (`deploy.yml`); para editarlo hay que reconstruir el archivo (por ejemplo desde el pod) y
-  volver a pegarlo entero, porque los secretos de GitHub no se leen de vuelta. El secreto de
-  cada tienda es el `CRON_SECRET` de su proyecto de Vercel. Con eso el backend no
+  microservicio. Ese `.env` **no** está en GitHub: `ENV_FILE_PROD` es el nombre de un blob
+  (`.env`) en Azure Storage `containerproduction2` / `env-file-microservices`, compartido por
+  12 micros, que el Dockerfile baja al construir — se edita con `az storage blob` (snapshot
+  primero), ver [la lección de Miguel](../lessons/env-file-es-el-nombre-del-blob.md). El
+  secreto de cada tienda es el `CRON_SECRET` de su proyecto de Vercel; los cuatro se rotaron
+  el 2026-09-24 y las copias viven en el `TOOLS.md` del workspace de Miguel. Si se rotan de
+  nuevo: primero redeploy de la app en Vercel, después el blob, en ese orden. Con eso el backend no
   refresca nunca esas conexiones: pide el token, lo cachea en Redis hasta dos minutos antes
   de vencer y reintenta una vez ante un 401. **Al dar de alta un cliente nuevo hay que
   agregar su tienda a `VIO_CUSTOM_APPS`** (o queda en el modelo de copia empujada, que
