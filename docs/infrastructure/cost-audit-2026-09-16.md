@@ -1,6 +1,6 @@
 ---
 title: Audit de costos Azure — 2026-09-16
-last-updated: 2026-09-23
+last-updated: 2026-09-25
 owner: miguel
 ---
 
@@ -19,7 +19,7 @@ Se hizo el día en que se acabaron los créditos del Sponsorship. No se cambió 
 | # | Recurso | Hoy | Hallazgo | Propuesta | Ahorro/mes aprox. |
 |---|---|---|---|---|---|
 | 1 | AKS `vio-commerce-prod` (3 × D4as_v5) | $540 | Pide 7,33 cores y usa ~0,5. El autoscaler tiene min=3 | Bajar los CPU requests y poner min=2, o pasar a 3 × E2as_v5 ($354) | ~$180 |
-| 2 | Azure Managed Redis `redus-vio-prod` y `redus-vio-staging` (Balanced B1, $144 c/u) | $288 | 1 % de memoria y máx. 4 ops/s en las dos | Bajar a B0 ($57 c/u), o como mínimo staging. Verificar antes si se puede bajar en caliente o hay que recrear | ~$87–174 |
+| 2 | Azure Managed Redis `redus-vio-prod` y `redus-vio-staging` (los dos Balanced_B1) | $355 | 1 % de memoria y máx. 4 ops/s en las dos | **CORREGIDO 2026-09-25 con facturación real:** prod = **$308/mes** (96 NOK/día) porque tiene `highAvailability: Enabled` + `redundancyMode: ZR`; staging = **$47/mes** (14,5 NOK/día) sin HA. El estimado anterior de "$144 c/u" era erróneo en los dos sentidos. Ahorro real: apagar la HA/ZR de prod son ~$260/mes (decisión de resiliencia, es prod → requiere OK de Angelo); bajar staging a B0 son ~$25/mes | ~$25 (staging) / ~$260 (prod, con OK) |
 | 3 | MySQL `vio-ecom-db-prod` y `-staging` (GP D2ds_v4, sin HA) | ~$340–470 | CPU al 3 % y al 1 % | Pasar a Burstable B2ms (~$128 c/u). Requiere reinicio | ~$80–200 |
 | 4 | APIM `OpenClawCodex` y `OpenClawCodexRetry` (RG `qa`, Developer) | ~$96 | Los creó angelo@tipio.no el 2026-04-11. Solo tienen la `echo-api` de ejemplo; no son de Vio | **Borrados el 2026-09-22** | ~$96 |
 | 5 | App Service plan `ASP-prodreachu-96fd` (B1 **Windows**) | ~$56 | Aloja las funciones legacy `prod-functions-code2` y `qa-functions-code2` (Service Bus de Reachu) | **Borrado el 2026-09-21** por pedido de Angelo, con el plan y las dos funciones. Solo llamaban a `api.reachu.io`, que ya no responde (ver journal 2026-09-21) | ~$56 |
@@ -97,7 +97,7 @@ Precios de la Retail Prices API (730 h/mes, USD). Uso medido en vivo.
 | AKS `kubernetesqa` (3 × E2as_v4, $0,18/h) | $394 24/7. Con horario (08–01 L-V, ~51 %) serían ~$201 | 0,5 cores y 5,2 GB en total. Requests: 2,67 cores (default: 740m / 2,9 GB) | Pool nuevo 2 × B2as_v2 ($0,095/h) y borrar el actual | $139 24/7, ~$71 con horario |
 | **Horario QA roto** | Los crons `qa-cluster-stop/start` fallan desde el 21/09 (`claude-cli cannot enforce runtime toolsAllow`); el 19/09 no corrió. Los nodos existen desde el 18/09 08:51: **4 días 24/7** | — | Pasar el start/stop a un Container Apps Job con managed identity (como `pg-start/stop-api-vio-staging`), sin depender del LLM | — |
 | MySQL `vio-ecom-db-staging` (**pasada a Burstable B2s el 2026-09-22**; antes GP D2ds_v4, Norway West, $0,298/h + 64 GB) | ~$230, 24/7 (nunca se apaga) | 1 GB de datos, CPU media 7,8 % / máx. 28 %, máx. 77 conexiones | Burstable B2s ($0,126/h) + apagarla con el mismo horario que el cluster | ~$60 |
-| Managed Redis `redus-vio-staging` (Balanced B1, Norway West) | ~$43 (13–15 NOK/día medidos) | 1 % de memoria. La usan base-api y graph-ql de QA | Redis dentro del cluster (se apaga con él) o B0 ($22) | $0–22 |
+| Managed Redis `redus-vio-staging` (Balanced_B1 sin HA, Norway West) | $47 (14,5 NOK/día, confirmado en facturación 2026-09-23) | 1 % de memoria. La usan base-api y graph-ql de QA | Redis dentro del cluster (se apaga con él) o B0 (~$22) | $25–47 |
 | APIM `OpenClawCodex` ×2 (RG `qa`, Developer) | ~$96 | No es de Vio | Borrar (decide Angelo, pendiente desde el 16/09) | $0 |
 | Backend staging (PG B1ms, Container Apps min=0) | ~$25 | Demo 24/7 | Nada, ya está al mínimo | ~$25 |
 | ACR `reachuqa2`, Service Bus, storage QA, partner mock (Y1) | ~$30 | ACR en 141 GB vs 100 incluidos | **ACR hecho el 2026-09-23** (ver punto 9): 90 GB, exceso $0, purga semanal automática | ~$26 |
