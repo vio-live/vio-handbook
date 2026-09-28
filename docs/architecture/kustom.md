@@ -341,12 +341,48 @@ quote de tienda. Es una extensión de código que ya existe, no algo desde cero.
   además necesita acceso a su Magento para armar el carrito y **tira a la basura el checkout de
   Vio** — es click-out disfrazado, justo lo que Vio elimina.
 
+- **Exportar las órdenes de Kustom a CSV e importarlas a Magento:** Magento **no importa
+  órdenes por CSV** (su import nativo es productos/clientes/stock, no `sales_order`). "Importar
+  el CSV" sería o una extensión de terceros (módulo, que Boots no instala) o un importador
+  nuestro por la API — es decir, el mismo camino de la API pero por lotes, con la misma pared
+  del link y encima latencia, pasos manuales y reconciliación de SKUs/impuestos. No aterriza
+  nativa.
+
 **Decisión de piloto (Angelo, 2026-09-28).** El piloto corre **sin nada de esto**: Boots da el
 feed + su key de Kustom, y las órdenes **se gestionan en el portal de Kustom (Order
 Management)**, no en Magento. Es **0 intrusivo en setup** (no instalan ni tocan nada), pero
 **sí intrusivo en la operación**: esas ventas se atienden en un back-office separado del flujo
 de boots.no. Tolerable para pocas órdenes; no a escala. El link a Magento es lo que lo vuelve
 transparente a volumen, y es lo único que depende de Kustom.
+
+
+### El costo de la versión offline, y por qué el link ES la reconciliación
+
+Si Boots diera una API key de escritura, podríamos crear las órdenes por REST, pero **offline**
+(`checkmo`, sin el link). Lo peor de esa versión no es lo técnico (etiqueta checkmo, emails
+duplicados, stock, dedupe — todo maquillable con convenciones), sino lo **estructural**:
+
+1. **Reconciliación manual.** La plata está en Kustom y la orden en Magento figura "no pagada";
+   finanzas matchea a mano cuál pago es cuál orden.
+2. **Impuestos que no cuadran.** La orden lleva nuestros totales (del feed), no los del motor de
+   Magento; sus reportes fiscales pueden quedar mal.
+3. **Captura/refund divergen en silencio.** Las acciones de dinero pasan en Kustom, el registro
+   en Magento, y nada los sincroniza.
+
+**El link (`klarna_core_order`) es, literalmente, esa reconciliación hecha máquina.** Con él, la
+orden de Magento sabe que es un pago de Kustom, y las acciones fluyen solas (factura en Magento
+→ captura en Kustom; nota de crédito → refund). En la versión nativa esos tres problemas
+**desaparecen**, no persisten: es un solo registro consistente, no dos libros. Lo único inherente
+al modelo es que el precio lo pone el **feed** y no el motor de Magento — pero eso es una cuestión
+de *fidelidad del feed* (el feed es el catálogo de Boots, así que coincide), no el problema de
+reconciliación, y aplica a toda venta de Vio con o sin Magento.
+
+**Y ese link solo lo escribe el módulo de Kustom.** No hay REST (`webapi.xml` inexistente),
+ninguna API key del comerciante lo toca, el CSV/import tampoco, y el write directo a la base
+(su tabla interna) está fuera de alcance. Conclusión dura: **la versión nativa/reconciliada
+depende 100% de Kustom** — o extienden su fallback para materializar una orden creada por su
+API, o no existe. Las otras dos vías (offline con dos libros, o gestionar en el portal de
+Kustom) las podemos hacer nosotros y sirven para un piloto, pero no son el canal transparente.
 
 ## Pendiente
 - E2E en el playground: tarjeta `4242…`, 3DS `4000002760003184`, cambio de tarifa dentro del
