@@ -323,6 +323,24 @@ link cuando la compra nace en la tienda; que haga lo mismo con una orden creada 
 **reconstruyéndola desde la propia orden de Kustom** (Order Management) en vez de desde una
 quote de tienda. Es una extensión de código que ya existe, no algo desde cero.
 
+**Descartados (2026-09-28, contra el código de los módulos):**
+
+- **Express Buttons / Kustom Elements** (`vaimo/kustom-module-kec` v2.0.19). Los sugirió Kustom
+  en la reunión. Es un botón de un clic (wallets + Klarna), pero **está atado al carrito de
+  Magento** igual o más que el checkout normal: sus controladores actualizan la quote
+  (`UpdateQuoteAddress` → `updateMagentoQuoteByKlarnaAddressData`) y colocan la orden por el
+  checkout de Magento (`SuccessControllerPlugin` restaura la quote). Sin `webapi.xml`, sin
+  ningún camino que arme la orden desde el pedido de Kustom. No resuelve el landing y además
+  exige KSA en el MID (más setup, contra el piloto). Solo volvería a la mesa si Kustom dijera
+  que *su* vía de registro al comerciante pasa por Elements.
+- **Embeber el checkout de Kustom que creamos nosotros:** es lo que ya hacemos; nace por API,
+  sin quote de storefront → no aterriza. El problema no es el embed, es el origen de la orden.
+- **Embeber el checkout/tienda del propio comerciante** (iframe de su Magento en el artículo):
+  bloqueado por `X-Frame-Options`/CSP `frame-ancestors` (los checkouts no se dejan enmarcar,
+  PCI) y por cookies de tercero (Safari/Chrome rompen la sesión de Magento en el iframe);
+  además necesita acceso a su Magento para armar el carrito y **tira a la basura el checkout de
+  Vio** — es click-out disfrazado, justo lo que Vio elimina.
+
 **Decisión de piloto (Angelo, 2026-09-28).** El piloto corre **sin nada de esto**: Boots da el
 feed + su key de Kustom, y las órdenes **se gestionan en el portal de Kustom (Order
 Management)**, no en Magento. Es **0 intrusivo en setup** (no instalan ni tocan nada), pero
