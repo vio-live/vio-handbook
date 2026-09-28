@@ -78,7 +78,12 @@ completa queda en 362 en verde.
   tests de ese repo no se pudieron correr aquí.
 - Siguen abiertos, a propósito, fuera de estos PR: captura automática de Klarna (tarjeta de
   auto-captura), órdenes PENDING de checkouts de Stripe abandonados, el respaldo con la cuenta de
-  Vio sin liquidación ni IVA, y los vendedores sin `whsec_`.
+  Vio sin liquidación ni IVA, y los vendedores sin `whsec_`. Sobre esto último, corrijo lo que
+  escribí en la primera versión de esta entrada: **el dashboard NO recoge el secreto de firma de
+  Stripe** — `webapp/src/lib/payments.js` sólo pide `publishKey` y `secretKey`, y el único
+  proveedor con campo de `whsec_` es Kustom. O sea que hoy ningún vendedor con claves propias
+  tiene firma verificable; lo que salva la situación es que el webhook relee el objeto en Stripe
+  antes de dar nada por pagado. Va con la tarjeta [tGxeYY9k](https://trello.com/c/tGxeYY9k).
 
 ## Next session
 
