@@ -99,6 +99,42 @@ migración atrás del código). Con esa pendiente, el scheduler tiraba
 - **Reinicio completo probado**: tras `systemctl reboot`, los tres servicios levantan solos,
   el swap se remonta, las reglas de iptables persisten y todos los endpoints vuelven a 200.
 
+## Gotcha: las VITE_* son de build, no de runtime
+
+Vite **incrusta** las variables con prefijo `VITE_` en el bundle del cliente al compilar.
+Ponerlas en el `.env` que lee systemd no sirve de nada: hay que tenerlas presentes **antes**
+de `npm run build`. Si faltan, la app levanta bien y el server responde 200, pero la pantalla
+de login muestra *"Missing client config. Set VITE_FIREBASE_API_KEY..."*.
+
+En el pipeline de Azure iban como `build-args` del Dockerfile desde secrets de GitHub
+(`FIREBASE_WEB_API_KEY_PROD`, `FIREBASE_WEB_AUTH_DOMAIN_PROD`). Acá van en
+`/opt/vio-backend/.env`, que funciona para las dos cosas porque `vite.config.ts` define
+`envDir` como la raíz del repo — el mismo archivo que usa systemd.
+
+    VITE_FIREBASE_API_KEY=AIza...        # config web, publica (viaja en el bundle)
+    VITE_FIREBASE_AUTH_DOMAIN=reachu-prod.firebaseapp.com
+    VITE_FIREBASE_PROJECT_ID=reachu-prod
+
+**Tras cambiarlas hay que reconstruir**, no sólo reiniciar. Para verificar que quedaron dentro:
+
+    curl -s https://api.vio.live/ | grep -oE '/assets/index-[^"]+\.js'
+    curl -s "https://api.vio.live<ese-asset>" | grep -oE 'AIza[A-Za-z0-9_-]{30,40}'
+
+## Firebase: dominios autorizados
+
+`api.vio.live` **no está** en los dominios autorizados de `reachu-prod`. La lista hoy es
+`localhost`, `reachu-prod.firebaseapp.com`, `reachu-prod.web.app`, `reachu.io`, `test.reachu.io`
+— desactualizada, sin ningún dominio `vio.live`. Se consulta sin credenciales:
+
+    curl -s "https://identitytoolkit.googleapis.com/v1/projects?key=<VITE_FIREBASE_API_KEY>"
+
+Consecuencia concreta:
+
+- **Login con email/password: funciona.** Ese flujo no valida el dominio.
+- **Login con Google (`signInWithPopup`): falla** con `auth/unauthorized-domain` hasta que
+  alguien agregue `api.vio.live` en Firebase console -> Authentication -> Settings ->
+  Authorized domains. Requiere acceso al proyecto `reachu-prod`.
+
 ## Pendientes conocidos
 
 - **Firebase**: la service account de `reachu-prod` se perdió al borrar el RG de Azure y hay
@@ -106,6 +142,7 @@ migración atrás del código). Con esa pendiente, el scheduler tiraba
   necesita `FIREBASE_PROJECT_ID`, que está configurado. Falta sólo para operaciones del Admin SDK.
 - **Analytics**: `ANALYTICS_EVENTS_URL` quedó sin setear — el Container App de analytics de prod
   se borró con el RG. Decidir si se rehospeda o si Mixpanel alcanza.
+- **`api.vio.live` en los dominios autorizados de Firebase** (ver arriba): sin eso el login con Google no anda. Requiere consola de Firebase.
 - **Backups de la base**: hoy no hay ninguno automatizado en esta máquina. Es lo próximo.
 - **Sin proxy de Cloudflare**: la IP de origen queda expuesta. Si se quiere el naranja, hay que
   pasar a modo Full (strict) y verificar que el WebSocket siga estable.
