@@ -38,13 +38,22 @@ que ya pagó.
 suite 348/348; `tsc` limpio. En QA, shopcart arrancó y el relay público con un id inventado no crea
 nada.
 
+**El mismo agujero en base-api, encontrado al probarlo y quitado el mismo día.** Cuando `pre` decía
+que el pago no era de shopcart, `klarnaService.receiveWebhook` leía el pedido con las claves de
+plataforma y **creaba la orden de Commerce él mismo** (canal WORDPRESS), sin estado ni idempotencia.
+Era el flujo antiguo de WordPress, cuyos pagos nacían en `POST /klarna/checkout`.
+
+Angelo: "bórralo y nos quedamos solo con lo nuevo". En
+[base-api #18](https://github.com/vio-live/vio-base-api/pull/18) se quitaron esa rama, la ruta
+`POST /klarna/checkout` y los mapeadores que solo ella usaba. El webhook ahora reenvía a shopcart e
+**ignora** lo que shopcart no reconoce. Verificado en QA: un id inventado responde 200 y no crea
+nada (`is not one of ours — ignored`), y `POST /klarna/checkout` responde 404. base-api 51/51.
+
+Los pagos de Klarna los inicia solo el checkout. `GET /klarna/order/:id` y la captura/cancelación
+siguen igual — sin ruta que los llame, quedan como código muerto a revisar.
+
 ## Blockers
 
-- **base-api tiene su propio camino heredado para Klarna.** Cuando `pre` dice que el pago no es de
-  shopcart, `klarnaService.receiveWebhook` lee el pedido con las claves de plataforma y **crea la
-  orden él mismo** (`orderService.save` + `processOrderPaidByCustomerByMicroServices`), sin
-  comprobar el estado ni la idempotencia. Hoy falla con 401 porque no hay claves de plataforma en QA,
-  pero el código sigue ahí: mismo agujero, otro servicio.
 - Siguen abiertos los otros fallos graves del 10/09: Apple Pay y Google Pay marcan la orden como
   pagada sin comprobar que Stripe cobró; Walley manda el IVA multiplicado por 100; el webhook de
   Vipps se fía del cuerpo en vez del estado real.
@@ -53,4 +62,4 @@ nada.
 
 - Apple Pay y Google Pay (lo que puede enviar mercancía sin cobro).
 - El IVA de Walley.
-- Decidir qué se hace con el camino heredado de Klarna en base-api: quitarlo o protegerlo igual.
+- Repasar lo que quedó sin usar en `klarnaService` de base-api (captura y cancelación, sin ruta).
