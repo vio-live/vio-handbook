@@ -275,6 +275,61 @@ Con `node ~/vio-commerce/tools/kustom-spike/spike.mjs` se comprobó en el playgr
 - **Apple Pay:** Kustom no da datos de prueba.
 - **Guía para QA:** tarjeta de Alan [ZgnheyI8](https://trello.com/c/ZgnheyI8).
 
+## La orden en el Magento del comerciante (análisis 2026-09-28)
+
+> Leído del módulo oficial `vaimo/kustom-module-kco` v12.0.23 (+ `-backend`, `-base`),
+> **no probado contra un Magento real**. Contexto: reunión con Kustom para vender Vio a
+> comerciantes que ya usan Kustom en su tienda (Boots, Magento 2), donde la venta la crea
+> **Vio por la API de Kustom, en la cuenta del comerciante**. El dinero ya cae en la cuenta
+> del comerciante; lo que se investiga es cómo la orden llega a su Magento para gestionarla ahí.
+
+**Qué hace administrable una orden en Magento.** Para que el comerciante capture y devuelva
+desde su Magento (facturas y notas de crédito) tienen que existir, a la vez, en su Magento:
+
+1. la **orden de Magento** (`sales_order`), con el método de pago Kustom;
+2. el **link `klarna_core_order`** que la ata al pedido de Kustom (`klarna_order_id` ↔
+   `order_id` de Magento, `reservation_id`, `used_mid`).
+
+Las acciones de captura/refund del método (backend `Gateway/Command/Capture.php`,
+`Refund.php`) resuelven el pedido de Kustom con `getByOrder($mageOrder)` → leen
+`klarna_core_order` → llaman Order Management. **Sin ese link, la orden de Magento no sabe
+cobrar.**
+
+**En una venta de la tienda** eso se crea solo: en el push, `Controller/Api/Push.php` →
+`createMagentoOrder()` (`Model/Order/Order.php`) crea la orden y escribe el link de una vez.
+Pero `createMagentoOrder` necesita la **quote de Magento** y su fila `klarna_kco_quote`
+(`klarna_checkout_id` ↔ `quote_id`), que solo existe si la compra nació en el checkout de la
+tienda. Si no la encuentra, intenta **cancelar el pedido en Kustom**.
+
+**En una venta de Vio** (creada por la API de Kustom) no hay quote de tienda → el fallback no
+tiene con qué construir → hoy falla. Ese es el hueco.
+
+**Por qué el acceso al Magento del comerciante NO lo resuelve:**
+
+- Una key **de lectura** no crea nada — es la dirección equivocada.
+- Una key **de escritura** crea la orden por REST (como nuestro conector, con `checkmo`), pero
+  **no escribe el link**: `klarna_core_order` es tabla interna del módulo y **ningún módulo
+  expone `webapi.xml`** — no hay REST que la toque. Resultado: orden visible y despachable en
+  Magento, pero captura/refund siguen en el portal de Kustom.
+- Escribir la fila a mano necesita un módulo corriendo dentro del Magento (o acceso a la base).
+  Boots no instala módulos.
+
+**Conclusión.** El link "administrable como orden de Kustom en Magento" solo lo puede escribir
+el **módulo de Kustom**, que ya corre en el Magento del comerciante. Es un *write*, no un
+*read*; ninguna API key del comerciante lo baja.
+
+**El pedido a Kustom (la pregunta afilada de la reunión).** Su fallback ya crea la orden y el
+link cuando la compra nace en la tienda; que haga lo mismo con una orden creada por su API,
+**reconstruyéndola desde la propia orden de Kustom** (Order Management) en vez de desde una
+quote de tienda. Es una extensión de código que ya existe, no algo desde cero.
+
+**Decisión de piloto (Angelo, 2026-09-28).** El piloto corre **sin nada de esto**: Boots da el
+feed + su key de Kustom, y las órdenes **se gestionan en el portal de Kustom (Order
+Management)**, no en Magento. Es **0 intrusivo en setup** (no instalan ni tocan nada), pero
+**sí intrusivo en la operación**: esas ventas se atienden en un back-office separado del flujo
+de boots.no. Tolerable para pocas órdenes; no a escala. El link a Magento es lo que lo vuelve
+transparente a volumen, y es lo único que depende de Kustom.
+
 ## Pendiente
 - E2E en el playground: tarjeta `4242…`, 3DS `4000002760003184`, cambio de tarifa dentro del
   widget, cambio de carrito con el widget abierto (sync), cierre y reapertura (¿re-inicializar el
