@@ -97,7 +97,42 @@ molesta se puede sacar el `ExecStartPre` y correr migraciones sólo en el deploy
 - El fix del 404 por API key desconocida está desplegado
 - **Reinicio completo probado**: los 4 servicios levantan solos, swap e iptables persisten
 
-## Pendiente: dar de baja lo de Azure
+## Baja de Azure: EJECUTADA el 2026-09-28
+
+Antes de borrar nada se tomó un **dump final** y se comparó contra el que ya se había
+restaurado en Oracle: **idénticos** salvo los tokens aleatorios `\restrict` que pg_dump genera
+en cada corrida. Cero escrituras perdidas.
+
+Respaldos en `~/vio-backups/azure-staging-decommission-2026-09-28/`: dump final, la config JSON
+completa de las dos Container Apps **con sus secretos**, los 3 jobs, el environment y la Postgres.
+El dump también quedó en el blob `saapivio/db-snapshots/`.
+
+Borrado:
+
+- `ca-api-vio-staging` y `ca-analytics-vio-staging`
+- Los 3 jobs (`pg-start-api-vio-staging`, `pg-stop-api-vio-staging`, `db-restore-staging`)
+- El environment `cae-api-vio-staging`, y con él **el load balancer `capp-svc-lb` y la IP
+  pública `capp-svc-lb-ip`** — confirmado que ya no existen. Eran 152 NOK/mes, el 40 % del gasto.
+
+`pg-api-vio-staging` quedó **`Stopped`, no borrada**, para poder volver atrás.
+
+### Trampa: los alias `api-dev` / `events-dev` colgaban de las apps de staging
+
+Al borrar las Container Apps, `api-dev.vio.live` y `events-dev.vio.live` quedaron muertos (CNAME
+a apps inexistentes, `curl` devolvía 000). Son alias que apuntan a staging desde que se eliminó
+el entorno de development el 2026-09-16. Se repuntaron a la misma máquina de Oracle, se sumaron
+al `server_name` de nginx y se extendió el certificado con `--expand`. **Los 4 dominios responden
+200.** Si se borra algo de staging en el futuro, revisar siempre qué alias cuelgan de ahí.
+
+### Pendiente
+
+- **`pg-api-vio-staging` sigue existiendo, detenida.** Azure **reinicia sola** una flexible server
+  detenida **a los 7 días**, y el cron `pg-start` que la encendía ya no existe para volver a
+  apagarla. Si no se borra antes del **2026-10-05**, vuelve a facturar. Hay un recordatorio puesto.
+- Quedan `log-api-vio-staging`, la VNet, la zona DNS privada y dos identidades: ~8 NOK/mes.
+  Se van cuando se borre el RG entero.
+
+## Referencia: lo que costaba antes
 
 Nada se borró todavía. Lo que sigue costando en `rg-api-vio-staging`:
 
