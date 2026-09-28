@@ -128,21 +128,32 @@ En el pipeline de Azure iban como `build-args` del Dockerfile desde secrets de G
 
     curl -s "https://identitytoolkit.googleapis.com/v1/projects?key=<VITE_FIREBASE_API_KEY>"
 
-Consecuencia concreta:
+Consecuencia: el login con email/password funciona igual (ese flujo no valida dominio), pero
+`signInWithPopup` con Google falla con `auth/unauthorized-domain`.
 
-- **Login con email/password: funciona.** Ese flujo no valida el dominio.
-- **Login con Google (`signInWithPopup`): falla** con `auth/unauthorized-domain` hasta que
-  alguien agregue `api.vio.live` en Firebase console -> Authentication -> Settings ->
-  Authorized domains. Requiere acceso al proyecto `reachu-prod`.
+**RESUELTO el 2026-09-28.** `api.vio.live` y `events.vio.live` agregados, preservando los
+cinco que ya estaban. No hizo falta la consola: la service account de `reachu-prod` que usa
+Commerce (`base-api/.env` en el blob `env-file-microservices`) alcanza para leer y escribir la
+config vía Identity Toolkit Admin API:
+
+    GET/PATCH https://identitytoolkit.googleapis.com/admin/v2/projects/reachu-prod/config?updateMask=authorizedDomains
+
+Se verifica sin credenciales con el endpoint público de arriba. Los dominios viejos
+(`reachu.io`, `test.reachu.io`) se dejaron intactos a propósito: limpiarlos es otra decisión.
 
 ## Pendientes conocidos
 
-- **Firebase**: la service account de `reachu-prod` se perdió al borrar el RG de Azure y hay
-  que regenerarla en la consola de Firebase. **No bloquea**: la verificación de tokens sólo
-  necesita `FIREBASE_PROJECT_ID`, que está configurado. Falta sólo para operaciones del Admin SDK.
+- **Firebase Admin SDK**: el backend no tiene `FIREBASE_SERVICE_ACCOUNT_PATH`. **No bloquea el
+  login**: verificar tokens sólo necesita `FIREBASE_PROJECT_ID`. Lo que queda degradado es la
+  gestión de usuarios desde el panel — `listPendingSignups` devuelve `[]`, y crear o borrar
+  usuarios no propaga a Firebase (el código lo contempla con `isFirebaseAdminEnabled()`, no rompe).
+
+  Corrección a lo que creíamos: la service account **no se perdió**. Commerce tiene una del mismo
+  proyecto `reachu-prod` en `base-api/.env` (blob `env-file-microservices`). Se podría reutilizar,
+  pero implica que un compromiso del backend expone la credencial de Firebase de Commerce.
+  **Decisión pendiente de Angelo**: reutilizarla o generar una nueva y dedicada.
 - **Analytics**: `ANALYTICS_EVENTS_URL` quedó sin setear — el Container App de analytics de prod
   se borró con el RG. Decidir si se rehospeda o si Mixpanel alcanza.
-- **`api.vio.live` en los dominios autorizados de Firebase** (ver arriba): sin eso el login con Google no anda. Requiere consola de Firebase.
 - **Backups de la base**: hoy no hay ninguno automatizado en esta máquina. Es lo próximo.
 - **Sin proxy de Cloudflare**: la IP de origen queda expuesta. Si se quiere el naranja, hay que
   pasar a modo Full (strict) y verificar que el WebSocket siga estable.
