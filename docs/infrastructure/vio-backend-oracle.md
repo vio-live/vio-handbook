@@ -157,3 +157,29 @@ Se verifica sin credenciales con el endpoint público de arriba. Los dominios vi
 - **Backups de la base**: hoy no hay ninguno automatizado en esta máquina. Es lo próximo.
 - **Sin proxy de Cloudflare**: la IP de origen queda expuesta. Si se quiere el naranja, hay que
   pasar a modo Full (strict) y verificar que el WebSocket siga estable.
+
+## Enmascarado de la API key en los logs de nginx
+
+`/api/campaign/payments/apikey/<key>` lleva la key en el **path**, así que nginx la escribía
+en texto plano en `access.log`. `/etc/nginx/conf.d/mask-apikey.conf` define un `map` que la
+reemplaza por `***` sólo para el log; la request al backend va intacta:
+
+    "POST /api/campaign/payments/apikey/*** HTTP/1.1" 404 ...
+
+Las entradas que ya estaban escritas se purgaron con `sed` sobre el log existente. Si el
+endpoint alguna vez pasa la key a header o body, esto deja de hacer falta — pero mientras siga
+en el path, cualquier proxy nuevo en el camino necesita el mismo tratamiento.
+
+## Sin CI/CD: el deploy acá es manual
+
+`deploy.yml` del repo apunta a Azure Container Apps (`main` -> staging, `workflow_dispatch` ->
+la prod que ya no existe). **Esta máquina no está conectada a ningún pipeline.** Mergear un PR
+no la actualiza. El ciclo hoy es:
+
+    tar czf ... (sin node_modules/.git) -> scp -> tar xzf en /opt/vio-backend
+    npm ci && npm run build      # con NODE_OPTIONS=--max-old-space-size=1536
+    node scripts/migrate.mjs     # si hay migraciones nuevas
+    sudo systemctl restart vio-backend
+
+Automatizarlo (deploy por SSH desde GitHub Actions) es un pendiente real: mientras no exista,
+cada cambio depende de que alguien se acuerde de repetir estos pasos.
