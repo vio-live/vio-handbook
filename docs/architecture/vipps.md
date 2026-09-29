@@ -98,11 +98,23 @@ caracteres), `express` (activo por defecto), `webhookSecret`/`webhookSecretPrevi
 
 ### Órdenes
 
-No hay nada nuevo que construir: la orden de Vipps entra en `processOrderPaidByCustomer`, que
-crea la orden en Shopify (extensions, `financial_status: paid`, `source_name:
-channel:<handle>`) para productos de origen Shopify, y dispara `order.paid` al webhook del
-vendedor para el feed. Pendiente decidir si la orden de Shopify debe salir `authorized` hasta
-la captura.
+La orden de Vipps entra en `processOrderPaidByCustomer`, que crea la orden en Shopify
+(extensions, `financial_status: paid`, `source_name: channel:<handle>`, y desde el 2026-09-29
+`note_attributes: [{ vio_order_id }]`) para productos de origen Shopify, y dispara `order.paid`
+al webhook del vendedor para el feed. Pendiente decidir si la orden de Shopify debe salir
+`authorized` hasta la captura.
+
+**El dinero sigue a la orden** (2026-09-29): la orden lleva `paymentProcessor: 'VIPPS'` y
+orders-ms avisa a shopcart en dos momentos, por nuestro id de orden:
+
+| Momento | Quién lo dispara | Qué hace shopcart |
+|---|---|---|
+| **Despachada** — `saveTrackingNumber` | El dashboard (tracking), o extensions cuando llega el `orders/fulfilled` de Shopify por Pub/Sub | `POST /payment/vipps/order/:id/shipped`: captura lo reservado **solo si** `captureMode = 'shipment'`; con `account` o `payment` no hace nada y lo dice. |
+| **Cancelada** — `cancelOrder` | El dashboard | `POST /payment/vipps/order/:id/cancelled`: libera la reserva, o devuelve lo capturado; tras los switches del vendedor — un 400 «own portal» se registra y la cancelación de la orden sigue. |
+
+Ninguno de los dos es fatal para la orden: el cambio de estado es el registro, y el vendedor
+que mueve el dinero desde su portal recibe exactamente eso como respuesta. La aprobación de
+una devolución no mueve dinero para ningún PSP hoy (tampoco antes).
 
 ## Lo que hay que hacer fuera del código
 
@@ -112,15 +124,20 @@ la captura.
 | Angelo | Cargar en QA las claves de la unidad de prueba (`VIPPS_CLIENT_ID/SECRET/SUBSCRIPTION_KEY/MERCHANT_SERIAL_NUMBER`). |
 | Angelo | Un usuario de prueba + la app MT (TestFlight) en su teléfono para el E2E. |
 | Vio (clúster) | Registrar el webhook: `POST shopcart /checkout/register/webhook/vipps` con `scope: 'platform'` en QA (devuelve el secreto → `VIPPS_WEBHOOK_SECRET`); en prod además `scope: 'partner'` (→ `VIPPS_PARTNER_WEBHOOK_SECRET`). Un vendedor con claves propias lo conecta desde el dashboard. |
+| Vio (clúster) | **Asignar la unidad de venta** cuando Vipps confirma una firmada por el partnership: `PATCH api-ms /paymentmethod/:id/vipps-sales-unit { data: { merchantSerialNumber } }` — interno, sin proxy en base-api; solo acepta una fila de Vipps en modo partnership. El dashboard del vendedor pasa de «Waiting…» a «Sales unit NNN». |
 | Angelo | Prod: partner keys en el entorno, checklist de ePayment (PDF + vídeo), alta de comercios con Management API. |
 
 ## Pendiente
 
 - E2E en QA: producto → app de Vipps → orden en Vio → orden en la dev store de Shopify →
   `order.paid`; capture/refund/cancel; firma en logs; el barrido recupera un webhook perdido.
-- Captura al despachar desde el fulfillment de Shopify (`captureMode: 'shipment'` existe
-  como opción, nadie la dispara todavía).
-- Rebundle de Vev con el SDK nuevo.
+- ~~Captura al despachar desde el fulfillment de Shopify~~: cableada el 2026-09-29 (arriba).
+  Queda por ver en QA que el `orders/fulfilled` de la dev store llega a
+  `handleSaveTrackingNumber` con los ítems de la venta.
+- Estado de pago en la orden (capturado / devuelto) para que lo que el vendedor hace en su
+  portal se vea en Vio y en Shopify — hoy queda en la foto del checkout.
+- Assets oficiales del botón de Vipps en el SDK (hoy un badge de texto).
+- Rebundle de Vev con el SDK nuevo (0.17.0).
 - Alta de comercios desde el dashboard/admin con Management API (prod).
 - El camino legacy de base-api (`/vipps/*`, eCom v2 con claves de Vio) no lo llama nadie
   desde nuestros repos; retirarlo cuando se confirme que ningún cliente externo lo usa.
@@ -131,4 +148,6 @@ la captura.
 [base-api#21](https://github.com/vio-live/vio-base-api/pull/21) ·
 [api-ms#30](https://github.com/vio-live/vio-api-microservice/pull/30) ·
 [graphql#16](https://github.com/vio-live/graphql/pull/16) ·
-[web-sdk#69](https://github.com/vio-live/vio-web-sdk/pull/69) · [webapp#40](https://github.com/vio-live/webapp-vio-commerce/pull/40).
+[web-sdk#69](https://github.com/vio-live/vio-web-sdk/pull/69) · [webapp#40](https://github.com/vio-live/webapp-vio-commerce/pull/40) ·
+[extensions#12](https://github.com/vio-live/vio-extensions-microservice/pull/12) (note_attributes) ·
+orders-ms: en PR (el dinero sigue a la orden).

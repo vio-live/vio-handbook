@@ -32,8 +32,15 @@ punta con todas las opciones, mapear Express como en Apple Pay, y mirar el camin
 - **Fase 3**: gateway con `express` y email opcional ([#16](https://github.com/vio-live/graphql/pull/16));
   SDK con los botones de producto y carrito en Express, un clic en el checkout
   ([#69](https://github.com/vio-live/vio-web-sdk/pull/69)).
-- **Órdenes**: verificado que no hace falta construir nada — `order:paid` ya crea la orden en
-  Shopify (extensions, `source_name: channel:<handle>`) y dispara `order.paid` para el feed.
+- **Órdenes**: verificado que no hace falta construir nada para crearlas — `order:paid` ya crea
+  la orden en Shopify (extensions, `source_name: channel:<handle>`) y dispara `order.paid` para
+  el feed.
+- **El dinero sigue a la orden** (tarde): despachar captura (si el vendedor eligió «al
+  despachar»), cancelar libera o devuelve — orders-ms → shopcart por id de orden; extensions ya
+  relaya el `orders/fulfilled` de Shopify a `saveTrackingNumber`, así que el fulfillment del
+  comercio captura solo. `note_attributes.vio_order_id` en la orden de Shopify
+  ([extensions#12](https://github.com/vio-live/vio-extensions-microservice/pull/12)); MSN de
+  una unidad del partnership asignable por endpoint interno (api-ms#30).
 
 ## Decisions
 
@@ -45,6 +52,9 @@ punta con todas las opciones, mapear Express como en Apple Pay, y mirar el camin
 - Sin secreto de webhook configurado, el aviso es una pista y el estado de Vipps decide.
 
 ## Blockers
+
+- **Los seis PRs siguen abiertos** al cierre de la sesión (Angelo dijo dos veces «mergeados»;
+  la API de GitHub dice `merged=false`). Nada está desplegado en QA todavía.
 
 - **Programa de partners**: hay que solicitarlo (Vipps lo pidió); sin eso no hay entorno de
   test con claves de partner. En QA hacen falta las claves de una unidad de prueba y un usuario
