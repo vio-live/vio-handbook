@@ -22,7 +22,7 @@ los conectores — **el casing importa**:
 
 | Proveedor | `name` | Campos | ¿Fallback a la cuenta de Vio? |
 |---|---|---|---|
-| Stripe | `STRIPE` | `publishKey`, `secretKey` | **Sí** |
+| Stripe | `STRIPE` | `publishKey`, `secretKey` — o, en modo **Connect** ([ADR-0022](../decisions/0022-stripe-connect-como-opcion-de-cobro.md)), `mode: 'connect'` + `accountId: 'acct_…'` (server-owned, ver abajo) | **Sí** (Connect no tiene respaldo: cobra la cuenta del seller) |
 | Klarna | `Klarna` | `apiKey` | **Sí** |
 | Kustom | `Kustom` | `apiKey` (`kco_(test\|live)_api_…`; el entorno sale del prefijo), `autoCapture?` (default true), `termsUrl?` (fallback `KUSTOM_TERMS_URL` con WARN), `providerShipping?` (KSA del seller) | **No** — sin clave propia no se ofrece (decisión 2026-08-28, ratificada en [ADR-0020](../decisions/0020-kustom-una-orden-por-checkout.md)) |
 | Qliro | `Qliro` | `apiKey` (MerchantApiKey), `apiSecret` (firma), `sandbox?` (elige host), `termsUrl?`, `notifyUrl?` (opción A, en rama) | **Sí desde el 2026-09-03** (`QLIRO_API_KEY/SECRET/SANDBOX/TERMS_URL`, commit `179dab4` de una sesión de agente) — el dinero de un seller sin claves liquida en la cuenta de Vio. **Se queda** (Angelo, 2026-09-11): la intención es no ser vendedores, pero si se usa hay que añadir lo que falta para serlo (liquidación al seller, IVA, refunds, aviso en el dashboard) |
@@ -31,6 +31,12 @@ los conectores — **el casing importa**:
 | Adyen | `Adyen` | `apiKey` (cifrada), `clientKey` (pública; **decide el entorno**: `test_`/`live_`), `merchantAccount`, `liveUrlPrefix` (sólo live), `hmacKey` (cifrada), `captureMode?`, `shopperStatement?`, `merchantAccounts?` (por market); `webhookToken` lo gestiona el servidor | **Sí** (decisión de Angelo, 2026-09-17): `ADYEN_*` del entorno, para cualquier seller sin fila propia. Una fila del seller **incompleta es un error**, nunca un fallback; cada sesión registra qué cuenta cobró. En ramas, sin desplegar — ver [`adyen.md`](./adyen.md) |
 | Vipps | `VIPPS` | `clientId`, `clientSecret`, `subscriptionKey`, `merchantSerialNumber` | **Sí** en código: sin fila del seller usa `VIPPS_*` del entorno (`vipps.service.ts` ~L165-180, corregido 2026-09-22) |
 
+- **Stripe Connect** (ADR-0022, en PR al 2026-09-29): la misma fila `STRIPE` guarda
+  `mode` (`'keys'` | `'connect'`), `accountId`, `connectRequested` y `connect` (último estado leído de
+  Stripe). Sólo api-ms escribe esos campos (`/paymentmethod/stripe/connect/*`); create/update genéricos
+  los conservan. Con `mode: 'connect'` y un `acct_`, shopcart y payment-processors usan las claves de
+  plataforma **sobre** la cuenta del seller (`stripeAccount`, cobro directo): el dinero nunca pasa por Vio.
+  Los clientes reciben `stripeAccount` en la config Stripe del canal y `stripe_account` en el intent.
 - Apple Pay y Google Pay **corren sobre las claves Stripe del seller**
   (`apple-pay.service` / `google-pay.service` leen la fila `STRIPE`).
 - Kustom conserva la superficie de Klarna Checkout (KCO v3) en sus
