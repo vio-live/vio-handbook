@@ -108,7 +108,7 @@ Tarjeta en Trello (To do, asignada a Alan): https://trello.com/c/l1fQDCcE — 6 
 
 ## Cuarto camino: vincular la cuenta de Stripe que el seller ya tiene (OAuth)
 
-Pedido por Angelo. Rama `feature/stripe-connect-oauth` (commits locales, sin push todavía):
+Pedido por Angelo. Rama `feature/stripe-connect-oauth` — PR [base-api#20](https://github.com/vio-live/vio-base-api/pull/20) · [api-ms#29](https://github.com/vio-live/vio-api-microservice/pull/29) · [webapp#39](https://github.com/vio-live/webapp-vio-commerce/pull/39) (abiertos, sin merge):
 - **api-ms** `d05bd9a`, `b1fa3f4`, `280cabf`: `POST /paymentmethod/stripe/connect/oauth/{start,complete}` y `/disconnect`. `state` aleatorio guardado en la fila del seller (15 min, un solo uso, se consume **antes** de canjear el código); cuenta ya usada por otro seller → rechazada; otra cuenta ya conectada → hay que desconectarla primero (no se deja huérfana); acceso revocado desde el Stripe del seller → conserva el modo y el estado dice `access_revoked` (ADR-0023). `connectOrigin: 'created' | 'oauth'`. Env nueva `STRIPE_CONNECT_CLIENT_ID` (`ca_…`, no es secreto). Tests +13.
 - **base-api** `d99e01b`: proxy de las tres rutas, userId de la sesión.
 - **dashboard** `d157ba1`, `cdd63b9`: "I already have a Stripe account — connect it"; vuelta a `/settings/payments` con `?code&state`; "Disconnect Stripe account"; vinculada sin poder cobrar → "Finish in your Stripe Dashboard"; revocada → "Reconnect". Suite 297/297.
