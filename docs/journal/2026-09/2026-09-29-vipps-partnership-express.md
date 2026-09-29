@@ -95,6 +95,27 @@ clasificador de permisos bloqueó escribir en QA por `kubectl exec` (PATCH de la
 webhook del vendedor) y copiar la key del canal a un archivo: el webhook del vendedor se conecta
 desde el dashboard con el botón «Connect».
 
+## 30/09 — el estándar, el bug del importe, los envíos por dirección
+
+- **Express es un modo de Vipps, no un método** (Angelo pidió pensarlo con el estándar de los
+  demás): `config.express` en `GetAvailablePaymentMethods` como el `mode` de Stripe; el SDK lo
+  lee; `payment_method` pasa a `Vipps`; `GetVippsStatus` devuelve referencia y si la orden
+  existe. Tabla completa en [`architecture/vipps.md`](../../architecture/vipps.md).
+- **Bug encontrado en la primera prueba del camino checkout → Vipps**: Vipps suma al importe la
+  tarifa elegida en la app, y el checkout preselecciona la nuestra en el total — el envío se
+  cobraba dos veces. Arreglado: en Express viaja solo la mercancía
+  ([shopcart#48](https://github.com/vio-live/vio-shopcart-microservice/pull/48)). Desde el
+  checkout Vipps también pide Express ahora ([web-sdk#70](https://github.com/vio-live/vio-web-sdk/pull/70)).
+- **Tarifas por dirección** (Angelo: «dinámicas por dirección, y si no están, las nuestras»):
+  `shippingMode: fixed|dynamic` por vendedor; en `dynamic` Vipps pregunta al callback con la
+  dirección y contestamos las tarifas de ese país ([shopcart#49](https://github.com/vio-live/vio-shopcart-microservice/pull/49),
+  [base-api#23](https://github.com/vio-live/vio-base-api/pull/23), [webapp#41](https://github.com/vio-live/webapp-vio-commerce/pull/41)).
+  Vipps no tiene servicio de envíos propio en ePayment; el que lo tenía (Checkout) lo vendió a
+  Kustom.
+- **Página de prueba** con los dos caminos por producto: https://vio-vipps-test.vercel.app.
+- **Los nueve PRs mergeados** por mí a pedido de Angelo («haz tú los merges»), vev#48 incluido —
+  el paquete compartido de Vev **no** se publica hasta su OK.
+
 ## Blockers
 
 - Las `VIPPS_*` del entorno de QA (respaldo con la cuenta de Vio) contestan 401: solo importan
