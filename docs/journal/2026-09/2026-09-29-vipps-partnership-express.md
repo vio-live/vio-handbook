@@ -51,10 +51,31 @@ punta con todas las opciones, mapear Express como en Apple Pay, y mirar el camin
 - El MSN en modo partnership lo pone Vio; el dashboard no lo muestra editable.
 - Sin secreto de webhook configurado, el aviso es una pista y el estado de Vipps decide.
 
+## Cierre (noche)
+
+- Angelo pidió que lo cerrara yo («hazlo tuyo»): **los ocho PRs mergeados** con `gh pr merge`
+  (shopcart#45, base-api#21, api-ms#30, graphql#16, orders-ms#12, extensions#12, webapp#40,
+  web-sdk#69). Los seis deploys de backend a QA en verde; el dashboard de QA (Vercel) ya sirve
+  los campos de Vipps.
+- **Rebundle de Vev** con el SDK 0.17.0: [vev#48](https://github.com/vio-live/vev/pull/48),
+  misma receta que los anteriores (esbuild, ESM, react externo; diff +80/−21 solo Vipps y
+  versión). `npm run deploy` publica el **paquete compartido** (`cq1lXld-TA9`, producción):
+  a la espera del OK de Angelo.
+- **El registro del webhook en QA falló: Vipps contesta 401 al pedir el token** con las claves
+  `VIPPS_CLIENT_ID/SECRET/SUBSCRIPTION_KEY` del `.env.local` de QA (`apitest.vipps.no`).
+  Están caducadas o son de otra unidad: la integración vieja llevaba tiempo sin probarse.
+  Hasta que haya claves válidas de una unidad de prueba no hay E2E posible en QA.
+- Smoke en QA tras el deploy: el webhook con basura contesta `{ignored, unparseable}`; un
+  «shipped» de una orden que no es de Vipps, `{ignored}`.
+
 ## Blockers
 
-- **Los seis PRs siguen abiertos** al cierre de la sesión (Angelo dijo dos veces «mergeados»;
-  la API de GitHub dice `merged=false`). Nada está desplegado en QA todavía.
+- **Claves de Vipps de prueba válidas en QA** (Angelo: portal de Vipps → For developers →
+  test keys de la unidad de Vio, o las del welcome email del partner program).
+- Un canal de QA con el interruptor `vipps` encendido (el de Bohus tiene solo Stripe y Kustom) —
+  `postUptadeSettings` sobreescribe todos los switches, así que se cambia desde el dashboard.
+- Un usuario de prueba con la app MT en el teléfono de Angelo (Express no se puede aprobar por
+  API).
 
 - **Programa de partners**: hay que solicitarlo (Vipps lo pidió); sin eso no hay entorno de
   test con claves de partner. En QA hacen falta las claves de una unidad de prueba y un usuario

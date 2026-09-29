@@ -121,7 +121,7 @@ una devolución no mueve dinero para ningún PSP hoy (tampoco antes).
 | Quién | Qué |
 |---|---|
 | Angelo | **Solicitar el programa de partners** (Vipps lo pidió; sin eso no hay entorno de test). |
-| Angelo | Cargar en QA las claves de la unidad de prueba (`VIPPS_CLIENT_ID/SECRET/SUBSCRIPTION_KEY/MERCHANT_SERIAL_NUMBER`). |
+| Angelo | Cargar en QA claves **válidas** de la unidad de prueba (`VIPPS_CLIENT_ID/SECRET/SUBSCRIPTION_KEY/MERCHANT_SERIAL_NUMBER`): las que hay contestan **401** en `apitest.vipps.no` (comprobado el 2026-09-29 al registrar el webhook). |
 | Angelo | Un usuario de prueba + la app MT (TestFlight) en su teléfono para el E2E. |
 | Vio (clúster) | Registrar el webhook: `POST shopcart /checkout/register/webhook/vipps` con `scope: 'platform'` en QA (devuelve el secreto → `VIPPS_WEBHOOK_SECRET`); en prod además `scope: 'partner'` (→ `VIPPS_PARTNER_WEBHOOK_SECRET`). Un vendedor con claves propias lo conecta desde el dashboard. |
 | Vio (clúster) | **Asignar la unidad de venta** cuando Vipps confirma una firmada por el partnership: `PATCH api-ms /paymentmethod/:id/vipps-sales-unit { data: { merchantSerialNumber } }` — interno, sin proxy en base-api; solo acepta una fila de Vipps en modo partnership. El dashboard del vendedor pasa de «Waiting…» a «Sales unit NNN». |
@@ -150,4 +150,4 @@ una devolución no mueve dinero para ningún PSP hoy (tampoco antes).
 [graphql#16](https://github.com/vio-live/graphql/pull/16) ·
 [web-sdk#69](https://github.com/vio-live/vio-web-sdk/pull/69) · [webapp#40](https://github.com/vio-live/webapp-vio-commerce/pull/40) ·
 [extensions#12](https://github.com/vio-live/vio-extensions-microservice/pull/12) (note_attributes) ·
-orders-ms: en PR (el dinero sigue a la orden).
+[orders-ms#12](https://github.com/vio-live/vio-orders-microservice/pull/12) (el dinero sigue a la orden) · [vev#48](https://github.com/vio-live/vev/pull/48) (rebundle 0.17.0). **Todos mergeados el 2026-09-29 y desplegados en QA**, salvo vev#48 (publicar el paquete compartido es de producción).
