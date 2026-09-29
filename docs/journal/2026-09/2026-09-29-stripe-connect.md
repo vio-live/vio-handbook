@@ -36,3 +36,11 @@ Los clones de VioKotlinSDK y VioSwiftSDK viven ahora en `~/Documents/GitHub/` (a
 - `payments-lib.test.js` (Kustom `optionsFrom`) ya falla en develop del dashboard.
 - Kotlin/iOS: Google Pay directo (`VioGooglePayManager`, tokenización con `stripe:publishableKey`) no se adaptó a Connect; con Connect los wallets van por PaymentSheet. iOS no configura `returnURL` en el sheet, así que Klarna por Stripe no aparece en iOS hasta configurarlo.
 - Un seller Connect con el toggle Klarna del canal encendido vería dos Klarna (el nativo, que cobraría con el respaldo de Vio, y el de Stripe). Recomendación: apagar el toggle Klarna del canal para sellers Connect.
+
+## Stripe de QA configurado por CLI (tarde)
+
+- QA usa el **sandbox `acct_1TMTbsECwcLH8wcP`** ("New Co", nombre interno del sandbox; lo que ve el seller sale de Connect → Branding). Angelo borró el otro entorno de test. Los `.env.test` de los micros y `shopcart/.env.local.qa` apuntan a cuentas viejas (`acct_1Iq07vGa01S…`, `acct_1I72iQCClYv…`): hay que actualizarlos.
+- Connect ya activo en el sandbox (0 cuentas conectadas).
+- Creado `we_1UKxwIECwcLH8wcPgzrYmlsf` (**cuentas conectadas**) → `https://api-ecom-staging.vio.live/api/shopcart/checkout/payment/webhook`, 4 eventos. Su secreto está en `~/.config/vio/stripe-connect-whsec-qa` de la máquina de Angelo → cargarlo como `STRIPE_CONNECT_WEBHOOK_SECRET` de shopcart en QA.
+- Arreglo **preexistente**: el webhook de plataforma `we_1To5IzECwcLH8wcPIydkBTq0` sólo tenía `payment_intent.succeeded` y `checkout.session.completed`; se agregaron `payment_intent.canceled` y `checkout.session.expired`. Sin ellos un pago Stripe abandonado nunca devolvía el stock en QA.
+- Stripe CLI 1.52 instalado (`/opt/homebrew/bin/stripe`), logueado en el sandbox.
