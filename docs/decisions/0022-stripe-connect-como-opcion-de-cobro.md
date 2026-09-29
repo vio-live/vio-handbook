@@ -131,6 +131,10 @@ de ventas por supplier para que el seller liquide.
 **Prueba:** Connect en test mode en QA (tarjeta, Apple Pay, Klarna en NOK, reembolso
 parcial y total, evento de webhook repetido) y E2E desde el navegador, no sólo por API.
 
+## Estado
+
+Implementado de punta a punta en ramas `feature/stripe-connect` (2026-09-29), sin push: detalle, orden de despliegue y variables en el [journal](../journal/2026-09/2026-09-29-stripe-connect.md). Desvío del plan: `account.updated` no tiene webhook propio; el estado se relee de Stripe cada vez que el dashboard lo pide.
+
 ## Decisiones abiertas
 
 - **Retiro del respaldo con la cuenta de Vio** (antes "Fase 4"). Mantenido por ahora.
