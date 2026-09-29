@@ -93,3 +93,11 @@ Lección del día: [comprobar secretos sin imprimirlos](../../lessons/comprobar-
 - **No verificado todavía:** el campo `stripe_account` en el gateway (la introspección pide API key), y que las builds hayan tomado las variables nuevas del `.env.local` (se ve en la primera alta).
 - **Sin mergear (van a `main`, clic de Angelo):** web-sdk#68, vev#46 → vev#47, VioKotlinSDK#3, react-native-sdk#4, VioSwiftSDK#18.
 - Aparte: 3 ejecuciones de `shopcart-reconcile` de ~5 h antes terminaron en Error; las recientes, Completed. No investigado.
+
+## SDKs mergeados a main (OK explícito de Angelo: "ves desplegando los sdks, te doy permiso")
+
+Excepción a ADR-0015 (merge a `main` normalmente es clic humano), autorizada por Angelo en la sesión.
+- web-sdk#68 `beb3e71` · vev#46 `dc8dab8` · vev#47 `9629132` (re-apuntado a `main` tras #46) · VioKotlinSDK#3 `224f597` · react-native-sdk#4 `48b68d8` · VioSwiftSDK#18 `b6de9f9`.
+- **Vev desplegado** (`vev deploy`, paquete `cq1lXld-TA9`) desde `main`; bundle de `main` = bundle probado en la rama (mismo sha256). Hubo que subir `@vev/cli` a 2.2.0 **con el npm de nvm** (`~/.nvm/versions/node/v24.16.0/bin/npm`): el `npm` del PATH es el de `/usr/local` y da EACCES. Las páginas ya publicadas en Vev probablemente necesiten re-publicarse desde el editor para tomar el componente nuevo.
+- **Nativos: mergeados pero SIN versión nueva a propósito.** Se consumen por versión (SwiftPM `from: 0.1.0`, Maven `1.0.0-alpha`, npm `0.1.0-beta.1`); piden `stripe_account` al gateway y graphql sólo lo tiene en QA. No publicar versión de Kotlin/RN/iOS hasta que graphql#15 llegue a prod.
+- web-sdk en npm sigue en 0.11.1 (el repo está en 0.16.x); Vev no lo necesita (bundlea desde el fuente). Publicar pide OTP de Angelo.
