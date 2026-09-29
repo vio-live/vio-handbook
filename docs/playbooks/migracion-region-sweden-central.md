@@ -29,6 +29,20 @@ Regla general: **nada se borra en Noruega hasta que Suecia sirva tráfico real y
 
 ## Fase 1 — levantar el destino en paralelo (sin tráfico)
 
+- [x] **Precarga de imágenes en los nodos (hacer siempre antes de la ventana).** Las 13
+      imágenes suman **10,9 GB comprimidos** y el ACR `reachuprod2` está en Norway East:
+      tirarlas durante el corte fue parte de la demora del intento del 29/09.
+      DaemonSet `prepull-images` (`~/vio-migracion/prepull-daemonset.yaml`): un initContainer
+      por imagen con `command: ["sh","-c","exit 0"]`. Tardó ~9 min y dejó 13/13 imágenes en
+      los 3 nodos. **Dejarlo vivo hasta después del corte**: si se borra, el GC del kubelet
+      puede evictar las imágenes sin usar bajo presión de disco.
+
+      > Alternativa descartada: geo-replicar el ACR exige subirlo a **Premium**, que son
+      > ~+$80/mes permanentes (base + réplica, contra los ~$20 de Standard) para resolver un
+      > problema de una sola vez. Va en contra del objetivo de la mudanza, que es bajar costo.
+      > Queda como decisión aparte si después del corte molesta el pull cross-region en cada
+      > scale-up; la opción barata sería mover el ACR a Suecia, pero toca el CI/CD de Alan.
+
 - [x] **RG `rg-vio-commerce-prod-sc`** creado en Sweden Central (tags `migracion=ADR-0021`).
 - [x] **AKS `vio-commerce-prod-sc`** creado, k8s 1.35.7, `Standard_D4as_v5`, tier Free,
       identidad SystemAssigned. Config de red idéntica a prod: `azure` + `overlay`,
@@ -105,10 +119,20 @@ Regla general: **nada se borra en Noruega hasta que Suecia sirva tráfico real y
 
 ## Fase 2 — datos
 
-- [x] **MySQL: réplica creada y al día.** `vio-ecom-db-prod-sc` en Sweden Central,
-      `Standard_D2ds_v4`, 8.0.21, `replicationRole: Replica`, state Ready. FQDN
-      `vio-ecom-db-prod-sc.mysql.database.azure.com`. **Lag en 0,0 s sostenido** (métrica
-      `replication_lag`). Fuente sigue siendo `vio-ecom-db-prod` en Norway West.
+- [x] **MySQL: réplica RECREADA el 2026-09-29 13:3x y al día.** `vio-ecom-db-prod-sc` en
+      Sweden Central, `Standard_D2ds_v4`, 8.0.21, `replicationRole: Replica`, state Ready.
+      FQDN `vio-ecom-db-prod-sc.mysql.database.azure.com`. `SHOW REPLICA STATUS`:
+      IO y SQL en `Yes`, **`Seconds_Behind_Source = 0`**, sin errores, `read_only=ON`.
+      Conteos y `MAX(id)` idénticos al origen mientras prod escribe. Fuente sigue siendo
+      `vio-ecom-db-prod` en Norway West. Hereda la regla de firewall de servicios de Azure
+      y **la contraseña del origen** hasta que se rote en el corte.
+
+      > La réplica anterior se promovió en el corte revertido del 29/09 y por eso dejó de
+      > replicar: **una réplica promovida no se puede reusar, hay que borrarla y crear una
+      > nueva.** Antes de borrar la vieja se verificó que era **prefijo estricto** del
+      > origen (mismo `COUNT` y mismo checksum `SUM(id)` sobre los ids comunes, y las otras
+      > 7 tablas idénticas), o sea que ninguna escritura de la ventana había quedado sólo en
+      > Suecia. Hacer siempre esa comprobación antes de borrar.
 - [x] **Blobs: COPIADOS.** `containerproduction2` -> `containerproductionsc` (nuevo, en
       `rg-vio-commerce-prod-sc`, Standard_LRS Hot, mismos 6 containers).
       **59.256 de 59.256, 0 fallos, 6,6 minutos**, copia server-to-server (Put Block From
@@ -183,12 +207,40 @@ Orden importa. Estimado: minutos para la app, no horas.
 2. [ ] Última pasada de `azcopy sync`.
 3. [ ] Verificar lag de la réplica en 0 y **promoverla** a servidor independiente.
        Es irreversible: desde ese momento Suecia es la fuente de verdad.
-4. [ ] **Repuntar los servicios con env vars de Kubernetes, NO editando el blob.**
-       El `.env` está **horneado en la imagen**: editar el blob no afecta a los pods que
-       corren (ver `lessons/el-env-esta-horneado-en-la-imagen-no-en-el-blob.md`).
-       Las env vars de k8s le ganan al `.env` (dotenv sin `override`, verificado).
-       Inyectar por Secret + `envFrom` sólo lo que cambia: `DB_HOST`, `DB_PASSWORD`,
-       `CACHE_HOST`, `CACHE_PASSWORD`. El resto sigue saliendo de la imagen.
+4. [ ] **Repuntar montando un `.env` parcheado sobre el horneado.**
+       El `.env` está **horneado en la imagen** (`/usr/src/app/.env`): editar el blob no
+       afecta a los pods que corren (ver
+       `lessons/el-env-esta-horneado-en-la-imagen-no-en-el-blob.md`).
+
+       > **El mecanismo de env vars NO sirve y fue la causa del corte fallido del 29/09.**
+       > `base-api` es Express + mysql2 y respeta `process.env`, pero los otros 11 son
+       > NestJS + TypeORM y **no** construyen la conexión desde la env var aunque esté
+       > presente en el contenedor. `graph-ql` no tiene DB y "funciona" siempre, así que no
+       > valida nada. Ver `lessons/validar-el-mecanismo-de-corte-en-el-servicio-mas-raro.md`.
+
+       Mecanismo validado 13/13 el 29/09:
+       ```bash
+       cd ~/vio-migracion
+       # 1. extraer el .env de CADA imagen (no del blob: los 13 son distintos)
+       #    un pod por servicio con  command: ["sh","-c","sleep 3600"]  y cat /usr/src/app/.env
+       # 2. parchear sólo los valores, preservando comillas
+       python3 patch-env.py --with-storage      # genera envs/sc-<svc>.env
+       # 3. un Secret por servicio con el archivo completo
+       kubectl create secret generic env-sc-<svc> --from-file=.env=envs/sc-<svc>.env
+       # 4. montarlo encima del horneado
+       #    volumeMounts: [{name: envfile, mountPath: /usr/src/app/.env, subPath: .env}]
+       ```
+       **Ajustar la contraseña en `REPL` de `patch-env.py` antes de generar**: la réplica
+       hereda la de Noruega hasta que se rote en el paso 5.
+
+       Claves que cambian (8, o 2 en `graph-ql`): `DB_HOST`, `TYPEORM_HOST`, `DB_PASSWORD`,
+       `TYPEORM_PASSWORD`, `CACHE_HOST`, `CACHE_PASSWORD`, **`AZURE_STORAGE_URL` y
+       `AZURE_SERVICE_CONTAINER_CONNECTION_STRING`**.
+
+       > Las dos últimas **faltaban en el mecanismo anterior**: el `.env` también hornea el
+       > storage apuntando a `containerproduction2` (Noruega). Sin eso, post-corte las
+       > subidas de imágenes siguen yendo al storage de Noruega en silencio.
+
        **Actualizar el blob igual**, aunque no tenga efecto hoy: si no, la próxima imagen
        que se construya vuelve a hornear los valores de Noruega y revierte la migración en
        silencio. Primero el blob, después cualquier rebuild.
@@ -196,7 +248,28 @@ Orden importa. Estimado: minutos para la app, no horas.
        `publicNetworkAccess=Disabled`, private endpoint en la VNet nueva y **sin regla
        `AllowAll`**. Actualizar el blob `.env` compartido con la credencial nueva
        (ver ADR-0016) y sacar el default de `variables.tf` en `vio-live/vio-infra-tf`.
-6. [ ] Escalar los microservicios de Suecia a réplicas normales.
+6. [ ] Escalar los microservicios de Suecia a réplicas normales:
+       `~/vio-migracion/escalar-corte.sh` (mismas réplicas que Noruega, 29 pods).
+       Con las imágenes precargadas, el ensayo del 29/09 dio **29/29 Ready en menos de un
+       minuto**. Si el DaemonSet `prepull-images` no está corriendo, esto tarda ~9 minutos
+       más porque hay que tirar 10,9 GB desde el ACR de Noruega.
+
+6b. [ ] **No cerrar la ventana sin evidencia a nivel de socket en el 100% de los pods.**
+       "Ready" no sirve: el readiness probe no toca la DB. Exigir, en **cada uno de los 29
+       pods**, socket establecido a la IP nueva de MySQL y **cero** a `10.224.0.4`:
+       ```bash
+       HEX=$(python3 -c "print(''.join(f'{int(o):02X}' for o in reversed('<IP-mysql-sc>'.split('.'))))")
+       for p in $(kubectl get pods --no-headers | awk '{print $1}'); do
+         echo "$p $(kubectl exec $p -- grep -c "${HEX}:0CEA" /proc/net/tcp) \
+                  $(kubectl exec $p -- grep -c '0400E00A:0CEA' /proc/net/tcp)"
+       done
+       ```
+       Ojo: el pool de TypeORM **cierra conexiones por idle**, así que un pod en reposo da 0
+       legítimamente. Contar sólo pods recién arrancados, o forzar una query antes de medir.
+       Redis en modo cluster no usa el puerto del `.env`: filtrar por IP, no por puerto.
+       Sumar una lectura real que devuelva datos (`users/1325` -> 200), no un `/health-check`.
+       Nota de puertos: no todos escuchan en 3000 (`users` escucha en 8000, y en IPv6);
+       mirar el `readinessProbe` del deployment antes de probar a mano.
 7. [ ] DNS en Cloudflare a las IPs nuevas. Zona `vio.live` `d8ebb16763e96258028487006145eb9c`,
        token DNS en `TOOLS.md`. Bajar el TTL a 60s **el día anterior**.
 8. [ ] Front Door `prod-cdn`: cambiar los origins. Es global, no se migra.
