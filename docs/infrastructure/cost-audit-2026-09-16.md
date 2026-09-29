@@ -1,6 +1,6 @@
 ---
 title: Audit de costos Azure — 2026-09-16
-last-updated: 2026-09-25
+last-updated: 2026-09-29
 owner: miguel
 ---
 
@@ -35,7 +35,7 @@ Se hizo el día en que se acabaron los créditos del Sponsorship. No se cambió 
 - Public IPs: las 8 están asignadas. No hay discos huérfanos ni snapshots.
 - Log Analytics: ~1,3 GB/mes en total, dentro de la franja gratuita.
 - Service Bus: 4 namespaces Basic, costo despreciable.
-- Cuentas de Azure OpenAI/AI Services (`ai-services`, `rg-sonner`): todas las deployments son de pago por token, sin PTU. Las métricas marcan 0 tokens en 30 días (con la salvedad del método), así que no hay costo fijo.
+- Cuentas de Azure OpenAI/AI Services (`ai-services`, `rg-sonner`): todas las deployments son de pago por token, sin PTU. Las métricas marcaban 0 tokens en 30 días (con la salvedad del método), así que no hay costo fijo. **Corrección 2026-09-29:** `vio-openai-main` sí costaba, y no era de Vio — su costo diario correlaciona 1:1 con las llamadas a `azure-openai` del gateway de OpenClaw (0,09–0,12 NOK por llamada; 28/09: 340 llamadas = 28,2 NOK con el día al 71%). Llegó a ~$128/mes. **Borrada el 2026-09-29** por pedido de Angelo, tras confirmar 0 referencias en los dos clusters y que la API key era la de OpenClaw. Ver journal 2026-09-29. Queda en soft-delete, sin facturar.
 - Front Door `prod-cdn` (Standard, $35 base): se usa, sirve `container.vio.live`, `container-staging.vio.live` y los `container*.reachu.io` legacy.
 - ClickHouse `vm-clickhouse-vio` (B2s): es el store de analytics (ADR-0010). Se mantiene.
 - Container Apps: entornos Consumption; dev y staging con min=0 réplicas.
