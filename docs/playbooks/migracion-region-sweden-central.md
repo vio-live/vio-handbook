@@ -106,6 +106,25 @@ Regla general: **nada se borra en Noruega hasta que Suecia sirva tráfico real y
 
 Orden importa. Estimado: minutos para la app, no horas.
 
+> **Riesgo específico de la ventana: WooCommerce desactiva webhooks.** Woo marca como
+> fallida cualquier respuesta que no sea 2xx/301/302 y **desactiva el webhook tras 5 fallos
+> consecutivos**; reactivarlo es manual en el WordPress de cada comercio. Shopify no tiene
+> este problema (reintenta con backoff durante 48 h) y Pub/Sub retiene 7 días.
+>
+> Alcance real medido el 2026-09-29: **4 conexiones Woo, de las cuales 3 son tiendas de
+> test** en pantheonsite.io. El único comercio real es **`qkoreancosmetics.no`**, con 2
+> webhooks apuntando a `https://api-ecom.vio.live/woo/webhooks` (`order.created` y
+> `order.updated`). Los otros 6 de esa tienda van a TikTok y no se tocan.
+> Los webhooks apuntan a **nombre DNS, no a IP**, así que el repunte de DNS los arrastra
+> solo: no hay que re-registrarlos.
+>
+> Guard: `~/vio-migracion/guard-woo-webhooks.js` (correr desde un pod de `base-api`, que
+> tiene la DB y las credenciales de cada tienda).
+> `node guard-woo-webhooks.js check` reporta y no cambia nada; `repair` reactiva los caídos.
+> Solo toca webhooks cuyo `delivery_url` es de `vio.live`.
+> **Correrlo ANTES del corte** (baseline: el 29/09 daba 6 revisados, 0 caídos) **y DESPUÉS**,
+> con `repair` si alguno quedó abajo.
+
 1. [ ] Poner la app en modo mantenimiento / escalar a 0 los writers en Noruega. **Esto es
        lo que evita split-brain**: mientras haya writes en Noruega, la réplica sigue viva y
        promoverla pierde datos.
