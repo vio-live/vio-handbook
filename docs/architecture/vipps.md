@@ -196,6 +196,26 @@ con `export * from './core/index.js'` + `export * from './ui/index.js'` (el `src
 SDK no registra los elementos). Fuente en el scratchpad de la sesión del 2026-09-29; vale la pena
 moverla a un repo si se sigue usando.
 
+## En Vev (2026-09-30)
+
+Con el paquete compartido publicado y la página republicada, el detalle, el carrito y la kasse
+muestran sus botones de Vipps solos (vienen del SDK). La **card** de Vev (suelta, carrusel, grid)
+tiene además la opción «Vipps Express button» ([vev#49](https://github.com/vio-live/vev/pull/49)),
+**off por defecto** para no cambiar páginas publicadas: añade una unidad y abre la app; con
+variantes abre el detalle; si el canal no ofrece Vipps no se pinta; con Express apagado abre la
+kasse con Vipps. La oferta se lee una vez por sponsor para todas las cards de la página.
+
+## Después de la orden: qué avisa a Vipps (2026-09-30)
+
+| Pasa en… | orders-ms avisa | shopcart hace |
+|---|---|---|
+| Tracking guardado (Shopify fulfillment, Woo con plugin de tracking, Aftership) | `shipped` | captura si `captureMode = shipment` |
+| Orden completa (todos los ítems; p. ej. `completed` de Woo sin tracking, o a mano) | `shipped` | ídem; el segundo aviso → `skipped` |
+| Cancelar la orden (dashboard) | `cancelled` | libera la reserva o devuelve lo capturado (switches) |
+| Último ítem cancelado (p. ej. `cancelled` de Woo, ítem a ítem) | `cancelled` | ídem; el segundo aviso → `ignored` |
+| Un ítem de varios cancelado | nada | **limitación**: al enviar se captura todo |
+| Capture/refund/cancel desde el portal de Vipps | (webhook) | registra el evento; la orden no cambia — **limitación** |
+
 ## Estado en QA (2026-09-30)
 
 Todo lo de arriba está desplegado en QA (shopcart redesplegado a mano tras el choque de tres deploys,

@@ -177,3 +177,35 @@ desde el dashboard con el botón «Connect».
 - Probar `shippingMode: dynamic` en Bohus (callback real desde la app).
 - Prod: programa de partners, partner keys, alta partner del webhook, checklist ePayment (PDF +
   vídeo), assets oficiales del botón.
+
+## 30/09 — Vev, Woo y la tarjeta de Alan
+
+### Done
+
+- **Botón de Vipps Express en la card de Vev** ([vev#49](https://github.com/vio-live/vev/pull/49),
+  mergeado): opción «Vipps Express button» (off por defecto) en card/carrusel/grid; añade el
+  producto y abre la app; con variantes abre el detalle; si el canal no ofrece Vipps no se pinta;
+  con Express apagado abre la kasse con Vipps. Sin rebundle: el bundle 0.17.0 ya tenía todo.
+  **El paquete compartido se publica el 01/10** con Angelo (`npm run deploy`).
+- **Woo y el dinero después de la orden** ([orders-ms#13](https://github.com/vio-live/vio-orders-microservice/pull/13),
+  [shopcart#50](https://github.com/vio-live/vio-shopcart-microservice/pull/50), mergeados): la
+  orden completa (todos los ítems, p. ej. `completed` de Woo sin tracking) avisa «shipped» y el
+  último ítem cancelado avisa «cancelled»; shopcart hace inocuo el segundo aviso (nada que
+  capturar / nada reservado). Limitaciones que quedan: cancelar un ítem de varios no toca Vipps
+  (al enviar se captura todo) y lo hecho desde el portal se registra pero no cambia la orden.
+- **Tarjeta de QA para Alan**: [Trello W2NNShth](https://trello.com/c/W2NNShth) — contexto,
+  prerrequisitos, activación y 38 escenarios (A activación, B Vev, C app, D orden, E Shopify/Woo,
+  F dinero después de la orden, G robustez), autocontenida y sobre su propio canal.
+
+### Blockers
+
+- orders-ms no compila ni testea en local: el kernel `@vio-/*@1.0.267` no resuelve desde esta
+  máquina (npm 404). El PR se tipó contra los `node_modules` de shopcart (misma línea base de
+  errores) y se verifica en QA.
+
+### Next session
+
+- 01/10: `npm run deploy` del paquete de Vev + republicar la página de Bohus; Alan arranca la
+  tarjeta cuando tenga claves y usuario de prueba.
+- Verificar en QA los enganches de Woo (orden Vipps «at shipment» → completed sin tracking →
+  `[vippsOrderShipped]`).
