@@ -1,0 +1,76 @@
+# Precarga las 13 imagenes en los 3 nodos de Suecia antes de la ventana de corte.
+# 10,9 GB comprimidos: tirarlos durante el corte fue parte de la demora del intento del 29/09.
+# Alternativa descartada: geo-replicar el ACR exige Premium (~+$80/mes permanentes).
+# Dejar vivo el DaemonSet hasta despues del corte: si se borra, el GC del kubelet
+# puede evictar las imagenes sin usar bajo presion de disco.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: prepull-images
+  labels: {purpose: prepull}
+spec:
+  selector:
+    matchLabels: {name: prepull-images}
+  template:
+    metadata:
+      labels: {name: prepull-images}
+    spec:
+      initContainers:
+      - name: pull-api
+        image: reachuprod2.azurecr.io/api:latest
+        command: ["sh","-c","exit 0"]
+        resources: {requests: {cpu: 10m, memory: 32Mi}}
+      - name: pull-base-api
+        image: reachuprod2.azurecr.io/base-api:latest
+        command: ["sh","-c","exit 0"]
+        resources: {requests: {cpu: 10m, memory: 32Mi}}
+      - name: pull-collections
+        image: reachuprod2.azurecr.io/collections:latest
+        command: ["sh","-c","exit 0"]
+        resources: {requests: {cpu: 10m, memory: 32Mi}}
+      - name: pull-extensions
+        image: reachuprod2.azurecr.io/extensions:latest
+        command: ["sh","-c","exit 0"]
+        resources: {requests: {cpu: 10m, memory: 32Mi}}
+      - name: pull-graph-ql
+        image: reachuprod2.azurecr.io/graph-ql:latest
+        command: ["sh","-c","exit 0"]
+        resources: {requests: {cpu: 10m, memory: 32Mi}}
+      - name: pull-middleware
+        image: reachuprod2.azurecr.io/middleware:latest
+        command: ["sh","-c","exit 0"]
+        resources: {requests: {cpu: 10m, memory: 32Mi}}
+      - name: pull-orders
+        image: reachuprod2.azurecr.io/orders:latest
+        command: ["sh","-c","exit 0"]
+        resources: {requests: {cpu: 10m, memory: 32Mi}}
+      - name: pull-payment-processors
+        image: reachuprod2.azurecr.io/payment-processors:latest
+        command: ["sh","-c","exit 0"]
+        resources: {requests: {cpu: 10m, memory: 32Mi}}
+      - name: pull-products
+        image: reachuprod2.azurecr.io/products:latest
+        command: ["sh","-c","exit 0"]
+        resources: {requests: {cpu: 10m, memory: 32Mi}}
+      - name: pull-shopcart
+        image: reachuprod2.azurecr.io/shopcart:latest
+        command: ["sh","-c","exit 0"]
+        resources: {requests: {cpu: 10m, memory: 32Mi}}
+      - name: pull-templates
+        image: reachuprod2.azurecr.io/templates:latest
+        command: ["sh","-c","exit 0"]
+        resources: {requests: {cpu: 10m, memory: 32Mi}}
+      - name: pull-tracking
+        image: reachuprod2.azurecr.io/tracking:latest
+        command: ["sh","-c","exit 0"]
+        resources: {requests: {cpu: 10m, memory: 32Mi}}
+      - name: pull-users
+        image: reachuprod2.azurecr.io/users:latest
+        command: ["sh","-c","exit 0"]
+        resources: {requests: {cpu: 10m, memory: 32Mi}}
+      containers:
+      - name: pause
+        image: mcr.microsoft.com/oss/kubernetes/pause:3.6
+        resources: {requests: {cpu: 10m, memory: 16Mi}}
+      terminationGracePeriodSeconds: 0
+
