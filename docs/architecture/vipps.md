@@ -131,4 +131,4 @@ la captura.
 [base-api#21](https://github.com/vio-live/vio-base-api/pull/21) ·
 [api-ms#30](https://github.com/vio-live/vio-api-microservice/pull/30) ·
 [graphql#16](https://github.com/vio-live/graphql/pull/16) ·
-[web-sdk#69](https://github.com/vio-live/vio-web-sdk/pull/69) · webapp: en PR.
+[web-sdk#69](https://github.com/vio-live/vio-web-sdk/pull/69) · [webapp#40](https://github.com/vio-live/webapp-vio-commerce/pull/40).

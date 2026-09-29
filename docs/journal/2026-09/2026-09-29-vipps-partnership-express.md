@@ -28,7 +28,7 @@ punta con todas las opciones, mapear Express como en Apple Pay, y mirar el camin
   capture/refund/cancel, Vipps en el barrido. 435 tests.
 - **Fase 2**: base-api relay firmado ([#21](https://github.com/vio-live/vio-base-api/pull/21)),
   api-ms sonda en modo partner + secretos ([#30](https://github.com/vio-live/vio-api-microservice/pull/30)),
-  dashboard con modo/captura/devoluciones/Express y el botón «Connect» del webhook (PR).
+  dashboard con modo/captura/devoluciones/Express y el botón «Connect» del webhook ([#40](https://github.com/vio-live/webapp-vio-commerce/pull/40)).
 - **Fase 3**: gateway con `express` y email opcional ([#16](https://github.com/vio-live/graphql/pull/16));
   SDK con los botones de producto y carrito en Express, un clic en el checkout
   ([#69](https://github.com/vio-live/vio-web-sdk/pull/69)).
