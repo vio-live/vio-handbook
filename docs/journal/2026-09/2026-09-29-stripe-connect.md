@@ -105,3 +105,13 @@ Excepción a ADR-0015 (merge a `main` normalmente es clic humano), autorizada po
 ## Prueba para Alan
 
 Tarjeta en Trello (To do, asignada a Alan): https://trello.com/c/l1fQDCcE — 6 bloques / 37 puntos: regresión de lo de hoy, alta en el dashboard, dónde cae el dinero con Connect, seguridad (IDOR y campos del servidor), SDKs nativos contra QA, y su opinión.
+
+## Cuarto camino: vincular la cuenta de Stripe que el seller ya tiene (OAuth)
+
+Pedido por Angelo. Rama `feature/stripe-connect-oauth` (commits locales, sin push todavía):
+- **api-ms** `d05bd9a`, `b1fa3f4`, `280cabf`: `POST /paymentmethod/stripe/connect/oauth/{start,complete}` y `/disconnect`. `state` aleatorio guardado en la fila del seller (15 min, un solo uso, se consume **antes** de canjear el código); cuenta ya usada por otro seller → rechazada; otra cuenta ya conectada → hay que desconectarla primero (no se deja huérfana); acceso revocado desde el Stripe del seller → conserva el modo y el estado dice `access_revoked` (ADR-0023). `connectOrigin: 'created' | 'oauth'`. Env nueva `STRIPE_CONNECT_CLIENT_ID` (`ca_…`, no es secreto). Tests +13.
+- **base-api** `d99e01b`: proxy de las tres rutas, userId de la sesión.
+- **dashboard** `d157ba1`, `cdd63b9`: "I already have a Stripe account — connect it"; vuelta a `/settings/payments` con `?code&state`; "Disconnect Stripe account"; vinculada sin poder cobrar → "Finish in your Stripe Dashboard"; revocada → "Reconnect". Suite 297/297.
+- Revisión independiente: sin bloqueos. Seguimientos anotados: las rutas de api-ms confían en el `userId` que manda base-api (igual que el resto del controlador: api-ms no debe estar expuesto); no hay alerta activa cuando un seller revoca el acceso (se ve al entrar al dashboard).
+
+**Configuración en Stripe (Angelo):** Connect → Settings → OAuth: activar OAuth para cuentas Standard, registrar el redirect `https://dashboard-staging.ecom.vio.live/settings/payments`, y copiar el `client_id` (`ca_…`) a `STRIPE_CONNECT_CLIENT_ID` del `.env` de QA.
