@@ -112,15 +112,24 @@ Orden importa. Estimado: minutos para la app, no horas.
 2. [ ] Última pasada de `azcopy sync`.
 3. [ ] Verificar lag de la réplica en 0 y **promoverla** a servidor independiente.
        Es irreversible: desde ese momento Suecia es la fuente de verdad.
-4. [ ] **Cerrar el hallazgo crítico acá**: el server promovido nace con contraseña nueva,
+4. [ ] **Repuntar los servicios con env vars de Kubernetes, NO editando el blob.**
+       El `.env` está **horneado en la imagen**: editar el blob no afecta a los pods que
+       corren (ver `lessons/el-env-esta-horneado-en-la-imagen-no-en-el-blob.md`).
+       Las env vars de k8s le ganan al `.env` (dotenv sin `override`, verificado).
+       Inyectar por Secret + `envFrom` sólo lo que cambia: `DB_HOST`, `DB_PASSWORD`,
+       `CACHE_HOST`, `CACHE_PASSWORD`. El resto sigue saliendo de la imagen.
+       **Actualizar el blob igual**, aunque no tenga efecto hoy: si no, la próxima imagen
+       que se construya vuelve a hornear los valores de Noruega y revierte la migración en
+       silencio. Primero el blob, después cualquier rebuild.
+5. [ ] **Cerrar el hallazgo crítico acá**: el server promovido nace con contraseña nueva,
        `publicNetworkAccess=Disabled`, private endpoint en la VNet nueva y **sin regla
        `AllowAll`**. Actualizar el blob `.env` compartido con la credencial nueva
        (ver ADR-0016) y sacar el default de `variables.tf` en `vio-live/vio-infra-tf`.
-5. [ ] Apuntar los microservicios de Suecia a la DB de Suecia y escalar a réplicas normales.
-6. [ ] DNS en Cloudflare a las IPs nuevas. Zona `vio.live` `d8ebb16763e96258028487006145eb9c`,
+6. [ ] Escalar los microservicios de Suecia a réplicas normales.
+7. [ ] DNS en Cloudflare a las IPs nuevas. Zona `vio.live` `d8ebb16763e96258028487006145eb9c`,
        token DNS en `TOOLS.md`. Bajar el TTL a 60s **el día anterior**.
-7. [ ] Front Door `prod-cdn`: cambiar los origins. Es global, no se migra.
-8. [ ] Verificar: `/health` de los 13 servicios, un checkout real de punta a punta, los
+8. [ ] Front Door `prod-cdn`: cambiar los origins. Es global, no se migra.
+9. [ ] Verificar: `/health` de los 13 servicios, un checkout real de punta a punta, los
        webhooks de Shopify llegando, y los certificados emitidos.
 
 ## Fase 4 — desmantelar Noruega (no antes de 48-72 h estables)
