@@ -65,9 +65,16 @@ Regla general: **nada se borra en Noruega hasta que Suecia sirva tráfico real y
       Ojo: ese playbook asume IPs estáticas ya existentes (prod hoy 20.100.188.135) — en
       Sweden Central hay que crear IPs nuevas primero. Los certificados se reemiten solos
       vía ACME una vez que el DNS apunte; hasta entonces no forzarlos.
-- [ ] Managed Redis nuevo. **Ojo:** `redus-vio-prod` hoy tiene `highAvailability: Enabled`
-      y eso son ~$260/mes. Crear el nuevo ya sin HA si Angelo lo aprueba (decisión abierta),
-      o con HA para no mezclar dos cambios en un solo corte.
+- [x] **Managed Redis creado y MIGRADO.** `redus-vio-prod-sc` en Sweden Central,
+      Balanced_B1, **`highAvailability: Enabled`** (se decidió mantener HA: el Redis guarda
+      tokens OAuth de 15 comerciantes, ver lesson). Database `default` igual que prod:
+      OSSCluster, NoEviction, RDB 12 h, puerto 10000, Encrypted. Redis 7.4 en los dos lados.
+      Contenido migrado con `~/vio-migracion/migrar-redis.py --run`:
+      **40 claves, 60.389 bytes de valores, 15 sesiones offline de Shopify, 0 SHA1
+      distintos**, destino `DBSIZE=40`, `expires=3` con los TTL puestos. Origen intacto
+      (sigue en 40). Verificado además a mano con `redis-cli -c`.
+      **Hay que volver a correrlo en el corte** para levantar las sesiones que cambien
+      entre ahora y entonces.
 - [ ] Desplegar los 13 microservicios sin tráfico y verificar readiness contra la DB de
       Noruega todavía (funciona, sólo suma latencia).
 
