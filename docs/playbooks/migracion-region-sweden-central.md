@@ -44,7 +44,23 @@ Regla general: **nada se borra en Noruega hasta que Suecia sirva tráfico real y
       `mcr.microsoft.com`, `quay.io` y Docker Hub. Cross-region funciona, así que la
       geo-replicación es una optimización de velocidad de pull, no un bloqueo. Decidir si
       se geo-replica (cuesta) o se deja apuntando a Noruega.
-- [ ] nginx-ingress, cert-manager, Istio. **Reusar `cluster-restore.md`**, que ya tiene los
+- [x] **IPs estáticas creadas** en `rg-vio-commerce-prod-sc`: nginx-ingress
+      **4.225.221.49**, istio-ingressgateway **135.116.206.152**, egress AKS
+      **4.223.89.241**. La identidad del cluster recibió `Network Contributor` sobre el RG
+      para poder usarlas.
+- [x] **nginx-ingress** instalado con la IP estática pegada. **Health probes del Azure LB
+      pasados a Tcp** (los 5: nginx y los 3 de istio). Ojo con el playbook viejo: el flag es
+      `--protocol Tcp --path ""` — sin el `--path ""` Azure rechaza con "Request path must be
+      null when its protocol is Tcp".
+- [x] **cert-manager v1.21.2** + los 2 ClusterIssuers (`base-api` y `graph-ql`, ACME Let's
+      Encrypt prod, http01) — los dos `Ready=True`. Nota: prod corre cert-manager 1.18.2,
+      el nuevo es 1.21.2. Los issuers levantaron igual.
+- [x] **Istio 1.24.2** (`istio-base`, `istiod`, `istio-ingressgateway`), misma versión que
+      prod. **Verificado que QA ya corre Istio 1.24.2 sobre k8s 1.35.7**, o sea la
+      combinación destino está probada en casa. Gotcha del chart: el `gateway` 1.24.2 tiene
+      un values.schema.json que rechaza `service` en la raíz; hay que instalar con
+      `-f values.yaml --skip-schema-validation`.
+- [ ] Referencia para lo que falta: **`cluster-restore.md`**, que ya tiene los
       comandos exactos (pasos 2, 3, 4 y 7) incluido el fix de health probes del Azure LB.
       Ojo: ese playbook asume IPs estáticas ya existentes (prod hoy 20.100.188.135) — en
       Sweden Central hay que crear IPs nuevas primero. Los certificados se reemiten solos
@@ -57,13 +73,18 @@ Regla general: **nada se borra en Noruega hasta que Suecia sirva tráfico real y
 
 ## Fase 2 — datos
 
-- [ ] **MySQL por réplica de lectura cross-region.** El server prod es 8.0.21,
-      GeneralPurpose, `replicaCapacity` 10, `replicaRole` None: admite réplica.
-      `az mysql flexible-server replica create` apuntando a Sweden Central. Esperar a que
-      el lag llegue a 0 (`replica_lag_in_seconds`).
-- [ ] Blobs: `azcopy sync` de `containerproduction2` (1,56 TB / 6,16 M blobs) y `saapivio`.
-      Correrlo varias veces; la última pasada durante el corte, ya con poco delta.
-      Recordar la lifecycle policy `uploads-cool-tras-30d-sin-acceso`: recrearla en destino.
+- [x] **MySQL: réplica creada y al día.** `vio-ecom-db-prod-sc` en Sweden Central,
+      `Standard_D2ds_v4`, 8.0.21, `replicationRole: Replica`, state Ready. FQDN
+      `vio-ecom-db-prod-sc.mysql.database.azure.com`. **Lag en 0,0 s sostenido** (métrica
+      `replication_lag`). Fuente sigue siendo `vio-ecom-db-prod` en Norway West.
+- [x] **Blobs: COPIADOS.** `containerproduction2` -> `containerproductionsc` (nuevo, en
+      `rg-vio-commerce-prod-sc`, Standard_LRS Hot, mismos 6 containers).
+      **59.256 de 59.256, 0 fallos, 6,6 minutos**, copia server-to-server (Put Block From
+      URL, no pasó por la red local). Script reusable en `~/vio-migracion/copy-blobs.sh`.
+      **Corrección al audit del 16/09: no son 1,56 TB / 6,16 M blobs, son 59.256.** Esa
+      cifra quedó vieja. Por eso esto duró minutos y no horas.
+      Falta: recrear la lifecycle policy `uploads-cool-tras-30d-sin-acceso` en destino, y
+      volver a correr el script en el corte para levantar el delta.
 - [ ] ClickHouse: VM nueva + copia del disco de datos. No hay réplica, así que este es el
       componente que más ventana necesita. Evaluar si se migra en un corte aparte.
 
