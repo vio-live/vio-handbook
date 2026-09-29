@@ -127,6 +127,17 @@ una devolución no mueve dinero para ningún PSP hoy (tampoco antes).
 | Vio (clúster) | **Asignar la unidad de venta** cuando Vipps confirma una firmada por el partnership: `PATCH api-ms /paymentmethod/:id/vipps-sales-unit { data: { merchantSerialNumber } }` — interno, sin proxy en base-api; solo acepta una fila de Vipps en modo partnership. El dashboard del vendedor pasa de «Waiting…» a «Sales unit NNN». |
 | Angelo | Prod: partner keys en el entorno, checklist de ePayment (PDF + vídeo), alta de comercios con Management API. |
 
+## Página de prueba con el web SDK
+
+**https://vio-vipps-test.vercel.app** (Vercel, proyecto `vio-vipps-test`). HTML estático + bundle
+del SDK 0.17.0 (`esbuild core+ui`, sin React) que hace de Vio backend para sí misma: intercepta
+`GET /v2/mobile/config` y responde un sponsor (Bohus, canal 498) con la API key del canal, que se
+pega una vez y queda en `localStorage`. Productos por defecto: el catálogo de Bohus en QA. Sirve
+para probar Express en un móvil real sin Vev. Regenerar el bundle: `esbuild src/_page-entry.ts`
+con `export * from './core/index.js'` + `export * from './ui/index.js'` (el `src/index.ts` del
+SDK no registra los elementos). Fuente en el scratchpad de la sesión del 2026-09-29; vale la pena
+moverla a un repo si se sigue usando.
+
 ## Pendiente
 
 - E2E en QA: producto → app de Vipps → orden en Vio → orden en la dev store de Shopify →

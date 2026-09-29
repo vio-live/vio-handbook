@@ -68,12 +68,40 @@ punta con todas las opciones, mapear Express como en Apple Pay, y mirar el camin
 - Smoke en QA tras el deploy: el webhook con basura contesta `{ignored, unparseable}`; un
   «shipped» de una orden que no es de Vipps, `{ignored}`.
 
+## Primera compra en QA con el SDK 0.17.0 (noche, más tarde)
+
+Angelo pasó las claves de la unidad de prueba 358493 («Tipio»). Resultó que el vendedor de Bohus
+(user 1322) **ya las tenía guardadas** en su fila de Vipps y son válidas (la sonda las acepta en
+test); lo que fallaba con 401 eran las `VIPPS_*` del entorno, que solo importan para el respaldo
+con la cuenta de Vio.
+
+Como la página de Bohus en Vev caducó, y Angelo pidió una página propia con el web SDK para
+probar en el móvil: **https://vio-vipps-test.vercel.app** (proyecto `vio-vipps-test`, team
+`tipio-2`). Es un HTML estático con el bundle del SDK 0.17.0 (esbuild de `core + ui`, sin
+React); hace de «backend de Vio» para sí misma — intercepta `GET /v2/mobile/config` y devuelve un
+solo sponsor, Bohus, con la API key del canal 498 que se pega una vez y queda en `localStorage`
+(la key no está en el HTML). Productos: los 13 del catálogo de Bohus en QA.
+
+Verificado desde el navegador integrado, en local: productos cargan por `graph-ql-dev`, el
+detalle muestra «Kjøp nå med Vipps», y el botón crea el pago **Express** con las claves del
+vendedor — shopcart: `POST /epayment/v1/payments → 201`, `VIO-<checkout>`, 499900 NOK,
+`express, own 358493` — y redirige a la landing de test de Vipps («Pay 4,999 NOK to Tipio»).
+`payment-vipps/status` contesta `CREATED` sin crear orden. La aprobación necesita la app MT en
+el teléfono (Express no se puede aprobar por API): queda para Angelo.
+
+Notas de este tramo: `src/index.ts` del SDK **no** registra los elementos (solo re-exporta el
+core, al contrario de lo que dice su README) — el bundle de la página entra por `core + ui`. El
+clasificador de permisos bloqueó escribir en QA por `kubectl exec` (PATCH de la fila, alta del
+webhook del vendedor) y copiar la key del canal a un archivo: el webhook del vendedor se conecta
+desde el dashboard con el botón «Connect».
+
 ## Blockers
 
-- **Claves de Vipps de prueba válidas en QA** (Angelo: portal de Vipps → For developers →
-  test keys de la unidad de Vio, o las del welcome email del partner program).
-- Un canal de QA con el interruptor `vipps` encendido (el de Bohus tiene solo Stripe y Kustom) —
-  `postUptadeSettings` sobreescribe todos los switches, así que se cambia desde el dashboard.
+- Las `VIPPS_*` del entorno de QA (respaldo con la cuenta de Vio) contestan 401: solo importan
+  para vendedores sin fila propia. Bohus tiene la suya y funciona.
+- El webhook del vendedor 1322 sin registrar (botón «Connect» del dashboard; el exec lo bloqueó
+  el clasificador). Sin él la orden se crea igual por el retorno y el barrido; faltan los
+  eventos de captura/devolución desde el portal.
 - Un usuario de prueba con la app MT en el teléfono de Angelo (Express no se puede aprobar por
   API).
 
