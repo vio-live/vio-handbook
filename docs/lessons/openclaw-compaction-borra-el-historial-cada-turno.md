@@ -51,11 +51,19 @@ reemplazaba el historial.
 
 1. Subir `agents.defaults.compaction.maxHistoryShare` a 0.6–0.7. Nunca dejarlo por
    debajo de `system_prompt_tokens / context_window` con margen.
+   Aplicado 2026-09-29: 0.3 -> 0.65. Ojo, el gateway considera este path protegido y
+   `config.patch` lo rechaza — hay que editar `~/.openclaw/openclaw.json` a mano
+   (con backup, y editando sólo el bloque para no reformatear el JSON entero).
+   Recarga en caliente, sin reiniciar: el log confirma con `[reload] config change detected`.
 2. Medir el prompt antes de tocar el share: `totalTokens` en
    `~/.openclaw/agents/<agente>/sessions/sessions.json`, o `cacheWrite` de cualquier
    mensaje assistant del jsonl.
-3. Adelgazar el system prompt si pasa de ~50k: `MEMORY.md` y `TOOLS.md` del workspace
-   se inyectan enteros, y los bloques "Promoted From Short-Term Memory" crecen solos.
+3. No confundir el prompt con los archivos del workspace: los 7 archivos inyectados
+   (`AGENTS.md`, `SOUL.md`, `IDENTITY.md`, `USER.md`, `TOOLS.md`, `MEMORY.md`,
+   `HEARTBEAT.md`) sumaban ~7.300 tokens de los ~60.000. El grueso es el catálogo de
+   tools y el andamiaje. Adelgazar `MEMORY.md` ayuda, pero no arregla esto por sí solo.
+   Aun así conviene: los bloques "Promoted From Short-Term Memory" crecen solos y eran
+   el 77% del archivo, casi todo logs repetidos del cron del cluster QA.
 4. Activar `compaction.qualityGuard` para que un resumen basura se reintente en vez de
    commitearse encima del historial.
 
