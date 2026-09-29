@@ -54,7 +54,8 @@ la fila de otro podía poner sus claves Stripe y cobrar las ventas del otro. Aho
 ## Decisions
 
 - Dos modos por seller: credenciales propias / Stripe Connect Standard con cobro directo. Sin comisión de plataforma. Sin reparto automático a suppliers (el seller del canal cobra todo y le paga al supplier por fuera).
-- **El respaldo con la cuenta de Vio se mantiene por ahora** (Stripe, Klarna, Qliro, Vipps, Adyen). Retirarlo queda abierto en el ADR.
+- **El cobro con la cuenta de Vio se queda** (Stripe, Klarna, Qliro, Vipps, Adyen): no se retira, Connect es una opción más → [ADR-0023](../../decisions/0023-el-cobro-con-la-cuenta-de-vio-se-queda.md).
+- Gestiones externas (Klarna partners, abogado) fuera de foco por ahora; producción sólo cuando Connect esté terminado y comprobado en QA.
 - El IDOR va en la misma rama que Connect (Angelo).
 - Las claves de test impresas por error en la sesión no se rotan ("en test no hay problemas"); prod se asegura al subir.
 - Desvío del plan: no hay webhook de `account.updated`; el estado se relee de Stripe cuando el dashboard lo pide.
