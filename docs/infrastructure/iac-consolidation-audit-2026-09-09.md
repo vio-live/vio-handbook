@@ -68,7 +68,13 @@ expuesto). Queda pendiente de Angelo decidir:
 1. Rotar la contraseña de `vio-ecom-db-prod` y `vio-ecom-db-qa` ya.
 2. Sacar el valor de `variables.tf` (mover a `TF_VAR_` / backend de secretos, nunca un default committeado)
    y evaluar si conviene reescribir historia de git del repo (impacto: repo compartido con Alan).
-3. Restringir el firewall rule `AllowAll` a las IPs de egress de AKS reales, en vez de todo internet.
+3. ~~Restringir el firewall rule `AllowAll`~~ — **HECHO el 2026-09-29**: regla `AllowAll`
+   borrada de `vio-ecom-db-prod`. El puerto 3306 ya no responde desde internet y el app no
+   se vio afectado porque entra por el private endpoint 10.224.0.4. Queda la regla de
+   servicios de Azure, necesaria para la replicación. Ver journal 2026-09-29.
+   **Sigue abierto en `vio-ecom-db-staging`** (verificar antes si Vercel conecta directo).
+4. Pendientes todavía: rotar la contraseña de prod y sacar el default de `variables.tf`.
+   Se cierran en el corte de ADR-0021, cuando el server promovido nazca con credencial nueva.
 
 ---
 
