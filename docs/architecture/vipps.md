@@ -144,6 +144,25 @@ Ninguno de los dos es fatal para la orden: el cambio de estado es el registro, y
 que mueve el dinero desde su portal recibe exactamente eso como respuesta. La aprobación de
 una devolución no mueve dinero para ningún PSP hoy (tampoco antes).
 
+### El importe en Express, y de dónde salen los envíos
+
+**Vipps suma al `amount` la tarifa que el comprador elige en la app.** Por eso en Express viaja
+solo la mercancía (total del checkout − envío del carrito) y la tarifa del carrito va como
+opción preseleccionada; en un pago plano viaja el total tal cual. El primer pago desde el
+checkout en QA (2026-09-30) mandó mercancía + tarifa preseleccionada — el envío se habría
+cobrado dos veces — y lo arregló [shopcart#48](https://github.com/vio-live/vio-shopcart-microservice/pull/48).
+
+**Vipps no tiene servicio de envíos propio en ePayment.** Las opciones son siempre del
+comercio, de dos formas ([doc](https://developer.vippsmobilepay.com/docs/APIs/epayment-api/api-guide/features/express/)):
+
+| Forma | Qué es | Nosotros |
+|---|---|---|
+| `fixedOptions` | Las tarifas van en la creación del pago, agrupadas por transportista (`brand`: POSTEN, BRING, POSTNORD, HELTHJEM…) y tipo (`HOME_DELIVERY`, `PICKUP_POINT`, `MAILBOX`, `IN_STORE`) | **Hecho**: nuestras tarifas del supplier, con transportista y tipo inferidos del nombre |
+| `dynamicOptions` | Vipps hace `POST` a un `callbackUrl` nuestro con la dirección del comprador y contestamos las opciones | Sin hacer. Es donde se enchufaría un TMS (nShift, Ingrid, Bring…) como el `shipping.mode` de Qliro |
+
+El producto que sí traía envíos integrados (Posten, Bring, Porterbuddy, Helthjem, Instabox) era
+**Vipps Checkout**, y Vipps lo vendió a Kustom (su doc queda «para integraciones existentes»).
+
 ## Lo que hay que hacer fuera del código
 
 | Quién | Qué |
