@@ -523,7 +523,7 @@ haga el comercio por su cuenta en la PSP.
 | Kustom | Sí | Línea con el SKU del feed y `merchant_data` con nuestros IDs | `captureMode`: su cuenta, al pagar o al despachar (PR) | Por API y opcional por vendedor (PR) | **Los eventos llegan y se ignoran**: su webhook de cuenta entrega en nuestro endpoint de QA, pero el relay lee el id de la query y viene en el cuerpo ([detalle](./kustom.md#webhooks-de-cuenta-probados-el-2026-09-24)) | No hace falta: su portal admite varios destinos y el comercio pone el suyo |
 | Klarna | **No**: cae a la clave de Vio | **Las líneas no llevan SKU**. Términos apuntando a `outshifter.com` | **La decide el navegador** en la petición | Existe, por un camino muerto | No: no mandamos URLs de aviso. Desde el 2026-09-28 lo cubre el barrido ([shopcart#43](https://github.com/vio-live/vio-shopcart-microservice/pull/43)) | Falta |
 | Walley | Sí | Ítems con `productId`, **sin datos del cliente**. IVA ×100 | No | No | No: solo la compra completada | Falta |
-| Vipps | **No**: cae a las claves de Vio | **Sin líneas, solo el importe**. Referencia aleatoria | **No capturamos**: la reserva caduca sola | Existe, por un camino muerto | No: no nos suscribimos a capturado ni devuelto, y no verificamos la firma | Falta. Su webhook de cuenta ya recibe nuestros pagos |
+| Vipps | **No**: cae a la cuenta de Vio (ADR-0023); y desde el 2026-09-29 (PR) también **partnership**: su unidad de venta, cobrada con las partner keys de Vio | Recibo con SKU, envío y nuestro número de orden; referencia `VIO-{checkout}` editable (PR; antes solo el importe y un UUID) | `captureMode` como Kustom — su portal por defecto, al pagar o al despachar — y captura por API (PR; antes nadie capturaba) | Por API y opcional por vendedor (PR) | Los 8 eventos, firma verificada, dedupe (PR; antes 5 sin firma) | Su webhook de cuenta ya recibe nuestros pagos; con partner keys un alta sin MSN cubre a todos. Detalle en [`vipps.md`](./vipps.md) |
 | Adyen | Falla si la fila está incompleta; sin fila cobra Vio, por decisión | Lo más completo: línea con el `g:id` del feed, SKU, cliente y metadata | `captureMode`, pero no hay llamada de captura | No | **Los eventos llegan y se ignoran** | Falta. Su webhook de cuenta ya recibe nuestros pagos |
 | Stripe | Las dos claves o ninguna: con la fila incompleta cobra Vio y se avisa en el log | Productos solo con el nombre. `metadata.order_id` choca con su plugin de Woo | Automática | **Con la clave del vendedor que cobró** desde el 2026-09-28, y la orden guarda ya el id del pago ([payment-processors#8](https://github.com/vio-live/vio-payment-processors-microservice/pull/8), [shopcart#43](https://github.com/vio-live/vio-shopcart-microservice/pull/43)) | El webhook relee el objeto en Stripe; la firma se exige donde tenemos el `whsec_`, pero **ninguna pantalla lo recoge** (el dashboard sólo pide publishable y secret key) | Falta |
 
@@ -592,7 +592,7 @@ transportista.
 
 **Orden de trabajo propuesto.**
 
-- **Fase 0, el dinero y las puertas abiertas.** Capturar en Vipps, que hoy reserva y nadie cobra.
+- **Fase 0, el dinero y las puertas abiertas.** Capturar en Vipps, que hoy reserva y nadie cobra (en PR desde el 2026-09-29, [`vipps.md`](./vipps.md)).
   Cerrar los pendientes de seguridad. Quitar el respaldo silencioso a la cuenta de Vio y añadir
   el interruptor de «solo mi cuenta».
 - **Fase 1, que la orden sea identificable y entregable.** El ID del feed en la línea de cada PSP
