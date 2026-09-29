@@ -22,7 +22,17 @@ Regla general: **nada se borra en Noruega hasta que Suecia sirva tráfico real y
       **`kubernetesqa` ya corre 1.35.7** con los mismos 13 microservicios, o sea que prod
       está *atrasado* respecto a QA, no adelantado. El cluster nuevo salió con 1.35.7
       exacto, la misma patch que QA lleva probando.
-- [ ] Inventariar allowlists de IP en terceros (Shopify, Adyen, Klarna, Kustom) — las IPs
+- [ ] **(EL ÚNICO PREP QUE PUEDE MORDER DESPUÉS DE LA VENTANA)**
+      Inventariar allowlists de IP en terceros (Shopify, Adyen, Klarna, Kustom) — las IPs
+
+      > Medido el 29/09: la IP de salida cambia de **`20.100.174.85`** (Noruega, confirmada
+      > desde un pod de prod) a **`57.174.195.161`** (Suecia). Cualquier tercero que tenga
+      > allowlisteada la de Noruega empieza a rechazar llamadas salientes **después** del
+      > corte, no durante: el síntoma aparece tarde y no lo agarra el smoke test.
+      > No se puede verificar desde Azure; hay que mirar el panel de cada proveedor.
+      > Nota: el RG tiene una IP `aks-outbound-vio-prod-sc` (`4.223.89.241`) que **no** es la
+      > que usa el egress hoy. Si se va a declarar una IP fija a terceros, fijar antes el
+      > outbound del cluster a esa IP en vez de dejar la del LB por defecto.
       de egress cambian. Ver `docs/infrastructure/azure-overview.md` para las actuales.
 - [ ] Ensayar todo esto en QA (`kubernetesqa`) antes de tocar prod. El ensayo valida el
       salto de versión y el orden, que es lo que más riesgo tiene.
@@ -139,8 +149,12 @@ Regla general: **nada se borra en Noruega hasta que Suecia sirva tráfico real y
       URL, no pasó por la red local). Script reusable en `~/vio-migracion/copy-blobs.sh`.
       **Corrección al audit del 16/09: no son 1,56 TB / 6,16 M blobs, son 59.256.** Esa
       cifra quedó vieja. Por eso esto duró minutos y no horas.
-      Falta: recrear la lifecycle policy `uploads-cool-tras-30d-sin-acceso` en destino, y
-      volver a correr el script en el corte para levantar el delta.
+      - [x] **Lifecycle policy replicada el 29/09**: `uploads-cool-tras-30d-sin-acceso`
+        (tierToCool tras 30 d sin acceso, autoTierToHot activo, prefijos
+        `outshifter-uploads-production/`, `reachu-uploads-production/`, `others/`).
+        Requería habilitar **last access time tracking** en la cuenta destino, que venía
+        apagado; sin eso la regla no dispara nunca.
+      - [ ] Volver a correr `copy-blobs.sh` en el corte para levantar el delta.
 - [ ] ClickHouse: VM nueva + copia del disco de datos. No hay réplica, así que este es el
       componente que más ventana necesita. Evaluar si se migra en un corte aparte.
 
@@ -271,8 +285,35 @@ Orden importa. Estimado: minutos para la app, no horas.
        Nota de puertos: no todos escuchan en 3000 (`users` escucha en 8000, y en IPv6);
        mirar el `readinessProbe` del deployment antes de probar a mano.
 7. [ ] DNS en Cloudflare a las IPs nuevas. Zona `vio.live` `d8ebb16763e96258028487006145eb9c`,
-       token DNS en `TOOLS.md`. Bajar el TTL a 60s **el día anterior**.
+       token DNS en `TOOLS.md`.
+
+       **Son exactamente 3 records** (inventariados el 29/09), los tres `A` a
+       `20.100.174.93` (ingress de Noruega) que pasan a **`135.116.206.152`** (ingress de
+       Suecia):
+       | record | actual | nuevo |
+       |---|---|---|
+       | `api-ecom.vio.live` | 20.100.174.93 | 135.116.206.152 |
+       | `graph-ql.vio.live` | 20.100.174.93 | 135.116.206.152 |
+       | `api-commerce.vio.live` | 20.100.174.93 | 135.116.206.152 |
+
+       Los records a `20.251.70.230` (`*-dev`, `*-staging`, `ws-dev`, `dashboard-dev`) son
+       de `kubernetesqa` y **no se tocan**.
+       `msrvc-p.vio.live` **no existe en la zona**: el Gateway de prod que lo referencia
+       apunta a un dominio muerto. No es parte del corte; decidir aparte si se borra.
+
+       > **El TTL hoy es `1` (Auto), no 60.** En Cloudflare, Auto en un record no proxeado
+       > son 300 s. Bajarlo a **60 el día anterior** o el switch tarda hasta 5 minutos en
+       > propagar, que es tiempo de ventana regalado.
 8. [ ] Front Door `prod-cdn`: cambiar los origins. Es global, no se migra.
+
+       > **Esto va en la MISMA ventana que el paso 4, no después.** Verificado el 29/09:
+       > el origin group `prod-cdn-reachu-Default` apunta a
+       > `containerproduction2.blob.core.windows.net` (Noruega), y `container.vio.live` es
+       > CNAME a `prod-cdn-reachu-huakd5c2a4dmhnaj.z01.azurefd.net`.
+       > La app guarda y sirve las URLs vía `AZURE_STORAGE_URL_REACHU = https://container.vio.live`.
+       > Si el paso 4 manda las subidas nuevas a `containerproductionsc` pero el CDN sigue
+       > leyendo de Noruega, **toda imagen subida después del corte da 404 en la URL pública**,
+       > y es un fallo silencioso: las viejas siguen funcionando.
 9. [ ] Verificar: `/health` de los 13 servicios, un checkout real de punta a punta, los
        webhooks de Shopify llegando, y los certificados emitidos.
 
