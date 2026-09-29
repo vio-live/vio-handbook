@@ -47,6 +47,28 @@ Lo que la documentación añade y condiciona el diseño:
   cabeceras `Vipps-System-*` (obligatorias para partners); cancelar lo que no se captura;
   PDF + vídeo del flujo para la aprobación.
 
+## Decisión: Express es un modo de Vipps, no un método aparte (2026-09-30)
+
+Angelo pidió pensarlo bien y que siguiera el estándar de los demás métodos. Lo que hacen los
+demás:
+
+| Cosa | Cómo lo hacen los otros | Vipps |
+|---|---|---|
+| Un instrumento distinto | Método propio con interruptor de canal (`applePay`, `googlePay`) | No aplica: Express es el mismo pago de Vipps |
+| Una variante del mismo PSP | `config` del método en `GetAvailablePaymentMethods` (Stripe: `mode: native\|link`) | **Igual**: `config.express: true\|false`, leído de la fila del vendedor |
+| Crear el pago | `CreatePayment<PSP>` en GraphQL | `CreatePaymentVipps(express?)` |
+| La vuelta | `SyncPaymentKustom`, `SyncPaymentQliro`… completan la orden | `GetVippsStatus` completa la orden y dice `state`, `reference`, `order_created`, `order_id` |
+| Aviso de la PSP | relay en base-api con la firma → shopcart | igual |
+| `checkout.payment_method` | el nombre en mayúscula (`Kustom`, `Adyen`…) | `Vipps` (era `vipps`; las lecturas siguen sin distinguir mayúsculas) |
+| Dinero | `captureMode` + switches por vendedor (Kustom) | igual, más los avisos por id de orden desde orders-ms |
+
+Por qué un modo y no un método: misma credencial, mismo webhook, misma ruta de completar; en la
+propia API de Vipps Express es un flag (`shipping`) del mismo pago. Un método aparte habría
+duplicado interruptor, sonda, fila y avisos para nada. El SDK lo lee con
+`Vio.checkout.getVippsExpressEnabled()` y decide si los botones "Kjøp nå med Vipps" abren la
+app o el checkout. PRs: api-ms (`config.express`), vio-web-sdk (lectura), shopcart (`Vipps`),
+graphql#18 (`GetVippsStatus` completo).
+
 ## Cómo queda
 
 ### Credenciales: tres modos por vendedor
