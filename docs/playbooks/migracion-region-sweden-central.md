@@ -75,6 +75,13 @@ Regla general: **nada se borra en Noruega hasta que Suecia sirva tráfico real y
       (sigue en 40). Verificado además a mano con `redis-cli -c`.
       **Hay que volver a correrlo en el corte** para levantar las sesiones que cambien
       entre ahora y entonces.
+      Limitación conocida del script: **agrega y sobrescribe, no borra.** Si entre el
+      pre-sembrado y el corte un comerciante desinstala y su clave desaparece del origen,
+      en el destino queda una sesión de más. Para sesiones OAuth eso es preferible a que
+      falte una, pero conviene saberlo.
+      Backup independiente de los dos clusters:
+      `~/vio-migracion/backups/redis-prod-<timestamp>.json` (600, base64 + SHA1 por clave).
+      **Tiene tokens OAuth: no commitear ni pegar en chat.**
 - [ ] Desplegar los 13 microservicios sin tráfico y verificar readiness contra la DB de
       Noruega todavía (funciona, sólo suma latencia).
 
@@ -118,7 +125,19 @@ Orden importa. Estimado: minutos para la app, no horas.
 
 ## Fase 4 — desmantelar Noruega (no antes de 48-72 h estables)
 
-- [ ] AKS, Redis y storage de Norway East.
+> **⛔ El Redis de Noruega es lo ÚLTIMO que se borra, y sólo con confirmación explícita
+> de Angelo.** Guarda los tokens OAuth de 15 comerciantes. Antes de borrarlo hay que ver,
+> en Sweden Central, que los comerciantes reales operan (una llamada a la Admin API que
+> funcione, no sólo que la clave exista). Si se borra antes, cada comerciante tiene que
+> reinstalar la app. Ver `lessons/redis-de-vio-no-es-cache-tiene-sesiones-shopify.md`.
+>
+> Hay un backup independiente de los dos clusters en
+> `~/vio-migracion/backups/redis-prod-<timestamp>.json` (permisos 600, 40 claves, formato
+> base64 + SHA1 por clave). **Contiene tokens OAuth: no commitear, no subir al handbook,
+> no pegar en chat.** Regenerarlo con `~/vio-migracion/backup-redis.py`.
+
+- [ ] AKS y storage de Norway East.
+- [ ] Redis de Norway East — **último, con OK explícito** (ver aviso de arriba).
 - [ ] **Norway West queda vacío y hay que borrarlo explícito** o sigue facturando:
       `vio-ecom-db-prod`, `vio-ecom-db-staging`, `redus-vio-staging`.
 - [ ] Recién entonces **comprar la reserva, ya en Sweden Central** (antes del 1 de febrero
