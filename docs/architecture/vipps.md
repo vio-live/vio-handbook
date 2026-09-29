@@ -83,7 +83,8 @@ app o el checkout. PRs: [api-ms#32](https://github.com/vio-live/vio-api-microser
 
 Más las opciones comunes: `captureMode` (`account` por defecto / `payment` / `shipment`),
 `manageRefunds`, `manageCancellations`, `referenceFormat` (`VIO-{checkout}`; `{short}` = ocho
-caracteres), `express` (activo por defecto), `webhookSecret`/`webhookSecretPrevious`
+caracteres), `express` (activo por defecto), `shippingMode` (`fixed` por defecto / `dynamic`:
+Vipps pregunta las tarifas por dirección), `webhookSecret`/`webhookSecretPrevious`
 (cifrados; los guarda el alta del webhook, nadie los pega).
 
 ### El flujo
@@ -158,10 +159,19 @@ comercio, de dos formas ([doc](https://developer.vippsmobilepay.com/docs/APIs/ep
 | Forma | Qué es | Nosotros |
 |---|---|---|
 | `fixedOptions` | Las tarifas van en la creación del pago, agrupadas por transportista (`brand`: POSTEN, BRING, POSTNORD, HELTHJEM…) y tipo (`HOME_DELIVERY`, `PICKUP_POINT`, `MAILBOX`, `IN_STORE`) | **Hecho**: nuestras tarifas del supplier, con transportista y tipo inferidos del nombre |
-| `dynamicOptions` | Vipps hace `POST` a un `callbackUrl` nuestro con la dirección del comprador y contestamos las opciones | Sin hacer. Es donde se enchufaría un TMS (nShift, Ingrid, Bring…) como el `shipping.mode` de Qliro |
+| `dynamicOptions` | Vipps hace `POST` a un `callbackUrl` nuestro con la dirección del comprador y contestamos las opciones | **Hecho el 2026-09-30** (`shippingMode: 'dynamic'` en la fila del vendedor): contestamos nuestras tarifas del **país de la dirección**, agrupadas igual; 400 si no enviamos allí; token por pago en `Authorization`. `allowedCountries` = todos los países con tarifa. Es donde se enchufa un TMS (nShift, Ingrid, Bring…) después |
 
 El producto que sí traía envíos integrados (Posten, Bring, Porterbuddy, Helthjem, Instabox) era
 **Vipps Checkout**, y Vipps lo vendió a Kustom (su doc queda «para integraciones existentes»).
+
+### Usuarios de prueba (app MT)
+
+No hay ninguno registrado en nuestros repos: se crean en el portal, con la cuenta que tiene la
+unidad de prueba «Tipio» (358493). `portal.vippsmobilepay.com` → **For developers** → pestaña
+**Test users** → *Add a new test user*: el portal asigna teléfono y un NIN ficticio, con una
+tarjeta precargada. En la app MT (iOS: TestFlight `testflight.apple.com/join/hTAYrwea`): país
+Noruega → NIN → teléfono → código `0000`/`000000` → código personal `1236` (dos veces). Nunca
+usar esos teléfonos en producción.
 
 ## Lo que hay que hacer fuera del código
 
