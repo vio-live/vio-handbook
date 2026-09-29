@@ -64,16 +64,19 @@ la fila de otro podía poner sus claves Stripe y cobrar las ventas del otro. Aho
 
 - **Vipps por Stripe:** acceso al private preview **pedido por Angelo el 2026-09-29** (formulario de docs.stripe.com/payments/vipps, `vipps_beta_preview`). Esperando respuesta por email. Cuando llegue: shopcart tiene que mandar `vipps_preview=v1` en el `Stripe-Version` de las llamadas que incluyan Vipps (hoy no lo hace), y cada seller Connect activa Vipps en su Dashboard. Sólo NOK / clientes en Noruega.
 
-- VioSwiftSDK: VioUI no compila en `main` con Xcode 26 (`VioDesignSystem/Helpers/CacheHelper.swift`, aislamiento de main actor); sólo se pudo compilar VioCore.
 - El nombre real del `.env` que usan shopcart/api-ms en QA está en el secreto `ENV_FILE_QA` de GitHub; se asumió `.env.local` (Dockerfile). Se confirma en el primer build.
-- Los `.env.test` de los micros y `shopcart/.env.local.qa` apuntan a cuentas Stripe que ya no existen (`acct_1Iq07vGa01S…`, `acct_1I72iQCClYv…`).
+- Los `.env.test` de los micros y `shopcart/.env.local.qa` apuntan a cuentas Stripe que ya no existen. **Se dejan así a propósito:** los tests mockean Stripe, y copiar la secret key viva del sandbox a 9 archivos commiteados sería meter un secreto en git.
 
 ## Next session
 
 1. Revisión y merge de los PR en orden: base-api → api-ms → shopcart + payment-processors → graphql → webapp → vev (#46 antes) → SDKs nativos.
 2. ~~Branding de Connect en el Dashboard del sandbox~~ hecho por Angelo el 2026-09-29.
 3. Primera alta de prueba desde `dashboard-staging` + E2E: tarjeta, Apple Pay, Klarna por Stripe, reembolso, evento repetido; y repetir los métodos actuales con un seller con credenciales propias.
-4. Pendientes menores: `returnURL` en el PaymentSheet de iOS; Google Pay directo en Kotlin; apagar el toggle Klarna del canal para sellers Connect.
+4. ~~Pendientes técnicos menores~~ hechos (tarde del 2026-09-29), en las mismas ramas:
+   - iOS `575e0ad`: `CacheHelper.clearAllCaches` `@MainActor` → **VioUI compila completo** con Xcode 26 (fallo que ya estaba en main).
+   - iOS `289b139`: `cart.stripeReturnURL` → Klarna/Vipps por Stripe en el PaymentSheet si la app la configura.
+   - Kotlin `d0620888`: Google Pay directo tokeniza con `"<pk>/<acct_…>"` (formato del `GooglePayConfig` de Stripe, verificado en su bytecode).
+   - Dashboard `ba132b1`: avisos de Connect en el detalle del canal (doble Klarna; con qué cuenta cobra Stripe) — sólo avisa, no apaga nada (ADR-0023). `9c0543c`: test de Kustom que ya fallaba en develop. Suite 291/291.
 
 **Antes de subir a producción:** activar Connect en la cuenta live con branding "Vio"; webhook live de cuentas
 conectadas y revisar los 4 eventos del de plataforma; las tres variables en el `.env` de prod (`containerproduction2`)
