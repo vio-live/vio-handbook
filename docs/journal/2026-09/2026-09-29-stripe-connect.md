@@ -101,3 +101,7 @@ Excepción a ADR-0015 (merge a `main` normalmente es clic humano), autorizada po
 - **Vev desplegado** (`vev deploy`, paquete `cq1lXld-TA9`) desde `main`; bundle de `main` = bundle probado en la rama (mismo sha256). Hubo que subir `@vev/cli` a 2.2.0 **con el npm de nvm** (`~/.nvm/versions/node/v24.16.0/bin/npm`): el `npm` del PATH es el de `/usr/local` y da EACCES. Las páginas ya publicadas en Vev probablemente necesiten re-publicarse desde el editor para tomar el componente nuevo.
 - **Nativos: mergeados pero SIN versión nueva a propósito.** Se consumen por versión (SwiftPM `from: 0.1.0`, Maven `1.0.0-alpha`, npm `0.1.0-beta.1`); piden `stripe_account` al gateway y graphql sólo lo tiene en QA. No publicar versión de Kotlin/RN/iOS hasta que graphql#15 llegue a prod.
 - web-sdk en npm sigue en 0.11.1 (el repo está en 0.16.x); Vev no lo necesita (bundlea desde el fuente). Publicar pide OTP de Angelo.
+
+## Prueba para Alan
+
+Tarjeta en Trello (To do, asignada a Alan): https://trello.com/c/l1fQDCcE — 6 bloques / 37 puntos: regresión de lo de hoy, alta en el dashboard, dónde cae el dinero con Connect, seguridad (IDOR y campos del servidor), SDKs nativos contra QA, y su opinión.
