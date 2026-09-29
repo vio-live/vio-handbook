@@ -16,9 +16,12 @@ Regla general: **nada se borra en Noruega hasta que Suecia sirva tráfico real y
       regional era 10 vCPU: era un bloqueo duro. Subida el 2026-09-29 vía
       `az quota update`: `standardDASv5Family` 0 → **24**, `cores` 10 → **40**.
       Alcanza para 6 nodos D4as_v5. Verificar con `az vm list-usage -l swedencentral`.
-- [ ] Confirmar con Angelo que no hay requisito de residencia de datos en Noruega.
-- [ ] Decidir versión de k8s destino. **Sweden Central no ofrece 1.34**, que es la actual:
-      hay 1.31, 1.32, 1.33, 1.35, 1.36. Recomendado **1.35**.
+- [x] **Residencia de datos: no hay restricción.** Confirmado por Angelo el 2026-09-29.
+- [x] **Versión de k8s: 1.35.** Sweden Central no ofrece 1.34, que es la que corre prod
+      (hay 1.31, 1.32, 1.33, 1.35, 1.36). El riesgo resultó mucho menor de lo que parecía:
+      **`kubernetesqa` ya corre 1.35.7** con los mismos 13 microservicios, o sea que prod
+      está *atrasado* respecto a QA, no adelantado. El cluster nuevo salió con 1.35.7
+      exacto, la misma patch que QA lleva probando.
 - [ ] Inventariar allowlists de IP en terceros (Shopify, Adyen, Klarna, Kustom) — las IPs
       de egress cambian. Ver `docs/infrastructure/azure-overview.md` para las actuales.
 - [ ] Ensayar todo esto en QA (`kubernetesqa`) antes de tocar prod. El ensayo valida el
@@ -26,11 +29,26 @@ Regla general: **nada se borra en Noruega hasta que Suecia sirva tráfico real y
 
 ## Fase 1 — levantar el destino en paralelo (sin tráfico)
 
-- [ ] RGs nuevos en Sweden Central, espejando nombres.
-- [ ] AKS nuevo, 3 × D4as_v5, 3 zonas, autoscaler min 3 max 5. Versión de la Fase 0.
-- [ ] ACR: geo-replicar `reachuprod2` o crear uno nuevo y re-pushear las imágenes.
-- [ ] nginx-ingress, cert-manager, Istio. Los certificados se reemiten solos vía ACME una
-      vez que el DNS apunte; hasta entonces no hay que forzarlos.
+- [x] **RG `rg-vio-commerce-prod-sc`** creado en Sweden Central (tags `migracion=ADR-0021`).
+- [x] **AKS `vio-commerce-prod-sc`** creado, k8s 1.35.7, `Standard_D4as_v5`, tier Free,
+      identidad SystemAssigned. Config de red idéntica a prod: `azure` + `overlay`,
+      policy `none`, podCidr 10.244.0.0/16, serviceCidr 10.0.0.0/16, dnsServiceIp 10.0.0.10,
+      LB standard, outbound loadBalancer, maxPods 250, osDisk 128 GB.
+      **Creado con 1 nodo a propósito** (autoscaler 1-5) para no facturar 3 nodos mientras
+      espera el corte. **Escalar a min 3 antes de cutover.** Contexto kubectl: `vio-sc`.
+      Nota: prod no usa zonas de disponibilidad y el nuevo tampoco, por paridad. Activar
+      zonas sería una mejora gratis de resiliencia, pero no se mezcla con esta migración.
+- [x] **ACR: attach a `reachuprod2` (Norway East) hecho y pull verificado** con un pod real
+      tirando `reachuprod2.azurecr.io/base-api:latest` desde Sweden Central — arrancó
+      `Running`. Los 13 microservicios salen de ahí; el resto de las imágenes son de
+      `mcr.microsoft.com`, `quay.io` y Docker Hub. Cross-region funciona, así que la
+      geo-replicación es una optimización de velocidad de pull, no un bloqueo. Decidir si
+      se geo-replica (cuesta) o se deja apuntando a Noruega.
+- [ ] nginx-ingress, cert-manager, Istio. **Reusar `cluster-restore.md`**, que ya tiene los
+      comandos exactos (pasos 2, 3, 4 y 7) incluido el fix de health probes del Azure LB.
+      Ojo: ese playbook asume IPs estáticas ya existentes (prod hoy 20.100.188.135) — en
+      Sweden Central hay que crear IPs nuevas primero. Los certificados se reemiten solos
+      vía ACME una vez que el DNS apunte; hasta entonces no forzarlos.
 - [ ] Managed Redis nuevo. **Ojo:** `redus-vio-prod` hoy tiene `highAvailability: Enabled`
       y eso son ~$260/mes. Crear el nuevo ya sin HA si Angelo lo aprueba (decisión abierta),
       o con HA para no mezclar dos cambios en un solo corte.
