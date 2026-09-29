@@ -141,3 +141,39 @@ desde el dashboard con el botón «Connect».
 - Rebundle de Vev con el SDK.
 - Captura al despachar desde el fulfillment de Shopify.
 - Prod: partner keys, alta partner del webhook, checklist de ePayment.
+
+## Madrugada del 30/09 — despliegue y verificación en QA
+
+### Done
+
+- Los tres merges de shopcart ([#47](https://github.com/vio-live/vio-shopcart-microservice/pull/47),
+  [#48](https://github.com/vio-live/vio-shopcart-microservice/pull/48),
+  [#49](https://github.com/vio-live/vio-shopcart-microservice/pull/49)) dispararon tres deploys a
+  la vez: helm rechazó dos («another operation (install/upgrade/rollback) is in progress») y el pod
+  arrancó con la imagen que empujó `latest` en último lugar (la de #48), sin #49. Relanzado el run
+  del head (`ff79ef9`, build **y** deploy, no solo el job fallido); pod nuevo a las 22:39 UTC.
+  Lección: [merges seguidos del mismo servicio chocan en helm](../../lessons/merges-seguidos-del-mismo-servicio-chocan-en-helm.md).
+- [graphql#18](https://github.com/vio-live/graphql/pull/18) sí desplegó: el run apareció tres
+  minutos después del merge (cola de GitHub), no faltaba nada.
+- Verificado en QA desde la página de prueba, camino carrito → kasse → Vipps: landing
+  `pay-mt.vipps.no` «Pay 4,999 NOK to Tipio» con los 199 Kr de envío fuera del importe; log del
+  pod `499900 NOK (goods; 19900 of delivery left for the app to add), express, own 358493`.
+  El callback de tarifas responde por el relay público (`POST /api/shopcart/checkout/vipps/shipping`
+  → 404 «not ours» para una referencia ajena; antes del redeploy, el 404 «Cannot POST» de Nest).
+
+### Blockers
+
+- Usuario de prueba + app MT en el teléfono de Angelo para aprobar un pago (Express no se aprueba
+  por API).
+- Webhook del vendedor 1322 sin registrar: botón «Connect» en Settings → Payments → Vipps del
+  dashboard de QA.
+- El paquete compartido de Vev (vev#48 mergeado) sigue sin publicar: `npm run deploy` con el OK de
+  Angelo.
+
+### Next session
+
+- Aprobación en la app MT → orden → Shopify dev store → `order.paid`; captura al despachar
+  (`captureMode: shipment`); refund/cancel desde el portal vía webhook.
+- Probar `shippingMode: dynamic` en Bohus (callback real desde la app).
+- Prod: programa de partners, partner keys, alta partner del webhook, checklist ePayment (PDF +
+  vídeo), assets oficiales del botón.

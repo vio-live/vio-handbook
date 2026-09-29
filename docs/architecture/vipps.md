@@ -196,6 +196,16 @@ con `export * from './core/index.js'` + `export * from './ui/index.js'` (el `src
 SDK no registra los elementos). Fuente en el scratchpad de la sesión del 2026-09-29; vale la pena
 moverla a un repo si se sigue usando.
 
+## Estado en QA (2026-09-30)
+
+Todo lo de arriba está desplegado en QA (shopcart redesplegado a mano tras el choque de tres deploys,
+ver [lesson](../lessons/merges-seguidos-del-mismo-servicio-chocan-en-helm.md)). Verificado desde la
+página de prueba: Express desde el producto y Vipps desde la kasse llegan a `pay-mt.vipps.no` con el
+importe **sin** envío («Pay 4,999 NOK to Tipio» para 4 999 + 199 de frakt), y el callback de tarifas
+responde por el relay público (`POST /api/shopcart/checkout/vipps/shipping` → 404 «not ours» para una
+referencia ajena). Sin aprobar aún: hace falta un usuario de prueba con la app MT. El webhook del
+vendedor 1322 sigue sin conectar (botón «Connect» del dashboard).
+
 ## Pendiente
 
 - E2E en QA: producto → app de Vipps → orden en Vio → orden en la dev store de Shopify →
@@ -206,7 +216,7 @@ moverla a un repo si se sigue usando.
 - Estado de pago en la orden (capturado / devuelto) para que lo que el vendedor hace en su
   portal se vea en Vio y en Shopify — hoy queda en la foto del checkout.
 - Assets oficiales del botón de Vipps en el SDK (hoy un badge de texto).
-- Rebundle de Vev con el SDK nuevo (0.17.0).
+- ~~Rebundle de Vev con el SDK nuevo (0.17.0)~~: mergeado ([vev#48](https://github.com/vio-live/vev/pull/48)); falta **publicar** el paquete compartido (`npm run deploy`, con OK de Angelo).
 - Alta de comercios desde el dashboard/admin con Management API (prod).
 - El camino legacy de base-api (`/vipps/*`, eCom v2 con claves de Vio) no lo llama nadie
   desde nuestros repos; retirarlo cuando se confirme que ningún cliente externo lo usa.
