@@ -83,3 +83,13 @@ conectadas y revisar los 4 eventos del de plataforma; las tres variables en el `
 cargadas por quien tenga acceso a secretos de prod, **sin imprimir ningún valor**; desplegar en orden; probar con una cuenta conectada real.
 
 Lección del día: [comprobar secretos sin imprimirlos](../../lessons/comprobar-secretos-sin-imprimirlos.md).
+
+## Merge a develop (QA) — ADR-0015, OK de Angelo en la sesión
+
+- Mergeados en orden: base-api#19 `55e7f95` → api-ms#28 `1cbebbe` → shopcart#44 `c09a3bf` → payment-processors#9 `c914251` → graphql#15 `d1cb9c7` → webapp#38 `a4c00a0`.
+- Pipelines de los 5 backends en verde; pods nuevos 2/2 Running en `kubernetesqa`; api, shopcart y payment-processors arrancaron sin errores en el log.
+- Smoke: `GET /api/paymentmethod/stripe/connect/status` sin sesión → **401** (una ruta inexistente del mismo prefijo → 404: la ruta está desplegada).
+- Dashboard: Vercel `staging` desplegó `a4c00a0` (success). El panel no se pudo ver sin login.
+- **No verificado todavía:** el campo `stripe_account` en el gateway (la introspección pide API key), y que las builds hayan tomado las variables nuevas del `.env.local` (se ve en la primera alta).
+- **Sin mergear (van a `main`, clic de Angelo):** web-sdk#68, vev#46 → vev#47, VioKotlinSDK#3, react-native-sdk#4, VioSwiftSDK#18.
+- Aparte: 3 ejecuciones de `shopcart-reconcile` de ~5 h antes terminaron en Error; las recientes, Completed. No investigado.
