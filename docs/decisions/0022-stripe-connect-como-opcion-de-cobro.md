@@ -1,7 +1,7 @@
 ---
 title: "0022 — Stripe Connect como opción de cobro para sellers sin contratos"
 date: 2026-09-29
-status: proposed
+status: accepted
 owner: angelo
 deciders: [angelo]
 ---
@@ -77,10 +77,47 @@ la relación seller–supplier.
    `account.updated` alimenta el estado en el dashboard.
 5. payment-processors: reembolsos con `stripeAccount` (sobre payment-processors#8).
 6. Apple Pay: registrar el dominio de pago en cada cuenta conectada al darla de alta.
-7. Gateway + SDK: el SDK recibe `accountId` e inicia Stripe.js con `stripeAccount`.
+7. Gateway + SDK: el SDK recibe `accountId` e inicia Stripe con `stripeAccount`.
 
-**Fase 2 — dashboard (webapp, Settings → Payments):** selector de modo, botón
-"Conectar con Stripe", páginas de retorno/refresh del onboarding, estado de la cuenta.
+**Fase 2 — fronts:**
+
+| Front | Cambio |
+|---|---|
+| Dashboard (`webapp-vio-commerce`, Settings → Payments) | selector de modo, "Conectar con Stripe", retorno/refresh del onboarding, estado de la cuenta |
+| Web SDK (`vio-web-sdk`, `stripe-embedded.ts`) + rebundle de Vev | Stripe.js con `stripeAccount` si llega `accountId` |
+| SDK Android (`ReachuKotlinSDK`, `PaymentSheetBridge.kt`) | ídem en PaymentSheet |
+| SDK React Native (`src/payments/stripe.ts`) | ídem |
+| SDK iOS (VioSwiftSDK) | ídem si usa PaymentSheet |
+
+Con cobro directo el PaymentIntent vive en la cuenta del seller: un cliente que no pase
+`stripeAccount` recibe "no such payment_intent". Por eso **una app con un SDK viejo no
+puede cobrar embebido a un seller Connect**. El **payment link** funciona sin tocar ningún
+SDK (el cliente sólo abre una URL de Stripe), así que la salida es en dos pasos: primero
+Connect por payment link, después el embebido a medida que salen los SDK.
+
+### Que lo de hoy no cambie
+
+Todo lo de Connect se activa **sólo** si la fila del seller tiene `mode: 'connect'`.
+Sin eso `getStripe` devuelve el cliente de hoy, sin `stripeAccount`, y las llamadas a
+Stripe quedan idénticas (tests que comparan la request antes y después). Tres riesgos
+con protección explícita:
+
+1. **Firma del webhook.** Verificar sin el secreto correcto rompe la confirmación de pago
+   de *todos* los sellers. Sale en dos pasos: primero sólo loguea si la firma falla;
+   rechaza recién cuando los logs muestren que los eventos buenos pasan.
+2. **Redirecciones (Fase 3).** Abrir `allow_redirects` para todos haría aparecer Klarna
+   de golpe a un seller con Klarna activo en su propia cuenta Stripe. Va sólo para
+   sellers Connect.
+3. **Reembolsos.** Sin `accountId`, exactamente lo de hoy.
+
+La prueba final repite el E2E de los métodos actuales (Stripe, Apple Pay, Klarna nativo,
+Qliro, Vipps) en un seller con credenciales propias, no sólo el camino nuevo.
+
+### Forma de entrega
+
+Lo implementa un agente (Claude) con revisión de Alan. **Una sola rama
+`feature/stripe-connect` por repo tocado**, commits por avance, un PR por repo al final;
+sin push hasta el OK de Angelo (ADR-0001).
 
 **Fase 3 — Klarna y Vipps por Stripe:** hoy el intent embebido usa
 `allow_redirects: 'never'` (`checkout.service.ts` ~L1771), lo que **excluye** Klarna y
@@ -101,7 +138,6 @@ parcial y total, evento de webhook repetido) y E2E desde el navegador, no sólo 
   sigue abierto para ese caso. Si se retira: primero listar qué sellers de prod dependen
   del respaldo en cada proveedor, avisarles y migrarlos; después cortarlo en
   `getAvailablePaymentMethods` (api-ms) y en los conectores de shopcart.
-- **Quién implementa** las fases 1–3.
 
 ## Alternatives considered
 
