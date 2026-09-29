@@ -199,6 +199,10 @@ desde el dashboard con el botón «Connect».
 
 ### Blockers
 
+- **shopcart#50 y orders-ms#13 no llegaron a QA**: sus deploys corrieron a las 23:18 UTC y el
+  cluster `kubernetesqa` se apaga solo a las 23:00 UTC (`job-qa-aks-stop`, lunes a viernes;
+  arranca a las 06:00 UTC). Helm falló con «cluster unreachable / no such host» (así se ve un AKS
+  parado). Relanzar los dos runs (`gh run rerun`) a partir de las 06:00 UTC del 01/10.
 - orders-ms no compila ni testea en local: el kernel `@vio-/*@1.0.267` no resuelve desde esta
   máquina (npm 404). El PR se tipó contra los `node_modules` de shopcart (misma línea base de
   errores) y se verifica en QA.
