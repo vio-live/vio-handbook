@@ -58,3 +58,13 @@ Los clones de VioKotlinSDK y VioSwiftSDK viven ahora en `~/Documents/GitHub/` (a
 - Confirmado: el `.env.local` de QA ya cobra con el sandbox `acct_1TMTbs…`.
 - Entran en efecto en el próximo build de shopcart y api-ms (los PR todavía no están en develop; las variables sobrantes no afectan a nadie mientras tanto).
 - ⚠️ Incidente: al revisar el archivo, un filtro mal escrito imprimió completas en la sesión del agente `STRIPE_API_SECRET`, `STRIPE_PUBLISH_KEY` y `STRIPE_WEBHOOK_SECRET` del sandbox de QA (test, no prod). Recomendado rotar la secret key y el secreto del webhook `we_1To5Iz…`, y actualizar el blob.
+
+## Antes de subir Connect a producción (checklist)
+
+Angelo decidió no rotar las claves de test impresas ("en test no hay problemas"). Para prod:
+
+1. Activar Connect en la cuenta **live** de Vio (perfil de plataforma, Standard, Branding con nombre "Vio").
+2. Crear el webhook **live** de cuentas conectadas (misma URL de relay de prod, 4 eventos) y revisar que el webhook live de plataforma tenga también `payment_intent.canceled` y `checkout.session.expired`.
+3. Cargar `STRIPE_CONNECT_WEBHOOK_SECRET`, `STRIPE_CONNECT_RETURN_ORIGINS` (dashboard de prod) y `STRIPE_PAYMENT_METHOD_DOMAINS` (dominios de prod con Apple/Google Pay) en el `.env` de prod — `containerproduction2`, lo hace quien tenga acceso a secretos de prod; **ningún valor se imprime** en consolas ni chats.
+4. Desplegar en el orden de los PR (base-api primero por el arreglo del IDOR).
+5. Probar con una cuenta conectada real antes de ofrecerlo a sellers.
