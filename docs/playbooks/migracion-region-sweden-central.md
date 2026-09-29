@@ -82,8 +82,26 @@ Regla general: **nada se borra en Noruega hasta que Suecia sirva tráfico real y
       Backup independiente de los dos clusters:
       `~/vio-migracion/backups/redis-prod-<timestamp>.json` (600, base64 + SHA1 por clave).
       **Tiene tokens OAuth: no commitear ni pegar en chat.**
-- [ ] Desplegar los 13 microservicios sin tráfico y verificar readiness contra la DB de
-      Noruega todavía (funciona, sólo suma latencia).
+- [x] **Los 13 microservicios desplegados, en 0 réplicas.** Los charts no estaban en ningún
+      registry (se instalaron desde `.tgz` locales que ya no existen), así que se
+      reconstruyeron desde los secrets de release de Helm de prod con
+      `~/vio-migracion/extraer-charts.py` -> `~/vio-migracion/charts/`. Fidelidad validada:
+      `helm template base-api` rinde idéntico a prod (replicas 4, misma imagen, mismo puerto,
+      mismos requests/limits).
+      **Instalados con `--set replicaCount=0` a propósito**: `base-api` tiene cron interno
+      (`dist/cron/index.js`), así que levantarlos contra la DB viva de Noruega duplicaría
+      trabajo programado. **En el corte sólo hay que escalar.**
+- [x] **CronJob `shopcart-reconcile` SUSPENDIDO.** Viene en el chart de `shopcart` y se creó
+      activo, corriendo cada 10 min. Se suspendió antes de su primer disparo
+      (`lastScheduleTime` vacío, 0 Jobs). **Acordarse de reactivarlo en el corte.**
+- [x] **Secret `vio-endpoints-sc` inyectado por `envFrom` en los 13.** Contiene `DB_HOST`,
+      `DB_PASSWORD`, `CACHE_HOST`, `CACHE_PASSWORD` apuntando a Suecia. Así el corte no
+      requiere parchear deployments: sólo escalar. **Ojo: el `DB_PASSWORD` del Secret es el
+      viejo; hay que actualizarlo con la credencial nueva al promover.**
+- [x] **Smoke test hecho y verde.** Con 1 réplica de `base-api` apuntada a la réplica de
+      Suecia: pod `1/1 Running` sin reinicios, MySQL responde (32 `shopify_connection`,
+      `read_only=1` como corresponde a una réplica) y Redis responde. Confirma imagen,
+      arranque, override por env var y conectividad. Después se volvió a 0.
 
 ## Fase 2 — datos
 
