@@ -275,6 +275,13 @@ uno — ahí saltó que axios mandaba 23 bytes donde `fetch` mandaba 15. v1 sin 
 
 ### Walley en el checkout — **mergeado el 2026-09-04, sin probar contra el widget real**
 
+> **⚠️ 2026-09-29 — en producción desde el 28/09 con el IVA ×100.** `walley.service.ts:83`
+> (y `:119`, envío) manda `vat: round2(tax_rate * 100)` y el carrito ya trae el porcentaje
+> (25): a Walley le llega 2500. **No activar Walley en ningún canal de producción** hasta
+> corregirlo. El arreglo es normalizar como Qliro (`taxRateAsFraction`, `qliro-shipping.ts:271`);
+> está bloqueado porque no hay cuenta de test (UAT) de Walley para verificarlo — Angelo la
+> pidió el 29/09. Tarjeta [hBz8JNBg](https://trello.com/c/hBz8JNBg).
+
 > **Estado 2026-09-03:** backend al día y compilando en ramas `integration/walley-payment`
 > (api-ms #11 y shopcart #5 apilados sobre hardening; graphql #3, base-api #4, webapp #5),
 > todos en borrador. Kernel: columna `walley` mergeada en develop (PR #8, tras resolver el choque con `qliro` en la entidad), sale en 1.0.246 junto con la migración corregida del webhook.

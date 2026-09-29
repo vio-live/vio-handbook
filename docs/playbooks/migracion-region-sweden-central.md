@@ -203,6 +203,15 @@ Orden importa. Estimado: minutos para la app, no horas.
 9. [ ] Verificar: `/health` de los 13 servicios, un checkout real de punta a punta, los
        webhooks de Shopify llegando, y los certificados emitidos.
 
+   > [claude, 2026-09-29] Sumar a la verificación: en **los dos** pods de `extensions`, la
+   > línea `apps custom configuradas: vio-demo.myshopify.com, wxuxre-tf.myshopify.com,
+   > makeup-mekka.myshopify.com, villoid.myshopify.com` y 0 `Invalid API key` en los primeros
+   > minutos. `VIO_CUSTOM_APPS` vive en el `.env`: si el repunte no la trae, las apps custom de
+   > Shopify vuelven al refresh con credenciales ajenas y dan 401 (ver el
+   > [playbook de apps custom](shopify-app-custom-por-cliente.md)). `kubectl logs
+   > deploy/extensions` lee una sola réplica: recorrer los pods. En el corte revertido del
+   > 29/09 se recuperó sola.
+
 ## Fase 4 — desmantelar Noruega (no antes de 48-72 h estables)
 
 > **⛔ El Redis de Noruega es lo ÚLTIMO que se borra, y sólo con confirmación explícita

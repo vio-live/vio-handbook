@@ -52,6 +52,29 @@ Los paquetes `package-*` (`config`, `database`, `logger`, `utils`, `service`, `d
 
 Separadas del deploy de código — no las corre el pipeline. Ver [`playbooks/commerce-db-migrations.md`](./commerce-db-migrations.md). Los microservicios NO corren `runMigrations()` al arrancar (su `TypeOrmModule` solo tiene `synchronize`), así que un deploy de código nunca aplica schema — hay que correr las migraciones a mano, aparte, antes o después según si el código nuevo depende de la columna.
 
+## Qué está en prod ahora (sin preguntarle a nadie)
+
+Como un merge a `master`/`main` despliega solo, "¿qué hay en prod?" es "¿qué tiene `develop`
+que la rama de prod no?". Por repo; ojo, shopcart, middleware, collection, template y
+tracking usan `main`:
+
+```bash
+for r in vio-users-microservice:master vio-products-microservice:master vio-orders-microservice:master \
+         vio-payment-processors-microservice:master vio-api-microservice:master vio-base-api:master \
+         graphql:master webapp-vio-commerce:master vio-extensions-microservice:master \
+         vio-shopcart-microservice:main vio-middleware-microservice:main vio-collection-microservice:main \
+         vio-template-microservice:main vio-tracking-microservice:main; do
+  repo=${r%%:*}; base=${r##*:}
+  echo "$repo: $(gh api repos/vio-live/$repo/compare/$base...develop --jq .ahead_by) pendientes |" \
+       "último en $base: $(gh api repos/vio-live/$repo/commits/$base --jq '.commit.author.date[0:16] + " " + (.author.login // .commit.author.name)')"
+done
+```
+
+Para confirmar que el deploy terminó: la edad de los pods
+(`kubectl --context vio-commerce-prod get pods -n default`) y
+`gh run list --repo vio-live/<repo> --branch <rama>`. Así se vio el 28/09 que los 13
+servicios habían salido a prod sin aviso.
+
 ## Gotchas conocidos (ver `lessons/`)
 
 - [SnakeNamingStrategy vs migración raw SQL](../lessons/raw-sql-migration-column-name-must-match-naming-strategy.md) — una migración mal escrita puede tumbar un servicio en producción sin que el deploy de código tenga la culpa.
