@@ -1,6 +1,6 @@
 ---
 title: "Audit: cobertura real de Terraform vs. Azure (consolidación pre-migración)"
-last-updated: 2026-09-09
+last-updated: 2026-09-29
 owner: miguel
 status: live
 ---
@@ -53,6 +53,15 @@ resource "azurerm_mysql_flexible_server_firewall_rule" "allow_all" {
 
 Verificado en el recurso real (`rg-vio-databases`) — la regla `AllowAll` existe hoy en Azure, no es solo
 config declarada.
+
+**Re-verificado el 2026-09-29, 20 días después: sigue todo igual.** La contraseña continúa en
+`variables.tf` de `vio-live/vio-infra-tf` en `main` (el repo tuvo push el 28/09, o sea está vivo);
+el repo es **privado**, así que no es internet abierto, pero lo lee todo el org incluidos agentes con
+invite. La regla `AllowAll` sigue en `vio-ecom-db-prod` con `publicNetworkAccess=Enabled`, y el puerto
+3306 **respondió desde una IP residencial** (46.212.249.70, no de Azure), así que la exposición es real
+y no teórica. `vio-ecom-db-staging` tiene la misma regla `all` 0.0.0.0–255.255.255.255.
+No se re-confirmó que la contraseña siga siendo la activa: habría requerido autenticar contra prod y
+no se hizo. El audit del 09-09 sí lo confirmó en su momento.
 
 **No se investigó más allá de confirmar esto** (instrucción explícita: parar y reportar ante secreto
 expuesto). Queda pendiente de Angelo decidir:
