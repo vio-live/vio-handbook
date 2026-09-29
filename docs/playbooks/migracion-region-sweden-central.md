@@ -155,8 +155,12 @@ Regla general: **nada se borra en Noruega hasta que Suecia sirva tráfico real y
         Requería habilitar **last access time tracking** en la cuenta destino, que venía
         apagado; sin eso la regla no dispara nunca.
       - [ ] Volver a correr `copy-blobs.sh` en el corte para levantar el delta.
-- [ ] ClickHouse: VM nueva + copia del disco de datos. No hay réplica, así que este es el
-      componente que más ventana necesita. Evaluar si se migra en un corte aparte.
+- [ ] ClickHouse: VM nueva + copia del disco de datos. No hay réplica.
+      **FUERA DE LA RUTA CRÍTICA del corte (verificado 29/09):** ninguno de los 13
+      microservicios lo referencia — 0 coincidencias de `clickhouse` en los 13 `.env`
+      extraídos de las imágenes. Además la VM `vm-clickhouse-vio` (B2s) vive en
+      `RG-VIO-SHARED`, que no es parte de la mudanza de Vio Commerce.
+      **Se migra en un corte aparte, no bloquea la Fase 3.**
 
 ## Fase 3 — corte (la única ventana con impacto)
 
