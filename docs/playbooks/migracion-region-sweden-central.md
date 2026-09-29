@@ -118,6 +118,40 @@ Orden importa. Estimado: minutos para la app, no horas.
 > Los webhooks apuntan a **nombre DNS, no a IP**, así que el repunte de DNS los arrastra
 > solo: no hay que re-registrarlos.
 >
+> **Mitigación elegida (idea de Angelo, probada el 29/09): responder 200 desde Istio
+> durante la ventana**, sin que el request llegue a ningún pod. Así Woo recibe éxito y no
+> cuenta fallos aunque los 13 servicios estén en cero.
+>
+> Por qué no alcanza con dejar `base-api` encendido: su handler
+> (`dist/controller/wooController.js`) hace `await wooService.receiveWebhookByMicroservice(...)`
+> **antes** de responder 200. `base-api` no toca la DB en ese camino — es un proxy — pero
+> espera a `extensions`, y `extensions` sí necesita la DB. Si falla, Express devuelve 500 y
+> Woo cuenta el fallo.
+>
+> Receta, **probada en QA el 2026-09-29** (mismo Istio 1.24.2) y revertida:
+> anteponer una regla al `http` del VirtualService `virtual-service-reachu-prod-base-api`
+> (istio-system). El orden importa: Istio toma la primera que matchea, y la regla existente
+> es un catch-all `prefix: /`.
+>
+> ```yaml
+> - name: ventana-corte-woo
+>   match:
+>     - uri: { exact: /woo/webhooks }
+>       method: { exact: POST }
+>   directResponse:
+>     status: 200
+>     body: { string: '{"ok":true}' }
+> ```
+>
+> Resultado de la prueba: `POST` a la ruta devolvió **200 sin llegar al pod**, y la ruta
+> normal siguió en 200. Al revertir, la ruta volvió a 404.
+> **Guardar el VirtualService antes de tocarlo** (`kubectl get vs ... -o yaml`) y quitar la
+> regla al terminar la ventana.
+>
+> Costo: se pierde el payload de los webhooks de la ventana. Es recuperable — Vio tiene
+> `consumer_key`/`consumer_secret` de cada tienda en `woo_connection`, así que las órdenes se
+> re-piden por la API de Woo. Hay que hacer esa reconciliación después del corte.
+>
 > Guard: `~/vio-migracion/guard-woo-webhooks.js` (correr desde un pod de `base-api`, que
 > tiene la DB y las credenciales de cada tienda).
 > `node guard-woo-webhooks.js check` reporta y no cambia nada; `repair` reactiva los caídos.
