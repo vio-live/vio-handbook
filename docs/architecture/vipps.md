@@ -66,8 +66,10 @@ Por qué un modo y no un método: misma credencial, mismo webhook, misma ruta de
 propia API de Vipps Express es un flag (`shipping`) del mismo pago. Un método aparte habría
 duplicado interruptor, sonda, fila y avisos para nada. El SDK lo lee con
 `Vio.checkout.getVippsExpressEnabled()` y decide si los botones "Kjøp nå med Vipps" abren la
-app o el checkout. PRs: api-ms (`config.express`), vio-web-sdk (lectura), shopcart (`Vipps`),
-graphql#18 (`GetVippsStatus` completo).
+app o el checkout. PRs: [api-ms#32](https://github.com/vio-live/vio-api-microservice/pull/32) (`config.express`),
+[web-sdk#70](https://github.com/vio-live/vio-web-sdk/pull/70) (lectura + Express desde el checkout),
+[shopcart#47](https://github.com/vio-live/vio-shopcart-microservice/pull/47) (`Vipps`),
+[graphql#18](https://github.com/vio-live/graphql/pull/18) (`GetVippsStatus` completo).
 
 ## Cómo queda
 
@@ -92,8 +94,12 @@ caracteres), `express` (activo por defecto), `webhookSecret`/`webhookSecretPrevi
    transportista y tipo, en la moneda del pago, `allowedCountries` = el país). Si no se puede
    (varios suppliers, digital, sin tarifa) **no se crea pago** y se contesta `express: false`
    con el motivo: el SDK abre el checkout normal con Vipps preseleccionado.
-2. Dentro del checkout, Vipps es **un clic**: no se pide email (lo devuelve la app). Si el
-   comprador ya eligió envío en nuestro formulario, el pago es plano (perfil, sin `shipping`).
+2. Dentro del checkout, Vipps es **un clic** y también **Express** (2026-09-30): el checkout
+   preselecciona nuestra tarifa más barata al abrirse, así que un pago plano desde ahí se la
+   quedaba en silencio y el comprador no podía cambiarla (el formulario de entrega se esconde
+   con Vipps). Ahora el SDK pide `express: true` cuando el canal lo permite — la tarifa del
+   carrito viaja como preseleccionada en la app — y cae al pago plano solo si el backend dice
+   que el carrito no puede (varios suppliers) o si el vendedor apagó Express. No se pide email.
 3. Referencia `VIO-{checkout}` (reintento = `-n`), `paymentDescription` = el nombre del
    vendedor, `metadata` con checkout/canal/vendedor/flujo, cabeceras `Vipps-System-*` = Vio.
 4. **Completar — una sola ruta**, `paymentVippsOk(reference, source)`, para el retorno del
@@ -154,8 +160,9 @@ una devolución no mueve dinero para ningún PSP hoy (tampoco antes).
 **https://vio-vipps-test.vercel.app** (Vercel, proyecto `vio-vipps-test`). HTML estático + bundle
 del SDK 0.17.0 (`esbuild core+ui`, sin React) que hace de Vio backend para sí misma: intercepta
 `GET /v2/mobile/config` y responde un sponsor (Bohus, canal 498) con la API key del canal, que se
-pega una vez y queda en `localStorage`. Productos por defecto: el catálogo de Bohus en QA. Sirve
-para probar Express en un móvil real sin Vev. Regenerar el bundle: `esbuild src/_page-entry.ts`
+pega una vez y queda en `localStorage`. Productos por defecto: el catálogo de Bohus en QA, en tarjetas propias con los **dos caminos por
+producto**: «Legg i handlekurv» (carrito → checkout → Vipps) y «Kjøp nå med Vipps» (Express).
+Sirve para probar en un móvil real sin Vev. Regenerar el bundle: `esbuild src/_page-entry.ts`
 con `export * from './core/index.js'` + `export * from './ui/index.js'` (el `src/index.ts` del
 SDK no registra los elementos). Fuente en el scratchpad de la sesión del 2026-09-29; vale la pena
 moverla a un repo si se sigue usando.
