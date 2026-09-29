@@ -121,3 +121,20 @@ Pedido por Angelo. Rama `feature/stripe-connect-oauth` — PR [base-api#20](http
 **Dashboard del OAuth en staging:** Vercel no recibió el push del merge `5e1e6a7` (sin despliegue ni estado). Como el árbol de `develop` era idéntico al de la rama (`93d324a`), se hizo `vercel redeploy` del preview de `cdd63b9` con `--target staging` — no `vercel deploy` desde local, que subiría archivos como `.env.local`. Quedó Ready y con el alias `dashboard-staging.ecom.vio.live`.
 
 **OAuth listo para probar en QA:** `STRIPE_CONNECT_CLIENT_ID` (`ca_VLch…`, no es secreto) cargado en `containerqa2/.env.local` (respaldo `.env.local.backup-2026-09-29-oauth`); pipeline de api-ms relanzado → verde; pod nuevo 2/2 con la variable en `/usr/src/app/.env.local` (comprobado por conteo, sin imprimir valores). OAuth activado en el Stripe del sandbox con el redirect de `dashboard-staging`. Checklist 0 de la tarjeta de Alan completa.
+
+## Resultado de la prueba de Alan (29/09 noche) y arreglos — rama `fix/stripe-connect-qa`
+
+Alan completó las listas 2, 6 y 7, casi toda la 3; pendiente Apple/Google Pay, lista 5 (SDKs) y 8 (OAuth). Confirmó: alta en los 5 estados, el dinero cae en la cuenta del seller, reembolsos desde la cuenta del seller, webhook de Connect, reenvío idempotente, IDOR bloqueado en PATCH/DELETE, disputas en el seller, nombre del seller en el cargo.
+
+| ⚠️ de Alan | Causa | Arreglo |
+|---|---|---|
+| Claves propias: cobra y no nace la orden | **Preexistente.** La orden de Stripe sólo nace del webhook; con claves propias va a la cuenta del seller, sin webhook hacia Vio. La reconciliación no cubría Stripe. | shopcart `903494b`: `reconcileStripe` en el barrido (intent → `paymentStripeOk`; payment link → sesión pagada del link) con la cuenta que cobró. |
+| Klarna por Stripe no aparece | Stripe ofrece Klarna por país de envío del intent, si no por IP; no pasábamos dirección y Alan está en Chile. | shopcart `903494b`: intents de sellers Connect llevan `shipping`. |
+| PATCH `{mode, accountId}` sin `name` cambia la fila | La protección miraba sólo el nombre entrante; la fila quedó sin nombre (no desvía dinero, la corrompe). | api-ms `a6ceac4`: el proveedor no cambia por update; protección según lo guardado. Fila `cba86a9a…` a borrar en QA. |
+| Quitar Stripe no desconecta en Connect | Diseño inicial. | api-ms `a6ceac4`: `deleteById` desautoriza la cuenta conectada. |
+| Payment link con cuenta de Vio: "product tax code is missing" | El sandbox nuevo trae **Managed Payments** activado por defecto. | Angelo lo apaga en el Dashboard. **Revisar la cuenta live antes de prod.** |
+| GET por id → 400 | La petición llevaba un body no-JSON. | Re-probar sin body. |
+
+Además dashboard `d20fe7c`: "No cost from Vio" y qué tener a mano (org number, IBAN, ID). Con Connect **Vio no cobra fee** (Alan preguntó por la facturación del fee). Emails de compra que no llegaron: pendiente de revisar.
+
+Nota: en `develop` del dashboard fallan 2 tests (`qliro-shipping-config`, `payments-lib` Vipps) que vienen de los PR de Vipps #40/#41, no de Connect.
