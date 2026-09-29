@@ -115,3 +115,5 @@ Pedido por Angelo. Rama `feature/stripe-connect-oauth` — PR [base-api#20](http
 - Revisión independiente: sin bloqueos. Seguimientos anotados: las rutas de api-ms confían en el `userId` que manda base-api (igual que el resto del controlador: api-ms no debe estar expuesto); no hay alerta activa cuando un seller revoca el acceso (se ve al entrar al dashboard).
 
 **Configuración en Stripe (Angelo):** Connect → Settings → OAuth: activar OAuth para cuentas Standard, registrar el redirect `https://dashboard-staging.ecom.vio.live/settings/payments`, y copiar el `client_id` (`ca_…`) a `STRIPE_CONNECT_CLIENT_ID` del `.env` de QA.
+
+**Merge del OAuth a develop (QA):** base-api#20 `6dfd8ce`, api-ms#29 `65597e2`, webapp#39 `5e1e6a7`. Pipelines verdes, pods 2/2 Running. Smoke sin sesión: `oauth/start` y `oauth/complete` → 400 (validación del body, que corre antes del login), `disconnect` → 401, ruta inexistente → 404. Tarjeta de Alan con lista 8 (OAuth).
