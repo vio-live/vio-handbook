@@ -22,8 +22,29 @@ Regla general: **nada se borra en Noruega hasta que Suecia sirva tráfico real y
       **`kubernetesqa` ya corre 1.35.7** con los mismos 13 microservicios, o sea que prod
       está *atrasado* respecto a QA, no adelantado. El cluster nuevo salió con 1.35.7
       exacto, la misma patch que QA lleva probando.
-- [ ] **(EL ÚNICO PREP QUE PUEDE MORDER DESPUÉS DE LA VENTANA)**
-      Inventariar allowlists de IP en terceros (Shopify, Adyen, Klarna, Kustom) — las IPs
+- [x] **Allowlists de IP en terceros: VERIFICADO el 29/09, no bloquea.**
+
+      > **Por qué la IP importa si tenemos el dominio.** Son dos direcciones distintas:
+      > **entrante** (el proveedor nos llama: webhooks) usa `api-ecom.vio.live` y sigue al
+      > DNS, se arrastra solo; **saliente** (nosotros lo llamamos: pedir productos a
+      > Shopify, leer órdenes de una tienda Woo, cobrar) no tiene ningún dominio nuestro en
+      > juego — el proveedor ve la **IP de origen**, y esa cambia de región.
+      >
+      > Verificado, no asumido:
+      > - `20.100.174.85` no está declarada en ninguna config ni `.env`. No hay allowlist
+      >   propio que actualizar.
+      > - **Woo era el caso de riesgo real** (una tienda WordPress puede tener WAF o
+      >   Wordfence): llamada de sólo lectura a `qkoreancosmetics.no`, el único comercio Woo
+      >   real, desde la IP nueva -> **HTTP 200 con productos**. No rompe.
+      > - Shopify: los tokens probados dan 401/404, pero **el control desde Noruega da lo
+      >   mismo**. No es la IP; son tokens viejos de tiendas que ya no existen.
+      >
+      > Aun así se fijó la IP saliente de Suecia a la estática **`4.223.89.241`**
+      > (`az aks update --load-balancer-outbound-ips`). Antes salía por una IP **gestionada
+      > por AKS** que puede rotar sola si se recrea el load balancer: declarársela a un
+      > tercero habría sido frágil. Si en el futuro hay que dar una IP a alguien, es ésa.
+
+      Referencia original del ítem: las IPs
 
       > Medido el 29/09: la IP de salida cambia de **`20.100.174.85`** (Noruega, confirmada
       > desde un pod de prod) a **`57.174.195.161`** (Suecia). Cualquier tercero que tenga
