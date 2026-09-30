@@ -83,6 +83,17 @@ En `imageService.ts`:
 3. **`blobClient.exists()`** en lugar del GET completo de `validatePrev`.
 4. **No devolver `error.message`** al cliente.
 
-### Mitigación inmediata sin tocar código
-Se puede acotar en la Redirect Rule de Cloudflare: que sólo redirija al API cuando `size` sea uno de
-los valores conocidos. Lo que quede fuera se sirve como imagen original — degradación, no rotura.
+## Estado: cerrado por los dos lados (2026-09-30)
+
+**En el borde.** La Redirect Rule de Cloudflare sólo manda al API cuando `size` es uno de los nombres
+admitidos. Comprobado: `thumbnail`, `Thumbnail`, `LARGE`, `medium` y `full` siguen dando 308; en
+cambio `900x900`, `20000x20000`, `200`, `abc` y `1x1` devuelven la imagen original (200, 2.001.904
+bytes) sin llegar al API, y no crean ningún blob.
+
+> El primer intento de prueba dio un falso negativo: los valores bloqueados seguían devolviendo 308.
+> No era la regla, era **propagación**. Las reglas de Cloudflare tardan unas decenas de segundos en
+> estar activas en el borde; hay que reintentar antes de concluir que no funcionan.
+
+**En el origen.** PR [vio-base-api#24](https://github.com/vio-live/vio-base-api/pull/24) con la lista
+cerrada de tamaños, `blobContentType` en el upload, `blobClient.exists()` y el 500 sin `error.message`.
+Cierra el agujero aunque alguien toque la regla del CDN.
