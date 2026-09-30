@@ -138,3 +138,5 @@ Alan completó las listas 2, 6 y 7, casi toda la 3; pendiente Apple/Google Pay, 
 Además dashboard `d20fe7c`: "No cost from Vio" y qué tener a mano (org number, IBAN, ID). Con Connect **Vio no cobra fee** (Alan preguntó por la facturación del fee). Emails de compra que no llegaron: pendiente de revisar.
 
 Nota: en `develop` del dashboard fallan 2 tests (`qliro-shipping-config`, `payments-lib` Vipps) que vienen de los PR de Vipps #40/#41, no de Connect.
+
+**Arreglos de la prueba de Alan desplegados en QA (30/09):** api-ms#33 `c2de052`, shopcart#51 `ba9cd09` (rebasado sobre #50), webapp#42 `f4c4be8`. Pipelines verdes, pods 2/2, dashboard en staging (esta vez Vercel sí tomó el push). **Hueco detectado al responder a Angelo:** un reembolso o disputa hecho desde el Stripe del seller no llega a Vio (sólo se procesan 4 eventos de pago; nadie escucha `charge.refunded` ni disputas). Preexistente también con claves propias.
