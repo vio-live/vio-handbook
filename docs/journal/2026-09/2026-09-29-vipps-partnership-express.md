@@ -212,6 +212,21 @@ desde el dashboard con el botón «Connect».
   activar «Vipps Express button» en sus cards.
 - Tarjeta de Alan actualizada: el paquete ya está publicado; los escenarios B solo requieren
   republicar su página.
+- Al activar el botón en Vev la imagen de la card se encogía: la card llenaba el marco
+  (`height: 100%`) y el marco de la Product Card es de alto automático (Vev mide el contenido),
+  así que el flex apretaba la imagen en vez de crecer. Arreglado en
+  [vev#50](https://github.com/vio-live/vev/pull/50): `height: auto; min-height: 100%` y la imagen
+  con `flex-shrink: 0`. Requiere otro `vev deploy` y republicar.
+- **Vipps pasa a Alan de punta a punta** (Angelo, 30/09 tarde): la tarjeta
+  [W2NNShth](https://trello.com/c/W2NNShth) se reescribió como handoff — primero el bloque de Vev
+  (publicar el paquete con `main`, acabado de la card con el botón en las cuatro layouts y en
+  móvil, botón oficial de Vipps según guías de marca), después los 38 escenarios. Angelo dice que
+  la card «no se termina de ver bien» tras el fix: queda en manos de Alan con capturas
+  antes/después.
+- Nota de limpieza: el commit `4cf5086` de este journal arrastró por error archivos de otra
+  sesión que estaban en el mismo clon (handoff del feed de Google Merchant, su journal y una
+  lección); el contenido es de esa sesión y está bien en `main`, solo el mensaje del commit no
+  les corresponde.
 
 ### Blockers
 
