@@ -36,8 +36,8 @@ lo que no se usa.
 
 | # | Medida | Ahorro/efecto | Qué hace falta |
 |---|---|---|---|
-| B1 | **Promover `develop` -> `master` en `vio-base-api`** | lleva a prod el arreglo del resizer | Es un release. Producción ya está protegida por la regla de Cloudflare, así que no corre prisa. |
-| B2 | **Mover QA y staging a Suecia** | ~25 USD/mes | El playbook ya está escrito (`vio-staging-oracle.md` y el plan de staging). Ventana: un sábado. |
+| B1 | **Promover `develop` -> `master` en `vio-base-api`** | lleva a prod el arreglo del resizer | Es un release, y **espera a que Alan confirme**. Producción ya está protegida por la regla de Cloudflare, así que no corre prisa. |
+| B2 | **Mover QA y staging a Suecia** | ~25 USD/mes | El playbook ya está escrito (`vio-staging-oracle.md` y el plan de staging). Ventana: un sábado. **Es la puerta del punto C1**: Angelo quiere hacer lo de las contraseñas después de esto. |
 | B3 | **`redus-vio-staging` -> Redis dentro del cluster** | ~16 USD/mes | Es staging; no hay motivo para un servicio gestionado. |
 | B4 | **Cerrar más el horario del cluster QA** | ~17 USD/mes | Hoy 06:00-23:00 UTC L-V. Pasar a 07:00-20:00 depende de si le molesta a Alan. |
 | B5 | **Purgar `reachuqa2`** | ~2-11 USD/mes | 123 GB en 236 tags contra 100 GB incluidos: hay overage. Bajar a Basic exige <10 GB. |
@@ -48,9 +48,12 @@ lo que no se usa.
 
 Estos no tienen excusa económica. Cuando haya un rato, se hacen.
 
-1. **Password de producción en texto plano en git** — `vio-infra-tf/variables.tf`, en el `default` de
-   `vio_commerce_db_passwords`. Abierto desde el audit del 2026-09-09. Borrar la línea no alcanza:
-   git no olvida, hay que **rotar la credencial**.
+1. **Contraseñas en texto plano en `vio-infra-tf/variables.tf`** — en el `default` de
+   `vio_commerce_db_passwords`. **Comprobado el 30/09: ya no autentican** (control positivo con la
+   contraseña buena por el mismo camino, y control negativo con una cadena inventada). Eso lo baja de
+   crítico a higiene: **no hay que rotar nada**, sólo quitar los `default` y dejar la variable sin
+   valor para que Terraform obligue a pasarla. Reescribir la historia de git deja de hacer falta.
+   **Secuencia acordada con Angelo:** después de que Alan confirme y de mover staging.
 2. **MySQL de staging abierta a todo internet** — regla de firewall `all` =
    `0.0.0.0-255.255.255.255`. No es producción, pero tiene datos reales.
 3. **443 de la instancia Oracle de analytics sin restringir** — requiere un NSG atado a la VNIC,
