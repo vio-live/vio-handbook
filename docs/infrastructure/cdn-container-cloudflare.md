@@ -87,10 +87,12 @@ imagen: `cf-cache-status: HIT`.
 
 ## Lo que quedó distinto, a propósito o no
 
-- **El `.json` no se cachea.** Cloudflare Free cachea por extensión y `.json` no entra; Front Door
-  cacheaba `/*`. Se intentó una Cache Rule para igualar y el token devolvió
-  `request is not authorized`: **hace falta un token de Cloudflare con permiso de Cache Rules**.
-  Las imágenes, que son el grueso, sí cachean.
+- **Caché igualado (resuelto el mismo día).** Cloudflare Free cachea por extensión y `.json` no
+  entra, así que al principio los JSON salían como `DYNAMIC` mientras Front Door cacheaba `/*`. La
+  Cache Rule que lo iguala **no la puede crear el token de DNS** (`request is not authorized`):
+  hace falta uno con permiso de Cache Rules, que Angelo generó. Con la regla puesta
+  (`cache: true`, query string fuera de la clave, TTL del origen), `countries.json` pasa de `MISS` a
+  `HIT`. El redirect de `?size=` sigue disparando antes que la caché, como debe.
 - **`container.reachu.io` y `containerqa.reachu.io` mueren cuando se borre el Front Door.** Esa zona
   no está en nuestra cuenta de Cloudflare, así que no se pueden repuntar. Se verificó contra la base
   de producción antes de asumir que sobraban:
