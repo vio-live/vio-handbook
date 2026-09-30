@@ -148,3 +148,5 @@ shopcart `2aa215a` (rama `feature/stripe-refunds-disputes`, sin push): el webhoo
 Hallazgo del mapa (sin verificar contra la prueba de Alan, que sí vio reembolsos llegar a Stripe): en orders-ms, cancelar una orden entera como reseller sólo llama a Stripe para el canal WORDPRESS, y `cancelPaymentItem` lee `metadata.products` que shopcart no escribe.
 
 Tarjeta de Alan: lista 9 con las correcciones desplegadas para re-probar.
+
+**Reembolsos/disputas desplegado en QA:** shopcart#52 `6ec4b28`, pipeline verde, pod 2/2. Managed Payments (Stripe como merchant of record de productos digitales; no aplica a Vio, no soporta Connect ni Elements) — por eso fallaba sólo el payment link. Decisión pendiente de Angelo: qué hace la orden ante un reembolso hecho en Stripe (propuesta: mostrarlo en el detalle de la orden y avisar al seller de disputas, sin cancelar).
