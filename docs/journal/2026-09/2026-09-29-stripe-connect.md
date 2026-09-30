@@ -140,3 +140,11 @@ Además dashboard `d20fe7c`: "No cost from Vio" y qué tener a mano (org number,
 Nota: en `develop` del dashboard fallan 2 tests (`qliro-shipping-config`, `payments-lib` Vipps) que vienen de los PR de Vipps #40/#41, no de Connect.
 
 **Arreglos de la prueba de Alan desplegados en QA (30/09):** api-ms#33 `c2de052`, shopcart#51 `ba9cd09` (rebasado sobre #50), webapp#42 `f4c4be8`. Pipelines verdes, pods 2/2, dashboard en staging (esta vez Vercel sí tomó el push). **Hueco detectado al responder a Angelo:** un reembolso o disputa hecho desde el Stripe del seller no llega a Vio (sólo se procesan 4 eventos de pago; nadie escucha `charge.refunded` ni disputas). Preexistente también con claves propias.
+
+## Reembolsos y disputas hechos fuera de Vio (30/09)
+
+shopcart `2aa215a` (rama `feature/stripe-refunds-disputes`, sin push): el webhook reconoce `charge.refunded`, `charge.dispute.created` y `charge.dispute.closed`; relee el cargo/la disputa en Stripe con la cuenta que cobró, exige que sea del PaymentIntent del checkout y lo registra en `origin_payment_body.events` una vez por evento (mismo patrón que Kustom/Vipps). Payment links: el PaymentIntent lleva `vio_*` metadata y, al completarse, su id va a la foto y a `order.channelId` (antes las órdenes por link no tenían referencia y un reembolso desde el dashboard no tenía qué reembolsar). **No** cancela la orden ni manda emails: cancelar en orders-ms dispara emails de cancelación y cancela en Woo/Shopify, y un reembolso no siempre es una cancelación — decisión pendiente de Angelo. Webhooks del sandbox (`we_1To5Iz…`, `we_1UKxwI…`) suscriptos a los 3 eventos nuevos (7 en total).
+
+Hallazgo del mapa (sin verificar contra la prueba de Alan, que sí vio reembolsos llegar a Stripe): en orders-ms, cancelar una orden entera como reseller sólo llama a Stripe para el canal WORDPRESS, y `cancelPaymentItem` lee `metadata.products` que shopcart no escribe.
+
+Tarjeta de Alan: lista 9 con las correcciones desplegadas para re-probar.
