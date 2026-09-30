@@ -46,29 +46,43 @@ az monitor log-analytics query -w $(az monitor log-analytics workspace show -g q
 # pausar el horario (por ejemplo, una demo nocturna): suspender el job
 ```
 
-## La MySQL de staging va en el mismo horario (desde 2026-09-30)
+## La MySQL de staging ya tenía sus propios jobs (corrección del 2026-09-30)
 
-`vio-ecom-db-staging` costaba **70 USD/mes corriendo 24/7 al lado de un cluster que ya se apagaba**.
-Como `api-ecom-staging.vio.live` entra por el cluster de QA, mientras el cluster está abajo la base
-no le servía a nadie.
+El 30/09 añadí el arranque y el apagado de `vio-ecom-db-staging` a los jobs del cluster, creyendo
+que la base corría 24/7. **Estaba equivocado: `job-qa-mysql-start` y `job-qa-mysql-stop` existen
+desde el 2026-09-25 y funcionan.**
 
-Los dos jobs ahora manejan las dos cosas, y el **orden importa**:
+El coste lo deja claro:
 
-- **Apagado:** primero el cluster, después la base.
-- **Encendido:** primero la base, después el cluster. Si el cluster subiera antes, los pods
-  arrancarían sin base y entrarían en CrashLoopBackOff.
+| Día | USD |
+|---|---|
+| 19-21/09 (antes) | 9,10 |
+| 23-25/09 | ~4,55 |
+| 26-27/09 (sábado y domingo, con jobs) | **0,46** |
+| 28-29/09 (laborables, con jobs) | ~3,5 |
 
-La identidad `id-qa-aks-scheduler` tiene además el rol custom **`MySQL Start-Stop
-(vio-ecom-db-staging)`** (read, start y stop), con scope en ese único servidor. No puede borrarlo ni
-modificarlo.
+O sea que **el ahorro ya estaba hecho y mi cambio no aportó nada**. Lo revertí el mismo día: los
+jobs del cluster vuelven a ocuparse sólo del cluster.
 
-Ahorro: **~35 USD/mes** (51% de uptime: 85 de 168 horas por semana).
+### El diseño que ya había es el correcto
 
-> Una MySQL Flexible Server detenida **se enciende sola a los 7 días**. Con horario de lunes a
-> viernes nunca se llega a ese límite, pero tenerlo presente si alguna vez se suspende el job.
+Cuatro jobs, y el orden sale de la hora, no de un script que hace las dos cosas:
+
+| Job | Cron (UTC) | Qué hace |
+|---|---|---|
+| `job-qa-mysql-start` | `55 5 * * 1-5` | la base **antes** que el cluster |
+| `job-qa-aks-start` | `0 6 * * 1-5` | el cluster |
+| `job-qa-aks-stop` | `0 23 * * 1-5` | el cluster **antes** que la base |
+| `job-qa-mysql-stop` | `15 23 * * 1-5` | la base |
+
+Ese orden importa por lo de siempre: si el cluster sube antes que la base, los pods arrancan sin
+base y entran en CrashLoopBackOff. Separarlo en cuatro jobs con 5 y 15 minutos de margen lo resuelve
+mejor que encadenarlo dentro de un script.
+
+La identidad `id-qa-aks-scheduler` tiene el rol custom **`MySQL Start-Stop (vio-ecom-db-staging)`**
+(read, start y stop) con scope en ese único servidor.
 
 ## Pendiente
 
 - Todavía no hay alerta si un job falla: hay que revisar el historial.
-- El camino de apagado con la base se verifica recién en la corrida de las 23:00 UTC. El de encendido
-  ya se probó a mano el 30/09: `db_inicial=Ready / db_accion=ninguna / aks_accion=ninguna`, Succeeded.
+- Sigue sin haber alerta si un job falla: hay que mirar el historial a mano.
