@@ -1,6 +1,6 @@
 ---
 title: Encendido y apagado automático del cluster QA (kubernetesqa)
-last-updated: 2026-09-22
+last-updated: 2026-09-30
 owner: miguel
 ---
 
@@ -46,7 +46,29 @@ az monitor log-analytics query -w $(az monitor log-analytics workspace show -g q
 # pausar el horario (por ejemplo, una demo nocturna): suspender el job
 ```
 
+## La MySQL de staging va en el mismo horario (desde 2026-09-30)
+
+`vio-ecom-db-staging` costaba **70 USD/mes corriendo 24/7 al lado de un cluster que ya se apagaba**.
+Como `api-ecom-staging.vio.live` entra por el cluster de QA, mientras el cluster está abajo la base
+no le servía a nadie.
+
+Los dos jobs ahora manejan las dos cosas, y el **orden importa**:
+
+- **Apagado:** primero el cluster, después la base.
+- **Encendido:** primero la base, después el cluster. Si el cluster subiera antes, los pods
+  arrancarían sin base y entrarían en CrashLoopBackOff.
+
+La identidad `id-qa-aks-scheduler` tiene además el rol custom **`MySQL Start-Stop
+(vio-ecom-db-staging)`** (read, start y stop), con scope en ese único servidor. No puede borrarlo ni
+modificarlo.
+
+Ahorro: **~35 USD/mes** (51% de uptime: 85 de 168 horas por semana).
+
+> Una MySQL Flexible Server detenida **se enciende sola a los 7 días**. Con horario de lunes a
+> viernes nunca se llega a ese límite, pero tenerlo presente si alguna vez se suspende el job.
+
 ## Pendiente
 
 - Todavía no hay alerta si un job falla: hay que revisar el historial.
-- La MySQL de staging (`vio-ecom-db-staging`) sigue 24/7. Se puede sumar a estos jobs si nadie la usa fuera del horario del cluster.
+- El camino de apagado con la base se verifica recién en la corrida de las 23:00 UTC. El de encendido
+  ya se probó a mano el 30/09: `db_inicial=Ready / db_accion=ninguna / aks_accion=ninguna`, Succeeded.
