@@ -1,10 +1,11 @@
 # Handoff — Import de catálogo por Google Merchant feed
 
-> Última actualización: 2026-09-01 · dirigido por angelo, ejecutado por claude y alan.
-> Estado: **en producción con dos merchants reales** (Kondomeriet, Nytelse, más
-> Bohus por archivo). La versión dos del sync —descontinuados, parser streaming,
-> cadencia adaptativa, historial, imágenes a nuestro storage— está en tres ramas
-> esperando merge y una migración aditiva: Trello [`8BpvMIdF`](https://trello.com/c/8BpvMIdF).
+> Última actualización: 2026-09-30 · dirigido por angelo, ejecutado por claude y alan.
+> Estado: **en producción con tres merchants** (Kondomeriet, Nytelse, Boots) y un cuarto
+> probado en staging (Lekekassen). **La versión dos del sync ya está en producción**
+> —descontinuados, parser streaming, cadencia adaptativa, historial, imágenes a nuestro
+> storage—; lo de abajo que diga "pendiente de merge" es de la versión del 01/09.
+> Ver el [estado al 2026-09-30](#estado-al-2026-09-30) antes de leer el resto.
 >
 > 🎨 **Diseño del flujo — 7 pantallas:**
 > [`google-merchant-feed-flow.md`](./google-merchant-feed-flow.md).
@@ -18,6 +19,58 @@ Disparador: Kondomeriet / Nytelse (EQOM Group). Queremos sus catálogos dentro d
 artículos de VG, comprables vía Kustom. Los dos feeds son públicos:
 `kondomeriet.no/export/googleshopping.xml` y
 `nytelse.no/butikk/ekstern/xmlfeedgoogle.xml`.
+
+## Estado al 2026-09-30
+
+> [claude, 2026-09-30] Sección nueva. El cuerpo de este handoff es del 01/09 y varias de
+> sus listas de pendientes ya se cerraron; esto es la foto de hoy.
+
+**En producción, sincronizando:** Kondomeriet (user 1305, feed 1), Nytelse (1306, feed 2),
+Boots (1308, feed 4). Boots sigue sin poder publicar sus 3.821 productos: les falta clase
+de envío. El árbol de categorías de prod se verificó el 22/09: 26 raíces, sin duplicados,
+con el nombre de cada vendedor.
+
+**Lekekassen** (`lekekassen.no/amfeed/feed/download?url_key=schibsted-dso`) es el cuarto
+merchant, importado por Angelo en **staging** el 14/09 para probar el flujo de punta a
+punta. Es Magento vía Amasty, como Boots, y trajo los dos problemas que se arreglaron ese
+día: manda `simple` en `product_type` y escribe las rutas de Google con `/`
+(ver [categorías](../architecture/product-categories.md)). Sus links de producto vienen en
+`http` y sin `www`.
+
+**La cola del Service Bus cambió de nombre** con la mudanza a Sweden Central del 29/09:
+`production-product-processing2` → **`vio-product-processing-sc`**. Ojo con los mensajes
+**programados**: se materializan en la cola vieja aunque ningún pod la mire, así que al
+migrar hubo que mover 5 `process-google-merchant-feed-scheduler` a mano.
+
+**Único pendiente funcional:** `google-merchant-feed`
+[PR #4](https://github.com/vio-live/google-merchant-feed/pull/4) —leer los importes en
+cualquier locale— abierto desde el 14/09. `GoogleMerchantFeed-Prod` corre el código del
+10/09, así que un feed que escriba los precios con separador de miles puede leerse mal.
+En `-Test` está desde el 14/09, con 39/39 tests en verde.
+
+**Pendiente de decisión de Angelo:** índice único `category (slug, father_id, name)`, clase
+de envío para productos de feed, y filtrar por vendedor las categorías de feed en el selector.
+
+## La URL del producto en la tienda del comercio
+
+El feed trae `<link>`: la página del producto en la tienda del merchant. Se guarda en
+`Product.originUrl` (`varchar(2048)`) y desde el 15/09 se puede leer de punta a punta:
+
+| Capa | Cómo se llama | Dónde |
+|---|---|---|
+| Entidad | `originUrl` | `@vio-/database`, `Product.entity.ts` |
+| api, ítems del canal | `origin_url` si el `select` lo pide (y en el select por defecto) | `channel.service.ts`, `getUserChannelItems` |
+| api, vista paginada | `originUrl` | `getChannelUserByIdV2` |
+| graphql | **`origin_url`** en `Product` y por herencia en `ProductsAndTaxes` | `Sdk/Shared/DTO/Product.ts` |
+| dashboard | tarjeta **"Store page"** en la pestaña Details del producto | `views/product-detail/details-tab.jsx` |
+
+La URL es dato de un tercero, así que el dashboard **sólo la enlaza si es `http(s)`**: un
+`javascript:` o `data:` en un feed no se convierte en link (`src/lib/store-link.js`). Abre
+en otra pestaña con `noopener noreferrer`, y sin URL no se muestra la tarjeta. El campo del
+graphql todavía no lo consume nadie; se expuso para tenerlo cuando se use.
+
+Los tres formatos de `google_product_category` de los cuatro feeds, y las guardas de
+categoría, están en [`architecture/product-categories.md`](../architecture/product-categories.md).
 
 ## El pipeline
 
@@ -87,7 +140,7 @@ cascada (`78ea525`) lo mitiga por tandas.
 Las pantallas del diseño siguen sin construir; la 04 —revisión agrupada por
 categoría— es la que hace falta apenas se carguen catálogos grandes.
 
-## Cómo funciona el sync (versión dos, pendiente de merge)
+## Cómo funciona el sync (versión dos, en producción desde el 2026-09-11)
 
 ```
 scheduled message (Service Bus)  ──►  syncProductFeed

@@ -135,6 +135,42 @@ Boots
 - Google acepta tanto el id (`567`) como la ruta en texto. Un id que no está en la
   taxonomía no crea nada: no aparece una categoría llamada "567".
 
+### Un `product_type` que es un tipo de plataforma no es una categoría
+
+> [claude, 2026-09-14] Lekekassen manda `<g:product_type>simple</g:product_type>` en
+> **todos** sus productos: es el tipo de producto de Magento, no su categoría. Sin guarda,
+> el árbol global se llenaba de raíces llamadas "simple" y los productos quedaban
+> colgados de ahí en vez de caer a la taxonomía de Google. Arreglado en `1f51533`
+> (products), en prod desde el 15/09.
+
+`merchantProductType` descarta nueve identificadores de plataforma —`simple`,
+`configurable`, `grouped`, `virtual`, `bundle`, `downloadable`, `giftcard`, `variable`,
+`external`— y sólo cuando el valor **entero** es uno de ellos. Un `product_type` con
+ruta se respeta como venga, aunque su primer nivel se llame igual (`simple > Leker` no
+se descarta): lo que delata al tipo de plataforma es ser un único término, sin padre ni
+hijo.
+
+Descartado el `product_type`, el producto cae a `google_product_category` como si el
+feed no lo hubiera mandado. Para Lekekassen eso es la diferencia entre un árbol de una
+raíz inútil y el de Google.
+
+### Las rutas de Google pueden venir separadas por `/`
+
+> [claude, 2026-09-14] Google publica sus rutas con ` > `, pero un merchant puede
+> escribirlas con `/`, y `googleCategoryPath` las devolvía como **un solo nivel** con
+> barras dentro del nombre. Mismo commit `1f51533`.
+
+La división por `/` se aplica **sólo si la ruta no trae ningún `>`**: si los tiene, gana
+tal como está escrita. Y sólo vale para `google_product_category`, nunca para el
+`product_type` del comercio. Queda un borde conocido: una categoría cuyo nombre lleve una
+barra —"Helse/skjønnhet"— y venga sola se parte en dos niveles. Ninguno de los cuatro feeds
+reales lo hace, y la alternativa (ignorar la barra) rompía a Lekekassen.
+
+Los cuatro feeds mandan `google_product_category` de **tres formas distintas**, verificado
+el 2026-09-30 descargándolos: Kondomeriet y Nytelse **no lo mandan** (campo vacío), Boots
+manda **ids numéricos** (`1360`, `1901`, `2`) y Lekekassen manda **texto con barras**
+(`Leker og spill/Leker/Byggeleker`). Cualquier cambio acá hay que probarlo contra las tres.
+
 ### Visibilidad
 
 Las categorías de feed viven en la taxonomía global, así que el selector de **cada**
