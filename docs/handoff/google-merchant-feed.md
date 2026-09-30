@@ -140,7 +140,11 @@ cascada (`78ea525`) lo mitiga por tandas.
 Las pantallas del diseño siguen sin construir; la 04 —revisión agrupada por
 categoría— es la que hace falta apenas se carguen catálogos grandes.
 
-## Cómo funciona el sync (versión dos, en producción desde el 2026-09-11)
+## Cómo funciona el sync (versión dos, en producción)
+
+> [claude, 2026-09-30] En prod en dos tiempos: products desde el **2026-09-03**
+> (`0696374`, PR #5) y el parser en streaming de la Cloud Function desde el **2026-09-10**
+> (`4513f76` en `main`).
 
 ```
 scheduled message (Service Bus)  ──►  syncProductFeed

@@ -93,6 +93,15 @@ mergearlo y el permiso del entorno lo bloqueó; queda para Angelo.
   productos traen `mpn`. Pendiente en
   [`vg-lyko-feed-to-checkout.md`](../../architecture/vg-lyko-feed-to-checkout.md).
 
+## Un tropiezo de dos sesiones en el mismo clon
+
+Este journal, la lección y la edición de `product-categories.md` **se pushearon dentro de
+`4cf5086`**, un commit de la sesión de Vipps cuyo mensaje habla de la card de Vev: esa
+sesión corrió `git add docs/` mientras estos archivos estaban sin commitear y se los llevó.
+No se perdió nada y no se reescribió la historia, que ya estaba pusheada. Para la próxima:
+en el handbook conviene `git add` **de los archivos propios**, nunca del directorio entero,
+porque puede haber otra sesión escribiendo al mismo tiempo en el mismo clon.
+
 ## Next session
 
 Mergear #4 y verificar la primera corrida de `GoogleMerchantFeed-Prod` con el parser
