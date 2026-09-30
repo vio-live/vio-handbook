@@ -7,8 +7,8 @@ owner: miguel
 # Qué cambió
 
 Hasta el 2026-09-30, `container.vio.live` y `container-staging.vio.live` se servían por **Azure Front
-Door** (perfil `prod-cdn`, ~28 USD/mes). Ahora van por **Cloudflare**, que ya pagábamos y ya servía
-el DNS de la zona. Ahorro: **~28 USD/mes**, sin cambiar una sola URL.
+Door** (perfil `prod-cdn`, **36,9 USD/mes**). Ahora van por **Cloudflare**, que ya pagábamos y ya servía
+el DNS de la zona. Ahorro: **36,9 USD/mes**, sin cambiar una sola URL.
 
 ## Cómo funciona ahora
 
@@ -114,3 +114,20 @@ Mientras el perfil `prod-cdn` exista, revertir es cambiar el CNAME a
 `prod-cdn-reachu-huakd5c2a4dmhnaj.z01.azurefd.net` y quitarle el proxy. Por eso **no se borró el
 mismo día**: queda vivo 24 h como red de seguridad, y hay un job programado para el 01/10 a las 10:00
 que verifica tráfico en cero y lo borra.
+
+## Cuánto costaba, en detalle
+
+Desglose por medidor de la semana 22-28/09, antes de migrar:
+
+| Recurso | Medidor | USD/mes |
+|---|---|---|
+| `prod-cdn` | **Standard Base Fees** | **36,9** |
+| storage | Standard Data Transfer Out | 1,6 |
+| storage | Hot LRS Write Operations | 0,7 |
+
+**El 100% del coste del Front Door era cuota fija.** Cero facturado por tráfico: estábamos pagando
+la suscripción de un CDN que apenas movía datos. Por eso la migración se lleva la cifra entera y no
+una parte.
+
+El egress del blob (1,6 USD/mes) sigue existiendo con Cloudflare, porque alguien tiene que servir el
+origen, y con la caché puesta debería bajar en vez de subir.
