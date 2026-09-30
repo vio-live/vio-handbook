@@ -197,12 +197,24 @@ desde el dashboard con el botón «Connect».
   prerrequisitos, activación y 38 escenarios (A activación, B Vev, C app, D orden, E Shopify/Woo,
   F dinero después de la orden, G robustez), autocontenida y sobre su propio canal.
 
+### Mañana del 30/09 — cierre
+
+- shopcart#50 y orders-ms#13 **desplegados en QA** a las 08:03 UTC tras relanzar los runs (la
+  noche anterior habían caído con el cluster apagado: `job-qa-aks-stop` a las 23:00 UTC,
+  `job-qa-aks-start` a las 06:00 UTC, lunes a viernes — así se ve un AKS parado: «cluster
+  unreachable / no such host»). Pods nuevos `Running`; el callback de tarifas responde por el
+  relay público.
+- **Paquete compartido de Vev `cq1lXld-TA9` publicado** por Angelo desde su clon (`vev deploy`
+  con el node de nvm en el PATH: el shell de la app no carga nvm). El clasificador de auto-mode
+  bloquea `vev deploy` a Claude («Create Public Surface»). Su clon `~/Documents/GitHub/vev` era la
+  historia vieja de julio (sin ancestro común con `vio-live/vev`): se guardó en la rama
+  `old-main-2026-07` y `main` quedó en `origin/main`. Pendiente: republicar la página de Bohus y
+  activar «Vipps Express button» en sus cards.
+- Tarjeta de Alan actualizada: el paquete ya está publicado; los escenarios B solo requieren
+  republicar su página.
+
 ### Blockers
 
-- **shopcart#50 y orders-ms#13 no llegaron a QA**: sus deploys corrieron a las 23:18 UTC y el
-  cluster `kubernetesqa` se apaga solo a las 23:00 UTC (`job-qa-aks-stop`, lunes a viernes;
-  arranca a las 06:00 UTC). Helm falló con «cluster unreachable / no such host» (así se ve un AKS
-  parado). Relanzar los dos runs (`gh run rerun`) a partir de las 06:00 UTC del 01/10.
 - orders-ms no compila ni testea en local: el kernel `@vio-/*@1.0.267` no resuelve desde esta
   máquina (npm 404). El PR se tipó contra los `node_modules` de shopcart (misma línea base de
   errores) y se verifica en QA.

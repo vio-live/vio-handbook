@@ -236,7 +236,7 @@ vendedor 1322 sigue sin conectar (botón «Connect» del dashboard).
 - Estado de pago en la orden (capturado / devuelto) para que lo que el vendedor hace en su
   portal se vea en Vio y en Shopify — hoy queda en la foto del checkout.
 - Assets oficiales del botón de Vipps en el SDK (hoy un badge de texto).
-- ~~Rebundle de Vev con el SDK nuevo (0.17.0)~~: mergeado ([vev#48](https://github.com/vio-live/vev/pull/48)); falta **publicar** el paquete compartido (`npm run deploy`, con OK de Angelo).
+- ~~Rebundle de Vev con el SDK nuevo (0.17.0)~~: mergeado ([vev#48](https://github.com/vio-live/vev/pull/48)) y **paquete compartido publicado el 2026-09-30** (`vev deploy`, Angelo). Falta republicar las páginas (Bohus, la de Alan).
 - Alta de comercios desde el dashboard/admin con Management API (prod).
 - El camino legacy de base-api (`/vipps/*`, eCom v2 con claves de Vio) no lo llama nadie
   desde nuestros repos; retirarlo cuando se confirme que ningún cliente externo lo usa.
