@@ -67,8 +67,19 @@ Estos no tienen excusa económica. Cuando haya un rato, se hacen.
    **Limitación honesta:** se verificó el efecto, no la regla — no hay CLI de OCI en la máquina, así
    que la security list no se leyó. Si se quiere defensa en profundidad, queda confirmar que 8123 y
    9000 están cerrados también en la security list y no sólo en el firewall del host.
-4. **`vio-infra-tf` en rojo** en la rama `chore/eliminar-hosts-reachu`, y ahora con **4** PRs de
-   infra abiertos (#3 y #4 son de hoy).
+4. **`vio-infra-tf` en rojo — diagnosticado el 01/10, y eran dos cosas, no una.**
+   El workflow fallaba desde el **24 de julio** en `terraform fmt -check -recursive` (exit code 3),
+   por dos ficheros sin formatear: `aks.tf` y `modules/vio-commerce-db/main.tf`. Eso lo arregla
+   [`#5`](https://github.com/vio-live/vio-infra-tf/pull/5), que es sólo `fmt`.
+   **Pero el `fmt` estaba tapando el problema de verdad**, porque corre antes y cortaba el workflow.
+   Con el formato arreglado el `plan` sí corre, y falla por su cuenta:
+   - **El provider de Kubernetes no está configurado en CI**: apunta a `localhost`, así que cualquier
+     recurso `kubernetes_*` revienta el `plan`. Es del workflow, no del código.
+   - **El estado está muy desincronizado:** `Plan: 73 to add, 13 to change, 3 to destroy`, más varias
+     IPs públicas que el estado cree que existen y ya no. Parte de la deriva es conocida: la infra se
+     movió a Sweden Central **por CLI** (prod el 30/09, staging el 01/10) y el Terraform no se tocó.
+   **Reconciliar el estado con Suecia es un trabajo aparte y grande**, no un rato. Lo que ya no
+   procede es llamarlo "en rojo" sin más.
 5. **`DISCORD_WEBHOOK`** sigue con fecha 2026-03-18, escalado desde julio.
 6. **`vio_production` en ClickHouse sigue vacía.**
 
