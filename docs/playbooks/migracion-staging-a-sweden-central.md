@@ -1,6 +1,6 @@
 ---
 title: Migración de staging/QA a Sweden Central
-last-updated: 2026-09-29
+last-updated: 2026-10-01
 estado: listo para ejecutar, esperando el OK de Angelo
 ---
 
@@ -115,6 +115,51 @@ Emitir a **nombres de secret nuevos** y sólo cambiar el Gateway cuando el `Cert
 
 ---
 
+---
+
+## Estado real al 2026-10-01 (Fase 1 y Fase 2 de preparación YA EJECUTADAS)
+
+Lo de abajo ya está hecho y verificado; la ventana es más corta de lo estimado.
+
+- **ACR:** importados **sólo los 13 `latest` en uso + su tag de build** a `vioqasc` (26 tags, digest
+  verificado idéntico). **No se migra el histórico:** `reachuqa2` está al 122 % de su cuota
+  (131 GB / 100 GB) y mudarlo arrastraría el problema. Destino: 6,9 GB.
+- **Private endpoint con la IP clavada:** `db-staging-sc` → `vio-ecom-db-staging-sc` en
+  **`10.224.0.7`**, la misma IP que ya tiene `DB_HOST`. **Las dos VNets comparten CIDR
+  `10.224.0.0/12`.** Probado con handshake real de MySQL desde la VNet nueva.
+  → **El paso de repuntar `DB_HOST` desaparece del corte.** Ver
+  `lessons/mismo-cidr-permite-conservar-la-ip-privada-al-migrar.md`.
+- **Parámetros del MySQL igualados** (había drift real: `wait_timeout` e `interactive_timeout` en 300
+  contra el default de 28800, más `slow_query_log`, `log_output` y `error_server_log_file`).
+- **Service Bus replicado** en Suecia conservando el **nombre de cola** idéntico, para que en el corte
+  sólo cambie la connection string: `vio-qa-product-processing-sc` y `vio-qa-order-processing-sc`.
+  Origen con 0 mensajes activos: no hay datos que migrar.
+- **Gateways de base-api y graph-ql aplicados en el destino y probados con TLS real** contra
+  `74.158.41.166` con `--resolve`: `tls_verify=0`, CN correcto, 503 por no haber backends. Correcto.
+- **No hay secretos que copiar:** el cluster de origen no tiene ni un Secret ni un ConfigMap de
+  aplicación, sólo releases de Helm. Todo viaja horneado en la imagen.
+
+### Corrección: el Gateway de microservicios está MUERTO, no "con la IP vieja"
+
+`gateway-reachu-qa-microservices` declara host `20.251.70.230` (la IP viva del ingress) pero su
+`virtual-service-reachu-qa-microservices` declara `20.100.139.46`, **que no existe en la
+suscripción**. Los hosts no intersectan, Istio no ata el VS, y las 11 rutas dan **404 desde que la IP
+cambió**. Verificado en vivo. La auditoría del 2026-07-14 ya avisó de la fragilidad.
+
+**NO apuntar los dos a `74.158.41.166` en el corte.** Eso no sería migrar: resucitaría 11 rutas que
+exponen los microservicios por IP en HTTP plano, sin TLS ni autenticación. **Decisión pendiente de
+Angelo/Alan**: enterrarlo o rehacerlo con dominio y TLS. El destino se deja sin ese par.
+
+### Falta para la ventana
+
+1. Datos del MySQL (réplica o dump; con dump, `innodb_strict_mode=0`).
+2. Confirmar el conteo de `reachu-uploads-qa` y `vio` en el storage (los otros 5 contenedores ya dan
+   0 diferencias).
+3. Recrear los **4 jobs de Container Apps** del horario y **desactivar los viejos**.
+4. Recrear el **`cronjob/shopcart-reconcile`** (cada 10 min; no estaba en este playbook).
+5. Custom domain `container-staging.vio.live` en `containerqasc` vía `asverify` + repuntar Cloudflare.
+6. Actualizar el blob `.env`: **connection strings de Service Bus**. `DB_HOST` ya **no** hace falta.
+
 ## Fase 2 — Ventana (un sábado, staging ya apagado)
 
 Orden que importa, aprendido hoy:
@@ -123,6 +168,8 @@ Orden que importa, aprendido hoy:
    `reachuqa2`, **verificando que el digest coincide**).
 2. **Promover la réplica de MySQL** y comparar contra el origen: conteo exacto de filas por tabla
    y huella `COUNT(*)` + `SUM(id)`. Exigir **0 tablas con menos filas en el destino**.
+   **`DB_HOST` no se toca:** el private endpoint del destino ya está clavado en `10.224.0.7`, la misma
+   IP del `.env`. No hay Secret ni `envFrom` que inyectar para la base.
 3. Apuntar el DNS de los 4 dominios a la IP nueva (TTL 60).
 4. **Recién ahora** verificar los servicios que se llaman a sí mismos por el dominio público.
    En producción `products` estaba en CrashLoopBackOff con 27 reinicios porque llamaba a
@@ -131,6 +178,8 @@ Orden que importa, aprendido hoy:
 5. Cambiar los Gateways a los certificados nuevos (ya emitidos en la fase 1c).
 6. Recrear los 4 jobs de Container Apps apuntando al cluster nuevo, y **desactivar los viejos**.
    Si no, el scheduler viejo enciende un cluster que ya no sirve tráfico y factura.
+7. Recrear el **`cronjob/shopcart-reconcile`** (cada 10 min, `curlimages/curl:8.22.0`). No estaba en
+   la lista original de este playbook.
 
 ## Fase 3 — Verificación (con la regla que hoy falló)
 
