@@ -1,6 +1,6 @@
 ---
 title: Registro de pendientes diferidos (retomar cuando haya recursos)
-last-updated: 2026-09-30
+last-updated: 2026-10-01
 owner: miguel
 ---
 
@@ -37,10 +37,10 @@ lo que no se usa.
 | # | Medida | Ahorro/efecto | Qué hace falta |
 |---|---|---|---|
 | B1 | **Promover `develop` -> `master` en `vio-base-api`** | lleva a prod el arreglo del resizer | Es un release, y **espera a que Alan confirme**. Producción ya está protegida por la regla de Cloudflare, así que no corre prisa. |
-| B2 | **Mover QA y staging a Suecia** | ~25 USD/mes | El playbook ya está escrito (`vio-staging-oracle.md` y el plan de staging). Ventana: un sábado. **Es la puerta del punto C1**: Angelo quiere hacer lo de las contraseñas después de esto. |
-| B3 | **`redus-vio-staging` -> Redis dentro del cluster** | ~16 USD/mes | Es staging; no hay motivo para un servicio gestionado. |
-| B4 | **Cerrar más el horario del cluster QA** | ~17 USD/mes | Hoy 06:00-23:00 UTC L-V. Pasar a 07:00-20:00 depende de si le molesta a Alan. |
-| B5 | **Purgar `reachuqa2`** | ~2-11 USD/mes | 123 GB en 236 tags contra 100 GB incluidos: hay overage. Bajar a Basic exige <10 GB. |
+| B2 | ~~Mover QA y staging a Suecia~~ | — | **HECHO el 2026-10-01.** Staging corre en Sweden Central y Noruega quedó sin un solo recurso de Vio Commerce. |
+| B3 | ~~`redus-vio-staging` -> Redis dentro del cluster~~ | — | **Sin objeto:** el recurso se **borró** el 01/10. El de Suecia (`redus-vio-staging-sc`) sigue siendo gestionado; si se quiere pasar a Redis en cluster, es una medida nueva, no esta. |
+| B4 | **Cerrar más el horario del cluster QA** | ~17 USD/mes | **Corrección importante: los crons van en UTC.** `55 5`-`15 23` es **07:55-01:15 hora de Oslo**, no 06:00-23:00. O sea que staging está arriba de madrugada sin que nadie lo use: el margen es mayor de lo que se creía. Sigue dependiendo de si le molesta a Alan. |
+| B5 | ~~Purgar `reachuqa2`~~ | — | **Sin objeto:** el registry se **borró** el 01/10 con los 122 GB. El de Suecia (`vioqasc`) nació con sólo los 13 `latest` en uso: **6,9 GB de 100**. |
 
 ---
 
@@ -48,17 +48,27 @@ lo que no se usa.
 
 Estos no tienen excusa económica. Cuando haya un rato, se hacen.
 
-1. **Contraseñas en texto plano en `vio-infra-tf/variables.tf`** — en el `default` de
-   `vio_commerce_db_passwords`. **Comprobado el 30/09: ya no autentican** (control positivo con la
-   contraseña buena por el mismo camino, y control negativo con una cadena inventada). Eso lo baja de
-   crítico a higiene: **no hay que rotar nada**, sólo quitar los `default` y dejar la variable sin
-   valor para que Terraform obligue a pasarla. Reescribir la historia de git deja de hacer falta.
-   **Secuencia acordada con Angelo:** después de que Alan confirme y de mover staging.
-2. **MySQL de staging abierta a todo internet** — regla de firewall `all` =
-   `0.0.0.0-255.255.255.255`. No es producción, pero tiene datos reales.
-3. **443 de la instancia Oracle de analytics sin restringir** — requiere un NSG atado a la VNIC,
-   porque la security list es compartida y restringirla ahí rompería `events.vio.live`.
-4. **`vio-infra-tf` en rojo** en la rama `chore/eliminar-hosts-reachu`, con 2 PRs de infra abiertos.
+1. ~~**Contraseñas en texto plano en `vio-infra-tf/variables.tf`**~~ — **HECHO el 01/10:**
+   [`vio-infra-tf#4`](https://github.com/vio-live/vio-infra-tf/pull/4) quita el bloque `default` de
+   `vio_commerce_db_passwords` y añade `example.tfvars` como plantilla. `.gitignore` ya excluía
+   `*.tfvars` salvo el ejemplo, así que el patrón correcto ya existía y los `default` eran un atajo
+   que se lo saltaba. **No se rota nada** (las credenciales ya no autenticaban) y **no hace falta
+   reescribir el historial**: la de `qa` además quedó doblemente muerta porque ese servidor se borró
+   el mismo día. Pendiente sólo la revisión de Alan.
+2. ~~**MySQL de staging abierta a todo internet**~~ — **HECHO el 01/10.** Se borró la regla `all`
+   conservando la de servicios de Azure, y horas después el servidor entero desapareció con la
+   mudanza. Lo que desbloqueó el cierre fue la evidencia del lado que recibe:
+   `performance_schema.hosts` mostraba que **el host que más se conectaba no era la aplicación**,
+   sino `77.90.185.21` con **287 intentos** probando `root`/`admin`/`sa`.
+3. **443 de la instancia Oracle de analytics** — **revisado el 01/10 y el riesgo es menor de lo que
+   decía esta línea.** Comprobado desde fuera: el 443 sirve la app pública de eventos (necesita estar
+   abierto), y **ClickHouse no es alcanzable**: 8123 y 9000 no responden, y las rutas típicas
+   (`/?query=`, `/clickhouse/`, `/play`, `/ping`) devuelven el `index.html` de la SPA, no ClickHouse.
+   **Limitación honesta:** se verificó el efecto, no la regla — no hay CLI de OCI en la máquina, así
+   que la security list no se leyó. Si se quiere defensa en profundidad, queda confirmar que 8123 y
+   9000 están cerrados también en la security list y no sólo en el firewall del host.
+4. **`vio-infra-tf` en rojo** en la rama `chore/eliminar-hosts-reachu`, y ahora con **4** PRs de
+   infra abiertos (#3 y #4 son de hoy).
 5. **`DISCORD_WEBHOOK`** sigue con fecha 2026-03-18, escalado desde julio.
 6. **`vio_production` en ClickHouse sigue vacía.**
 
@@ -70,6 +80,8 @@ Estos no tienen excusa económica. Cuando haya un rato, se hacen.
 |---|---|---|
 | Tests del resizer | [`vio-base-api#25`](https://github.com/vio-live/vio-base-api/pull/25) | Abierto, revisión pedida a Alan. No lo mergeamos nosotros: ADR-0001. |
 | `fix(ci)` del registry en helm | [`vio-base-api#22`](https://github.com/vio-live/vio-base-api/pull/22) | Abierto desde antes. |
+| Desactivar el Gateway muerto de microservicios de QA | [`vio-infra-tf#3`](https://github.com/vio-live/vio-infra-tf/pull/3) | Abierto 01/10. La pregunta para Alan no es técnica: **¿staging necesita acceso por path a los microservicios?** |
+| Quitar los `default` de las contraseñas | [`vio-infra-tf#4`](https://github.com/vio-live/vio-infra-tf/pull/4) | Abierto 01/10. |
 
 ---
 
