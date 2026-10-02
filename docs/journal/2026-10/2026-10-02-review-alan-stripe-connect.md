@@ -77,4 +77,6 @@ levanto la mano por Android/iOS… seguí con lo de prod»), listarlo y decidir 
 
 ## Next session
 
-- Alan re-prueba 2, 3 y 4 con los PR desplegados; Angelo decide la tarjeta «URGENTE».
+- Alan re-prueba 2, 3 y 4 con los PR desplegados.
+- «URGENTE suscripciones» **devuelta a Doing** (Angelo, 02/10): #10/#11 de users-ms siguen
+  revertidos; Alan tiene que explicar el 401 y re-aplicarlos o descartarlos por escrito.
