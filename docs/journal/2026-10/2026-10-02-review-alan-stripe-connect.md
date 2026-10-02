@@ -45,6 +45,18 @@ levanto la mano por Android/iOS… seguí con lo de prod»), listarlo y decidir 
 - Dato operativo: QA vive en Sweden Central desde el 01/10 (`kubernetesqa-sc`, ACR `vioqasc`); el
   contexto `kubernetesqa` ya no existe.
 
+### Verificación en QA (Claude, 02/10 11:43 UTC — Alan no estaba)
+
+- Bohus (canal 498) hoy solo ofrece Vipps, así que el payment link se pidió por GraphQL:
+  `CreateCheckout` → `UpdateCheckout` (email, Stripe, condiciones, direcciones — sin direcciones
+  shopcart cae con `first_name` de null) → `CreatePaymentStripe` → link de test creado, orden 4429.
+  **El error de Managed Payments ya no aparece** (apagado en la cuenta de test).
+- Pagado con la 4242 en el link: Stripe redirigió a la página (`http://localhost` lo acepta), la
+  SDK mostró «Takk! Betalingen er bekreftet» a los ~4 s y el checkout quedó `SUCCESS`. Lo completó
+  el **webhook** (`checkout.session.completed` → `processOrderPaidByCustomer` orden 4429); el
+  camino «completar al leer» (shopcart#53) no tuvo que actuar porque la cuenta de Vio sí tiene
+  webhook. El caso de claves propias queda para la re-prueba de Alan.
+
 ## Decisions
 
 - **Todo se cierra en test antes de ir a prod** (Angelo, 02/10). Managed Payments apagado en la
