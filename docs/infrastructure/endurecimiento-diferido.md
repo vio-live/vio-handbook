@@ -1,6 +1,6 @@
 ---
 title: Registro de pendientes diferidos (retomar cuando haya recursos)
-last-updated: 2026-10-01
+last-updated: 2026-10-02
 owner: miguel
 ---
 
@@ -24,7 +24,31 @@ esperando, porque no todas esperan lo mismo.
 |---|---|---|---|
 | A1 | **HA zona-redundante en la MySQL de prod** | +178 USD/mes | Si cae la zona 3 de Sweden Central, la base se cae con ella. Los dumps diarios permiten reconstruir en otra región, no evitar el corte. |
 | A2 | **Réplica de lectura de la MySQL de prod** | +~178 USD/mes | Sin capacidad de lectura separada ni failover manual rápido. |
-| A3 | **Reservas de 1 año** (nodos de prod + MySQL prod) | **Ahorra 85-110 USD/mes** | Ninguno técnico: es compromiso de un año. Se posterga por no atar caja antes del live. Existe con pago mensual y sin desembolso inicial (Savings Plan). |
+| A3 | **Reservas de 1 año** (nodos de prod + MySQL prod) | **Ahorra ~154 USD/mes** sólo en los nodos | Ninguno técnico: es compromiso de un año. **Decisión de Angelo del 02/10: esperar a comprarla hasta que prod esté encendido y estable.** Ver el detalle debajo. |
+
+### A3 en detalle: por qué se espera, y cuándo deja de convenir esperar
+
+**La reserva factura 24/7 desde que se compra, esté la máquina encendida o apagada.** Con prod apagado
+desde el 30/09, comprarla ahora sería pagar un año de algo que no está sirviendo. De ahí la decisión
+del 02/10: **primero se enciende prod, después se reserva.**
+
+Precios reales de `Standard_D4as_v5` en Sweden Central (consultados el 02/10 en
+`prices.azure.com/api/retail/prices`, no estimados), para los **3 nodos** del pool de prod:
+
+| Modalidad | USD/mes | Descuento |
+|---|---|---|
+| Pago por uso | 403 | — |
+| Reserva 1 año | **249** | −38 % |
+| Reserva 3 años | **159** | −60 % |
+
+**Punto de equilibrio: 62 % del tiempo encendido** para la de 1 año (39 % para la de 3). Si prod va a
+estar apagado más de un tercio del mes, la reserva **no** amortiza y conviene seguir con pago por uso.
+Para un prod sirviendo tráfico de verdad, conviene claramente.
+
+**Lo que la reserva NO cubre:** sólo alcanza al compute de los nodos. El Redis Enterprise (56/mes), el
+load balancer (31), el ACR (23) y las IPs (12) se pagan igual — esos **133 USD/mes de prod apagado** no
+bajan con ninguna reserva. El MySQL de prod tiene reserva aparte y conviene mirarla en el mismo
+momento.
 
 Sobre A3: es el único de la lista que **da** dinero en vez de costarlo. Conviene revisarlo en cuanto
 la forma de la infraestructura deje de moverse — reservar un tamaño que después cambia es pagar por
