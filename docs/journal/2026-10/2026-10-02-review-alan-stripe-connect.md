@@ -66,8 +66,10 @@ levanto la mano por Android/iOS… seguí con lo de prod»), listarlo y decidir 
   mandar `trial_period_days` en los planes Shopify (5/6/7) confiando en el price; sin trial en el
   price, la sub nace `incomplete` → 401, y el cambio de plan retiraba la anterior. Arreglo: #10 y
   #11 vuelven tal cual y el trial se lee del price de Stripe (si falta o no se lee, 90 días desde
-  users-ms). 29 + 26 + 28 tests en verde. Verificación en QA: login de una cuenta existente sin
-  401, `PATCH /users/:id` propio OK y ajeno 403, alta en plan Shopify → `trialing`.
+  users-ms). 29 + 26 + 28 tests en verde. **Desplegado en QA a las 12:10 UTC** (pod nuevo, arranque
+  limpio; el middleware no registró ningún «without subscription» después). Verificación que queda
+  a Angelo/Alan: login de una cuenta existente sin 401, `PATCH /users/:id` propio OK y ajeno 403,
+  alta en plan Shopify → `trialing`.
 - **vio-infra-tf**: #3 ya estaba cerrado sin mergear; #4 (quitar las passwords de `variables.tf`)
   revisado y comentado — correcto, pero los dos workflows necesitan `TF_VAR_vio_commerce_db_passwords`
   (mapa JSON) en `env:` o el `plan` de `main` queda en rojo.
