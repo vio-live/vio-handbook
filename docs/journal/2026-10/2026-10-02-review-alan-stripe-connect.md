@@ -51,6 +51,10 @@ levanto la mano por Android/iOS… seguí con lo de prod»), listarlo y decidir 
   cuenta de Stripe de **test** el 02/10; la cuenta **live** se toca el día de la release (añadir a
   la lista de la release).
 - Lo de prod no se toca desde esta sesión: Miguel.
+- **Fuera del cierre en test, por ahora** (Angelo, 02/10): Walley (sin cuenta de test), Nexi
+  (sin claves), Klarna (sin API keys de prueba) y Adyen (credencial en 401). Lo que sí cuenta:
+  re-pruebas de Stripe Connect y la tarjeta de Vipps (Alan), claves/usuario MT y la tarjeta
+  «URGENTE» (Angelo), la DB de prod y el gateway (Miguel).
 - Reconciliar al leer, no un endpoint nuevo: sin cambios en SDK/graphql/base-api, mismo handler
   idempotente del webhook y del barrido.
 
