@@ -57,6 +57,29 @@ levanto la mano por Android/iOS… seguí con lo de prod»), listarlo y decidir 
   camino «completar al leer» (shopcart#53) no tuvo que actuar porque la cuenta de Vio sí tiene
   webhook. El caso de claves propias queda para la re-prueba de Alan.
 
+### Tarde del 02/10 — tomando lo de Alan (Angelo: «¿puedes tú hacer esto?»)
+
+- **El 401 del 28/09, explicado y cerrado** ([users-ms#13](https://github.com/vio-live/vio-users-microservice/pull/13),
+  mergeado a develop): el 401 lo da el **middleware** (solo pasa `active`/`trialing`/`past_due`).
+  #11 (ownership) no fue: base-api reenvía el token en todas las rutas `/users/:id…` y las dos
+  llamadas internas de extensions van a rutas sin guard. #10 sí, con toda probabilidad: dejó de
+  mandar `trial_period_days` en los planes Shopify (5/6/7) confiando en el price; sin trial en el
+  price, la sub nace `incomplete` → 401, y el cambio de plan retiraba la anterior. Arreglo: #10 y
+  #11 vuelven tal cual y el trial se lee del price de Stripe (si falta o no se lee, 90 días desde
+  users-ms). 29 + 26 + 28 tests en verde. Verificación en QA: login de una cuenta existente sin
+  401, `PATCH /users/:id` propio OK y ajeno 403, alta en plan Shopify → `trialing`.
+- **vio-infra-tf**: #3 ya estaba cerrado sin mergear; #4 (quitar las passwords de `variables.tf`)
+  revisado y comentado — correcto, pero los dos workflows necesitan `TF_VAR_vio_commerce_db_passwords`
+  (mapa JSON) en `env:` o el `plan` de `main` queda en rojo.
+- **Card de Vev**: harness local con el componente real (esbuild, `../../vio-sdk` sustituido por
+  un stub) en las cuatro layouts a 300 y 160 px. Horizontal pintaba las barras como tercera
+  columna; cards estrechas partían el texto. [vev#51](https://github.com/vio-live/vev/pull/51)
+  (meta + barras en `.vnc-body`; `container-type: inline-size` y barras compactas ≤ 220 px, ≤ 420 px
+  en horizontal), mergeado. Falta `vev deploy` + republicar (Angelo/Alan).
+- Lo que sigue sin poder hacerse desde aquí: pagos en la app MT (escenarios de Vipps), Apple/Google
+  Pay, evidencia de Android/iOS, el OAuth real de Stripe y un seller con claves propias para ver
+  «completar al leer» en vivo.
+
 ## Decisions
 
 - **Todo se cierra en test antes de ir a prod** (Angelo, 02/10). Managed Payments apagado en la
