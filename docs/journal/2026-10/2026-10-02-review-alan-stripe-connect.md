@@ -47,13 +47,16 @@ levanto la mano por Android/iOS… seguí con lo de prod»), listarlo y decidir 
 
 ## Decisions
 
+- **Todo se cierra en test antes de ir a prod** (Angelo, 02/10). Managed Payments apagado en la
+  cuenta de Stripe de **test** el 02/10; la cuenta **live** se toca el día de la release (añadir a
+  la lista de la release).
 - Lo de prod no se toca desde esta sesión: Miguel.
 - Reconciliar al leer, no un endpoint nuevo: sin cambios en SDK/graphql/base-api, mismo handler
   idempotente del webhook y del barrido.
 
 ## Blockers
 
-- Managed Payments: depende del Dashboard de Stripe de Angelo (test y live).
+- Managed Payments en la cuenta **live**: pendiente para la release.
 - Alan sin evidencia de Android/iOS.
 
 ## Next session
