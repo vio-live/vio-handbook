@@ -1,6 +1,6 @@
 ---
 title: Respaldo de la base de producción (Vio Commerce)
-last-updated: 2026-09-30
+last-updated: 2026-10-05
 ---
 
 ## Por qué existe esto
@@ -29,6 +29,7 @@ a mano con un CronJob.
 
 - **Dónde:** cluster `vio-commerce-prod-sc`, namespace `default`, `mysql-prod-offsite-backup`
 - **Cuándo:** `15 2 * * *` (02:15 UTC). La base pesa ~90 MB, el dump tarda segundos.
+  **Esa hora está mal y hay que cambiarla** — ver "Nunca corrió" más abajo.
 - **Qué hace:** `mariadb-dump --single-transaction --routines --triggers --events` de `outshifter`,
   gzip -9, y `PUT` al Blob REST API.
 - **Destino:** `viodbbackupwe` / contenedor `mysql-prod`, **West Europe**, `Standard_GRS`, tier Cool.
@@ -69,6 +70,39 @@ Ojo con lo de siempre: el restore **exige `innodb_strict_mode=0`** o se pierden 
 ```bash
 gzip -dc outshifter-<STAMP>.sql.gz | mariadb -h <destino> -u dbadmin -p outshifter
 ```
+
+## Nunca corrió: el job estaba roto desde el día uno (05/10/2026)
+
+Al ir a apagar producción el 05/10 se miró el contenedor de destino y **sólo estaban los dos blobs de
+las corridas manuales del 30/09**. `status.lastScheduleTime` ni siquiera existía: el CronJob **jamás
+se disparó por schedule**. Cinco días de producción sin respaldo fuera de región, con el job en verde
+aparente (`suspend: false`, `lastSuccessfulTime` del 30/09, que era mi corrida a mano).
+
+Dos causas, independientes, y las dos hay que arreglarlas:
+
+**1. La hora es inalcanzable.** Dispara 02:15 UTC (04:15 Oslo) y el cluster se apagaba de noche. Un
+CronJob no corre en un cluster `Stopped`, y con `startingDeadlineSeconds: 3600` el disparo perdido se
+descarta en vez de recuperarse. El horario del backup se fijó sin cruzarlo con la ventana de encendido
+del cluster.
+
+**2. Istio le corta la salida.** El pod recibe sidecar y el `apk add` muere antes de empezar:
+
+```
+WARNING: fetching https://dl-cdn.alpinelinux.org/alpine/v3.20/main: Permission denied
+ERROR: unable to select packages: curl (no such package)
+```
+
+Se arregla con `sidecar.istio.io/inject: "false"` en el `podTemplate`. Con esa anotación el mismo
+script corrió a la primera. Las corridas del 30/09 pasaron porque fueron pods lanzados a mano en otro
+contexto, no porque el job estuviera bien.
+
+**Al reencender producción hay que aplicar las dos cosas**: mover el schedule a una hora con el
+cluster arriba y anotar `inject: false`. Y la comprobación de que está vivo **no es que exista un blob
+reciente** — es `kubectl get cronjob mysql-prod-offsite-backup -o jsonpath='{.status.lastScheduleTime}'`.
+
+Respaldo bueno más reciente, hecho a mano antes del apagado: `outshifter-20261005T175552Z.sql.gz`,
+7.182.295 bytes, **119/119 tablas**, `upload HTTP 201`. Mientras la base esté `Stopped` no cambia, así
+que ese dump sigue siendo válido.
 
 ## Lo que sigue sin estar cubierto
 
