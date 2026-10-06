@@ -176,6 +176,9 @@ orders-ms marca los ítems `REFUNDED` y deriva REFUNDED cuando la devolución es
 ([orders-ms#14](https://github.com/vio-live/vio-orders-microservice/pull/14)), y el dashboard conoce el
 ítem devuelto ([webapp#46](https://github.com/vio-live/webapp-vio-commerce/pull/46)). Detalle en
 [`architecture/vipps.md` → «La devolución mueve la orden»](../../architecture/vipps.md#la-devolución-mueve-la-orden-2026-10-06-tarde).
+Desplegado y verificado en QA a las 17:05 UTC: orden 4458 (pago nuevo en NewCo) PROCESSING → captura →
+devolución total → **REFUNDED** sola, con el aviso en los logs de shopcart y orders-ms; la 4452 de Angelo se
+rellenó a mano con el mismo endpoint y también lee Refunded.
 
 ## Decisions
 
