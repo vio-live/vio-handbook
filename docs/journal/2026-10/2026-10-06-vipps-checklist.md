@@ -110,6 +110,19 @@ Bohus demo en Vev pintan el botón oficial (`vipps-mobilepay-button`, sin barra 
 PDF del checklist regenerado con las referencias (borrador para Angelo) y borrador del email a
 `developer@vippsmobilepay.com` con Fredrik en copia (en el scratchpad de la sesión; lo envía Angelo).
 
+### Noche (2) — los tres modos, dibujados, y la tarjeta de Alan
+
+Angelo preguntó qué cambia cuando Vio sea partner si hoy funciona con las claves de los comercios.
+Respuesta en [`architecture/vipps.md` → «Los tres modos, en un dibujo»](../../architecture/vipps.md#los-tres-modos-en-un-dibujo-2026-10-06):
+cambian **de quién son las claves y quién da de alta la unidad de venta** (partner keys de Vio en el
+env + MSN del vendedor que escribe Vio; un solo webhook de partner para todas las unidades); no
+cambian el pago, la orden, su enrutamiento ni el dinero. En test no existe el modo partner, por
+eso las referencias del checklist son en modo own con el mismo código.
+
+La tarjeta de Alan (W2NNShth) se actualizó con el dibujo en texto y con el rastreo de la orden en
+**tres escenarios** — Shopify, Woo y vendedor por feed de Google (orden solo en Vio + email +
+`order.paid` al receptor del vendedor) — además de los cambios de hoy que afectan a sus pruebas.
+
 ## Decisions
 
 - Pendiente de Angelo: orden de ataque y quién graba el vídeo.

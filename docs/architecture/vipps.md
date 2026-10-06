@@ -87,6 +87,67 @@ caracteres), `express` (activo por defecto), `shippingMode` (`fixed` por defecto
 Vipps pregunta las tarifas por dirección), `webhookSecret`/`webhookSecretPrevious`
 (cifrados; los guarda el alta del webhook, nadie los pega).
 
+### Los tres modos, en un dibujo (2026-10-06)
+
+Lo que cambia entre modos es **de quién son las claves y quién da de alta la unidad de venta**;
+el pago, la orden, el webhook y el dinero recorren el mismo código.
+
+```mermaid
+flowchart LR
+  subgraph vendedor["Vendedor en Vio (Settings → Payments → Vipps)"]
+    own["<b>own</b><br/>pega sus 4 claves + MSN<br/>(ya tiene Vipps)"]
+    partner["<b>partner</b><br/>sin claves: pide la unidad<br/>a través de Vio"]
+    none["<b>platform</b><br/>no configura nada"]
+  end
+  subgraph shopcart["shopcart · getConfig(sellerId)"]
+    cfgOwn["claves del vendedor<br/>+ su MSN"]
+    cfgPartner["partner keys de Vio<br/>(env VIPPS_PARTNER_*)<br/>+ MSN del vendedor<br/>(lo escribe Vio)"]
+    cfgPlatform["claves de Vio<br/>+ unidad de Vio"]
+  end
+  own --> cfgOwn
+  partner --> cfgPartner
+  none --> cfgPlatform
+  cfgOwn & cfgPartner & cfgPlatform --> api["ePayment · Webhooks · Order Management<br/>cabeceras Vipps-System-* = Vio<br/>Merchant-Serial-Number = la unidad que paga"]
+  api --> money1["💰 liquida en la unidad del vendedor"]
+  api --> money3["💰 liquida en la unidad de Vio<br/>(ADR-0023)"]
+  cfgOwn -.-> money1
+  cfgPartner -.-> money1
+  cfgPlatform -.-> money3
+  subgraph hooks["Webhook (8 eventos) → /api/shopcart/checkout/vipps/webhook"]
+    whOwn["un registro por vendedor,<br/>secreto cifrado en su fila<br/>(Connect en el dashboard)"]
+    whPartner["<b>un</b> registro de partner sin MSN:<br/>todas las unidades, presentes y futuras;<br/>secreto en env"]
+    whPlatform["registro de la unidad de Vio;<br/>secreto en env"]
+  end
+  cfgOwn -.-> whOwn
+  cfgPartner -.-> whPartner
+  cfgPlatform -.-> whPlatform
+```
+
+Alta de un vendedor por el partnership (producción; en test «partner functionality is not
+available», así que una fila `partner` usa las claves de plataforma como sustituto):
+
+```mermaid
+sequenceDiagram
+  participant V as Vendedor
+  participant D as Dashboard / api-ms
+  participant A as Angelo (Vio)
+  participant VP as Vipps MobilePay
+  participant S as shopcart
+  V->>D: Vipps → mode Partner → Save («Waiting for sales unit»)
+  A->>VP: alta de la unidad de venta del vendedor bajo el acuerdo de partner<br/>(formulario / Management API)
+  VP-->>A: MSN de la nueva unidad
+  A->>D: PATCH /paymentmethod/:id/vipps-sales-unit { merchantSerialNumber }
+  D-->>V: «Sales unit NNN» (Express, capture mode y switches como en own)
+  Note over S,VP: Cada pago: partner keys + Merchant-Serial-Number = MSN del vendedor
+  Note over S,VP: Un solo webhook de partner cubre esta unidad desde el primer pago
+```
+
+Qué **no** cambia con el partnership: el flujo de pago (Express o plano), la orden en Vio y
+su enrutamiento a la tienda, la captura/devolución/cancelación desde la orden, el recibo, y
+que Vio nunca toca el dinero. Qué **sí**: nadie pega claves, el MSN lo escribe Vio, un solo
+webhook y un solo secreto para todas las unidades firmadas por Vio, y las cabeceras
+`Vipps-System-*` pasan de recomendadas a obligatorias (ya van en todas las llamadas).
+
 ### El flujo
 
 1. **Botón Vipps** (producto o carrito, SDK) → `CreatePaymentVipps(express: true)` → shopcart
