@@ -214,6 +214,14 @@ respuesta resuelta ([package-service#9](https://github.com/vio-live/package-serv
 El release del kernel publica `service` y dispara el bump en los 11 micros (develop → QA). QA queda sin
 correos por diseño; **prod necesita `EMAIL_DELIVERY=on`** en su env antes del próximo release.
 
+**Fallo del workflow de release, visto al usarlo**: publicó `@vio-/service@1.0.268` pero anunció a los
+micros «1.0.267», porque el paso «Read published version» lee la versión de `package-database`, que no
+cambió. Resultado: el bump automático no movió `service` en nadie (y en users-ms subió todo de 1.0.258 a
+1.0.267 de paso). Bump a mano de `@vio-/service` 1.0.268 en orders-ms ([#17](https://github.com/vio-live/vio-orders-microservice/pull/17)),
+api-ms ([#35](https://github.com/vio-live/vio-api-microservice/pull/35)) y users-ms
+([#14](https://github.com/vio-live/vio-users-microservice/pull/14), tras su deploy en curso). Pendiente:
+que el workflow anuncie la versión del paquete que publicó (o publicar los 7 juntos), en los 7 repos del kernel.
+
 ## Decisions
 
 - Pendiente de Angelo: orden de ataque y quién graba el vídeo.
