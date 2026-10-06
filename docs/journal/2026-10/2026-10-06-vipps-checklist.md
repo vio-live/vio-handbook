@@ -191,6 +191,8 @@ pasan por `mailSafely` (aviso en el log, la operación responde) —
 [orders-ms#15](https://github.com/vio-live/vio-orders-microservice/pull/15); el camino de stock
 inválido tenía el mismo fallo y además se saltaba la cancelación en el canal. **Pendiente de ops**:
 desbloquear la cuenta de Mailjet (soporte) y, en los scripts de prueba, no usar buzones inexistentes.
+Verificado a las 17:38 UTC con Mailjet aún bloqueado: cancelar la orden 4459 (pago nuevo en NewCo) responde 200,
+la orden queda CANCELED, Vipps libera la reserva (4 999 NOK) y el correo queda como aviso en el log.
 
 ## Decisions
 
