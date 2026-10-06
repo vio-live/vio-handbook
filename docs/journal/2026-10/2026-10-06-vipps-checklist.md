@@ -65,6 +65,15 @@ temporada alta. El checklist va a `developer@vippsmobilepay.com` con Fredrik en 
   de la solución y las respuestas del checklist (referencias de capture/refund/cancel pendientes
   de un pago aprobado). El PDF editable tiene 51 campos rellenables (pypdf): se rellena al final.
 
+### Tarde — entorno de test de partner recibido
+
+Vipps dio a Vio una unidad de prueba («NewCo AS», **MSN 545865**, claves en el correo de Angelo —
+no se copian aquí) y un **usuario de prueba** para la app MT (NIN `29126699040`, teléfono
+`4795111218`, código `1236`). Con el usuario se pueden aprobar pagos no-Express por API
+(*force approve*) y sacar las referencias de capture/refund/cancel/events del checklist sin
+esperar a nadie. Antes del formulario de partner: probar a fondo en test, checklist, demo y leer
+las T&C de partner.
+
 ## Decisions
 
 - Pendiente de Angelo: orden de ataque y quién graba el vídeo.
