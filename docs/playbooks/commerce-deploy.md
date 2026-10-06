@@ -62,6 +62,12 @@ los valores viajan por privado y se pegan en el blob.
 Comprobación tras el deploy: `kubectl --context kubernetesqa-sc exec deploy/<svc> -c <svc> -- sh -c
 'grep -c ^NOMBRE_VAR= /usr/src/app/.env.local'` (cuenta, no imprime el valor).
 
+### Variables que deciden comportamiento por entorno
+
+| Variable | Dónde | Qué hace |
+|---|---|---|
+| `EMAIL_DELIVERY` | orders-ms, users-ms, api-ms (vía `@vio-/service`, kernel ≥ 1.0.268) | `off` (por defecto, también si falta): no sale ni se escribe nada en Mailjet, una línea `[mailService] … skipped` por llamada. `sandbox`: Mailjet valida sin entregar. `on`: entrega real, contactos y listas incluidos. **Prod debe llevar `on`** o deja de mandar correos (decidido 2026-10-06 tras el bloqueo de la cuenta de Mailjet por tráfico de pruebas de QA). |
+
 ## Kernel compartido (`@vio-/*`) — no se "despliega", se publica
 
 Los paquetes `package-*` (`config`, `database`, `logger`, `utils`, `service`, `definitions`, `testing`) no corren en un cluster — se publican a npm (`registry.npmjs.org`, scope `@vio-`) y cada microservicio los consume como dependencia. Bump de versión + publish, después cada microservicio actualiza su `package.json` y sigue el flujo normal de deploy de arriba.

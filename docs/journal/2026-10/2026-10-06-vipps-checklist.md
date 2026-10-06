@@ -205,9 +205,19 @@ soporte lo aclaran.
 Verificado 17:54 UTC tras el deploy de #16: cancelar la orden 4460 (Bohus, notificaciones off) → 200, CANCELED,
 reserva liberada en Vipps y **ningún intento de correo** en el log.
 
+### Noche — correos apagados por defecto (kernel)
+
+Angelo: «quizás dejarlas desactivadas por defecto», sin saber si tendremos acceso a la cuenta de
+Mailjet. Hecho en el kernel: `@vio-/service` lee `EMAIL_DELIVERY` (`off` por defecto / `sandbox` /
+`on`) en cada llamada; con `off` no sale ni se escribe nada en Mailjet y el que llama recibe una
+respuesta resuelta ([package-service PR](https://github.com/vio-live/package-service/pulls?q=is%3Apr+EMAIL_DELIVERY)).
+El release del kernel publica `service` y dispara el bump en los 11 micros (develop → QA). QA queda sin
+correos por diseño; **prod necesita `EMAIL_DELIVERY=on`** en su env antes del próximo release.
+
 ## Decisions
 
 - Pendiente de Angelo: orden de ataque y quién graba el vídeo.
+- **Correos apagados por defecto** en todos los entornos (`EMAIL_DELIVERY=off` salvo que el env diga `on`/`sandbox`); prod los enciende cuando el acceso a Mailjet esté claro (Angelo, 2026-10-06).
 
 ## Blockers
 
