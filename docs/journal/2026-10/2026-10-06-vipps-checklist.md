@@ -210,7 +210,7 @@ reserva liberada en Vipps y **ningún intento de correo** en el log.
 Angelo: «quizás dejarlas desactivadas por defecto», sin saber si tendremos acceso a la cuenta de
 Mailjet. Hecho en el kernel: `@vio-/service` lee `EMAIL_DELIVERY` (`off` por defecto / `sandbox` /
 `on`) en cada llamada; con `off` no sale ni se escribe nada en Mailjet y el que llama recibe una
-respuesta resuelta ([package-service PR](https://github.com/vio-live/package-service/pulls?q=is%3Apr+EMAIL_DELIVERY)).
+respuesta resuelta ([package-service#9](https://github.com/vio-live/package-service/pull/9)).
 El release del kernel publica `service` y dispara el bump en los 11 micros (develop → QA). QA queda sin
 correos por diseño; **prod necesita `EMAIL_DELIVERY=on`** en su env antes del próximo release.
 
