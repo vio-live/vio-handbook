@@ -123,6 +123,17 @@ La tarjeta de Alan (W2NNShth) se actualizó con el dibujo en texto y con el rast
 **tres escenarios** — Shopify, Woo y vendedor por feed de Google (orden solo en Vio + email +
 `order.paid` al receptor del vendedor) — además de los cambios de hoy que afectan a sus pruebas.
 
+### Tarde — Angelo prueba Express en la app MT: «The business can't ship to this address»
+
+Primer Express de verdad con envíos *dynamic* (Bohus). Vipps llamó a nuestro callback de tarifas y
+contestamos 400: la dirección venía en **camelCase** (`addressLine1, city, postCode, country`) y el
+parser leía solo la grafía con mayúscula inicial de la documentación de Vipps → país desconocido →
+«no delivery there». Arreglo en [shopcart#65](https://github.com/vio-live/vio-shopcart-microservice/pull/65)
+(lectura sin distinguir mayúsculas + alias + dirección anidada + claves recibidas en el log), en QA a las
+13:22 UTC; a las 13:26 el reintento de Angelo recibió 2 opciones (`NO 2016`). El relay de base-api no
+toca el body. Lección: cuando Vipps documenta un callback, probarlo con la app antes de fiarse de la
+grafía; con envíos *fixed* este camino no se ejercita.
+
 ## Decisions
 
 - Pendiente de Angelo: orden de ataque y quién graba el vídeo.
