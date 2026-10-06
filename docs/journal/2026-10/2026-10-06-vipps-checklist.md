@@ -227,7 +227,7 @@ arranca con `[mailService] EMAIL_DELIVERY=off (unset → off)`; una orden nueva 
 200, CANCELED, sin ninguna llamada ni error de Mailjet en el log. Nota: una orden de Bohus no dispara envíos
 de todos modos (es su propio proveedor y tiene las notificaciones al cliente apagadas), así que la línea
 «skipped» se verá con otros vendedores; el interruptor está cubierto por los tests del kernel. users-ms:
-bump mergeado (#14), deploy detrás del anterior.
+bump mergeado (#14) y desplegado a las 19:45 UTC, también con 1.0.268 y arranque en `off`.
 
 La tarjeta de Alan quedó reescrita entera (descripción consolidada, 48 ítems, I0 = formato de evidencia):
 lo central es seguir la orden hasta Woo, Shopify y el feed de Google pagando con Vipps, y después el dinero.
