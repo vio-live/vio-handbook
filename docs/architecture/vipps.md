@@ -289,6 +289,22 @@ responde por el relay público (`POST /api/shopcart/checkout/vipps/shipping` →
 referencia ajena). Sin aprobar aún: hace falta un usuario de prueba con la app MT. El webhook del
 vendedor 1322 sigue sin conectar (botón «Connect» del dashboard).
 
+## La devolución mueve la orden (2026-10-06, tarde)
+
+Hasta hoy una devolución de Vipps movía el dinero y lo anotaba en el pago; la orden no se enteraba
+(Angelo devolvió la 4452 entera y siguió «In progress»). La orden **no tiene estado propio**: orders-ms
+lo deriva de los ítems (`calculateStatusOrder`), por eso el historial del dashboard dice «DERIVED».
+
+| Pieza | Qué hace |
+|---|---|
+| shopcart ([#71](https://github.com/vio-live/vio-shopcart-microservice/pull/71)) | Tras una devolución hecha desde Vio, y tras un webhook `REFUNDED` que no causamos (portal del vendedor), avisa a orders-ms `POST /:orderId/payment-refunded` con importe, cómo queda el pago y `full` (= todo lo capturado devuelto **y** nada pendiente de capturar). A mejor esfuerzo: el dinero ya se movió. |
+| orders-ms ([#14](https://github.com/vio-live/vio-orders-microservice/pull/14)) | `full` → todos los ítems pasan a `REFUNDED` (con `statusDetail` «refunded via VIPPS (VIO-…)») y la derivación da **REFUNDED** (antes caía a COMPLETED); parcial → se registra y no cambia nada. Idempotente. Los ítems no se marcan `RETURNED`: eso es del flujo de devoluciones de mercancía. |
+| webapp ([#46](https://github.com/vio-live/webapp-vio-commerce/pull/46)) | El ítem `REFUNDED` se lee «Refunded», cuenta como cerrado y no ofrece acciones. |
+
+Queda fuera, a propósito: una devolución **parcial** no cambia la orden (la mercancía sigue su curso),
+y liberar la reserva desde la card («Release») tampoco cancela la orden — para eso está «Cancel order»,
+que ya libera o devuelve el dinero.
+
 ## Estado en QA (2026-10-06): pagos aprobados de verdad, y lo que salió al apretar
 
 Con el usuario de prueba que dio Vipps (`4795111218`) y el *force approve* de test se aprobaron por

@@ -167,6 +167,16 @@ rama `staging` (parada en el 14/09), pero lo que se ve en QA es `develop` (la ca
 el mapeo del README está desactualizado. Dos suites de jest del webapp fallan en `develop` sin relación
 (`qliro-shipping-config`, `payments-lib`).
 
+### Tarde (4) — «falta actualizar el estado de la orden»
+
+Angelo devolvió la 4452 entera desde la card y la orden siguió «In progress». Causa: nadie avisaba a
+orders-ms, y la orden no tiene estado propio (se deriva de los ítems). Arreglo en tres piezas:
+shopcart avisa tras devolver o al recibir un `REFUNDED` del portal ([#71](https://github.com/vio-live/vio-shopcart-microservice/pull/71)),
+orders-ms marca los ítems `REFUNDED` y deriva REFUNDED cuando la devolución es total
+([orders-ms#14](https://github.com/vio-live/vio-orders-microservice/pull/14)), y el dashboard conoce el
+ítem devuelto ([webapp#46](https://github.com/vio-live/webapp-vio-commerce/pull/46)). Detalle en
+[`architecture/vipps.md` → «La devolución mueve la orden»](../../architecture/vipps.md#la-devolución-mueve-la-orden-2026-10-06-tarde).
+
 ## Decisions
 
 - Pendiente de Angelo: orden de ataque y quién graba el vídeo.
