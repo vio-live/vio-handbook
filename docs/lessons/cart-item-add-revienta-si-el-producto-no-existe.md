@@ -1,6 +1,7 @@
 ---
 title: POST /cart/:id/item/add revienta con un TypeError si el producto no existe
 last-updated: 2026-10-06
+status: arreglado
 ---
 
 ## Síntoma
@@ -38,7 +39,19 @@ inmediatamente anterior sí usa `originalProduct?.variants.length`, con optional
 esa pasa sin romper y el error aparece dos líneas después. El mensaje correcto
 (`Product (N) was not found.`) ya estaba construido y nunca llega al cliente.
 
-## Cómo se arregla
+## Arreglado el 06/10/2026
+
+PR #70 (commit `002979e`), mergeado con permiso de Angelo. Verificado en vivo en QA tras el
+deploy: la misma petición ahora responde
+`[{"error":"availableProduct","message":"Product (7) was not found.",...}]`.
+
+Queda abierto un segundo problema en la misma función, **no tocado**: las validaciones de más
+abajo (`Product without image.`, `Product without shipping.`, `Product without title.`) son
+`throw` directos dentro de `validateProduct`. Al correr en `Promise.all`, uno de esos rechaza el
+conjunto y **se pierden los `hasError` acumulados de las otras líneas**, justo lo contrario de lo
+que hace el resto de la función.
+
+## Cómo se arregló
 
 Cortar el item en cuanto se sabe que el producto no existe (`continue` sobre el bucle de
 `line_items`, o devolver `hasError` sin seguir evaluando stock). Añadir `?.` no basta: dejaría
