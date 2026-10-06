@@ -202,6 +202,8 @@ Con eso, la causa del bloqueo de Mailjet no está en los correos de Bohus a comp
 al admin por orden (unos 30 hoy, a la misma dirección), lo que hayan enviado otros vendedores de QA (hay
 órdenes de hoy con buzones inventados como `dsadsa@dsaas.com`) y lo que diga Mailjet. Solo su panel o su
 soporte lo aclaran.
+Verificado 17:54 UTC tras el deploy de #16: cancelar la orden 4460 (Bohus, notificaciones off) → 200, CANCELED,
+reserva liberada en Vipps y **ningún intento de correo** en el log.
 
 ## Decisions
 
