@@ -194,6 +194,15 @@ desbloquear la cuenta de Mailjet (soporte) y, en los scripts de prueba, no usar 
 Verificado a las 17:38 UTC con Mailjet aún bloqueado: cancelar la orden 4459 (pago nuevo en NewCo) responde 200,
 la orden queda CANCELED, Vipps libera la reserva (4 999 NOK) y el correo queda como aviso en el log.
 
+Corrección al mirar los ajustes: Bohus **ya tenía** las *customer notifications* apagadas (settings 682),
+así que hoy no salió ninguna confirmación al comprador desde Bohus; lo que ignoraba el ajuste era el
+correo de **cancelación** al cliente (solo la confirmación lo miraba) —
+[orders-ms#16](https://github.com/vio-live/vio-orders-microservice/pull/16), una sola puerta para los dos.
+Con eso, la causa del bloqueo de Mailjet no está en los correos de Bohus a compradores: quedan los avisos
+al admin por orden (unos 30 hoy, a la misma dirección), lo que hayan enviado otros vendedores de QA (hay
+órdenes de hoy con buzones inventados como `dsadsa@dsaas.com`) y lo que diga Mailjet. Solo su panel o su
+soporte lo aclaran.
+
 ## Decisions
 
 - Pendiente de Angelo: orden de ataque y quién graba el vídeo.
