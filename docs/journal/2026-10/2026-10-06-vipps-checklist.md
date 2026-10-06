@@ -139,7 +139,7 @@ grafía; con envíos *fixed* este camino no se ejercita.
 Angelo vio en la app «Cosmed Beauty» (la unidad 358493 de las claves del 29/09) y decidió el camino
 partner de verdad: claves de NewCo (MSN 545865) como plataforma en el env de QA y Bohus en modo
 *Partner*. Miguel editó el blob y relanzó los deploys (shopcart, api-ms) y registró el webhook de
-plataforma; yo pasé la fila de Bohus a `partner` y le asigné el MSN por api-ms. Verificado: pago
+plataforma (su parte, con medidas, en [su journal del día](2026-10-06.md)); yo pasé la fila de Bohus a `partner` y le asigné el MSN por api-ms. Verificado: pago
 `partner 545865`, webhook firmado, orden 4447, recibo; referencias del checklist rehechas sobre
 545865 ([respuestas](../../partners/vipps/checklist-answers.md)). PDF regenerado; **se envía cuando Angelo
 diga** (tiene una lista de cosas que no terminan de estar bien, la demo entre ellas).
@@ -234,17 +234,37 @@ lo central es seguir la orden hasta Woo, Shopify y el feed de Google pagando con
 
 ## Decisions
 
-- Pendiente de Angelo: orden de ataque y quién graba el vídeo.
-- **Correos apagados por defecto** en todos los entornos (`EMAIL_DELIVERY=off` salvo que el env diga `on`/`sandbox`); prod los enciende cuando el acceso a Mailjet esté claro (Angelo, 2026-10-06).
+- **Correos apagados por defecto en todos los entornos** (`EMAIL_DELIVERY=off` salvo que el env diga
+  `on`/`sandbox`); prod los enciende cuando el acceso a Mailjet esté claro (Angelo, 2026-10-06).
+- **La unidad de prueba de NewCo (MSN 545865) es la de Vio en QA** (claves de plataforma) y **Bohus va en
+  modo partner** sobre ella; el modo own se prueba con el vendedor de Alan y la unidad 358493 (Angelo).
+- **Todo se termina en test antes de prod**; el PDF del checklist y el email a Vipps **esperan** a la
+  lista de Angelo de lo que no termina de estar bien (la demo, entre otras cosas).
+- Pendiente de Angelo: quién graba el vídeo del flujo con la app.
 
 ## Blockers
 
-- ~~Un pago aprobado en test~~: resuelto con el usuario de prueba de Vipps + force approve (noche).
-- Express no se puede aprobar por API en test: la referencia de Express queda como pago creado; un
-  pago Express completo necesita la app MT con el usuario de prueba (Angelo/Alan).
+- **Mailjet**: la cuenta de QA está bloqueada desde las 17:26 UTC; causa no demostrada (Bohus no envía
+  correos a compradores). Ticket a soporte: Angelo/Miguel. Ya no afecta a QA (correos en `off`).
+- **Express completo** solo desde la app MT (no se aprueba por API): lo hizo Angelo (órdenes 4436, 4437,
+  4452); para el checklist la referencia de Express es un pago creado.
+- **Repo antiguo de shopcart** con credenciales del ACR de QA: puede volver a pisar `shopcart:latest`
+  hasta que se le quiten (Miguel).
 
 ## Next session
 
-- Botón oficial en SDK + card; dashboard con estado de pago y capture/refund; página pública para
-  comercios; rellenar el PDF con referencias frescas; vídeo; email a developer@ con Fredrik en copia;
-  formulario de alta en producción (`vippsmobilepay.com/en-NO/partner-form`, lo rellena Angelo).
+- **Angelo**: lista de lo que no termina de estar bien (demo…) → corregir → OK para el PDF y el email a
+  `developer@vippsmobilepay.com` (cc Fredrik); suscripción a la status page; T&C y formulario de partner;
+  vídeo. Si cambian referencias, `fill-checklist.py` las regenera (valen hasta ~2026-11-05).
+- **Prod** (lista del release congelado): `EMAIL_DELIVERY=on`, partner keys reales de Vipps y registro
+  del webhook de partner (`scope: 'partner'`), `VIPPS_WEBHOOK_SECRET` de prod.
+- **Kernel CI**: `kernel-release.yml` debe anunciar la versión del paquete que publicó (hoy anunció la de
+  `package-database`); en los 7 repos.
+- **shopcart, menores**: `express` vacío en el resumen de pago; comentario «capital initials» en
+  `VippsCallbackAddress`; el reenvío de recibo debería contestar «ya existe» ante el 409 de Vipps en vez
+  de 400; recibos 4430–4432 quedaron con «Item»/sin IVA (irreemplazables).
+- **Alan** (tarjeta W2NNShth, reescrita): seguir la orden hasta Woo, Shopify y feed de Google con Vipps,
+  dinero después (envío → captura, devolución total → Refunded, cancelar → reserva liberada), evidencia
+  por ítem. Necesita de Angelo las claves de 358493, el usuario de prueba y las tiendas.
+- **Otra sesión**: shopcart #69 añadió rotación forzada del webhook; no rota solo, pero conviene que la
+  otra instancia lea la evidencia dejada en el PR antes de seguir por ahí.
