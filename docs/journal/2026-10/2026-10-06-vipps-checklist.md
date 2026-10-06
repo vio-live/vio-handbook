@@ -42,6 +42,28 @@ temporada alta. El checklist va a `developer@vippsmobilepay.com` con Fredrik en 
   merchant API keys»** — el modo partner no se puede probar en test, solo con las claves de la
   unidad de prueba (modo own). El modo partner se verifica en producción con las partner keys.
 
+### Tarde — lo que se construyó para el checklist (Angelo: «ve con ello»)
+
+- **Botón oficial de Vipps** sin descargar assets: el web component `<vipps-mobilepay-button>`
+  del CDN de Vipps, cargado una vez por `ensureVippsButton()` y con nuestro botón mientras no
+  responde ([web-sdk#71](https://github.com/vio-live/vio-web-sdk/pull/71)); en detalle (`buy`),
+  carrito (`pay`), tile de la kasse (`compact`) y la card de Vev
+  ([vev#52](https://github.com/vio-live/vev/pull/52), rebundle incluido). Verificado en el harness
+  local y en la página de prueba (redeployada en Vercel). Falta `vev deploy` + republicar.
+- **Soporte en nuestro sistema**: `GET /checkout/payment/vipps/order/:id` + capture/refund/cancel
+  por orden ([shopcart#56](https://github.com/vio-live/vio-shopcart-microservice/pull/56)), relay
+  con propiedad de la orden en base-api ([#26](https://github.com/vio-live/vio-base-api/pull/26) +
+  hotfix [#27](https://github.com/vio-live/vio-base-api/pull/27)) y la card «Vipps payment» en la
+  orden del dashboard ([webapp#44](https://github.com/vio-live/webapp-vio-commerce/pull/44)).
+  **Incidente**: #26 dejó base-api de QA en CrashLoop ~15 min — el controller no entró en el
+  commit por el nombre en otra mayúscula; lección en
+  [`lessons/git-add-con-mayusculas-distintas-no-stagea-nada.md`](../../lessons/git-add-con-mayusculas-distintas-no-stagea-nada.md).
+- **Reservas huérfanas**: el barrido libera una reserva pagada cuya orden lleva 24 h sin poder
+  crearse y cierra el checkout ([shopcart#57](https://github.com/vio-live/vio-shopcart-microservice/pull/57)).
+- **Documentos** (borradores, inglés) en `docs/partners/vipps/`: guía para comercios, descripción
+  de la solución y las respuestas del checklist (referencias de capture/refund/cancel pendientes
+  de un pago aprobado). El PDF editable tiene 51 campos rellenables (pypdf): se rellena al final.
+
 ## Decisions
 
 - Pendiente de Angelo: orden de ataque y quién graba el vídeo.
