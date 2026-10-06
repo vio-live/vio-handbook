@@ -50,7 +50,9 @@ El entorno **no** se lee en runtime: el `Dockerfile` de cada microservicio desca
 el blob que indica el secret `ENV_FILE_STAGING` del repo (storage `containerqasc`, contenedor
 `env-file-microservices`, archivo `.env.local`) y lo hornea en la imagen. Por eso un cambio de
 variable es: editar el blob → **relanzar el workflow de deploy** del servicio (re-run del último run
-de `develop`, o un push) → comprobar el pod nuevo. Un `rollout restart` solo **no** sirve: la imagen
+de `develop` **en el repo de `vio-live`**, o un push) → comprobar el pod nuevo. Nunca desde el repo antiguo
+ni desde un fork: empujan al mismo `:latest` con código viejo (ver
+[lección](../lessons/dos-repos-empujan-la-misma-imagen-latest.md)). Un `rollout restart` solo **no** sirve: la imagen
 sigue llevando el env viejo.
 
 Hace falta rol *Storage Blob Data Contributor* sobre el storage (Miguel lo tiene; la cuenta
