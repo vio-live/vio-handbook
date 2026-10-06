@@ -180,6 +180,18 @@ Desplegado y verificado en QA a las 17:05 UTC: orden 4458 (pago nuevo en NewCo) 
 devolución total → **REFUNDED** sola, con el aviso en los logs de shopcart y orders-ms; la 4452 de Angelo se
 rellenó a mano con el mismo endpoint y también lee Refunded.
 
+### Tarde (5) — cancelar desde el dashboard: la cancelación se hizo, el 401 era el correo
+
+Angelo canceló la 4449 (ya devuelta): ítems `CANCELED`, tienda avisada, shopcart contestó «nothing
+reserved or captured is left» (correcto), y el dashboard recibió **401**. La causa: `cancelOrder`
+esperaba el email al cliente al final y **Mailjet tiene la cuenta de QA bloqueada** («401 Your account
+has been temporarily blocked»), probablemente por los rebotes de las direcciones de prueba de hoy (la
+del usuario de prueba de Vipps y la de los scripts). Arreglo: los envíos en rutas de cambio de estado
+pasan por `mailSafely` (aviso en el log, la operación responde) —
+[orders-ms#15](https://github.com/vio-live/vio-orders-microservice/pull/15); el camino de stock
+inválido tenía el mismo fallo y además se saltaba la cancelación en el canal. **Pendiente de ops**:
+desbloquear la cuenta de Mailjet (soporte) y, en los scripts de prueba, no usar buzones inexistentes.
+
 ## Decisions
 
 - Pendiente de Angelo: orden de ataque y quién graba el vídeo.
