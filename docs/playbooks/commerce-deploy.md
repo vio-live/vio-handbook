@@ -44,6 +44,22 @@ az aks get-credentials --resource-group qa --name kubernetesqa --overwrite-exist
 kubectl set image deployment/<servicio> <servicio>=reachuqa2.azurecr.io/<servicio>:debug -n default
 ```
 
+## Cambiar variables del entorno de QA (`.env.local` en el storage)
+
+El entorno **no** se lee en runtime: el `Dockerfile` de cada microservicio descarga en el **build**
+el blob que indica el secret `ENV_FILE_STAGING` del repo (storage `containerqasc`, contenedor
+`env-file-microservices`, archivo `.env.local`) y lo hornea en la imagen. Por eso un cambio de
+variable es: editar el blob → **relanzar el workflow de deploy** del servicio (re-run del último run
+de `develop`, o un push) → comprobar el pod nuevo. Un `rollout restart` solo **no** sirve: la imagen
+sigue llevando el env viejo.
+
+Hace falta rol *Storage Blob Data Contributor* sobre el storage (Miguel lo tiene; la cuenta
+`angelo@tipio.no` no al 2026-10-06). Las variables nunca se copian a Git, al handbook ni a Trello:
+los valores viajan por privado y se pegan en el blob.
+
+Comprobación tras el deploy: `kubectl --context kubernetesqa-sc exec deploy/<svc> -c <svc> -- sh -c
+'grep -c ^NOMBRE_VAR= /usr/src/app/.env.local'` (cuenta, no imprime el valor).
+
 ## Kernel compartido (`@vio-/*`) — no se "despliega", se publica
 
 Los paquetes `package-*` (`config`, `database`, `logger`, `utils`, `service`, `definitions`, `testing`) no corren en un cluster — se publican a npm (`registry.npmjs.org`, scope `@vio-`) y cada microservicio los consume como dependencia. Bump de versión + publish, después cada microservicio actualiza su `package.json` y sigue el flujo normal de deploy de arriba.
