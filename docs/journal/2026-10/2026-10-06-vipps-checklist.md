@@ -222,6 +222,16 @@ api-ms ([#35](https://github.com/vio-live/vio-api-microservice/pull/35)) y users
 ([#14](https://github.com/vio-live/vio-users-microservice/pull/14), tras su deploy en curso). Pendiente:
 que el workflow anuncie la versión del paquete que publicó (o publicar los 7 juntos), en los 7 repos del kernel.
 
+Verificado en QA (19:40–19:42 UTC): orders-ms y api-ms con `@vio-/service` **1.0.268** en el pod; orders-ms
+arranca con `[mailService] EMAIL_DELIVERY=off (unset → off)`; una orden nueva (4467) creada y cancelada →
+200, CANCELED, sin ninguna llamada ni error de Mailjet en el log. Nota: una orden de Bohus no dispara envíos
+de todos modos (es su propio proveedor y tiene las notificaciones al cliente apagadas), así que la línea
+«skipped» se verá con otros vendedores; el interruptor está cubierto por los tests del kernel. users-ms:
+bump mergeado (#14), deploy detrás del anterior.
+
+La tarjeta de Alan quedó reescrita entera (descripción consolidada, 48 ítems, I0 = formato de evidencia):
+lo central es seguir la orden hasta Woo, Shopify y el feed de Google pagando con Vipps, y después el dinero.
+
 ## Decisions
 
 - Pendiente de Angelo: orden de ataque y quién graba el vídeo.
