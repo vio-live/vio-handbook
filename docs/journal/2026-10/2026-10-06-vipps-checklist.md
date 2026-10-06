@@ -55,8 +55,9 @@ temporada alta. El checklist va a `developer@vippsmobilepay.com` con Fredrik en 
   con propiedad de la orden en base-api ([#26](https://github.com/vio-live/vio-base-api/pull/26) +
   hotfix [#27](https://github.com/vio-live/vio-base-api/pull/27)) y la card «Vipps payment» en la
   orden del dashboard ([webapp#44](https://github.com/vio-live/webapp-vio-commerce/pull/44)).
-  **Incidente**: #26 dejó base-api de QA en CrashLoop ~15 min — el controller no entró en el
-  commit por el nombre en otra mayúscula; lección en
+  **Incidente**: #26 dejó base-api de QA en CrashLoop ~15 min (10:24–10:38 UTC) — el controller
+  no entró en el commit por el nombre en otra mayúscula; el hotfix #27 desplegó a las 10:35 UTC y el
+  pod nuevo quedó 2/2 (la ruta `GET /api/orders/:id/vipps` contesta 401 sin sesión); lección en
   [`lessons/git-add-con-mayusculas-distintas-no-stagea-nada.md`](../../lessons/git-add-con-mayusculas-distintas-no-stagea-nada.md).
 - **Reservas huérfanas**: el barrido libera una reserva pagada cuya orden lleva 24 h sin poder
   crearse y cierra el checkout ([shopcart#57](https://github.com/vio-live/vio-shopcart-microservice/pull/57)).
