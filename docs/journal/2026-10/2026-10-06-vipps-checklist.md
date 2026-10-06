@@ -74,14 +74,51 @@ no se copian aquí) y un **usuario de prueba** para la app MT (NIN `29126699040`
 esperar a nadie. Antes del formulario de partner: probar a fondo en test, checklist, demo y leer
 las T&C de partner.
 
+### Noche — pagos aprobados, referencias del checklist, y cinco cosas que solo se ven pagando
+
+Con el usuario de prueba de Vipps y el *force approve* se aprobaron por API cinco pagos hechos por
+nuestra integración (unidad de prueba MSN 358493, Bohus 1322, canal 498); nuestro webhook creó las
+órdenes 4430–4433. Angelo encendió «Let Vio refund / cancel» en Bohus (el clasificador me bloqueó
+el clic). Referencias y fechas en [`partners/vipps/checklist-answers.md`](../../partners/vipps/checklist-answers.md):
+R1 `VIO-d18d614e-…` (4430: capturas 1000 + 3999, devolución 500, event log), R2 `VIO-0dc9ced1-…`
+(4431: reserva liberada), R3 `VIO-27cb60cf-…` (4432: captura total, devolución total), R4
+`VIO-f0bb69da-…` (Express, solo creado), R5 `VIO-d24b7c66-…` (4433: recibo correcto en Vipps).
+
+Lo que salió al apretar los endpoints de verdad — todo mergeado y desplegado en QA, detalle en
+[`architecture/vipps.md`](../../architecture/vipps.md#estado-en-qa-2026-10-06-pagos-aprobados-de-verdad-y-lo-que-salió-al-apretar):
+
+- Recibo rechazado por Vipps (`taxRate` + `taxPercentage` a la vez) → solo `taxPercentage`
+  ([shopcart#59](https://github.com/vio-live/vio-shopcart-microservice/pull/59)).
+- Recibo con «Item» y el importe **sin IVA**: `sendReceipt` leía otras grafías que las del checkout
+  formateado → lee las dos, bruto primero ([#62](https://github.com/vio-live/vio-shopcart-microservice/pull/62)).
+  Un recibo ya enviado no se reemplaza (Vipps: 409 «Receipt already exists»): los de 4430–4432 quedan
+  mal, el de 4433 está bien. Hay `POST /checkout/payment/vipps/order/:id/receipt` para reenviar uno que falló (#59).
+- En modo «on account» tampoco se podía capturar a mano desde la orden → la captura manual pasa
+  `manual: true`; las automáticas siguen rechazadas (#59).
+- Devolver sin importe se rechazaba → devuelve lo que queda ([#61](https://github.com/vio-live/vio-shopcart-microservice/pull/61)
+  + [#63](https://github.com/vio-live/vio-shopcart-microservice/pull/63), el controller mandaba `0`).
+- **Cuatro webhooks** registrados en la unidad de prueba con la misma URL (uno por cada guardado de
+  las claves; Vio solo guarda el último secreto) → 3 de cada 4 entregas rechazadas por firma y
+  reintentadas por Vipps. El alta ahora conserva el registro cuyo secreto tenemos y borra el resto
+  (#62); ejecutado en QA: `reused: true, removed: 3`, Vipps lista **1** webhook.
+
+Verificado además: la card «Vipps payment» de la orden 4430 en el dashboard de QA (reservado /
+capturado / devuelto / referencia / «Refund up to kr 4499.00»), el cliente de la orden viene del
+*profile sharing* de Vipps (nombre, email y teléfono del usuario de prueba), y las 3 cards del
+Bohus demo en Vev pintan el botón oficial (`vipps-mobilepay-button`, sin barra de respaldo).
+
+PDF del checklist regenerado con las referencias (borrador para Angelo) y borrador del email a
+`developer@vippsmobilepay.com` con Fredrik en copia (en el scratchpad de la sesión; lo envía Angelo).
+
 ## Decisions
 
 - Pendiente de Angelo: orden de ataque y quién graba el vídeo.
 
 ## Blockers
 
-- Un pago aprobado en test (usuario de prueba de Angelo en la app MT, o force approve para un pago
-  no-Express) para generar las referencias de capture/refund/cancel/events y el recibo.
+- ~~Un pago aprobado en test~~: resuelto con el usuario de prueba de Vipps + force approve (noche).
+- Express no se puede aprobar por API en test: la referencia de Express queda como pago creado; un
+  pago Express completo necesita la app MT con el usuario de prueba (Angelo/Alan).
 
 ## Next session
 

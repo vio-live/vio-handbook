@@ -226,6 +226,30 @@ responde por el relay público (`POST /api/shopcart/checkout/vipps/shipping` →
 referencia ajena). Sin aprobar aún: hace falta un usuario de prueba con la app MT. El webhook del
 vendedor 1322 sigue sin conectar (botón «Connect» del dashboard).
 
+## Estado en QA (2026-10-06): pagos aprobados de verdad, y lo que salió al apretar
+
+Con el usuario de prueba que dio Vipps (`4795111218`) y el *force approve* de test se aprobaron por
+API cuatro pagos hechos por nuestra integración (GraphQL `CreatePaymentVipps` → shopcart, unidad de
+prueba MSN 358493, Bohus 1322 / canal 498): R1 `VIO-d18d614e-…` → orden **4430** (capturas parciales
+1000 + 3999, devolución parcial 500), R2 `VIO-0dc9ced1-…` → orden **4431** (reserva liberada), R3
+`VIO-27cb60cf-…` → orden **4432** (captura total, devolución total), R4 `VIO-f0bb69da-…` (Express,
+solo creado: Express no se puede aprobar por API en test). Las órdenes las creó nuestro webhook. Son
+las referencias del checklist ([respuestas](../partners/vipps/checklist-answers.md)).
+
+Lo que se rompió al usar los endpoints de verdad, y cómo quedó:
+
+| Encontrado | Arreglo |
+|---|---|
+| El recibo a Order Management devolvía 400 «Both tax rate and tax percentage set»: mandábamos `taxRate` y `taxPercentage`. | Solo `taxPercentage` ([shopcart#59](https://github.com/vio-live/vio-shopcart-microservice/pull/59)). |
+| El recibo decía «Item» y 3999.20 en un pago de 4999.00: `sendReceipt` leía `title` / `price.amount_incl_taxes` / `tax_rate`, pero el checkout formateado trae `product_title` / `price.amountInclTaxes` / `taxRate`; caía a `price.amount`, que es sin IVA. | Lee las dos grafías, bruto primero ([#62](https://github.com/vio-live/vio-shopcart-microservice/pull/62)); `POST /checkout/payment/vipps/order/:id/receipt` reenvía el recibo de una orden (#59). |
+| Con `captureMode = account` tampoco se podía capturar **a mano** desde Vio: `VippsService.capture` rechazaba toda captura en ese modo, incluida la del botón de la orden. | «On account» = el vendedor captura a mano, en su portal **o en Vio**: la ruta del dashboard pasa `manual: true`; las automáticas (al pagar, al despachar) siguen rechazadas (#59). |
+| Devolver sin importe respondía «449900 left to refund»: `vippsRefund` exigía importe (capture no). | Sin importe devuelve lo que queda ([#61](https://github.com/vio-live/vio-shopcart-microservice/pull/61)); el controller convertía body vacío en `0` ([#63](https://github.com/vio-live/vio-shopcart-microservice/pull/63)). |
+| La unidad de prueba tenía **cuatro** webhooks registrados con la misma URL: cada guardado de las claves registraba otro y Vio solo guarda el último secreto → cada evento llegaba cuatro veces, tres rechazadas («signature mismatch») y Vipps las reintentaba. | El alta lista lo que Vipps tiene en nuestra URL, conserva el registro cuyo secreto está en la fila, borra el resto y solo registra si no hay nada que conservar (#62). |
+
+Dos pods del CronJob `shopcart-reconcile` fallaron a las 06:05 y 06:08 UTC («Failed to connect to
+shopcart:80»): el clúster de QA despierta a las 06:00 y shopcart aún no estaba listo; a los 10 minutos
+corrió bien. No hay nada que arreglar.
+
 ## Pendiente
 
 - E2E en QA: producto → app de Vipps → orden en Vio → orden en la dev store de Shopify →
@@ -233,9 +257,10 @@ vendedor 1322 sigue sin conectar (botón «Connect» del dashboard).
 - ~~Captura al despachar desde el fulfillment de Shopify~~: cableada el 2026-09-29 (arriba).
   Queda por ver en QA que el `orders/fulfilled` de la dev store llega a
   `handleSaveTrackingNumber` con los ítems de la venta.
-- Estado de pago en la orden (capturado / devuelto) para que lo que el vendedor hace en su
-  portal se vea en Vio y en Shopify — hoy queda en la foto del checkout.
-- Assets oficiales del botón de Vipps en el SDK (hoy un badge de texto).
+- ~~Estado de pago en la orden (capturado / devuelto)~~: la card «Vipps payment» de la orden del dashboard
+  (2026-10-06) muestra reservado/capturado/devuelto/liberado, el log de eventos de Vipps y capture/refund/cancel.
+  Queda: que lo que el vendedor hace en su portal mueva la orden en Vio y en Shopify.
+- ~~Assets oficiales del botón de Vipps en el SDK~~: web component oficial en SDK y card de Vev (2026-10-06).
 - ~~Rebundle de Vev con el SDK nuevo (0.17.0)~~: mergeado ([vev#48](https://github.com/vio-live/vev/pull/48)) y **paquete compartido publicado el 2026-09-30** (`vev deploy`, Angelo). Falta republicar las páginas (Bohus, la de Alan).
 - Alta de comercios desde el dashboard/admin con Management API (prod).
 - El camino legacy de base-api (`/vipps/*`, eCom v2 con claves de Vio) no lo llama nadie
