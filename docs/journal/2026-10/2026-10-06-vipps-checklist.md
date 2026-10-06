@@ -154,6 +154,19 @@ que borré con #62 (los eventos nuevos sí se aceptaban). Dejé la evidencia en 
 que ya estaba mergeado (añade un endpoint de rotación forzada; no rota solo). Las referencias de hoy ya
 no dependen de la unidad 358493.
 
+### Tarde (3) — Angelo paga y captura con NewCo desde la app y el dashboard
+
+Pago Express desde la app MT sobre la unidad 545865 (orden **4452**, 2 sillas + envío «Standard» =
+10 197 NOK, dirección y perfil de Vipps, recibo con 2 líneas), captura desde la card «Vipps payment»
+del dashboard (base-api → shopcart → Vipps 200 → webhook CAPTURED firmado y registrado). Un defecto
+de UX al verlo: tras capturar, el botón **Refund** quedaba deshabilitado hasta escribir un importe
+(el importe devolvible solo era el *placeholder*); arreglado en
+[webapp#45](https://github.com/vio-live/webapp-vio-commerce/pull/45): vacío = todo lo que queda, el
+botón dice cuánto va a devolver. Nota: el README del webapp dice que `dashboard-staging` sale de la
+rama `staging` (parada en el 14/09), pero lo que se ve en QA es `develop` (la card de #44 está en vivo);
+el mapeo del README está desactualizado. Dos suites de jest del webapp fallan en `develop` sin relación
+(`qliro-shipping-config`, `payments-lib`).
+
 ## Decisions
 
 - Pendiente de Angelo: orden de ataque y quién graba el vídeo.
