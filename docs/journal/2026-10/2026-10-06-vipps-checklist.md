@@ -134,6 +134,26 @@ parser leía solo la grafía con mayúscula inicial de la documentación de Vipp
 toca el body. Lección: cuando Vipps documenta un callback, probarlo con la app antes de fiarse de la
 grafía; con envíos *fixed* este camino no se ejercita.
 
+### Tarde (2) — la unidad de NewCo entra en QA, y media hora de código viejo
+
+Angelo vio en la app «Cosmed Beauty» (la unidad 358493 de las claves del 29/09) y decidió el camino
+partner de verdad: claves de NewCo (MSN 545865) como plataforma en el env de QA y Bohus en modo
+*Partner*. Miguel editó el blob y relanzó los deploys (shopcart, api-ms) y registró el webhook de
+plataforma; yo pasé la fila de Bohus a `partner` y le asigné el MSN por api-ms. Verificado: pago
+`partner 545865`, webhook firmado, orden 4447, recibo; referencias del checklist rehechas sobre
+545865 ([respuestas](../../partners/vipps/checklist-answers.md)). PDF regenerado; **se envía cuando Angelo
+diga** (tiene una lista de cosas que no terminan de estar bien, la demo entre ellas).
+
+**Incidente**: al probar el pago salió «Not clientId found in Vipps Credentials»: la imagen que corría
+era de otro repo (etiqueta `100`, código pre-29/09, env nuevo). `gh run rerun` del último run de
+`develop` y QA volvió; lección en [`lessons/dos-repos-empujan-la-misma-imagen-latest.md`](../../lessons/dos-repos-empujan-la-misma-imagen-latest.md).
+
+**Dos sesiones a la vez**: otra instancia (misma cuenta) mergeó hoy shopcart #64, #66, #67, #68, #69 y
+#70 persiguiendo «todos los webhooks rechazados»; eran los reintentos de los tres registros duplicados
+que borré con #62 (los eventos nuevos sí se aceptaban). Dejé la evidencia en un comentario de #69,
+que ya estaba mergeado (añade un endpoint de rotación forzada; no rota solo). Las referencias de hoy ya
+no dependen de la unidad 358493.
+
 ## Decisions
 
 - Pendiente de Angelo: orden de ataque y quién graba el vídeo.

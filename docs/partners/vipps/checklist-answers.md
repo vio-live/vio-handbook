@@ -7,23 +7,30 @@ status: complete — references from 2026-10-06, copied into the PDF the same da
 
 # ePayment API checklist — Vio's answers
 
-Partner name: **Vio (Tipio AS)** · MSN (test): **358493**
+Partner name: **Vio (Tipio AS)** · MSN (test): **545865** (NewCo AS, the test sales unit Vipps opened for Vio as partner)
 
 ## Endpoints — reference and date
 
 | Endpoint | Reference | Date |
 |---|---|---|
-| Create payment | `VIO-d18d614e-da63-46d3-bbf6-87571df716bf` (R1, order 4430) | 2026-10-06 |
-| Create payment with Express | `VIO-f0bb69da-e3d7-4969-a077-24fdcb5fa45b` (R4, `shipping.fixedOptions`, created only — Express cannot be force-approved in test) | 2026-10-06 |
-| Create payment with Profile sharing | R1 (`profile.scope: name address email phoneNumber` goes on every payment) | 2026-10-06 |
+| Create payment | `VIO-75eb28a5-d012-425d-9a72-f675b4e8e3cb` (P1, order 4447) | 2026-10-06 |
+| Create payment with Express | `VIO-b41ffb12-7cf5-49bc-a9b3-a6ecb8311f48` (P4, `shipping.dynamicOptions`, created only — Express cannot be force-approved in test) | 2026-10-06 |
+| Create payment with Profile sharing | P1 (`profile.scope: name address email phoneNumber` goes on every payment) | 2026-10-06 |
 | Create payment with Minimum user age | not used | — |
-| Get payment | R1 (status poll on return, the order page, the sweep) | 2026-10-06 |
-| Get payment event log | R1 (`vippsEvents` on the order page: CREATED, AUTHORIZED, CAPTURED ×2, REFUNDED) | 2026-10-06 |
-| Cancel payment | `VIO-0dc9ced1-f6e7-410a-948b-7039c439c4e1` (R2, order 4431, released from the order page) | 2026-10-06 |
-| Full capture | `VIO-27cb60cf-946e-4c75-b2f7-b870158501bb` (R3, order 4432, 4999.00 in one capture) | 2026-10-06 |
-| Partial capture | R1 (1000.00, then the remaining 3999.00) | 2026-10-06 |
-| Full refund | R3 (4999.00 in one refund, from the order page with no amount) | 2026-10-06 |
-| Partial refund | R1 (500.00 of 4999.00) | 2026-10-06 |
+| Get payment | P1 (status poll on return, the order page, the sweep) | 2026-10-06 |
+| Get payment event log | P1 (`vippsEvents` on the order page: CREATED, AUTHORIZED, CAPTURED ×2, REFUNDED) | 2026-10-06 |
+| Cancel payment | `VIO-7fe79ec2-69fa-4e58-97ab-7b5e89617659` (P2, order 4448, released from the order page) | 2026-10-06 |
+| Full capture | `VIO-54973365-24f2-4c9e-a0e7-08755373c9b5` (P3, order 4449, 4999.00 in one capture) | 2026-10-06 |
+| Partial capture | P1 (1000.00, then the remaining 3999.00) | 2026-10-06 |
+| Full refund | P3 (4999.00 in one refund, from the order page with no amount) | 2026-10-06 |
+| Partial refund | P1 (500.00 of 4999.00) | 2026-10-06 |
+
+All four payments were made through Vio's own integration (GraphQL `CreatePaymentVipps` → shopcart) with the seller
+(Bohus) in **partner mode**: Vio's keys for the test unit NewCo AS (MSN 545865) plus the seller's `Merchant-Serial-Number`,
+approved with the Vipps test user (`4795111218`) through the test-only force-approve endpoint; the orders were created by
+our webhook handler (platform registration on that unit, signature verified). P1's receipt is the Order Details example
+(product name, 4999.00 incl. 25% VAT, receipt number = order id). An earlier set on the Tipio test unit 358493 (orders
+4430–4433, same day) is superseded by this one.
 
 A fifth payment, R5 `VIO-d24b7c66-85f0-4a78-83e5-97483bd93dc1` (order 4433), is the receipt example at Vipps
 (product name, 4999.00 incl. 25% VAT, receipt number = order id). All five payments were made through Vio's own integration (GraphQL `CreatePaymentVipps` → shopcart)

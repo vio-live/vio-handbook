@@ -310,6 +310,20 @@ Lo que se rompió al usar los endpoints de verdad, y cómo quedó:
 | Express con envíos *dynamic*: «The business can't ship to this address» en la app. El callback de Vipps llega en **camelCase** (`reference, addressLine1, addressLine2, city, postCode, country`), no con mayúscula inicial como documenta Vipps; leíamos solo la forma documentada → país «?» → 400. | El callback se lee sin distinguir mayúsculas, con alias y dirección anidada, y el log dice qué claves llegaron ([#65](https://github.com/vio-live/vio-shopcart-microservice/pull/65)). Verificado: NO 2016 → 2 opciones en 42 ms. Con envíos *fixed* Vipps no llama, por eso nadie lo había visto. |
 | La unidad de prueba tenía **cuatro** webhooks registrados con la misma URL: cada guardado de las claves registraba otro y Vio solo guarda el último secreto → cada evento llegaba cuatro veces, tres rechazadas («signature mismatch») y Vipps las reintentaba. | El alta lista lo que Vipps tiene en nuestra URL, conserva el registro cuyo secreto está en la fila, borra el resto y solo registra si no hay nada que conservar (#62). |
 
+**Camino partner verificado en QA (2026-10-06, 16:11 UTC).** Miguel puso en el `.env.local` de QA las
+claves de la unidad que Vipps abrió a Vio (NewCo AS, MSN 545865) y registró el webhook de plataforma
+sobre ella; la fila de Vipps de Bohus pasó a modo `partner` con el MSN 545865 asignado por api-ms
+(`PATCH /paymentmethod/9` con `userId` + `PATCH /paymentmethod/9/vipps-sales-unit`). Un pago nuevo
+salió como `partner 545865` (claves de plataforma + `Merchant-Serial-Number` del vendedor), el webhook
+llegó con firma válida y creó la orden 4447, y el recibo entró a la primera. Sobre esa unidad se
+rehicieron las referencias del checklist (P1–P4: órdenes 4447, 4448, 4449 y un Express solo creado);
+las de la unidad 358493 (4430–4433) quedan superadas. El dashboard muestra en Bohus «Sales unit 545865».
+
+**Incidente del mismo día**: tras el cambio de env, shopcart corrió media hora una imagen con código
+anterior al 29/09, construida por el workflow de **otro repo** que empuja al mismo `shopcart:latest`
+(etiqueta `100` frente a los runs 126–132 de `vio-live`). Se recuperó relanzando el build de `develop`;
+lección en [`lessons/dos-repos-empujan-la-misma-imagen-latest.md`](../lessons/dos-repos-empujan-la-misma-imagen-latest.md).
+
 Dos pods del CronJob `shopcart-reconcile` fallaron a las 06:05 y 06:08 UTC («Failed to connect to
 shopcart:80»): el clúster de QA despierta a las 06:00 y shopcart aún no estaba listo; a los 10 minutos
 corrió bien. No hay nada que arreglar.
