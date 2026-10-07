@@ -1,0 +1,94 @@
+{
+  "billing_address": {
+    "city": "Oslo",
+    "country": "NO",
+    "email": "ola.nordmann@example.com",
+    "family_name": "Nordmann",
+    "given_name": "Ola",
+    "phone": "+4740123456",
+    "postal_code": "0194",
+    "street_address": "Edvard Munchs Plass 1"
+  },
+  "captured_amount": 0,
+  "captures": [],
+  "created_at": "2026-10-07T10:15:42Z",
+  "customer": {
+    "type": "person"
+  },
+  "expires_at": "2026-11-04T00:00:00Z",
+  "fraud_status": "ACCEPTED",
+  "initial_payment_method": {
+    "description": "Card",
+    "type": "CARD"
+  },
+  "klarna_reference": "K7QW2M9X",
+  "locale": "nb-NO",
+  "merchant_data": "{\"vio_checkout\":\"c3a8e1f0-5d2b-4c9a-8e7f-1b6d0a9c2e44\",\"vio_seller\":1310,\"vio_channel\":512,\"vio_channel_name\":\"Eksempelavis\",\"vio_market\":\"NO\",\"vio_client\":\"web-sdk 0.16.0\"}",
+  "merchant_reference1": "VIO-4512",
+  "merchant_reference2": "c3a8e1f0-5d2b-4c9a-8e7f-1b6d0a9c2e44",
+  "order_amount": 79600,
+  "order_id": "6f2c9a41-3b8e-4d17-9e25-7a1c0d4b8f63",
+  "order_lines": [
+    {
+      "merchant_data": "{\"productId\":512301,\"variantId\":498877,\"supplierId\":1310,\"variantTitle\":\"50 ml\"}",
+      "name": "Eksempel dagkrem 50 ml",
+      "quantity": 2,
+      "reference": "1234567",
+      "tax_rate": 2500,
+      "total_amount": 59800,
+      "total_discount_amount": 0,
+      "total_tax_amount": 11960,
+      "type": "physical",
+      "unit_price": 29900
+    },
+    {
+      "merchant_data": "{\"productId\":512377,\"variantId\":498902,\"supplierId\":1310,\"variantTitle\":\"250 ml\"}",
+      "name": "Eksempel sjampo 250 ml",
+      "quantity": 1,
+      "reference": "7654321",
+      "tax_rate": 2500,
+      "total_amount": 14900,
+      "total_discount_amount": 0,
+      "total_tax_amount": 2980,
+      "type": "physical",
+      "unit_price": 14900
+    },
+    {
+      "merchant_data": null,
+      "name": "Posten - Pakke i postkassen",
+      "quantity": 1,
+      "reference": "a41f6c2e-8b3d-4e9a-b7c5-2d1e0f9a6b38",
+      "tax_rate": 2500,
+      "total_amount": 4900,
+      "total_discount_amount": 0,
+      "total_tax_amount": 980,
+      "type": "shipping_fee",
+      "unit_price": 4900
+    }
+  ],
+  "original_order_amount": 79600,
+  "purchase_country": "NO",
+  "purchase_currency": "NOK",
+  "refunded_amount": 0,
+  "refunds": [],
+  "remaining_authorized_amount": 79600,
+  "selected_shipping_option": {
+    "id": "a41f6c2e-8b3d-4e9a-b7c5-2d1e0f9a6b38",
+    "name": "Posten - Pakke i postkassen",
+    "price": 4900,
+    "tax_amount": 980,
+    "tax_rate": 2500
+  },
+  "shipping_address": {
+    "city": "Oslo",
+    "country": "NO",
+    "email": "ola.nordmann@example.com",
+    "family_name": "Nordmann",
+    "given_name": "Ola",
+    "phone": "+4740123456",
+    "postal_code": "0194",
+    "street_address": "Edvard Munchs Plass 1"
+  },
+  "shipping_info": [],
+  "status": "AUTHORIZED"
+}

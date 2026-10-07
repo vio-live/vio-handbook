@@ -381,8 +381,83 @@ reconciliación, y aplica a toda venta de Vio con o sin Magento.
 ninguna API key del comerciante lo toca, el CSV/import tampoco, y el write directo a la base
 (su tabla interna) está fuera de alcance. Conclusión dura: **la versión nativa/reconciliada
 depende 100% de Kustom** — o extienden su fallback para materializar una orden creada por su
-API, o no existe. Las otras dos vías (offline con dos libros, o gestionar en el portal de
+API, o no existe. *Matiz del 2026-10-07:* eso vale mientras nadie del comercio escriba código dentro
+de su propio Magento; si su desarrollador importa las órdenes, el link queda a su alcance (ver la
+sección siguiente). Las otras dos vías (offline con dos libros, o gestionar en el portal de
 Kustom) las podemos hacer nosotros y sirven para un piloto, pero no son el canal transparente.
+
+### Importación por el desarrollador del comercio (Boots, 2026-10-07)
+
+El desarrollador de Boots ofreció importar él las órdenes en su Magento si le pasamos "un archivo o
+algo", sin decir formato. Esto **matiza la conclusión de arriba**: el link `klarna_core_order` lo
+puede escribir cualquier código que corra dentro del Magento del comercio, y su desarrollador sí
+puede correr ahí. Para la demo igual se recomienda una orden **offline**, que es más simple; la
+versión nativa queda como opción suya, sin que Kustom construya nada.
+
+**Cómo crea la orden el plugin de Kustom** (`vaimo/kustom-module-kco` v12.0.23, leído en el código):
+
+- Por el carrito, como una compra web: `Model/Order/Shop/Placement.php` →
+  `CartManagementInterface::placeOrder($quoteId)`.
+- Método de pago `klarna_kco`. Captura, devolución y cancelación las hacen los comandos del módulo
+  backend (`Klarna\Backend\Gateway\Command\{Capture,Refund,Cancel}`), que buscan el pedido en
+  `klarna_core_order`.
+- En el pago (`additional_information`): `klarna_reference` y `method_title`. El transaction id es la
+  reserva.
+- Fila `klarna_core_order`: `order_id` (Magento), `klarna_order_id`, `used_mid`, `reservation_id`,
+  `is_b2b`.
+- **Nunca trae órdenes desde Kustom.** No hay `crontab.xml` en los tres módulos, y solo se crean
+  órdenes en `Controller/Klarna/Confirmation.php` (el cliente vuelve a la tienda) y en
+  `Controller/Api/Push.php` (aviso a la URL que puso la tienda). Las dos suponen que la compra
+  empezó en la tienda: una orden de Vio en la cuenta del comercio aparece en su portal de Kustom,
+  pero nunca sola en Magento.
+
+**El stock no es un parámetro: es el camino** (verificado en el código oficial de Magento 2.4 + MSI):
+
+- Por el carrito: `placeOrder` → `QuoteManagement::submitQuote` → `orderManagement->place()`, donde
+  `AppendReservationsAfterOrderPlacementPlugin` (MSI) reserva el stock. Se descuenta del almacén al
+  crear el envío.
+- `POST /V1/orders` es `OrderRepositoryInterface::save`: no pasa por `place()` y **no toca el stock**.
+
+**Orden offline para la demo:**
+
+- Crearla por el carrito, así el stock es automático.
+- Método **offline** (por ejemplo *Purchase Order*, con el `order_id` de Kustom como número).
+  **Nunca `klarna_kco` sin la fila de `klarna_core_order`**: al facturar, Magento intentaría capturar,
+  buscaría el link y fallaría.
+- Captura y devoluciones desde el portal de Kustom. Guardar el `order_id` de Kustom en la orden para
+  que finanzas cruce el portal con Magento.
+
+**Formato propuesto: el pedido de Kustom**, tal como lo devuelve
+`GET /ordermanagement/v1/orders/{id}`. Su plugin ya lo conoce, y es más completo que nuestro
+`order.paid` (IVA por línea, totales, facturación y envío, método usado). Ejemplo con la estructura
+exacta de un pedido pagado del playground (`9eb60b00…`, 22/09) y valores ilustrativos:
+[`assets/kustom-order-example.json`](./assets/kustom-order-example.json).
+
+- Montos en unidades menores; `unit_price` con IVA; `tax_rate` en puntos básicos (2500 = 25 %).
+- Para reconocer nuestras órdenes: `merchant_data.vio_checkout`, que está desde que se crea el
+  pedido. `merchant_reference1` = `VIO-{order}` (`KUSTOM_DEFAULT_REFERENCE`, configurable por
+  vendedor) se escribe **después** del pago; `merchant_reference2` es el checkout.
+- En cada línea, `reference` = `sku || productId` (`kustom.service.ts`). En productos de feed es
+  `g:mpn`, o `g:id` si falta. En Magento el SKU suele ser el `g:id`: si el comercio lo confirma,
+  cambiar el orden es chico.
+
+**Cómo le llegaría:**
+
+1. **Directo de Kustom, sin depender de nosotros:** webhook de cuenta `order.created` en su portal
+   (Developers → Webhooks; el 24/09 verificamos que salta también con nuestras órdenes). Filtra por
+   `vio_checkout` y lee el pedido con sus credenciales.
+2. **Se lo mandamos nosotros:** el JSON por archivo o por POST. Para la demo sería semimanual: leer
+   cada pedido de Kustom con su clave y enviarlo.
+
+**Nuestro `order.paid` hoy** (orders-ms, `postOrderWebhook`, en prod): JSON firmado
+(`X-Vio-Signature: sha256=<HMAC>`) a `user_settings.orderWebhookUrl`. Trae cliente, dirección de
+envío, envío, ítems (`sku`, `title`, `variantTitle`, `quantity`, `price`), `channelId` (la
+referencia del pago en la PSP) y `paymentProcessor`. Le faltan el IVA por línea, el total, la
+facturación y reintentos durables: reintenta una vez y se rinde.
+
+**Estado (2026-10-07):** mensaje corto en noruego para el desarrollador de Boots, con el ejemplo:
+"¿se puede importar sin una integración? ¿qué formato les sirve? ¿funciona este, falta algo?".
+Esperando respuesta.
 
 ## Pendiente
 - E2E en el playground: tarjeta `4242…`, 3DS `4000002760003184`, cambio de tarifa dentro del
