@@ -78,3 +78,9 @@ test-only force-approve endpoint; the orders were created by our webhook handler
 
 - How to apply / configure / FAQ: `merchant-guide.md` (to be published as the merchant page).
 - Demo: https://vio-vipps-test.vercel.app + video.
+
+## Files
+
+- Filled PDF (06/10, MSN 545865): [`assets/epayment-checklist-2026-10-06-msn545865.pdf`](assets/epayment-checklist-2026-10-06-msn545865.pdf) — **on hold**: Angelo sends it after his list of fixes (demo etc.).
+- Regenerate it: [`assets/fill-checklist.py`](assets/fill-checklist.py) over the blank form [`assets/epayment-checklistv2-blank.pdf`](assets/epayment-checklistv2-blank.pdf) (`pip install pypdf`); edit `refs` first if the references change (they stay valid about a month: until ~2026-11-05).
+- Email to developer@vippsmobilepay.com (cc Fredrik): [`../email-checklist-draft.md`](../email-checklist-draft.md).
