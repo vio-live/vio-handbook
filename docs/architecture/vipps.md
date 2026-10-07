@@ -186,6 +186,40 @@ webhook y un solo secreto para todas las unidades firmadas por Vio, y las cabece
 7. **Dinero desde el dashboard o el sistema del vendedor**: `POST
    /payment/vipps/:checkoutId/{capture,refund,cancel}`, tras los switches del vendedor.
 
+### De qué secreto se verifica cada aviso (y cómo se diagnostica)
+
+`secretsForMsn(msn)` junta, por ese orden: el `webhookSecret` (y el anterior) de **la fila cuyo
+`merchantSerialNumber` coincide**, el **de partner** del entorno, y el **de plataforma** del
+entorno *solo si* la MSN del evento es la de `VIPPS_MERCHANT_SERIAL_NUMBER`. Con cero secretos el
+aviso se acepta como pista; con alguno, se exige que la firma cuadre.
+
+De ahí salen las dos averías posibles, y las dos dan `signature mismatch` con todo lo demás
+correcto:
+
+- **El evento viene de una unidad que ya no es la nuestra.** Al cambiar de unidad de prueba
+  (2026-10-06: 358493 → 545865) los reintentos de la vieja siguen llegando siete días y no hay
+  fila que los respalde. No es una avería: se apagan solos.
+- **El registro vivo en Vipps no es del que tenemos el secreto.** Vipps enseña el secreto **una
+  sola vez**, al registrar: un registro que se queda sin su secreto firma eventos que nadie puede
+  verificar.
+
+Orden para diagnosticarlo, sin tocar nada hasta el final:
+
+1. `GET /checkout/webhook/vipps?sellerId=&scope=` — qué hay registrado y con qué id (interno, sin
+   proxy en base-api).
+2. El log del rechazo dice **sobre qué firmó**: `host`, `path` y cuántos secretos se probaron. Si
+   el host o el path no son los de la URL registrada, el problema es el reenvío, no la clave.
+3. Si el valor guardado no sirve —cifrado sin `PAYMENT_SECRETS_KEY`, o una máscara `••••` que una
+   edición devolvió— el conector lo dice y no lo prueba (`unusableSecretReason`).
+4. Solo entonces: `POST /checkout/register/webhook/vipps` con `force: true` rota el registro y
+   guarda el secreto nuevo en la fila. Sin `force`, registrar **conserva** lo que ya verifica: no
+   es una rotación por accidente.
+
+Para probar sin esperar a Vipps: un POST al endpoint público con un cuerpo de evento, su
+`x-ms-content-sha256`, una fecha fresca y una firma inventada. Siempre da 401 y no crea nada, pero
+el log responde con el host, el path y el número de secretos — que es justo lo que no se ve de
+otra forma.
+
 ### Órdenes
 
 La orden de Vipps entra en `processOrderPaidByCustomer`, que crea la orden en Shopify
