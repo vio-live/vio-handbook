@@ -427,9 +427,12 @@ Kustom; `auto_capture` por defecto).
   - **ACTIVO en QA desde el 2026-10-07**: clave cargada en el `.env.local` de
     `containerqasc`, los tres servicios reconstruidos y `reencrypt-all` corrido
     (`{total:23, changed:15}`, idempotente). Los 19 campos secretos de las filas
-    vivas están en `enc:v1:`. Ojo: las filas con borrado lógico **no** se cifran
-    (`find()` las excluye) y el mapa `SECRET_FIELDS` se busca por nombre exacto
-    — ver `docs/lessons/secret-fields-lookup-exacto-y-silencioso.md`.
+    vivas están en `enc:v1:`. Las dos lagunas que salieron ese día (filas con borrado
+    lógico sin cifrar, y el mapa `SECRET_FIELDS` por nombre exacto) quedaron **arregladas
+    el mismo día** en api-ms PR #36: lookup insensible a mayúsculas,
+    `find({ withDeleted: true })` y aviso de `unknownProviders`. Estado verificado el
+    07/10 15:45: 29 de 29 campos cifrados sobre las 36 filas, cero en plano.
+    Ver `docs/lessons/secret-fields-lookup-exacto-y-silencioso.md`.
   - **Producción sin clave todavía** (prod apagada desde el 05/10). Al encenderla:
     clave distinta → blob de prod → reconstruir los tres → `reencrypt-all`, en ese
     orden. Antes de `reencrypt-all` la clave se puede quitar; después, no.

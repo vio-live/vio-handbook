@@ -57,11 +57,14 @@
 - **Producción no tiene clave todavía** (prod apagada desde el 05/10 por orden de Angelo). Cuando
   se encienda: generar una clave **distinta**, meterla en el blob de prod, reconstruir los tres,
   y recién entonces `reencrypt-all`. En ese orden.
-- **10 campos secretos siguen en plano** en 13 filas con borrado lógico (6 de Stripe, 4 de Kustom):
-  `reencryptAll` usa `repository.find()`, que excluye las filas con `deleted_at`. Siguen siendo
-  legibles con un `SELECT`. Son credenciales de métodos que el vendedor quitó; lo razonable es
-  purgarlas, no cifrarlas. Decisión de Angelo.
-- **Desajuste de mayúsculas en `SECRET_FIELDS`**: ver `docs/lessons/secret-fields-lookup-exacto-y-silencioso.md`.
+- ~~**10 campos secretos siguen en plano** en 13 filas con borrado lógico~~ y
+  ~~**desajuste de mayúsculas en `SECRET_FIELDS`**~~ → **AMBOS ARREGLADOS el mismo día**
+  (api-ms PR #36, mergeado 12:51, commit `1e31309c`): el mapa ahora cae a una comparación
+  insensible a mayúsculas, `reencryptAll` usa `find({ withDeleted: true })`, y además reporta
+  `unknownProviders` en voz alta en vez de callarse. Nuevo `reencrypt-all` →
+  `{"total":36,"changed":10,"deletedRows":10}`, segunda pasada en 0.
+  **Verificado contra la base a las 15:45:** 29 campos secretos en las 36 filas (incluidas las 13
+  con borrado lógico), los 29 en `enc:v1:`, **cero en plano**. Hallazgo cerrado.
 - `webhookToken` de Adyen no está en `SECRET_FIELDS` y queda en claro. Es parte de la URL del
   webhook, no una credencial de cobro (el `hmacKey`, que sí firma, está cifrado). Candidato menor.
 

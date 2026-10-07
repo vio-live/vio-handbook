@@ -1,5 +1,11 @@
 # El mapa de campos secretos se busca por nombre exacto, y falla en silencio
 
+> **Arreglado en api-ms PR #36 (2026-10-07)**: el lookup cae a una comparación insensible a
+> mayúsculas, `reencryptAll` recorre `find({ withDeleted: true })` y los proveedores que no
+> reconoce se reportan como `unknownProviders` en vez de pasar en silencio. La lección se queda
+> porque el patrón —mapa por clave exacta con `?? []` de reserva, y un barrido que confía en
+> los filtros por defecto del ORM— reaparece en cualquier migración de datos.
+
 **Síntoma.** Activas `PAYMENT_SECRETS_KEY`, corres `reencrypt-all`, te devuelve
 `{total, changed}` con un número razonable y das el cifrado por completo. Pero quedan
 filas de `payment_method` con secretos en texto plano y nada lo reporta.
