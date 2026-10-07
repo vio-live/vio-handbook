@@ -1,6 +1,6 @@
 ---
 title: Registro de pendientes diferidos (retomar cuando haya recursos)
-last-updated: 2026-10-02
+last-updated: 2026-10-07
 owner: miguel
 ---
 
@@ -65,6 +65,8 @@ lo que no se usa.
 | B3 | ~~`redus-vio-staging` -> Redis dentro del cluster~~ | — | **Sin objeto:** el recurso se **borró** el 01/10. El de Suecia (`redus-vio-staging-sc`) sigue siendo gestionado; si se quiere pasar a Redis en cluster, es una medida nueva, no esta. |
 | B4 | **Cerrar más el horario del cluster QA** | ~17 USD/mes | **Corrección importante: los crons van en UTC.** `55 5`-`15 23` es **07:55-01:15 hora de Oslo**, no 06:00-23:00. O sea que staging está arriba de madrugada sin que nadie lo use: el margen es mayor de lo que se creía. Sigue dependiendo de si le molesta a Alan. |
 | B5 | ~~Purgar `reachuqa2`~~ | — | **Sin objeto:** el registry se **borró** el 01/10 con los 122 GB. El de Suecia (`vioqasc`) nació con sólo los 13 `latest` en uso: **6,9 GB de 100**. |
+| B6 | **`PAYMENT_SECRETS_KEY` en producción** | las credenciales de pago de los vendedores dejan de estar en texto plano en la DB de prod | **Espera el encendido de prod** (apagada desde el 05/10). En QA quedó activo el 07/10. No es solo poner la variable: hay un orden obligatorio de 4 pasos y después la clave ya no se puede quitar. Procedimiento completo en `docs/playbooks/prod-power-on-demand.md`. |
+| B7 | **`VIPPS_PARTNER_WEBHOOK_SECRET`** | Vio se entera de capturas, devoluciones y cancelaciones de las unidades de venta del partnership | **Espera el encendido de prod** y que haya unidades firmadas por el partnership. En QA no bloquea nada. Vipps enseña el secreto **una sola vez**: registrar y guardar es una única pasada, y hay que guardar también el id del registro. Procedimiento en `docs/playbooks/prod-power-on-demand.md`. |
 
 ---
 
