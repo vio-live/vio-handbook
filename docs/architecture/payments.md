@@ -392,6 +392,10 @@ Kustom; `auto_capture` por defecto).
 > `data` del logger). PRs en borrador: api-ms #10, shopcart #4, payment-processors #3. Se
 > mergean **juntos**, con `PAYMENT_SECRETS_KEY` igual en los tres `.env`, `reencrypt-all`
 > tras el deploy, un scheduler para `/payments/reconcile`, y review funcional previo.
+>
+> **Al día 2026-10-07:** hecho en QA. Los tres mergeados y desplegados, la clave cargada en el
+> `.env.local` de `containerqasc`, `reencrypt-all` corrido y el scheduler vivo como CronJob
+> `shopcart-reconcile`. Queda solo producción.
 
 - **Reconciliación**: `POST shopcart /checkout/payments/reconcile` — barrido
   idempotente de pushes perdidos (Kustom/Qliro/Walley/Nexi/Adyen). El scheduler
@@ -420,6 +424,16 @@ Kustom; `auto_capture` por defecto).
   lecturas API enmascaradas `••••last4` con merge server-side en update,
   `reencrypt-all` interno para migrar lo existente. decrypt en todos los
   lectores DB-directos. Ver journal 2026-08-29-payment-hardening.
+  - **ACTIVO en QA desde el 2026-10-07**: clave cargada en el `.env.local` de
+    `containerqasc`, los tres servicios reconstruidos y `reencrypt-all` corrido
+    (`{total:23, changed:15}`, idempotente). Los 19 campos secretos de las filas
+    vivas están en `enc:v1:`. Ojo: las filas con borrado lógico **no** se cifran
+    (`find()` las excluye) y el mapa `SECRET_FIELDS` se busca por nombre exacto
+    — ver `docs/lessons/secret-fields-lookup-exacto-y-silencioso.md`.
+  - **Producción sin clave todavía** (prod apagada desde el 05/10). Al encenderla:
+    clave distinta → blob de prod → reconstruir los tres → `reencrypt-all`, en ese
+    orden. Antes de `reencrypt-all` la clave se puede quitar; después, no.
+    Ver journal 2026-10-07-cifrado-secretos-pago-qa.
 
 ## Cómo llega la venta al sistema del vendedor
 
