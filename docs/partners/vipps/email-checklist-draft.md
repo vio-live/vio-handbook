@@ -1,23 +1,24 @@
 To: developer@vippsmobilepay.com
 Cc: Fredrik (Vipps partner manager; his address is in his email of 2026-10-06)
-Subject: ePayment API checklist - NewCo AS / Vio Commerce (partner, test MSN 545865)
+Subject: ePayment API-sjekkliste – NewCo AS / Vio Commerce (partner, test-MSN 545865)
 Attachments: epayment-checklist-2026-10-08-msn545865.pdf, vipps-merchant-guide-2026-10-08.pdf, vipps-solution-description-2026-10-08.pdf (all in assets/)
+Language: Norwegian (the thread with Fredrik is in Norwegian); the PDFs stay in English, the form itself is English.
 
-Hi,
+Hei,
 
-Thank you for setting us up as a partner with test access. The partner is NewCo AS; Vio Commerce is the platform.
+Takk for at dere har satt oss opp som partner med tilgang til testmiljøet. Partneren er NewCo AS; Vio Commerce er plattformen.
 
-Attached are the completed ePayment API checklist, the solution description and the merchant guide the checklist refers to. All references in the checklist come from test payments made on 2026-10-08 through our own integration on the test sales unit 545865 (NewCo AS), so they can be looked up directly in the test environment.
+Vedlagt ligger den utfylte ePayment API-sjekklisten, løsningsbeskrivelsen og veiledningen for selgere som sjekklisten viser til. Alle referansene i sjekklisten kommer fra testbetalinger gjort 2026-10-08 gjennom vår egen integrasjon på testsalgsenheten 545865 (NewCo AS), så de kan slås opp direkte i testmiljøet.
 
-In short, what Vio does with Vipps MobilePay:
-- Vio is a platform that lets brands sell their products inside media surfaces (publisher sites, Vev pages, apps). Each seller connects its own Vipps sales unit in Vio, or Vio opens one for it through the partnership.
-- We use ePayment for the payment itself (regular and Express, where the shopper picks address and delivery inside the app), webhooks for the final state, Order Management for the receipt shown in the app, and capture / refund / cancel from the seller's order page in Vio.
-- The checkout shows the official Vipps MobilePay button (web component) and follows the design guidelines.
+Kort om hva Vio gjør med Vipps MobilePay:
+- Vio er en plattform som lar merkevarer selge produktene sine inne i medieflater (publisistsider, Vev-sider, apper). Hver selger kobler sin egen Vipps-salgsenhet til Vio, eller Vio oppretter en for dem gjennom partnerskapet.
+- Vi bruker ePayment til selve betalingen (vanlig og Express, der kunden velger adresse og levering i appen), webhooks for endelig status, Order Management for kvitteringen som vises i appen, og capture / refusjon / kansellering fra selgerens ordreside i Vio.
+- Kassen viser den offisielle Vipps MobilePay-knappen (web-komponent) og følger designretningslinjene.
 
-A test page where the flow can be tried end to end, on a publisher site that uses Vio: https://mote-livsstil-hub-vio.replit.app/skjonnhet/guider/vio-test-shoppable-favoritter (open a product and tap the Vipps button; pay with the test user you gave us).
+En testside der flyten kan prøves fra start til slutt, på en publisistside som bruker Vio: https://mote-livsstil-hub-vio.replit.app/skjonnhet/guider/vio-test-shoppable-favoritter (åpne et produkt og trykk på Vipps-knappen; betal med testbrukeren dere ga oss).
 
-If anything in the checklist needs more detail, or you would like a walkthrough, we are happy to set up a call.
+Si fra om noe i sjekklisten trenger mer detaljer, eller om dere ønsker en gjennomgang, så setter vi gjerne opp et møte.
 
-Best regards,
+Med vennlig hilsen
 Angelo
-NewCo AS - Vio Commerce, vio.live
+NewCo AS – Vio Commerce, vio.live
