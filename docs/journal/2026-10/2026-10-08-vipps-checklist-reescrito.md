@@ -46,6 +46,29 @@ preguntan, no se inventan. El envío a Vipps sigue en espera.
 - Revisión independiente del borrador (solo lectura, contra código y formulario): resultado en el
   cierre de este journal.
 
+## Cierre del día (tarde)
+
+- **Decisión de Angelo**: el vendedor 1289 pasa a **modo partner con MSN 545865** y las referencias
+  se rehacen. Hecho por api-ms (`PATCH /paymentmethod/8` con `userId` + `/vipps-sales-unit`); la fila
+  conserva sus claves propias. Cuatro pagos nuevos por el canal de la página de Aller, aprobados
+  con el usuario de prueba: P1 `VIO-ac20bc9a…` (orden 4511: captura 100,00 + 89,00, devolución
+  50,00), P2 `VIO-f20e9a47…` (4512: reserva liberada), P3 `VIO-94c42c74…` (4513: captura y
+  devolución de 189,00), P4 `VIO-3a985944…` (Express, solo creado). Todas `partner 545865` en el
+  log de shopcart; órdenes creadas por el webhook.
+- **Revisión independiente (agente solo lectura)**: ~90 % de las afirmaciones confirmadas contra el
+  código; hallazgos aplicados: el formulario «vivo» se re-maqueta y se corta en Chrome y en PDFKit
+  (Preview/Mail/iOS) → el PDF se entrega **horneado** (campos aplanados, PyMuPDF `bake`); «event log
+  en la order page» no era cierto → «disponible por nuestra API»; «la referencia en la orden de la
+  tienda» no era cierto → la tienda lleva el número de orden de Vio; captura «on account»
+  sobreprometía el aviso de caducidad; la guía decía switch de refund/cancel «Off» por defecto y el
+  código dice «On» → guía corregida; la guía prometida como PDF no existía → exportada con Chrome
+  headless; el ejemplo de log debía ser real → línea real del 409 de recibo repetido (P1).
+  Observación de código para seguimiento: un webhook CANCELLED entra al mismo handler y crearía la
+  orden de una reserva liberada desde el portal antes de existir la orden (mira `state`, no
+  `aggregate.cancelledAmount`).
+- Adjuntos listos en `docs/partners/vipps/assets/`: checklist horneado, guía de merchant (PDF) y
+  descripción de la solución (PDF).
+
 ## Decisions
 
 - Partner name = **NewCo AS** (string exacto pendiente de confirmar con Angelo).

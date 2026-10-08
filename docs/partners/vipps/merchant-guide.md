@@ -1,6 +1,6 @@
 ---
 title: "Vipps MobilePay through Vio — merchant guide"
-last-updated: 2026-10-06
+last-updated: 2026-10-08
 owner: angelo
 audience: merchants (public text; English)
 ---
@@ -33,7 +33,7 @@ In **Settings → Payments → Vipps**:
 | **Vipps Express** | The shopper taps Vipps and the app opens with their address and your delivery options already there. Off, the shopper fills the delivery form first. | On |
 | **Shipping options** | *Fixed*: your delivery rates, as configured in Shipping. *Dynamic*: Vipps asks Vio for the rates that match the address the shopper picks. | Fixed |
 | **Capture mode** | When the reserved money is taken: *At payment* (immediately), *At shipment* (when the order gets a tracking number or is completed), *On account* (you capture, in Vio or in your Vipps portal). | On account |
-| **Let Vio refund / cancel** | Whether refunds and cancellations may be made from Vio (the order page). Off, you do them in your Vipps portal. | Off |
+| **Let Vio refund / cancel** | Whether refunds and cancellations may be made from Vio (the order page). Off, you do them in your Vipps portal. | On (always on for a sales unit opened through Vio) |
 | **Reference format** | How the payment appears in Vipps: `VIO-{checkout}` or `{short}` plus your prefix. | `VIO-{checkout}` |
 | **Connect webhook** | Lets Vipps tell Vio about captures, refunds and cancellations you make in your portal. One click. | — |
 
@@ -74,8 +74,9 @@ reservation is released or the captured amount refunded. If not, do it in your V
 **Can I refund part of an order?** Yes, from the order page (any amount up to what was captured),
 if you let Vio refund.
 
-**Which countries?** Vipps users in Norway today; delivery options follow the countries your
-shipping rates cover.
+**Which countries?** Vipps users in Norway today; in Express the app offers the countries your
+shipping rates cover (with dynamic shipping) or the country of the checkout (with fixed options),
+so add a rate for every country you want to serve.
 
 **Something failed.** The order page and your Vio dashboard show the Vipps reference
 (`VIO-…`): give it to Vio support. You never need the Vipps portal for day-to-day work.

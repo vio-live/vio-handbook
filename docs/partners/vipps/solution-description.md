@@ -10,7 +10,7 @@ audience: Vipps MobilePay developer review (English)
 **Partner:** NewCo AS (Vio Commerce), Norway. **Product:** shoppable media — products sold inside articles,
 video pages, Vev pages and apps; the merchant's catalogue and orders stay in the merchant's shop
 (Shopify, WooCommerce) or in Vio. **Vio acts as a platform**: one integration, many merchants
-(sales units). Test sales unit used for this checklist: the one named in the checklist (MSN 545865, NewCo AS, unless Angelo decides otherwise — see `checklist-answers.md`).
+(sales units). Test sales unit used for this checklist and by the demo page: MSN 545865 (NewCo AS), through Vio's partner credentials.
 
 ## Architecture
 
