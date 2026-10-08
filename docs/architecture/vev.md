@@ -51,6 +51,19 @@ Después `npx vev build` (sanity) y `npm run deploy`.
 `vio-sdk/index.js`. Es la única comprobación barata de que el bundle trae lo que uno cree
 que trae: el esbuild no falla si el entrypoint no exporta lo esperado.
 
+Más fuerte todavía, y cuesta lo mismo: **reconstruirlo a un fichero temporal y comparar**
+con el commiteado. Si son byte a byte idénticos, el repo está coherente y no hay nada que
+rebundlear; si no, el commiteado está viejo y desplegarlo repetiría la 0.306.
+
+```bash
+cd ../vio-web-sdk
+npx esbuild src/_vev-entry.ts --bundle --format=esm --external:react --external:react-dom \
+  --tsconfig=tsconfig.json --outfile=/tmp/bundle-nuevo.js
+cmp /tmp/bundle-nuevo.js ../vio-vev/vio-sdk/index.js && echo "al día"
+```
+
+Hecho así el 2026-10-08 antes de la 0.318: 586.779 bytes idénticos.
+
 ## Despliegue: lo que hay que saber
 
 **Vev es la única pieza de Vio Commerce sin entornos.** El backend tiene `develop`→QA y
