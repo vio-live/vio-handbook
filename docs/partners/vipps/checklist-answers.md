@@ -2,7 +2,7 @@
 title: "ePayment API checklist — the answers in the PDF"
 last-updated: 2026-10-08
 owner: angelo
-status: final draft of 2026-10-08 (partner NewCo AS, demo page on 545865, references of the day); sending still on hold for Angelo
+status: final of 2026-10-08 (partner NewCo AS, demo page on 545865, references of the day, status page subscribed); ready to send when Angelo says
 ---
 
 # ePayment API checklist — the answers
@@ -90,8 +90,8 @@ Bohus) and the 29/09 set on 358493 are superseded. References stay valid about a
   CUSTOMER_NOT_PRESENT, userFlow WEB_REDIRECT, paymentMethod.type WALLET, profile.scope "name
   address email phoneNumber", reference, returnUrl, paymentDescription and metadata; Express adds
   shipping (fixedOptions or dynamicOptions) and allowedCountries.
-- **Operational updates** — box left unticked until Angelo subscribes at status.vippsmobilepay.com
-  (`STATUS_PAGE_REGISTERED` in the script).
+- **Operational updates** — box ticked: Angelo subscribed at https://status.vippsmobilepay.com/ on
+  2026-10-08 (`STATUS_PAGE_REGISTERED = True` in the script).
 
 ## Avoiding pitfalls (page 3)
 

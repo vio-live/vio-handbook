@@ -173,7 +173,7 @@ F = {
 # The form's checkboxes: the eight states/events, the design guidelines, the status page.
 CHECKS_ON = ['CREATED', 'AUTHORIZED', 'ABORTED', 'EXPIRED', 'TERMINATED', 'CANCELLED', 'CAPTURED', 'REFUNDED',
              'using the design guidelines']
-STATUS_PAGE_REGISTERED = False   # 'We have registered for the operational updates' - flip when Angelo has subscribed
+STATUS_PAGE_REGISTERED = True    # 'We have registered for the operational updates' - flip when Angelo has subscribed
 
 
 def ascii_safe(v):

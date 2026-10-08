@@ -84,15 +84,13 @@ preguntan, no se inventan. El envío a Vipps sigue en espera.
 
 ## Blockers
 
-- Ninguno técnico. Quedan de Angelo: suscripción a la status page (casilla sin marcar en el PDF,
-  `STATUS_PAGE_REGISTERED` en el script), vídeo o PDF de capturas de la demo (opcional; el formulario
-  prefiere PDF, hoy va solo el enlace) y el envío a developer@vippsmobilepay.com con Fredrik en copia
+- Ninguno técnico. Angelo se suscribió a la status page (19:20; casilla marcada y PDF regenerado).
+  Quedan de Angelo: vídeo o PDF de capturas de la demo (opcional; el formulario prefiere PDF, hoy va
+  solo el enlace) y el envío a developer@vippsmobilepay.com con Fredrik en copia
   (`email-checklist-draft.md`; adjuntos: checklist, guía y descripción en PDF).
 
 ## Next session
 
-- Si Angelo se suscribe a la status page: poner `STATUS_PAGE_REGISTERED = True`, regenerar y
-  reemplazar el PDF en `assets/`.
 - Tarjeta de seguimiento: webhook CANCELLED → `paymentVippsOk` crea la orden de una reserva ya
   liberada desde el portal (mirar `aggregate.cancelledAmount`, no solo `state`).
 - Las referencias del 08/10 valen hasta ~2026-11-07; si el envío se retrasa más, rehacerlas con
