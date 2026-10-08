@@ -31,6 +31,16 @@ había probado Vipps con Woo y Shopify, repasado Stripe Connect y dejado una tar
   liberada y orden Refunded. El aviso del dashboard quedó desplegado por Vercel (no pude verlo: sesión
   caducada).
 
+- **Stripe Connect, «re-conectar»** (punto 3): una cuenta creada por «Set up Stripe with Vio» no se puede
+  volver a vincular por OAuth (regla de Stripe). api-ms recuerda al desconectar `{accountId, origin, at}`
+  y lo devuelve en el estado ([api-ms#39](https://github.com/vio-live/vio-api-microservice/pull/39));
+  el panel lo dice con el id, renombra los botones («Set up Stripe with Vio again», «Connect a different
+  Stripe account») y, si Stripe revocó el acceso a una cuenta creada por Vio, ofrece volver a configurar en
+  vez de «Reconnect» ([webapp#48](https://github.com/vio-live/webapp-vio-commerce/pull/48)).
+- **Alan** (punto 4): comentarios en las tres tarjetas con lo confirmado, lo cambiado y cómo probarlo;
+  checklist «Cómo probarlo (08/10)» (M1–M5) en «Vipps, mejora»; F13–F16 (devoluciones desde Woo/Shopify)
+  en la tarjeta de Vipps; checklist S1–S4 en la de Stripe Connect; y la lista de lo que sigue sin evidencia.
+
 ## Decisions
 
 - **Partner: Vio siempre puede devolver y liberar**; own: por defecto sí, el vendedor puede apagarlo
@@ -51,4 +61,3 @@ había probado Vipps con Woo y Shopify, repasado Stripe Connect y dejado una tar
   (sin switches) y el aviso de la card; decidir qué hacer con la tarjeta «Vipps, mejora» (cubierta).
 - Alan: evidencia de E (Woo, Shopify **y feed de Google**), F1–F5, F7–F8, F10–F12, G, H2, I0; repetir
   la devolución en Woo (#99 o nueva) y en Shopify para ver la orden Refunded y Vipps liberado.
-- Pendiente menor: Stripe Connect, ocultar «conectar existente» para cuentas creadas con Vio.

@@ -729,3 +729,13 @@ en npm es para el resto de los consumidores y es un paso aparte.
 - Backend: `vio-api-microservice/src/modules/paymentMethod`,
   `vio-base-api/src/router/paymentMethodRouter.js`,
   `vio-shopcart-microservice/src/modules/checkout/providers/*`.
+
+## Stripe Connect: una cuenta creada por Vio no se re-vincula (2026-10-08)
+
+Stripe no permite volver a vincular por OAuth una cuenta que la plataforma creó y luego se desconectó
+(«previously disconnected as a v2 account and cannot be reconnected to any platform»). Al desconectar,
+api-ms guarda `disconnected: { accountId, origin, at }` en la fila (campo del servidor, como los demás de
+Connect) y el estado lo devuelve mientras no haya cuenta; una cuenta nueva (onboarding u OAuth) lo borra.
+El dashboard lo explica y ofrece «Set up Stripe with Vio again» (cuenta nueva) o conectar **otra** cuenta
+propia; con el acceso revocado desde el Dashboard de Stripe a una cuenta creada por Vio, no ofrece
+«Reconnect». PRs: api-ms#39, webapp#48.
