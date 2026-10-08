@@ -1,16 +1,16 @@
 ---
 title: "Vipps MobilePay ePayment — Vio's integration (solution description for the checklist)"
-last-updated: 2026-10-06
+last-updated: 2026-10-08
 owner: angelo
 audience: Vipps MobilePay developer review (English)
 ---
 
 # Vio Commerce × Vipps MobilePay ePayment — solution description
 
-**Partner:** Vio (Tipio AS), Norway. **Product:** shoppable media — products sold inside articles,
+**Partner:** NewCo AS (Vio Commerce), Norway. **Product:** shoppable media — products sold inside articles,
 video pages, Vev pages and apps; the merchant's catalogue and orders stay in the merchant's shop
 (Shopify, WooCommerce) or in Vio. **Vio acts as a platform**: one integration, many merchants
-(sales units). Test sales unit used for this checklist: MSN 358493 ("Tipio").
+(sales units). Test sales unit used for this checklist: the one named in the checklist (MSN 545865, NewCo AS, unless Angelo decides otherwise — see `checklist-answers.md`).
 
 ## Architecture
 
@@ -46,11 +46,12 @@ video pages, Vev pages and apps; the merchant's catalogue and orders stay in the
   24 h is released automatically and the failure logged.
 - **Errors**: Vipps' error body is surfaced as `VippsApiError` (status, code, detail, trace id);
   the shopper sees a plain message ("Betalingen ble avbrutt eller feilet. Vennligst prøv igjen."),
-  the merchant sees the reason in the dashboard; every failing call is logged with endpoint,
-  headers (secrets masked), body, code and message.
-- **Headers** on every request: `Vipps-System-Name: Vio`, `Vipps-System-Version: <shopcart version>`,
-  `Vipps-System-Plugin-Name: vio-commerce-shopcart`, `Vipps-System-Plugin-Version: <version>`,
-  plus an `Idempotency-Key` on capture / refund / cancel.
+  the merchant sees the reason in the dashboard; every failing call is logged on one line with
+  endpoint, Vipps' error body (type, title, detail, traceId), the request headers (bearer token and
+  subscription key masked) and the request body.
+- **Headers** on every request: `Vipps-System-Name: Vio`, `Vipps-System-Version: 4.0.1` (the shopcart
+  release), `Vipps-System-Plugin-Name: vio-commerce-shopcart`, `Vipps-System-Plugin-Version: 4.0.1`,
+  plus an `Idempotency-Key` on create / capture / refund / cancel.
 - **Branding**: Vipps MobilePay's own button component (`<vipps-mobilepay-button>`, from
   `cdn.vippsmobilepay.com`) on the product, the cart and the checkout.
 - **Support**: the order page shows the payment as Vipps sees it (reserved / captured /
@@ -58,6 +59,7 @@ video pages, Vev pages and apps; the merchant's catalogue and orders stay in the
 
 ## Demo
 
-- Test page (web SDK, test sales unit 358493): https://vio-vipps-test.vercel.app — Express from a
-  product and Vipps from the checkout.
-- Video of the flow: attached.
+- Test page (Aller Media's Mote & Livsstil, Vio web SDK):
+  https://mote-livsstil-hub-vio.replit.app/skjonnhet/guider/vio-test-shoppable-favoritter — open a
+  product and tap the Vipps "buy now" button (Express), or pay with Vipps from the cart, with the
+  Vipps test user.
