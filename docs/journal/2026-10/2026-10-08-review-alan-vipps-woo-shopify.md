@@ -42,8 +42,8 @@ había probado Vipps con Woo y Shopify, repasado Stripe Connect y dejado una tar
 
 - Shopify solo entregará `refunds/create` cuando Angelo despliegue la configuración del app
   (vio-shopify-sync #110), primero staging.
-- Dos deploys de extensions se solaparon (#17 y #18); el segundo corre detrás — comprobar que acaba
-  en verde (lección de helm).
+- ~~Dos deploys de extensions se solaparon (#17 y #18)~~: los dos acabaron en verde (08:04 y 08:06 UTC) y el pod
+  lleva los dos handlers.
 
 ## Next session
 
