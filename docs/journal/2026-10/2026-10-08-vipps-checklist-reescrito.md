@@ -69,6 +69,12 @@ preguntan, no se inventan. El envío a Vipps sigue en espera.
 - Adjuntos listos en `docs/partners/vipps/assets/`: checklist horneado, guía de merchant (PDF) y
   descripción de la solución (PDF).
 
+- **19:00 — shopcart #77 mergeado por Angelo (16:55 UTC) y desplegado en QA (run 37812605540).**
+  Reenvío del recibo de la orden 4511 → Vipps 409 → línea de log completa con cuerpo del error,
+  cabeceras (token y subscription key enmascarados) y cuerpo de la petición. La casilla «Proper
+  logging» lleva esa línea abreviada a 6 pt y la línea literal va en `solution-description.md`
+  (sección «Log example») y su PDF. Checklist final: `assets/epayment-checklist-2026-10-08-msn545865.pdf`.
+
 ## Decisions
 
 - Partner name = **NewCo AS** (string exacto pendiente de confirmar con Angelo).

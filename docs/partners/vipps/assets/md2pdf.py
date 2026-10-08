@@ -11,6 +11,7 @@ html = f"""<!doctype html><html><head><meta charset="utf-8"><title>{src.stem}</t
  table {{ border-collapse: collapse; width: 100%; font-size: 10pt; }} th, td {{ border: 1px solid #ccc; padding: 5px 7px; vertical-align: top; text-align: left; }}
  th {{ background: #f3f3f3; }} code {{ font: 9.5pt Menlo, monospace; background: #f4f4f4; padding: 0 3px; }}
  blockquote {{ border-left: 3px solid #ddd; margin: 0; padding: 0 12px; color: #333; }}
+ pre {{ white-space: pre-wrap; word-break: break-all; font: 8.5pt Menlo, monospace; background: #f4f4f4; padding: 8px; }} pre code {{ background: none; padding: 0; font-size: inherit; }}
  p.meta {{ color: #666; font-size: 9.5pt; }}
 </style></head><body>{body}<p class="meta">NewCo AS - Vio Commerce, {src.stem}, 2026-10-08.</p></body></html>"""
 tmp = pathlib.Path(tempfile.mkdtemp()) / (src.stem + '.html'); tmp.write_text(html)

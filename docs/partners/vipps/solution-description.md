@@ -57,6 +57,16 @@ video pages, Vev pages and apps; the merchant's catalogue and orders stay in the
 - **Support**: the order page shows the payment as Vipps sees it (reserved / captured /
   refunded / released, reference, events) with the actions; support never needs the portal.
 
+## Log example (QA, 2026-10-08 17:04 UTC)
+
+One line per failed call: endpoint, status, Vipps' title and detail, trace id, then the error body,
+the request headers (bearer token and subscription key masked) and the request body. This one is
+the receipt of the checklist's Create payment reference sent a second time (Vipps keeps the first):
+
+```
+[VippsConnector] POST /order-management/v2/ecom/receipts/VIO-ac20bc9a-d938-4982-b11e-e43a862e1434 → 409 Conflicting receipt — Receipt already exists (trace -) error {"title":"Conflicting receipt","status":409,"detail":"Receipt already exists","instance":"00-6c1b726bdd93992329e12f28c0db1577-7f48871c6101716e-01"} headers {"Accept":"application/json, text/plain, */*","Content-Type":"application/json","Authorization":"***","Ocp-Apim-Subscription-Key":"***","Merchant-Serial-Number":"545865","Vipps-System-Name":"Vio","Vipps-System-Version":"4.0.1","Vipps-System-Plugin-Name":"vio-commerce-shopcart","Vipps-System-Plugin-Version":"4.0.1","User-Agent":"axios/0.21.3","Content-Length":"355"} body {"orderLines":[{"name":"Lait Corporel Body Lotion","id":"5ULHOI5LAIYUOHR4","totalAmount":18900,"totalAmountExcludingTax":15120,"totalTaxAmount":3780,"taxPercentage":25,"unitInfo":{"unitPrice":18900,"quantity":"1","quantityUnit":"PCS"},"discount":0,"isReturn":false,"isShipping":false}],"bottomLine":{"currency":"NOK","tipAmount":0,"receiptNumber":"4511"}}
+```
+
 ## Demo
 
 - Test page (Aller Media's Mote & Livsstil, Vio web SDK):

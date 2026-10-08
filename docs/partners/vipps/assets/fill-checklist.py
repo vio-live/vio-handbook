@@ -56,10 +56,16 @@ DESCRIPTION = (
     'button component.'
 )
 
-# A real line from shopcart's log in QA, 2026-10-08 15:54 UTC: the receipt of P1 sent a second time.
+# A real line from shopcart's log in QA, 2026-10-08 17:04 UTC: the receipt of P1 sent a second time.
+# Abridged for the box (the JSON objects are cut with "..."; spaces after commas so it can wrap);
+# the verbatim line is in ../solution-description.md, which travels with the checklist as a PDF.
 LOG_EXAMPLE = (
-    f'[VippsConnector] POST /order-management/v2/ecom/receipts/\n{P1} -> 409 Conflicting receipt - '
-    'Receipt already exists (trace -).'   # the newline only breaks the 76-character path for the box
+    '[VippsConnector] POST /order-management/v2/ecom/receipts/\n'
+    f'{P1} -> 409\n'
+    'error {"title":"Conflicting receipt", "status":409}\n'
+    'headers {"Authorization":"***", "Merchant-Serial-Number":"545865", ...}\n'
+    'body {"orderLines":[...], "bottomLine":{"receiptNumber":"4511"}}\n'
+    'Full line in the attached solution description.'
 )
 
 # ── Comment boxes (167 pt wide) ───────────────────────────────────────────────
@@ -77,9 +83,7 @@ A = {
     'reason on the order page, e.g. "Vipps: 12900 left to refund on this payment" or Vipps\' own '
     'title and detail. Developer: VippsApiError with the HTTP status and Vipps\' type, title, '
     'detail and traceId.'),
- 'logging': (
-    LOG_EXAMPLE + ' Logged for every failed call, followed by the error body and the request '
-    '(headers with token and key masked, and body).'),
+ 'logging': LOG_EXAMPLE,
  'headers': (
     'Vipps-System-Name: Vio\n'
     'Vipps-System-Version: 4.0.1 (the shopcart release)\n'
@@ -226,6 +230,7 @@ def font_size(name):
     if name == 'Text12': return 7
     if name in REFERENCE_CELLS: return 5.1 if str(F[name]).startswith('VIO-') else 8   # a uuid on one line
     if name.startswith('Text'): return 10           # dates
+    if name in COMMENT and COMMENT[name] == 'logging': return 6   # a log line with JSON wraps worse than prose
     return 6.5                                       # comment boxes
 
 

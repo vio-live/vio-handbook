@@ -73,13 +73,12 @@ Bohus) and the 29/09 set on 358493 are superseded. References stay valid about a
   Merchant: the reason on the order page, e.g. "Vipps: 12900 left to refund on this payment" or
   Vipps' own title and detail. Developer: `VippsApiError` with the HTTP status and Vipps' type,
   title, detail and traceId.
-- **Logging** — a real line from QA, 2026-10-08 15:54 UTC (P1's receipt sent a second time):
-  `[VippsConnector] POST /order-management/v2/ecom/receipts/VIO-ac20bc9a-d938-4982-b11e-e43a862e1434
-  -> 409 Conflicting receipt - Receipt already exists (trace -).` Logged for every failed call,
-  followed by the error body and the request (headers with token and key masked, and body) —
-  the two trailing parts are what [shopcart #77](https://github.com/vio-live/vio-shopcart-microservice/pull/77)
-  adds; **until it is merged and deployed the real line stops at the trace id**. Re-trigger the
-  409 after the deploy (`vipps-order.sh 4511 receipt`) and paste the full line before sending.
+- **Logging** — a real line from QA, 2026-10-08 17:04 UTC (P1's receipt sent a second time), in the
+  format of [shopcart #77](https://github.com/vio-live/vio-shopcart-microservice/pull/77) (merged and
+  deployed the same day): endpoint, status, title and detail, trace id, then `error {...}` (Vipps'
+  body), `headers {...}` (Authorization and subscription key masked) and `body {...}`. The box shows
+  it abridged with "..." and says "Full line in the attached solution description", where it is
+  verbatim ([`solution-description.md`](solution-description.md), "Log example").
 - **HTTP headers** — `Vipps-System-Name: Vio` · `Vipps-System-Version: 4.0.1` (the shopcart
   release) · `Vipps-System-Plugin-Name: vio-commerce-shopcart` · `Vipps-System-Plugin-Version: 4.0.1`.
   Sent on every request; create, capture, refund and cancel also carry an `Idempotency-Key`.
