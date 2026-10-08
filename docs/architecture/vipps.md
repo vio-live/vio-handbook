@@ -339,6 +339,25 @@ Queda fuera, a propósito: una devolución **parcial** no cambia la orden (la me
 y liberar la reserva desde la card («Release») tampoco cancela la orden — para eso está «Cancel order»,
 que ya libera o devuelve el dinero.
 
+## Devoluciones hechas en la tienda, y los switches (2026-10-08)
+
+Del QA de Alan (07/10): cancelar desde Woo/Shopify funcionaba; **devolver** desde la tienda no hacía
+nada en Vio ni en Vipps (extensions solo trataba `completed`/`cancelled`/`processing` en Woo y no
+escuchaba `refunds/create` en Shopify). Y con «Let Vio refund/cancel» apagados, cancelar dejaba la
+reserva viva. Decidido con Angelo y hecho:
+
+| Pieza | Qué hace |
+|---|---|
+| extensions ([#17](https://github.com/vio-live/vio-extensions-microservice/pull/17), [#18](https://github.com/vio-live/vio-extensions-microservice/pull/18)) | Woo: `order.updated` con `refunded` = devolución total; si no, `refunds[]` suma lo devuelto hasta ahora (parcial). Shopify: topic nuevo `refunds/create` (lee la orden, la mapea por nota/metafield, `financial_status: refunded` = total, suma `refunds[].transactions`). Ambos avisan a orders-ms. El app de Shopify tiene que declarar el topic: [vio-shopify-sync#110](https://github.com/vio-live/vio-shopify-sync/pull/110) + `shopify app deploy` (Angelo). |
+| orders-ms ([#18](https://github.com/vio-live/vio-orders-microservice/pull/18)) | `POST /:orderId/refunded-in-shop`: total → ítems `REFUNDED` (la orden lee Refunded) y pide a shopcart devolver lo capturado o liberar la reserva; parcial → pide devolver hasta el total de la tienda, la orden sigue. Dentro de los switches del vendedor; solo Vipps mueve dinero así hoy. |
+| shopcart ([#75](https://github.com/vio-live/vio-shopcart-microservice/pull/75)) | `POST /payment/vipps/order/:id/refunded-in-shop`: total = como una cancelación (devuelve capturado / libera reservado); parcial = devuelve `min(total tienda, capturado) − ya devuelto` (idempotente); parcial sin captura → se informa, no se adivina. |
+| **Switches** (api-ms [#37](https://github.com/vio-live/vio-api-microservice/pull/37), shopcart #75, webapp [#47](https://github.com/vio-live/webapp-vio-commerce/pull/47)) | Modo **partner**: siempre ON (solo Vio tiene claves de esa unidad); el formulario no los muestra. Modo **own**: ON por defecto en filas nuevas, un «no» explícito se respeta. En la orden, si está Cancelled/Refunded y queda dinero reservado en Vipps, la card lo dice y explica cómo liberarlo. |
+
+Verificado en QA el 08/10 (órdenes 4485 total con captura, 4486 parcial reportada dos veces, 4487 solo
+reservada → liberada). Lo que **no** se hace: devolver parcialmente una reserva sin capturar (Vipps no
+libera a trozos) ni mover dinero de otros PSP desde la tienda (se registra el estado, el dinero lo mueve
+el vendedor con sus herramientas).
+
 ## Estado en QA (2026-10-06): pagos aprobados de verdad, y lo que salió al apretar
 
 Con el usuario de prueba que dio Vipps (`4795111218`) y el *force approve* de test se aprobaron por
