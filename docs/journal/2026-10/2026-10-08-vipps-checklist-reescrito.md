@@ -75,6 +75,10 @@ preguntan, no se inventan. El envío a Vipps sigue en espera.
   logging» lleva esa línea abreviada a 6 pt y la línea literal va en `solution-description.md`
   (sección «Log example») y su PDF. Checklist final: `assets/epayment-checklist-2026-10-08-msn545865.pdf`.
 
+- **Cierre (19:50)**: Angelo revisó los tres documentos y envía él el email (en noruego, a
+  developer@vippsmobilepay.com con Fredrik en copia; Gmail de reachu.io y vio.live estaba bloqueado
+  por Workspace al intentar dejarle el borrador). Siguiente paso: la respuesta de Vipps.
+
 ## Decisions
 
 - Partner name = **NewCo AS** (string exacto pendiente de confirmar con Angelo).
