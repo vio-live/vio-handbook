@@ -84,15 +84,16 @@ preguntan, no se inventan. El envío a Vipps sigue en espera.
 
 ## Blockers
 
-- **MSN de la demo vs MSN del checklist** (decide Angelo): (a) pasar el vendedor 1289 a modo partner
-  con MSN 545865 y rehacer las cuatro referencias por el canal de la demo; (b) poner 358493 en el
-  checklist y rehacer las referencias ahí; (c) dejarlos distintos (no recomendado).
-- Merge de shopcart #77 (pendiente de Angelo).
-- Suscripción a la status page (casilla sin marcar), vídeo o PDF de capturas de la demo (el
-  formulario prefiere PDF; la respuesta hoy solo da el enlace), guía de merchant como PDF o URL.
+- Ninguno técnico. Quedan de Angelo: suscripción a la status page (casilla sin marcar en el PDF,
+  `STATUS_PAGE_REGISTERED` en el script), vídeo o PDF de capturas de la demo (opcional; el formulario
+  prefiere PDF, hoy va solo el enlace) y el envío a developer@vippsmobilepay.com con Fredrik en copia
+  (`email-checklist-draft.md`; adjuntos: checklist, guía y descripción en PDF).
 
 ## Next session
 
-- Con la decisión del MSN: regenerar referencias (mismo día), `fill-checklist.py` → PDF final en
-  `assets/`, actualizar `checklist-answers.md`, y hacer los PDF de la guía y de la descripción
-  (Chrome headless `--print-to-pdf`). Enviar solo cuando Angelo diga.
+- Si Angelo se suscribe a la status page: poner `STATUS_PAGE_REGISTERED = True`, regenerar y
+  reemplazar el PDF en `assets/`.
+- Tarjeta de seguimiento: webhook CANCELLED → `paymentVippsOk` crea la orden de una reserva ya
+  liberada desde el portal (mirar `aggregate.cancelledAmount`, no solo `state`).
+- Las referencias del 08/10 valen hasta ~2026-11-07; si el envío se retrasa más, rehacerlas con
+  `vipps-aller.py` (scratchpad de la sesión; mismo flujo que `vipps-newco.py`, canal de Aller).
