@@ -79,6 +79,10 @@ preguntan, no se inventan. El envío a Vipps sigue en espera.
   developer@vippsmobilepay.com con Fredrik en copia; Gmail de reachu.io y vio.live estaba bloqueado
   por Workspace al intentar dejarle el borrador). Siguiente paso: la respuesta de Vipps.
 
+> [claude, 2026-10-09] **Vipps contestó al email**: el checklist está **en proceso de review** y
+> responden el **lunes 12/10**. Nada que hacer hasta entonces; las referencias del 08/10 siguen
+> valiendo hasta ~2026-11-07.
+
 ## Decisions
 
 - Partner name = **NewCo AS** (string exacto pendiente de confirmar con Angelo).

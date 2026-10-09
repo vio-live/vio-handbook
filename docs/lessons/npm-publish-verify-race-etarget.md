@@ -47,3 +47,14 @@ El mensaje de error del script decía `"FATAL: ... aborting, nothing published"`
 
 - [ADR-0013: Release automático del kernel](../decisions/0013-release-automatico-del-kernel.md)
 - [Journal 2026-09-04](../journal/2026-09/2026-09-04-kernel-release-caos-y-fixes.md)
+
+## > [claude, 2026-10-09] Dos variantes más, al publicar `@vio-live/web-sdk` 0.19.0
+
+- **403 «You may not perform that action with these credentials»** con un usuario que *sí* es
+  maintainer: el token de `~/.npmrc` era **granular de solo lectura** (en la cuenta hay varios;
+  `npm token list --json` dice `permissions` de cada uno sin enseñar el valor). `npm login` deja un
+  token de sesión que puede publicar (y sigue pudiendo leer los `@vio-/*`).
+- Tras un publish correcto con login web, npm respondió *«Your package is being processed and may
+  take a few minutes to become available»*: `npm view … dist-tags.latest` siguió diciendo la
+  versión vieja ~2 minutos. Mirar el log (`~/.npm/_logs/*-debug-0.log`: `PUT 202` + `exit 0`) antes
+  de concluir que no se publicó, y esperar en bucle a que `latest` cambie.

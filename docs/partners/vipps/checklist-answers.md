@@ -2,7 +2,7 @@
 title: "ePayment API checklist — the answers in the PDF"
 last-updated: 2026-10-08
 owner: angelo
-status: final of 2026-10-08 (partner NewCo AS, demo page on 545865, references of the day, status page subscribed); reviewed by Angelo, sent by him to developer@vippsmobilepay.com with Fredrik in cc — awaiting Vipps' review
+status: final of 2026-10-08 (partner NewCo AS, demo page on 545865, references of the day, status page subscribed); reviewed by Angelo, sent by him to developer@vippsmobilepay.com with Fredrik in cc — in review at Vipps (confirmed 2026-10-09), answer expected Monday 2026-10-12
 ---
 
 # ePayment API checklist — the answers

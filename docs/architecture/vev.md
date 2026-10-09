@@ -64,6 +64,29 @@ cmp /tmp/bundle-nuevo.js ../vio-vev/vio-sdk/index.js && echo "al día"
 
 Hecho así el 2026-10-08 antes de la 0.318: 586.779 bytes idénticos.
 
+## La card: reglas de maquetación
+
+Lo que la card (`card-view.tsx`, compartida por la card individual, el carrusel y el grid) garantiza
+desde 0.319–0.320 (08/10). Cambiarlo rompe alineaciones que se ven en cuanto hay dos cards juntas.
+
+- **Orden en el cuerpo**: marca, nombre, **precio, botón de Vipps**, tienda. Sin meta en el cuerpo
+  (layouts *overlay* e *image-only*) el botón va justo bajo la imagen.
+- **Alineación**: en el cuerpo la marca reserva su línea aunque el producto no tenga, el nombre
+  ocupa siempre dos líneas, y bajo ~120px de ancho el precio reserva dos. Todo en `em`, así que un
+  tamaño de letra cambiado desde el editor mantiene la alineación.
+- **Botón de Vipps**: el oficial de Vipps (`vipps-mobilepay-button`); por debajo de 220px de
+  ancho en su forma `compact` («Kjøp nå» + logo), que cabe en una línea hasta ~160px. Más estrecho
+  ocupa dos líneas.
+- **La opción «Vipps Express button» solo existe en el panel si el canal tiene Vipps**: `hidden`
+  asíncrono que pregunta los métodos de pago del canal (`loadVippsOffer`, compartido con la card).
+  Solo un «no» seguro la oculta; si la consulta falla, se ve. Ojo: `vev build` no guarda funciones
+  en el manifest — Vev usa el registro que se ejecuta en el panel, igual que con los `component`.
+- **Avisos del editor** (`editor-fit.tsx`, ampliado en 0.322): si el marco de Vev corta el bloque
+  (alto fijo), o la card individual es demasiado ancha o estrecha, el editor lo dice; publicado, no.
+  El componente no puede mover ni redimensionar su marco: eso es de Vev, por breakpoint.
+- **Custom image** (solo la card individual): sustituye la foto en esa card; ficha y carrito siguen
+  con las del producto.
+
 ## Despliegue: lo que hay que saber
 
 **Vev es la única pieza de Vio Commerce sin entornos.** El backend tiene `develop`→QA y
