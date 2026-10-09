@@ -38,19 +38,50 @@ Config (6 de 7: país/moneda, dos bloques Config, analítica sin duplicados…),
 la sección 1; las secciones «lo que falta para vender mejor» y la lista de mejoras ordenada por
 impacto con coste no están, aunque los tres ítems de «Crítica y mejoras» figuran tildados.
 
+## Hecho (tarde): los seis puntos, mergeados y desplegados
+
+Angelo: «ve con todos los puntos, mergeas, despliegas y cuando yo vuelva los probamos».
+
+| # | Fix | PR | Estado |
+|---|---|---|---|
+| 1 | Un carrito, un pago: `checkout-guards.ts` (`assertPayable` / `paidSiblingOf`); todo inicio de pago exige checkout `ACTIVE` sin hermano `SUCCESS`; toda finalización descarta el duplicado (sin orden, checkout `CANCEL`, en Vipps libera la reserva); `CreateCheckout` rechaza un carrito pagado. Códigos `CHECKOUT_SUPERSEDED` / `CART_ALREADY_PAID` que el SDK traduce. | [shopcart#78](https://github.com/vio-live/vio-shopcart-microservice/pull/78) + [#79](https://github.com/vio-live/vio-shopcart-microservice/pull/79) | QA |
+| 2 | Descuentos null-safe en los inits de Stripe (el bloque legacy copiado cinco veces) | shopcart#78 | QA |
+| 3 | Foco, Tab y Esc en ficha, carrito y kasse (`dialog-focus.ts`, 21 tests) | [web-sdk#74](https://github.com/vio-live/vio-web-sdk/pull/74) (0.20.0) | bundle en Vev |
+| 4 | Radios del tema en ficha y carrito (SDK) y en la card de Vev con variables propias (`--vio-card-radius` etc.): default idéntico, sharp/rounded llegan a la card | web-sdk#74 + [vev#56](https://github.com/vio-live/vev/pull/56) | bundle en Vev |
+| 5 | La card individual sigue a `vio:sponsor-changed` (hook `useActiveSponsorId` compartido con carrusel y grid) | vev#56 | bundle en Vev |
+| 6 | Card individual: tope 480 px centrado + avisos del editor (>480 / <120 px) con `useFrameWidth`/`EditorNotices` | vev#56 | bundle en Vev |
+| — | Mensajes claros al no poder iniciar un pago (`friendlyPaymentError`): carrito vacío, cambiado en otra pestaña, ya pagado | web-sdk#74 | bundle en Vev |
+| — | Rebundle del SDK 0.20.0 en el plugin (`vio-sdk/index.js`, receta esbuild del README) | [vev#57](https://github.com/vio-live/vev/pull/57) | **falta `vev deploy` (Angelo) + republicar** |
+
+- **Incidente propio, 10 minutos**: #78 recargaba el checkout con `findOne(id, { relations: ['cart'] })` y la
+  entidad ya trae el carrito eager → `Not unique table/alias: 'Checkout__cart'` en todo init de Vipps en QA.
+  #79 lo recarga con el query builder (`leftJoin`), como `getCartIdByCheckoutId`. Lección: con entidades del
+  kernel que declaran relaciones eager, nunca `relations:` en `findOne`.
+- Comprobado antes de mergear que los tres SDK (web, Swift, Kotlin) abren un carrito nuevo tras cada orden
+  (`clearSponsorCart` / `resetCartAndCreateNew`), así que «carrito pagado → sin checkout nuevo» no rompe una
+  segunda compra.
+- Decisión de diseño (agente + yo): los botones circulares no siguen el preset de esquinas; y la card usa
+  variables propias porque el SDK inyecta valores por defecto para `--vio-radius-*` y el fallback nunca
+  aplicaría (el aspecto «default» habría cambiado).
+- Trello: seis tarjetas nuevas para Alan en To do con cómo probar y qué evidencia (SqfAhftq, HG2F9r4b,
+  VIXYYn1u, kmRoWIwV, ebrwi4MI, BynkPCL1), enlazadas a CQIvMg89, y comentario en su tarjeta con lo que falta
+  (crítica completa, 12 puntos, el vídeo de clics rápidos).
+- Seguimiento sin hacer (del agente del SDK): los diálogos cerrados siguen en el DOM fuera de pantalla y sus
+  botones son alcanzables con Tab desde la página (`inert` o `visibility: hidden` al cerrar).
+
 ## Decisions
 
-- Pendientes de Angelo: qué arreglar primero. Propuesta: (1) doble pago por carrito en shopcart
-  (rechazar checkouts `INACTIVE` y carritos ya comprados en todo inicio y confirmación de pago;
-  cerrar el carrito al crear la orden; mensaje claro en el SDK), (2) null-safe en los descuentos
-  del intent de Stripe, (3) foco/Esc en los diálogos del SDK, (4) tokens de radio en ficha, carrito
-  y card de Vev, (5) la card escucha `vio:sponsor-changed`, (6) guardrails de la card por breakpoint.
+- Angelo: arreglar los seis puntos de una vez, mergear y desplegar sin esperar a su vuelta («cuando
+  yo vuelva los probamos»). El trabajo se repartió: shopcart a mano (dinero), SDK y plugin de Vev con
+  dos agentes con instrucciones cerradas y revisión del diff antes de mergear.
+- La refusal «carrito ya pagado → sin checkout nuevo» se mantiene estricta: los tres SDK abren un
+  carrito nuevo tras cada orden; un cliente que reutilizara el carrito pagado sería precisamente el
+  bug del doble cobro.
 
 ## Blockers
 
-- Ninguno técnico. Alan debe completar la crítica y los 12 puntos sin tildar.
+- `vev deploy` del paquete y republicar las páginas: Angelo. Alan: completar la crítica y los 12 puntos sin tildar; probar las seis tarjetas nuevas.
 
 ## Next session
 
-- Con el OK de Angelo: PRs por servicio (shopcart, web-sdk, vio-vev), tarjetas nuevas enlazadas a
-  CQIvMg89 para los bugs 1–5, y un comentario en la tarjeta de Alan con lo que falta.
+- Probar con Angelo los seis puntos en QA tras `vev deploy`; revisar la evidencia de Alan en las seis tarjetas.
