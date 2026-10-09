@@ -51,7 +51,7 @@ Angelo: «ve con todos los puntos, mergeas, despliegas y cuando yo vuelva los pr
 | 5 | La card individual sigue a `vio:sponsor-changed` (hook `useActiveSponsorId` compartido con carrusel y grid) | vev#56 | bundle en Vev |
 | 6 | Card individual: tope 480 px centrado + avisos del editor (>480 / <120 px) con `useFrameWidth`/`EditorNotices` | vev#56 | bundle en Vev |
 | — | Mensajes claros al no poder iniciar un pago (`friendlyPaymentError`): carrito vacío, cambiado en otra pestaña, ya pagado | web-sdk#74 | bundle en Vev |
-| — | Rebundle del SDK 0.20.0 en el plugin (`vio-sdk/index.js`, receta esbuild del README) | [vev#57](https://github.com/vio-live/vev/pull/57) | **falta `vev deploy` (Angelo) + republicar** |
+| — | Rebundle del SDK 0.20.0 en el plugin (`vio-sdk/index.js`, receta esbuild del README) | [vev#57](https://github.com/vio-live/vev/pull/57) | **publicado como 0.322** (12:35); falta republicar cada página |
 
 - **Incidente propio, 10 minutos**: #78 recargaba el checkout con `findOne(id, { relations: ['cart'] })` y la
   entidad ya trae el carrito eager → `Not unique table/alias: 'Checkout__cart'` en todo init de Vipps en QA.
@@ -69,6 +69,11 @@ Angelo: «ve con todos los puntos, mergeas, despliegas y cuando yo vuelva los pr
 - **Verificado en QA tras #79** (script `two-tabs-smoke.py`, canal de Aller, 11:26): pagar el checkout
   reemplazado → `CHECKOUT_SUPERSEDED`; pagar el nuevo y aprobarlo → orden 4521 creada una vez; pedir otro
   checkout del carrito pagado → `CART_ALREADY_PAID`; volver a pagar el checkout pagado → `CART_ALREADY_PAID`.
+- **`vev deploy` hecho por mí a petición explícita de Angelo («haz tú el vev deploy»)**, con las comprobaciones
+  de la regla del 18/08: `vev versions` sin versiones indocumentadas por encima de la 0.321, `vev.json` en el
+  paquete compartido `cq1lXld-TA9`, árbol limpio en `main` (de0e4e2), bundle byte a byte idéntico a un build
+  fresco del `main` del SDK (600.965 bytes), `vev build` limpio. Resultado: **0.322** con mensaje. Las
+  páginas publicadas siguen con su bundle hasta que se republiquen (Angelo y Alan).
 - Seguimiento sin hacer (del agente del SDK): los diálogos cerrados siguen en el DOM fuera de pantalla y sus
   botones son alcanzables con Tab desde la página (`inert` o `visibility: hidden` al cerrar).
 
@@ -83,8 +88,8 @@ Angelo: «ve con todos los puntos, mergeas, despliegas y cuando yo vuelva los pr
 
 ## Blockers
 
-- `vev deploy` del paquete y republicar las páginas: Angelo. Alan: completar la crítica y los 12 puntos sin tildar; probar las seis tarjetas nuevas.
+- Republicar las páginas de Vev (Angelo y Alan). Alan: completar la crítica y los 12 puntos sin tildar; probar las seis tarjetas nuevas.
 
 ## Next session
 
-- Probar con Angelo los seis puntos en QA tras `vev deploy`; revisar la evidencia de Alan en las seis tarjetas.
+- Probar con Angelo los seis puntos en QA sobre una página republicada con 0.322; revisar la evidencia de Alan en las seis tarjetas.
