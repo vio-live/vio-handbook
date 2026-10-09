@@ -66,6 +66,9 @@ Angelo: «ve con todos los puntos, mergeas, despliegas y cuando yo vuelva los pr
 - Trello: seis tarjetas nuevas para Alan en To do con cómo probar y qué evidencia (SqfAhftq, HG2F9r4b,
   VIXYYn1u, kmRoWIwV, ebrwi4MI, BynkPCL1), enlazadas a CQIvMg89, y comentario en su tarjeta con lo que falta
   (crítica completa, 12 puntos, el vídeo de clics rápidos).
+- **Verificado en QA tras #79** (script `two-tabs-smoke.py`, canal de Aller, 11:26): pagar el checkout
+  reemplazado → `CHECKOUT_SUPERSEDED`; pagar el nuevo y aprobarlo → orden 4521 creada una vez; pedir otro
+  checkout del carrito pagado → `CART_ALREADY_PAID`; volver a pagar el checkout pagado → `CART_ALREADY_PAID`.
 - Seguimiento sin hacer (del agente del SDK): los diálogos cerrados siguen en el DOM fuera de pantalla y sus
   botones son alcanzables con Tab desde la página (`inert` o `visibility: hidden` al cerrar).
 
