@@ -53,3 +53,26 @@ forma que producción.
 "0 migraciones, ninguna variable de entorno nueva, CI verde" es la comprobación que se hizo antes de
 llevar esos commits a producción. Las tres pasaron y ninguna de las tres podía ver esto. Para
 cambios que tocan consultas, esa lista no es cobertura.
+
+## Auditoría de toda la organización (2026-10-12)
+Tras el incidente se clonaron los 13 microservicios y se cruzaron **todas** las relaciones
+`eager: true` de las entidades de `@vio-/database` (32 entidades) contra cada `relations: [...]` del
+código. En toda la organización hay **dos** coincidencias entidad+propiedad:
+
+| Dónde | Entidad | Pide | Estado |
+|---|---|---|---|
+| `vio-users-microservice` subscription.service.ts | `Subscription` | `plan` | corregido (#16 en master, #17 a develop) |
+| `vio-extensions-microservice` magento.service.ts ~3877 | `ImportedProduct` | `product` | **preexistente**, PR #20 |
+
+El segundo rompe `unpublishProductFromChannel` siempre, no en un caso borde.
+
+Los demás `relations: ['user' | 'product' | 'category']` del código son **correctos**: van sobre
+`ApiCredential`, `WooConnection`, `MagentoConnection`, `ProductCategory` y `ProductDigital`, donde
+esa relación **no** es eager. O sea que el patrón no es sospechoso por sí mismo: lo que importa es
+la coincidencia entidad + propiedad.
+
+**Cómo repetir la auditoría:** sacar la lista de eager de
+`node_modules/@vio-/database/dist/entity` dentro de un pod (`grep -rl "eager: true"`, y para cada
+fichero las props del decorador), clonar los repos y, para cada `relations: [...]`, resolver la
+entidad mirando hacia atrás el `getRepository(X)` o el `_xRepository`. La búsqueda de código de
+GitHub no sirve: se agota por rate limit a la cuarta consulta.
