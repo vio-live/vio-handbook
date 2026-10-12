@@ -74,6 +74,8 @@ Angelo: «ve con todos los puntos, mergeas, despliegas y cuando yo vuelva los pr
   paquete compartido `cq1lXld-TA9`, árbol limpio en `main` (de0e4e2), bundle byte a byte idéntico a un build
   fresco del `main` del SDK (600.965 bytes), `vev build` limpio. Resultado: **0.322** con mensaje. Las
   páginas publicadas siguen con su bundle hasta que se republiquen (Angelo y Alan).
+- 12/10: el checklist de retest de Angelo (19 puntos, 0–6) añadido a la tarjeta de Alan como checklist
+  «9 · Retest tras la 0.322», a tildar con evidencia; los bugs van a sus seis tarjetas.
 - Seguimiento sin hacer (del agente del SDK): los diálogos cerrados siguen en el DOM fuera de pantalla y sus
   botones son alcanzables con Tab desde la página (`inert` o `visibility: hidden` al cerrar).
 
