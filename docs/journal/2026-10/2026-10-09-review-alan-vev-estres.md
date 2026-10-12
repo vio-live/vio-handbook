@@ -94,6 +94,15 @@ Angelo: «ve con todos los puntos, mergeas, despliegas y cuando yo vuelva los pr
   entra), respetando otro diálogo Vio abierto. Rebundle [vev#59](https://github.com/vio-live/vev/pull/59),
   **Vev 0.324** publicado por mí. Los botones dentro de los iframes de Qliro/Nexi/Klarna siguen la regla de
   Safari («Pulsar Tab para resaltar cada elemento»): se lo expliqué a Alan en la tarjeta.
+- **12/10, noche — la pestaña duplicada dice «ya pagado»**: shopcart deja `duplicateOf` en el checkout
+  cerrado y lo expone como `duplicate_of` en `GetCheckoutById` y en el estado de Vipps
+  ([shopcart#85](https://github.com/vio-live/vio-shopcart-microservice/pull/85), [#86](https://github.com/vio-live/vio-shopcart-microservice/pull/86));
+  el gateway lo pasa en `GetCheckout` y `GetVippsStatus` ([graphql#23](https://github.com/vio-live/graphql/pull/23));
+  el SDK lo convierte en el resultado `duplicate` y muestra «Denne handlekurven er allerede betalt. Start en ny
+  handlekurv.» en la verificación de vuelta, el poll de Vipps y el settle embebido de Stripe
+  ([web-sdk#77](https://github.com/vio-live/vio-web-sdk/pull/77), 0.20.3; rebundle [vev#60](https://github.com/vio-live/vev/pull/60);
+  **Vev 0.325**). Verificado en QA con `dup-reason-smoke.py`: dos pagos de Vipps sobre un carrito → orden 4541
+  del primero; el segundo CANCEL con `duplicate_of` = el primero, reserva liberada, `GetVippsStatus` con el motivo.
 - Seguimiento sin hacer (del agente del SDK): los diálogos cerrados siguen en el DOM fuera de pantalla y sus
   botones son alcanzables con Tab desde la página (`inert` o `visibility: hidden` al cerrar).
 
