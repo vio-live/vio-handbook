@@ -50,9 +50,26 @@ Orden obligatorio, y no es el mismo que el de QA por casualidad:
    32 bytes exactos o el helper la ignora en silencio).
 2. Ponerla en el `.env` de **producción** (blob de `containerproductionsc`), guardarla en el
    `TOOLS.md` de miguel.
-3. **Reconstruir los tres** servicios que leen ese fichero: `vio-shopcart-microservice`,
-   `vio-api-microservice`, `vio-payment-processors-microservice`. El `.env` se hornea en la imagen,
-   así que `kubectl set env` no sirve.
+3. **Actualizar el Secret de Kubernetes de cada servicio y recrear sus pods.**
+   **CORREGIDO 2026-10-12 — el paso que estaba aquí era erróneo.** Decía "reconstruir los tres
+   servicios, porque el `.env` se hornea en la imagen". El `.env` **sí** se hornea, pero **no es el
+   que la app lee**: cada pod monta un Secret de Kubernetes `env-sc-<servicio>` encima de
+   `/usr/src/app/.env` (volumen `envfile`, `subPath: .env`), y ese montaje **tapa** el de la imagen.
+   Comprobado: `/proc/mounts` muestra ese path como **tmpfs**. Por eso se puede reconstruir las veces
+   que se quiera sin que el secreto llegue a producción.
+
+   Lo que funciona:
+   ```bash
+   # el fichero del blob es la fuente; el Secret es lo que se usa
+   az storage blob download -c env-file-microservices -n <servicio>/.env \
+     --account-name containerproductionsc --account-key "$K" -f <servicio>.env
+   kubectl create secret generic env-sc-<servicio> -n default \
+     --from-file=.env=<servicio>.env --dry-run=client -o yaml | kubectl apply -f -
+   kubectl delete pod -n default -l app.kubernetes.io/instance=<servicio>
+   ```
+   Respaldar antes el Secret (`kubectl get secret ... -o yaml > backup.yaml`) y comprobar después
+   **dentro del pod**: `grep ^CLAVE= /usr/src/app/.env`.
+   `kubectl set env` sigue sin servir: la app lee el fichero, no el entorno del proceso.
 4. Solo entonces `POST /paymentmethod/reencrypt-all` (interno, sin ruta pública).
 
 **Por qué ese orden:** si se corre `reencrypt-all` antes de que los tres tengan la clave, los
