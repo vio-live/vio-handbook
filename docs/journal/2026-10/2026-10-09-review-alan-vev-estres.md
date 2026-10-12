@@ -83,6 +83,17 @@ Angelo: «ve con todos los puntos, mergeas, despliegas y cuando yo vuelva los pr
   extremos ([web-sdk#75](https://github.com/vio-live/vio-web-sdk/pull/75), 0.20.1; rebundle
   [vev#58](https://github.com/vio-live/vev/pull/58); **Vev 0.323** publicado por mí con las mismas
   comprobaciones). Lección para cualquier trampa de foco: no delegar ningún Tab al navegador.
+- **12/10, retest de Alan (tarde)**: (1) Stripe intermitente: confirmado arreglado. (2) Dos pestañas, Vipps
+  primero y Stripe después: el duplicado no creaba orden pero **el cobro de Stripe se quedaba** (el intent
+  se confirma en el navegador). [shopcart#84](https://github.com/vio-live/vio-shopcart-microservice/pull/84):
+  `releaseDuplicateStripe` cancela el intent si solo está autorizado y lo reembolsa entero si ya se cobró,
+  en el Stripe del vendedor (own o Connect), idempotente. (3) Safari, segunda vuelta: tras el iframe de
+  Stripe el foco saltaba a la página sin llegar a «Betal», y al cambiar de método el foco caía al body.
+  [web-sdk#76](https://github.com/vio-live/vio-web-sdk/pull/76) (0.20.2): guardas a nivel de documento
+  mientras hay un diálogo abierto (`focusin` fuera del host → vuelve al elemento contiguo; Tab fuera →
+  entra), respetando otro diálogo Vio abierto. Rebundle [vev#59](https://github.com/vio-live/vev/pull/59),
+  **Vev 0.324** publicado por mí. Los botones dentro de los iframes de Qliro/Nexi/Klarna siguen la regla de
+  Safari («Pulsar Tab para resaltar cada elemento»): se lo expliqué a Alan en la tarjeta.
 - Seguimiento sin hacer (del agente del SDK): los diálogos cerrados siguen en el DOM fuera de pantalla y sus
   botones son alcanzables con Tab desde la página (`inert` o `visibility: hidden` al cerrar).
 
