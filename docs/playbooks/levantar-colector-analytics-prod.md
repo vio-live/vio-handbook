@@ -1,0 +1,127 @@
+---
+title: "Levantar el colector de analytics en producción (Oracle)"
+last-updated: 2026-10-12
+owner: angelo
+status: live
+---
+
+# Levantar el colector de analytics en producción
+
+Hoy **no hay colector de producción**. Desde el rehost a Oracle, `events.vio.live`
+vive en la VM del backend (`82.70.54.151`) y devuelve `503
+analytics_collector_not_deployed` (vhost `events-vio-gone`, puesto por Miguel el
+2026-10-12). Este playbook lo reemplaza por el colector real.
+
+Quien lo ejecuta necesita **SSH a la VM de producción** — el agente de analytics
+no lo tiene. Espejo de lo que ya corre en staging
+([vio-staging-oracle](../infrastructure/vio-staging-oracle.md)).
+
+## Antes de empezar: lo que ya está listo (verificado 2026-10-12)
+
+| Pieza | Estado |
+|---|---|
+| ClickHouse (`analytics.vio.live`, Oracle) | ✅ vivo; `vio_production` existe con la tabla `events`, 0 filas |
+| `events.vio.live` → `82.70.54.151` (DNS + cert) | ✅ el certificado ya cubre el nombre |
+| Colector en staging (`129.151.196.99:5100`) | ✅ sano, 7.535 eventos, Mixpanel al día |
+| Código | `vio-live/vio-analytics` `main` @ `3f1a5f6` |
+
+⚠️ **El CI del repo no sirve**: `.github/workflows/deploy.yml` sigue desplegando a
+Azure Container Apps (`acrvioapi`, `rg-api-vio-*`), que ya no existen. El deploy
+es manual, como en staging. Arreglar el workflow es tarea aparte.
+
+⚠️ **RAM**: la VM es `E2.1.Micro` (954 MB + 2 GB swap) y ya corre `vio-backend` +
+Postgres. En staging los mismos tres procesos ocupan 405 MB. Entra, pero medir
+con `free -m` después de arrancar.
+
+## 1. Token interno: generar uno nuevo (no reutilizar)
+
+El token que hoy tiene base-api de producción (`ANALYTICS_INTERNAL_TOKEN`)
+**quedó expuesto en una captura de Trello el 2026-09-15** y además **no coincide**
+con el de `vio-analytics/infra/terraform.tfvars`. Así que:
+
+```bash
+openssl rand -hex 32   # token nuevo, uno solo
+```
+
+Ese valor va en **dos lugares**, y tienen que ser idénticos o el dashboard de
+Commerce responde 401:
+
+1. el `.env` del colector (`INTERNAL_EVENTS_TOKEN`, paso 2);
+2. el `.env` de prod de base-api (`ANALYTICS_INTERNAL_TOKEN`) en
+   `containerproduction2` / `env-file-microservices` / `base-api/.env`, que se
+   hornea en el build → hay que **redesplegar base-api** después.
+
+Opcional pero recomendado: `INTERNAL_READ_TOKENS` con un segundo token distinto,
+y que base-api use **ese** (solo lectura). Ver
+[handoff/analytics-stats-bridge](../handoff/analytics-stats-bridge.md).
+
+## 2. El `.env` del colector
+
+En la VM de producción, `/opt/vio-analytics/.env` (600, dueño del servicio):
+
+```
+NODE_ENV=production
+PORT=5100
+DATABASE_URL=            # Postgres LOCAL de la VM (la misma que usa vio-backend)
+CLICKHOUSE_URL=https://analytics.vio.live
+CLICKHOUSE_USER=default
+CLICKHOUSE_PASSWORD=     # el mismo que usa el colector de staging
+CLICKHOUSE_DATABASE=vio_production
+MIXPANEL_PROJECT_TOKEN=  # proyecto "Vio Analytics" (prod), id 4055947 — lo pasa Angelo
+MIXPANEL_API_SECRET=     # idem
+INTERNAL_EVENTS_TOKEN=   # el del paso 1
+INTERNAL_READ_TOKENS=    # opcional, solo lectura
+```
+
+**Dos valores de `terraform.tfvars` están viejos y NO se copian tal cual**:
+`database_url` (apunta a la Postgres de Azure, desmantelada) y `clickhouse_url`
+(apunta al host viejo de Noruega). El resto de los valores de producción siguen
+siendo válidos.
+
+`DATABASE_URL` es para resolver api keys → tenant: es la Postgres del backend, no
+una base propia del colector.
+
+## 3. Servicio
+
+Igual que en staging: clonar en `/opt/vio-analytics`, `pnpm install --prod=false`,
+`pnpm build`, y una unit `vio-analytics.service` con `Restart=always`,
+`EnvironmentFile=/opt/vio-analytics/.env`, `ExecStart=/usr/bin/node dist/index.js`.
+El colector crea las columnas que falten al arrancar (`ADD COLUMN IF NOT EXISTS`),
+así que no hay migración manual.
+
+## 4. nginx: reemplazar el 503
+
+`events.vio.live` pasa del vhost `events-vio-gone` a uno que haga proxy a
+`127.0.0.1:5100`, con el mismo certificado. **Guardar el vhost del 503**: es el
+estado al que se vuelve si hay que apagar el colector.
+
+```bash
+nginx -t && systemctl reload nginx
+```
+
+## 5. Verificación (desde fuera, sin SSH)
+
+```bash
+curl -s https://events.vio.live/health          # ready:true, clickhouse sin lastError
+curl -s -o /dev/null -w "%{http_code}\n" -X POST -H 'Content-Type: application/json' \
+  -d '{}' https://events.vio.live/v1/events     # 400 (envelope inválido) = contrato vivo, NO 200 ni 503
+curl -s https://events.vio.live/v1/commerce-stats/overview   # 401 internal token required
+curl -s https://api.vio.live/health             # 200 — el backend no se tocó
+```
+
+Y con el token nuevo, que el puente del dashboard responda:
+`curl -H "authorization: <ID token Firebase de prod>" https://api-ecom.vio.live/api/stats/overview`
+→ 200 (con ceros, hasta que haya tráfico).
+
+## 6. Qué esperar después
+
+Producción va a seguir mostrando **0** hasta que alguna superficie use
+`environment: production` en el SDK (la pareja es `api.vio.live` ↔
+`events.vio.live`). Hoy ninguna lo usa: Vev y la demo van a staging. Eso se decide
+aparte — ver [cuentas-y-capacidades](../architecture/cuentas-y-capacidades.md) y
+el journal del 2026-09-15.
+
+## Rollback
+
+Volver al vhost `events-vio-gone` (503 explícito) y `systemctl stop vio-analytics`.
+El 503 es un estado correcto: el SDK reintenta, no da el lote por aceptado.
