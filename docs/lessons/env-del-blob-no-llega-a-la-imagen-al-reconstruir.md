@@ -1,7 +1,15 @@
 ---
-title: Cambiar el .env del blob y reconstruir NO aplica el cambio
+title: El .env del blob se descarga bien, pero la imagen acaba sin las últimas líneas
 last-updated: 2026-10-12
 ---
+
+> **CORRECCIÓN (misma tarde).** La primera versión de esta lección decía que el build "no recoge el
+> fichero del blob". **Eso es falso** y lo desmiente el log del propio build: el paso
+> `RUN az storage blob download` **corre** (no está cacheado, 1,38 s) y descarga
+> **`contentLength: 14269`**, que es exactamente la versión con el secreto añadido, con
+> `lastModified` dos minutos anterior al build. Lo que queda sin explicar es por qué la imagen final
+> tiene ese `.env` en **14.174 bytes**, es decir sin las dos líneas del final. Lo escrito abajo sobre
+> *verificar* sigue valiendo; la causa raíz NO está identificada.
 
 ## El procedimiento documentado no funciona
 `prod-power-on-demand.md` dice, para cargar un secreto: ponerlo en el `.env` del blob y
@@ -50,3 +58,26 @@ Lo que sí vale, en este orden:
 `kubectl wait --for=condition=Available deploy/x` **vuelve de inmediato** si el deployment ya está
 disponible con los pods viejos. Tras un build, no demuestra nada: esperar por el digest o por la
 edad del pod. Por confiar en él inspeccioné un pod del build anterior y saqué una conclusión falsa.
+
+## Estado real del diagnóstico (no cerrado)
+
+**Confirmado:**
+- El secreto se escribe en el blob y se relee de vuelta correctamente.
+- El build descarga **ese** fichero: el log del paso lo dice (`contentLength`, `lastModified`).
+- La imagen final tiene el mismo `.env` **menos las dos últimas líneas** (los ~96 bytes añadidos).
+- El pod corre esa imagen (digest del contenedor igual al `:latest` del ACR).
+
+**Descartado:**
+- Caché de capas: el paso del download se ejecuta, con su salida y su tiempo en el log.
+- Storage equivocado: solo `containerproductionsc` y `containerqasc` tienen el contenedor, y QA no
+  tiene `.env` (usa `.env.local`). El tamaño descargado coincide con el de producción.
+- El `sed` de `APP_NAME`: solo suma 1 byte.
+- Que el `.env` venga del repo: no está en git (404 en la API de contenidos).
+
+**Siguiente paso para cerrarlo**, acotado y sin tocar producción: un PR a `develop` de shopcart que
+añada dos `RUN wc -c "${ENV_FILE}"` temporales, uno justo después del `sed` y otro después del
+`yarn build`. El build de QA dirá en qué paso cambia el tamaño. Con eso se identifica el culpable en
+una sola pasada.
+
+**Mientras no esté cerrado:** no dar por activo ningún secreto nuevo del blob sin comprobarlo
+**dentro del contenedor**, con el método de abajo.
