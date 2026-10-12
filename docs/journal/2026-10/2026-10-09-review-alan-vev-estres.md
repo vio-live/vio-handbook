@@ -76,6 +76,13 @@ Angelo: «ve con todos los puntos, mergeas, despliegas y cuando yo vuelva los pr
   páginas publicadas siguen con su bundle hasta que se republiquen (Angelo y Alan).
 - 12/10: el checklist de retest de Angelo (19 puntos, 0–6) añadido a la tarjeta de Alan como checklist
   «9 · Retest tras la 0.322», a tildar con evidencia; los bugs van a sus seis tarjetas.
+- **12/10 — Safari (hallazgo de Alan en VIXYYn1u)**: el foco entraba en el diálogo pero el primer Tab lo
+  abandonaba. Causa: Safari no incluye botones ni enlaces en su orden de Tab por defecto («Pulsar Tab para
+  resaltar cada elemento» apagado) y la trampa de #74 solo actuaba en los extremos, dejando los pasos
+  intermedios al navegador. Arreglo: la trampa mueve el foco en cada Tab/Shift+Tab con vuelta en ambos
+  extremos ([web-sdk#75](https://github.com/vio-live/vio-web-sdk/pull/75), 0.20.1; rebundle
+  [vev#58](https://github.com/vio-live/vev/pull/58); **Vev 0.323** publicado por mí con las mismas
+  comprobaciones). Lección para cualquier trampa de foco: no delegar ningún Tab al navegador.
 - Seguimiento sin hacer (del agente del SDK): los diálogos cerrados siguen en el DOM fuera de pantalla y sus
   botones son alcanzables con Tab desde la página (`inert` o `visibility: hidden` al cerrar).
 
