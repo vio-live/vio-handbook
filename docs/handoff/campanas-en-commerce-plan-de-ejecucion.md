@@ -83,12 +83,31 @@ fuera de `/v2/mobile/config` tiene tráfico real.
 
 ### F3 — Microservicio `vio-campaigns-microservice`
 
+**División (Angelo, 2026-10-13): Miguel se encarga de la configuración y la infra del micro;
+Claude, del código.**
+
+**Miguel: configuración e infra.** Se toma `collection` como referencia, porque es el micro
+más chico. No hay repo starter, y `vio-template-microservice` **no** es un template: es el
+servicio de mapeo de integraciones.
+
 | # | Qué |
 |---|---|
-| 3.1 | Scaffold desde `vio-template-microservice`, más chart, pipeline y env (con el fix del registry por `$ACR`), y sumarlo al dispatch de los 7 `kernel-release.yml`. |
-| 3.2 | Entidades en `package-database`: `surface`, `surface_platform`, `surface_channel`, `slot` (por plataforma), `campaign`, `campaign_sponsor`, `campaign_slot`, `brand_profile`. Las de liveshow se retiran si F1.5 da 0 filas. |
+| 3.1a | Crear el repo `vio-live/vio-campaigns-microservice` (privado), con ramas `develop` (QA) y `main` (prod). |
+| 3.1b | `Dockerfile`, `charts/campaigns` (Service ClusterIP 80→8000; 50m/192Mi; 1 réplica en QA y 2 en prod; registry por `$ACR`, como el fix de middleware #8), `.github/workflows/deploy.yml` y `kernel-bump.yml`. |
+| 3.1c | Secrets de GitHub del repo por entorno: `ACR_*`, `SV_APP_ID/PASSWORD/TENANT_ID_*`, `ENV_FILE_*`, `AZ_STORAGE_*`, `YARN_BUILD/START_*`, `APP_NAME_*`, `APP_PREFIX`, `NPM_CONTENT_FILE`. |
+| 3.1d | Variables nuevas en el `.env` compartido (`env-file-microservices`, QA y prod): URL interna de api (métodos de pago), orígenes CORS del dashboard y URL pública de GraphQL. Firebase admin y la DB ya vienen por el kernel. |
+| 3.1e | **Exposición pública.** A diferencia de los otros 11 micros, a este lo llaman directo los SDKs, Vev y el webapp. Necesita un `Gateway` + `VirtualService` de Istio (en `vio-kubernetes-config`), DNS en Cloudflare y TLS. Propuesta de hosts: `campaigns.vio.live` (prod) y `campaigns-qa.vio.live` (QA). |
+| 3.1f | Sumar el micro a la lista de dispatch de los 7 `kernel-release.yml`. |
+| 3.1g | En el corte (F6): un `location` por cada ruta portada en el nginx de Oracle de `api.vio.live`, hacia el host nuevo (ADR-0028). |
+
+**Claude: código.**
+
+| # | Qué |
+|---|---|
+| 3.2 | Entidades en `package-database`: `surface`, `surface_platform`, `surface_channel`, `slot` (por plataforma), `campaign`, `campaign_sponsor`, `campaign_slot`, `brand_profile`. Las de liveshow se retiran si F1.5 da 0 filas; si no, nombres nuevos (I8). Necesita OK de Angelo y release con los 7 paquetes juntos. |
 | 3.3 | Auth propia: token de Firebase para el dashboard y key de surface para el SDK, sin pasar por el middleware. |
-| 3.4 | Rutas iguales a las de vio-backend: `/api/client-apps…`, `/api/campaigns…`, `/api/sponsors…`, `/api/auth/me`, `/api/sponsor/me`, `/v2/mobile/config` (compatible + `campaigns[]`), `/v2/mobile/campaigns/:id/components`, `/v2/mobile/components/manifest` (por plataforma), `/v2/web/brands`. El estado de campaña se calcula en un solo lugar, y se valida siempre que la campaña sea de la surface de la key. |
+| 3.4 | Rutas iguales a las de vio-backend: `/api/client-apps…`, `/api/campaigns…`, `/api/sponsors…`, `/api/auth/me` (reexpone `accountType` de users), `/api/sponsor/me`, `/v2/mobile/config` (compatible + `campaigns[]`), `/v2/mobile/campaigns/:id/components`, `/v2/mobile/components/manifest` (con `platform` opcional), `/v2/web/brands`. El estado de campaña se calcula en un solo lugar, y se valida siempre que la campaña sea de la surface de la key. Los métodos de pago se le piden a api, con cache. |
+| 3.5 | Tests unitarios y de contrato contra las respuestas actuales de vio-backend. |
 
 ### F4 — Front (webapp)
 
@@ -150,8 +169,8 @@ El rol de origen de catálogo (vio-sync, `EcomUser` y las conexiones) **no se to
 | Persona | Qué |
 |---|---|
 | **Angelo** | Decisiones, mediciones, publish del kernel, OK de push y merge |
-| **Claude** | Implementación y PRs |
-| **Miguel** | Revisión del plan, `access.log` de Oracle, infra del micro nuevo (chart, pipeline, DNS) |
+| **Claude** | **El código**: la app del micro (F3.2–3.5), los ajustes de F2 y los PRs |
+| **Miguel** | Revisión del plan, `access.log` de Oracle, **toda la configuración e infra del micro nuevo** (F3.1a–g) |
 | **Alan** | SDK nativo y overlay de Kotlin |
 
 ## Revisión
