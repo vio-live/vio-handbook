@@ -107,11 +107,21 @@ gate de migraciones frenó el bump automático, como se esperaba.
    - `DB_MIGRATION_FILE=1791900705000-surface-tables.ts yarn migration:execute`
 2. **Comprobar:** `SELECT * FROM role WHERE id_role = 3` (tiene que dar Publisher) y
    `SHOW TABLES LIKE 'surface%'` (8 tablas), más `brand_profile`.
-3. **Recién después, el bump a QA.** `kernel-bump.yml` de cada micro **pushea directo a `develop`**
-   y redespliega los 11 en QA. Se dispara con un `repository_dispatch` `kernel-published`
-   con `version=1.0.269` a cada uno de los 11 repos (la lista está en `kernel-release.yml`). Lo
-   hace Claude cuando Miguel confirme el paso 1. `api` en QA tiene 1 réplica: corte de uno o
-   dos minutos.
+3. **Recién después, una release con los 7 paquetes juntos, que además dispara el bump a QA.**
+   ⚠️ *Corregido el 13/10, a partir del hallazgo del agente de `users`:* la release automática de
+   #17 publicó solo lo que cambió (database y service en 1.0.269, definitions y testing en
+   1.0.268, y config, logger y utils en 1.0.267). Como `kernel-bump.yml` pone **todos** los
+   `@vio-/*` en una misma versión, un bump con 1.0.269 falla al instalar `@vio-/config@1.0.269`.
+   - **Qué hay que hacer:** `gh workflow run kernel-release.yml -R vio-live/package-database -f pkg=all`.
+     Publica los 7 en la versión siguiente, 1.0.270, y como el último commit no agrega
+     migraciones, **dispara el bump automático** a los 11 micros. Cada `kernel-bump.yml` pushea
+     directo a `develop` y redespliega en QA.
+   - **Por eso va estrictamente DESPUÉS de los pasos 1 y 2.** Si se dispara antes, los micros
+     arrancan en QA esperando columnas que no existen. Lo dispara Claude cuando Miguel confirme.
+     `api` en QA tiene 1 réplica: corte de uno o dos minutos.
+   - **Lección:** la release automática por push respeta "solo lo que cambió" (ADR-0014), pero
+     el bump exige "los 7 juntos". Cuando una release automática publica solo una parte, hay que
+     completarla con `pkg=all` antes de bumpear.
 
 ### F3 — Microservicio `vio-campaigns-microservice`
 
