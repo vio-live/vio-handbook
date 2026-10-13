@@ -170,6 +170,11 @@ WHERE cu.user_id <> p.user_id
                   WHERE own.user_id = p.user_id AND own.deleted_at IS NULL AND own.active = 1)
 GROUP BY p.user_id
 ORDER BY p.user_id;
+
+-- 8. Carritos cuyo dueño no es el dueño de su channel (los últimos 30 días). Correr ANTES de
+--    desplegar orders: el cambio de /save engancha el channel solo si es del reseller.
+SELECT COUNT(*) FROM cart c JOIN channel_user cu ON cu.id = c.channel_user_id
+WHERE c.user_id <> cu.user_id AND c.created_at > NOW() - INTERVAL 30 DAY;
 ```
 
 ## Blockers / open questions
