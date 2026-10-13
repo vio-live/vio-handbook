@@ -92,6 +92,13 @@ flag.
 
 ## Blockers / open questions
 
+- 🔴 **En staging, estas pantallas solo andan desde IPs en lista blanca.** Desde el cierre de
+  Miguel (13/10, ver el journal `2026-10-13`), en `api-staging` solo son públicos `/api/auth/`
+  y `/api/sponsor/`. El resto de `/api/` está en lista blanca por IP en nginx: `/client-apps`,
+  `/campaigns` y `/sponsors` (plural). Fuera de la lista, el navegador recibe un 403 HTML sin
+  CORS, y el front lo muestra como error con Retry. `/auth/me` pasa, así que la nav sí aparece.
+  Se puede probar desde la red de Angelo (está en la lista). Para todos, hace falta el micro (F3)
+  o abrir esas rutas, lo que es decisión de Angelo y Miguel.
 - **Staging sin verificar:** no hay push. Además, las cuentas QA documentadas son business y no
   tienen `surfaces:manage`. Para probar en staging hace falta una cuenta publisher (signup como
   "Publisher" en QA).
