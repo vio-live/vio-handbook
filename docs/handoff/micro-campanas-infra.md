@@ -27,6 +27,28 @@ webapp no cambien. Por eso, a diferencia de los otros 11 micros, **es público**
 - **Sin tablas todavía:** van en `package-database` cuando Angelo dé el OK. Hasta entonces, la
   app corre con un adaptador en memoria.
 
+## Estado de la infra (Miguel, 2026-10-13 17:00)
+
+| # | Pieza | Estado |
+|---|---|---|
+| — | Service principal `sp-campaigns-ci` (mínimo privilegio) | ✅ creado, 3 roles verificados |
+| 7 | DNS en Cloudflare: `campaigns.vio.live`, `campaigns-staging`, `campaigns-dev` | ✅ A sin proxy, TTL 60, resolviendo |
+| 7 | Certificates DNS-01 en los dos clusters | ✅ `Ready=True`, Let's Encrypt hasta 2027-01-11 |
+| 7 | Gateway + VirtualService (QA y prod) | ✅ aplicados; los hosts dan **503** hasta que exista el Service |
+| 7 | Manifiestos en `vio-kubernetes-config` | ✅ [PR #1](https://github.com/vio-live/vio-kubernetes-config/pull/1) (sin mergear, ADR-0001) |
+| 1 | Repo `vio-campaigns-microservice` | ⬜ siguiente |
+| 2-4 | Dockerfile, chart `campaigns`, workflows | ⬜ van en el primer push del repo |
+| 5 | 39 secrets de GitHub | ⬜ tras crear el repo |
+| 8 | Dispatch del kernel (7 PRs) | ⬜ |
+
+**Verificado desde fuera:** `https://campaigns-staging.vio.live` y `https://campaigns.vio.live`
+presentan certificado válido (`CN=campaigns-staging.vio.live`, emisor Let's Encrypt) y devuelven
+503. `api-ecom.vio.live` sigue en 200: no se rompió nada de lo que ya estaba.
+
+**Reparto del primer push, para no pisarnos con el agente:** yo subo a `develop` solo la infra
+— `Dockerfile`, `charts/campaigns` + su `.tgz`, `.github/workflows/{deploy,kernel-bump}.yml` —
+y **nada de `src/` ni `package.json`**. El código entra después como PR encima.
+
 ## Checklist de Miguel
 
 **1. Repo.** `vio-live/vio-campaigns-microservice`, privado.
