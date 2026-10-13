@@ -152,7 +152,9 @@ que fanea a los microservicios REST.
 aplica `discount`, **crea la orden en `orders` (estado PENDING/PROCESSING) ANTES del cobro**,
 e **inicia el pago él mismo** (Stripe/Klarna/Vipps/Apple/Google Pay; Klarna/Vipps por HTTP
 directo, no SDK). El pago se confirma **por webhook**. `payment-processors` **NO inicia
-pagos ni recibe webhooks** — solo hace capture/cancel/refund post-autorización.
+pagos ni recibe webhooks** — solo hace capture/cancel/refund post-autorización, con la
+cuenta del vendedor del carrito (`cart.seller ?? cart.user`, ADR-0028; en Stripe gana el
+`sellerId` grabado en el pago; rama `feature/brand-publisher`, 2026-10-13, sin mergear).
 `orders` emite `order:paid` → dispara fulfillment en Shopify/Woo/Magento.
 
 **Canales de venta externos (import/export de catálogo):** `extensions` (bigcommerce/
