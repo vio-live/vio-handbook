@@ -131,6 +131,30 @@ al instante; el resto de eventos están disponibles y sin cablear.
   (popups públicos del OAuth de Magento; `src/lib/magento.js`; endpoints
   en RAÍZ del host, payload snake_case; supplier = credential→confirm).
 
+## Surfaces y campañas del Publisher (2026-10-13, rama local `feature/brand-publisher`)
+
+F4 del [plan de campañas](../handoff/campanas-en-commerce-plan-de-ejecucion.md). Detalle en el
+journal `2026-10/2026-10-13-front-commerce-surfaces-y-campanas.md`.
+
+- **Backend:** vio-backend (`vioApi`, `src/lib/vio.js`) con las rutas `/client-apps…`,
+  `/campaigns…` y `/sponsors`. El micro de campañas va a responder las mismas rutas (ADR-0027).
+  Todo el contrato y sus gotchas están en las cabeceras de **`src/lib/surfaces.js`** y
+  **`src/lib/campaigns.js`**: al cortar, se tocan esos dos archivos.
+- **Quién lo ve:** la nav arma el grupo *Publishing* con `navGroupsFor(account)` a partir de las
+  `features` de `/auth/me`: Surfaces con `surfaces:manage` y Campaigns con `campaigns:manage`
+  (publisher = `seller` e `internal`). `FeatureGate` cubre la URL directa. Sin `VIO_HOST` (prod
+  hoy) no aparece nada.
+- **Rutas:**
+  - `/surfaces` y `/campaigns` son páginas;
+  - `/surfaces/:id` y `/campaigns/:id` van por el catch-all;
+  - `/campaigns?surface=<id>` abre el alta con esa surface elegida.
+- **Estado de campaña:** se calcula solo en `campaignStatus()`, con las fronteras de
+  `isCampaignActive` del server. `isPaused` llega como string.
+- **Flag `VIO_CAMPAIGNS_V2`** (`next.config.js → env`, apagado). Cubre channels de la campaña,
+  slots, campaña por defecto, markets de la surface y `custom-web`. Con el flag apagado no se
+  muestran ni se mandan, porque vio-backend no valida el POST de campañas y rechaza `custom-web`.
+  Se enciende con el micro.
+
 ## Gotchas vigentes
 
 - Aliases semánticos de color en `:root, [data-theme]` (las custom props
@@ -143,6 +167,12 @@ al instante; el resto de eventos están disponibles y sin cablear.
   limpiar inputs; interceptar API cross-origin exige headers CORS en
   `req.respond()` + preflight OPTIONS; medir "no white flash" = muestreo
   in-page 30 ms de `.vio-app`.
+- **Ver vistas autenticadas sin cuenta de staging (2026-10-13):** `next dev` y puppeteer con la
+  sesión de Firebase inyectada. Se escribe el user en IndexedDB `firebaseLocalStorageDb` con la
+  clave `firebase:authUser:<apiKey>:[DEFAULT]`, con un `accessToken` falso y `expirationTime`
+  futuro. Hay que abortar `identitytoolkit` (`accounts:lookup`): ante `network-request-failed`
+  Firebase conserva el user. Después se interceptan base-api y vio-backend con fixtures, con CORS
+  y respuesta al OPTIONS.
 - `AVATAR_PLACEHOLDER` (signup Google sin foto) apunta hardcoded al
   container de staging (`outshifter-uploads-qa`) — flaggeado, sin decidir.
 

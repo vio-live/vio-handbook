@@ -115,6 +115,11 @@ servicio de mapeo de integraciones.
 
 🟡 Desde el 2026-10-13 hay un agente de front en la rama local `feature/brand-publisher` del webapp, sin push. Construye Surfaces y Campañas contra el contrato actual de vio-backend, que el micro mantiene. Lo nuevo de ADR-0027 queda detrás de un flag.
 
+**Primer corte hecho** (4 commits locales, `87e746f`..`af2c39f`, sin push). Incluye las listas,
+las altas y los detalles de Surfaces y Campañas, la nav por features y el flag `VIO_CAMPAIGNS_V2`.
+Faltan las vistas de solo lectura para business y los Channels como grupos de productos. Ver el
+journal `2026-10-13-front-commerce-surfaces-y-campanas`.
+
 
 Pantallas de Surfaces (con plataformas y slots), Channels (grupos de productos de una
 brand, a partir de Connection + colecciones), Campañas (sponsors, channels, fechas y
