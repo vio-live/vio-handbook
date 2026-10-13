@@ -17,7 +17,7 @@ validarlo y comprobar si engancharlo dispara la sincronización con una tienda.
 
 ## Done
 
-Dos commits locales en `feature/brand-publisher` de vio-orders-microservice, encima de `bec9a9e`
+Tres commits locales en `feature/brand-publisher` de vio-orders-microservice, encima de `bec9a9e`
 (`origin/develop`), en el worktree `~/vio-commerce/worktrees/orders-brand-publisher`. **Sin push**
 (ADR-0001). El kernel no cambia (1.0.267, service 1.0.268).
 
@@ -34,9 +34,9 @@ Dos commits locales en `feature/brand-publisher` de vio-orders-microservice, enc
   - Un channel borrado (soft-delete) después de abrir el carrito **cuenta**.
   - Sin `channelUserId`, todo sigue igual.
   - `create()`, que es el bus de las tiendas que se retiran, mantiene el lookup laxo de antes
-    (`{ channelOfReseller: false }`, `:3104`). Un rechazo ahí rebotaría por la DLQ sin fin, porque el
+    (`{ channelOfReseller: false }`, `:3116`). Un rechazo ahí rebotaría por la DLQ sin fin, porque el
     consumer reencola cada mensaje muerto con un timestamp nuevo.
-  - `getSellerDataByOrderId` (`:3483`) devuelve el channel solo si es de tienda
+  - `getSellerDataByOrderId` (`:3495`) devuelve el channel solo si es de tienda
     (`STORE_CHANNEL_IDS = [2, 5, 11]`, `staticData/index.ts:73`). Si no, devuelve lo mismo que una
     orden sin channel: nada.
 - `1c9bcdc` **Tests.**
