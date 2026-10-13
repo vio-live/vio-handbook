@@ -202,6 +202,8 @@ servicio de mapeo de integraciones.
 
 ### F4 — Front (webapp)
 
+✅ **PR #50 mergeado a `develop`** (`8ac55e6`, 13/10) y desplegado en staging (`dashboard-staging.ecom.vio.live`, Vercel `success`; el bundle trae la nav *Publishing*). Lo nuevo sigue detrás de `VIO_CAMPAIGNS_V2` y `ACCOUNT_PAYMENTS`, apagados: se encienden cuando el micro (TypeORM) y api F2.3/base-api 2.6 estén en QA. Hasta F2.3, el publisher sin suscripción no puede crear channels ni pedir Connections.
+
 🟡 Desde el 2026-10-13 hay un agente de front en la rama local `feature/brand-publisher` del webapp, sin push. Construye Surfaces y Campañas contra el contrato actual de vio-backend, que el micro mantiene. Lo nuevo de ADR-0027 queda detrás de un flag.
 
 **Primer corte hecho** (4 commits locales, `87e746f`..`af2c39f`, sin push). Incluye las listas,
