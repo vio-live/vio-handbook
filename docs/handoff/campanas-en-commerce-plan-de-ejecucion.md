@@ -92,6 +92,27 @@ fuera de `/v2/mobile/config` tiene tráfico real.
 | 2.6 | Proxies y docs de los endpoints nuevos de encendidos. | base-api | 2.3 |
 | 2.7 | Settings › Payments gana los encendidos. El detalle del channel muestra los pagos heredados en solo lectura. "Channel" pasa a ser grupo de productos, y la cuenta "Channel" se llama **Publisher**. | webapp | 2.3, 2.6 |
 
+### F2.1/F3.2 — Release del kernel 1.0.269 (13/10)
+
+✅ El PR #17 está mergeado (`6c1b3c6`) y publicó **`@vio-/database` 1.0.269** (tag `v1.0.269`). El
+gate de migraciones frenó el bump automático, como se esperaba.
+
+**Pasos que siguen. Solo QA; prod no se toca.**
+1. **Migraciones en la base de QA (Miguel)**, de a una y en este orden, desde
+   `package-database` en `develop` (o desde el pod, como en las mediciones):
+   - `DB_MIGRATION_FILE=1791899686000-brand-publisher.ts yarn migration:execute`
+   - `DB_MIGRATION_FILE=1791899686001-brand-publisher-payments-backfill.ts yarn migration:execute`.
+     **Guardar el log:** trae la consulta 7 y el listado de "cuenta de Vio" por método. En QA
+     son unos 474 pares, y es lo esperado.
+   - `DB_MIGRATION_FILE=1791900705000-surface-tables.ts yarn migration:execute`
+2. **Comprobar:** `SELECT * FROM role WHERE id_role = 3` (tiene que dar Publisher) y
+   `SHOW TABLES LIKE 'surface%'` (8 tablas), más `brand_profile`.
+3. **Recién después, el bump a QA.** `kernel-bump.yml` de cada micro **pushea directo a `develop`**
+   y redespliega los 11 en QA. Se dispara con un `repository_dispatch` `kernel-published`
+   con `version=1.0.269` a cada uno de los 11 repos (la lista está en `kernel-release.yml`). Lo
+   hace Claude cuando Miguel confirme el paso 1. `api` en QA tiene 1 réplica: corte de uno o
+   dos minutos.
+
 ### F3 — Microservicio `vio-campaigns-microservice`
 
 **División (Angelo, 2026-10-13): Miguel se encarga de la configuración y la infra del micro;
