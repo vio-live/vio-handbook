@@ -153,7 +153,19 @@ journal `2026-10/2026-10-13-front-commerce-surfaces-y-campanas.md`.
   - **Sin cuenta de Vio** (prod hoy, sin `VIO_HOST`): Commerce como siempre.
   - **El shell espera `/auth/me`** (timeout de 8 s) antes de montar la vista.
 - **"Getting started" del publisher** en `/home` (`src/lib/onboarding.js`): 4 pasos con estado
-  real.
+  real. Si la Connection está aceptada pero no hay colecciones compartidas, el paso 1 queda en
+  *Waiting*.
+- **Pasos 1 y 2 del publisher** (`src/lib/publisher-channels.js`; journal
+  `2026-10-13-front-commerce-pasos-1-y-2-publisher`):
+  - el publisher pide acceso a una brand desde Connections;
+  - la brand usa "Accept and share" (acepta y comparte en un paso);
+  - el asistente "New channel" crea un channel **tipo 10 por debajo**, sin tipo visible, con
+    colecciones compartidas o productos de UNA brand;
+  - el channel del publisher no muestra provider, sync ni pagos;
+  - hasta F2.3 la key es una por usuario y tipo: se avisa con `CHANNEL_KEY_SHARED_PER_TYPE`.
+
+  Commerce no guarda la brand del channel: se deriva de los dueños de sus colecciones
+  compartidas.
 - **Rutas:**
   - `/surfaces` y `/campaigns` son páginas;
   - `/surfaces/:id` y `/campaigns/:id` van por el catch-all;

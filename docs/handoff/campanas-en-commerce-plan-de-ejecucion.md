@@ -173,6 +173,20 @@ La propuesta para los pasos 1 y 2 del publisher (conectar con una brand y armar 
 está en el journal `2026-10-13-front-commerce-acceso-por-tipo-y-v2`. ⚠️ Deja **F2.3 (una key
 por channel) en el camino crítico** para publishers con más de una brand.
 
+**Pasos 1 y 2 implementados** (`c759bd8`, `65b8676`, sin push):
+- "Accept and share" para la brand;
+- *Waiting for <brand>* en Getting started;
+- el asistente "New channel" (tipo 10 por debajo, una brand);
+- el aviso de key compartida hasta F2.3.
+
+Del backend falta:
+- un endpoint para buscar brands;
+- la validación de una brand por channel en api;
+- verificar en staging la forma de `shared/me` y el `product_id` de otra cuenta en
+  `multi-group/v2`.
+
+Ver el journal `2026-10-13-front-commerce-pasos-1-y-2-publisher`.
+
 
 Pantallas de Surfaces (con plataformas y slots), Channels (grupos de productos de una
 brand, a partir de Connection + colecciones), Campañas (sponsors, channels, fechas y
