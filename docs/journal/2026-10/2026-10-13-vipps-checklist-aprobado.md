@@ -33,6 +33,15 @@ Leer la respuesta del equipo de integración de Vipps al checklist enviado el 08
   (`VIPPS_PARTNER_*`), registrar el webhook de partner (`scope: 'partner'` → `VIPPS_PARTNER_WEBHOOK_SECRET`),
   `EMAIL_DELIVERY=on`, `PAYMENT_SECRETS_KEY` en prod. Elegir el primer comercio que sale en vivo.
 
+## Plan de salida
+
+Escrito en [`partners/vipps/go-live-produccion.md`](../../partners/vipps/go-live-produccion.md). Al
+prepararlo, dos riesgos vivos en producción, comprobados en el cluster: **los correos están apagados
+desde el 12/10 13:18 UTC** (kernel 1.0.268 sin `EMAIL_DELIVERY`; sin órdenes desde entonces, nada
+perdido todavía) y **el SDK 0.20.3 pide `duplicate_of`, que el gateway de producción aún no tiene**
+(graphql #23 sin subir). Además `VIPPS_API_URL` de producción apunta a `apitest.vipps.no` y no hay partner
+keys ni webhook de partner.
+
 ## Next session
 
 - Con las partner keys: plan de release a producción por servicio, y avisar a Vipps en el hilo cuando el

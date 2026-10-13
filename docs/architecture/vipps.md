@@ -281,6 +281,8 @@ usar esos teléfonos en producción.
 | Vio (clúster) | **Asignar la unidad de venta** cuando Vipps confirma una firmada por el partnership: `PATCH api-ms /paymentmethod/:id/vipps-sales-unit { data: { merchantSerialNumber } }` — interno, sin proxy en base-api; solo acepta una fila de Vipps en modo partnership. El dashboard del vendedor pasa de «Waiting…» a «Sales unit NNN». |
 | Angelo | Prod: partner keys en el entorno, checklist de ePayment (PDF + vídeo), alta de comercios con Management API. |
 
+> [claude, 2026-10-13] Checklist aprobado por Vipps el 13/10. El orden para producción está en [`partners/vipps/go-live-produccion.md`](../partners/vipps/go-live-produccion.md).
+
 ## Página de prueba con el web SDK
 
 **https://vio-vipps-test.vercel.app** (Vercel, proyecto `vio-vipps-test`). HTML estático + bundle
