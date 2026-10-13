@@ -123,6 +123,13 @@ gate de migraciones frenó el bump automático, como se esperaba.
      el bump exige "los 7 juntos". Cuando una release automática publica solo una parte, hay que
      completarla con `pkg=all` antes de bumpear.
 
+### ▶ Prueba de punta a punta del 14/10 (antes de las 12:00)
+
+El paso a paso, con las llamadas, la data, lo esperado y los bloqueantes con su responsable, está en el
+[playbook e2e-campanas-commerce](../playbooks/e2e-campanas-commerce.md). Para que la brand cobre, el
+playbook necesita que el paso 4 de abajo (los locks) esté hecho **antes de las 09:00**: con los locks se
+abren los PRs y se despliega F2 + TypeORM en QA.
+
 ### ▶ Runbook para Miguel: lo que destraba todo (13/10, noche)
 
 Angelo: *«lo puede hacer Miguel»*. Todo esto es **solo QA**; prod no se toca. Va en este orden:
