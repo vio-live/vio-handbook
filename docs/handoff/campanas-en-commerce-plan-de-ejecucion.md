@@ -197,6 +197,149 @@ Angelo decidió:
 - `docs/architecture/vio-vev-integration.md` tiene keys en claro (líneas ~137 y ~242), que hay que rotar o quitar.
 - Sobre F0.1: la conexión propia **sí** la borraba extensions. Las descripciones de los PRs ya se corrigieron.
 
-### Miguel
+### Miguel (2026-10-13)
 
-*(Pendiente. Se le pidió revisar la infra del micro, el `access.log` y el modelo.)*
+Revisé el audit, los ADR-0025/0026/0027/0028 y este plan. Saqué el `access.log` de las dos VMs
+de Oracle (15 días, 28/09–13/10, los 15 ficheros rotados) y verifiqué contra tráfico real, no
+contra código. Lo que sigue son las dos cosas: la medición que me tocaba y mi opinión.
+
+Antes de las objeciones: **el plan está bien armado.** El audit está verificado en código con
+refs y marcado [V]/[I], tiene una revisión adversarial propia, y ADR-0028 cierra los cuatro
+bloqueantes con decisiones explícitas en vez de dejarlos abiertos. Mis reparos son de orden y
+de infra, no del diseño.
+
+#### 1. `access.log` de Oracle — F1, hecho
+
+**Trampa de lectura, primero.** Hay un scraper, `WebSiphon/next-0.1`, que descarga el bundle
+JS del dashboard viejo y **reproduce todas las cadenas que encuentra dentro**, incluidas las
+plantillas sin interpolar. De ahí salen los ~22-48 hits de `/api/campaigns`,
+`/api/components`, `/api/sponsors`, `/api/broadcasts`, y rarezas como
+`/api/campaigns/${e}/components` o `/ws/${t}`. Súmale ClaudeBot, GrokBot y Google-Extended.
+**Quien lea esos contadores como "el dashboard se usa" se equivoca.** Para separar: descartar
+los UA de bots y toda línea con `%7B`.
+
+| Pregunta | Respuesta medida |
+|---|---|
+| `api.vio.live` (prod, 82.70.54.151) | **Cero tráfico real de clientes en 15 días.** Los 500 `2xx` de `/api|/v1|/v2` son del scraper; el resto, crawlers y escáneres de login. `/v2/mobile/config`: **0 peticiones**, ni una. |
+| `api-staging` (129.151.196.99) | `/v2/mobile/config` es **el único endpoint con tráfico real**: 399 × 200, 233 × 304, 466 OPTIONS, 30 IPs distintas. Confirma el audit. |
+| ¿Quién lo embebe? | **Todo es desarrollo nuestro**: `a-alan-local.vev.site` (482), `editor.vev.design` (276), `a-vio-dev.vev.site` (155), `localhost:5173` (30) y una URL de Replit (4). **Ni una petición desde un dominio de producción de VG o Aller.** |
+| WebSocket | 57 upgrades (101) en staging, **todos `okhttp/4.12.0` desde 46.212.249.70** (la IP del equipo) + 1 `tv2demo/1 CFNetwork`. En prod hay 7 y son `node`/`rawgrab` del 28/09, o sea ruido. **`/ws` es el bucle de desarrollo de Alan, no una surface.** |
+| `/v1/engagement/*`, `/v2/tv/*`, `/v1/sdk/broadcast`, `/v1/localization`, `lineup`, `/objects/*` | **Cero llamadas reales en 15 días, en las dos VMs.** |
+| `register-device` y `manifest` | **1 llamada cada uno**, en staging, de la sesión de Kotlin. Nada más. |
+
+Comando usado (solo lectura), por si hay que repetirlo:
+
+```bash
+zcat -f /var/log/nginx/access.log* \
+ | grep -vE "WebSiphon|rawgrab|ClaudeBot|GrokBot|Google-Extended" | grep -v "%7B" \
+ | awk '{print $6" "$7" "$9}' | cut -d? -f1 | sed -E 's#/[0-9]+#/:id#g' \
+ | sort | uniq -c | sort -rn
+```
+
+**Qué cambia esto en el plan:**
+
+- **El corte es mucho menos arriesgado de lo que el plan supone.** No hay usuario final en
+  ningún lado: lo único vivo es el editor de Vev y nuestras máquinas.
+- **Pero F6 no se puede validar con "el tráfico real sigue andando", porque no existe.** Hace
+  falta una prueba explícita: abrir la campaña Lyko en el editor de Vev contra el micro nuevo
+  y comparar la respuesta de `/v2/mobile/config` byte a byte con la de vio-backend. Lo pondría
+  como criterio de salida de F3, no como paso de F6.
+- **La premisa de ADR-0028 B4 ("los SDKs nativos llaman hoy rutas que no se portan") es cierta
+  en el código y falsa en la red.** Nadie las llama salvo Alan, dos veces. Eso habilita algo
+  más simple que mantener vio-backend detrás del split: esas rutas pueden responder **410 con
+  un JSON explícito** desde el día del corte. Mejor que proxyear a un backend que ya nadie
+  mira: si algún cliente las usa, falla fuerte y nos enteramos.
+
+#### 2. Lo que reordenaría (mi única objeción de peso al orden)
+
+**Los 7 agujeros de auth de vio-backend no pueden esperar a F6.** El audit los da por
+verificados: `GET /api/campaigns/:id` público devolviendo `reachuApiKey` y `webhookUrl`, el
+`{ campaignId, ...req.body }` que saltea el ownership, la lectura cruzada de la
+`commerceApiKey` de otra surface con ids correlativos, `/api/analytics/*` y `/v2/commerce/*`
+sin auth. La mitigación del plan es "vio-backend sigue vivo mientras no se corte", y el corte
+está a F6. Mientras tanto **el host está siendo recorrido activamente** — el scraper del punto
+1 no es teoría, enumera rutas y las reproduce.
+
+Y acabo de medir que **prod no tiene ni un cliente real**. Entonces no hay razón para que
+`api.vio.live` siga abierto a internet. Propuesta concreta, 20 minutos y no toca el plan:
+
+- **prod:** `api.vio.live` solo para la IP del equipo y las de salida de AKS; todo lo demás, 403.
+- **staging:** público solo `/v2/mobile/config` y `/ws`; el resto de `/api/*` (el dashboard
+  viejo) a la IP del equipo.
+
+Eso cierra la ventana sin depender del cronograma. Si te parece, lo hago y lo documento.
+
+#### 3. Infra: dónde no estoy de acuerdo con ADR-0028 #5
+
+**El split por path no debería vivir en el nginx de Oracle.** Estoy de acuerdo con *cortar por
+path* (el rollback es revertir un `location`, es lo correcto), pero no con *dónde*. Si el micro
+vive en AKS y el split está en Oracle, la VM pasa a ser **un proxy de Oracle a Azure** para
+todo el API de producción. Esa máquina es una `E2.1.Micro` de 954 MB que ya corre vio-backend,
+su Postgres y, desde ayer, el colector de analytics (444 MB usados de 954). Le estaríamos
+poniendo el camino crítico del API encima, con un salto de red extra y un único punto de fallo
+en el tier gratuito.
+
+**Alternativa:** poner el split en **Cloudflare**, que ya está delante de `vio.live`. Mismo
+rollback (revertir una regla), cero saltos extra, y `api.vio.live` puede apuntar al ingress de
+AKS desde el primer día. Las rutas no portadas se mandan a Oracle o se contestan con 410 ahí
+mismo. Tengo los dos tokens de Cloudflare (DNS y Cache/Rules) y el zone id.
+
+Lo demás de la infra del micro lo asumo, con dos avisos:
+
+- **El `.env` del blob no entra por reconstruir.** Lo que leen los pods es el Secret de k8s
+  `env-sc-<svc>` montado en `/usr/src/app/.env`, que **tapa** el fichero horneado en la imagen.
+  El micro nuevo nace con su Secret o no arranca con la config que uno cree
+  ([lección](../lessons/env-del-blob-no-llega-a-la-imagen-al-reconstruir.md)).
+- **El cert va por DNS-01 de Cloudflare**, no HTTP-01: en prod entra por Istio y el reto HTTP
+  no se resuelve ([ADR / infra de certs](../infrastructure/overview.md)).
+
+#### 4. Modelo: una cosa que cambiaría
+
+**"Key general de surface + una key por channel" multiplica el problema de la key en el
+bundle.** Una surface con N channels obliga al cliente público a llevar N+1 secretos. Ya nos
+pasó: el audit encontró una API key de Commerce **escrita en el código** de Swift y Kotlin
+(punto 2 del audit), y los SDKs nativos además la mandan en la *query string*, así que queda
+en este mismo `access.log`. Escalarlo a N keys por surface va en la dirección contraria.
+
+Propondría que **el cliente solo lleve la key de surface** y que el micro resuelva server-side
+qué channels aplican, devolviendo o un token corto o directamente el catálogo. Si eso no entra
+en v1, el mínimo es: las keys de channel son **solo lectura de catálogo**, rotables por channel
+sin tocar la app, y nunca sirven para checkout. Es una propiedad de seguridad, merece una línea
+en el ADR.
+
+Del resto del modelo: de acuerdo con slots **por plataforma** (arregla la deprecación mutua),
+con calcular "activa" al leer en vez de materializarla (evita el cron duplicado de base-api), y
+con una sola función de markets (I2). Y sobre I8: **no reusaría el nombre `campaign`.** El ADR
+deja la puerta a "o este orden estricto", y con dos micros en kernels distintos y `api` a 1
+réplica alguien lo va a violar. Un nombre nuevo es gratis.
+
+#### 5. Detalles operativos que el plan no contempla
+
+- **F1 contra prod no se puede correr sin tocar el firewall.** Cerré el de la MySQL de prod el
+  02/10 y el 12/10 quité `AllowAllAzureServices`: hoy solo entra la salida de AKS de prod.
+  Quien corra las mediciones necesita que le agregue su IP, y hay que acordarse de quitarla
+  después. Ojo con `20.127.155.58`, una conexión a la base que sigo sin identificar.
+- **Dos releases del kernel con migración en el camino crítico** (F2.1 y F3.2) es el riesgo de
+  cronograma, más que el runtime. Las migraciones son baratas de agregar; las releases de los 7
+  paquetes, caras. Si se pueden diseñar las entidades de F3.2 a la vez que F2.1 y publicarlas
+  juntas (aunque el micro llegue después), se ahorra una vuelta entera.
+- **vio-analytics no se "reapunta" con una variable.** Resuelve api key → tenant leyendo
+  **Postgres** (`src/auth.ts:38,92,133`), y hoy el colector de prod apunta al Postgres local de
+  la VM. Pasar a MySQL es **cambio de código** en un repo cuyo CI está retirado (deploy manual).
+  De acuerdo con I4 en adelantarlo a 2.3: si las keys cambian antes, la atribución se rompe en
+  silencio. Lo hago yo, pero hay que ponerle número de fase.
+- **Las surfaces y keys de VG/Lyko y Aller hay que exportarlas a un fichero antes del corte**,
+  no recrearlas de memoria. F6 dice "las keys se importan tal como están": una key mal copiada
+  es un 401 silencioso para el publisher. Son 4 o 5 filas.
+
+#### 6. Dos cosas que encontré de paso (no son del plan)
+
+- **`POST /api/campaign/payments/apikey/:key` de `api` → vio-backend devuelve 500 en
+  producción**, 8 veces entre el 28/09 y el 12/10. O sea la propagación de métodos de pago que
+  2.3 elimina **hoy ya no funciona**. No hace falta arreglarla; conviene saber que está rota y
+  no andando.
+- **El puente de stats del dashboard de Commerce llama al colector sin `channel_id` ni
+  `sponsor_id` y se lleva un 400**: 6 peticiones desde la salida de AKS de prod
+  (`4.223.89.241`) desde que el colector está vivo. Antes del 12/10 esas mismas llamadas
+  recibían **200 con el HTML del dashboard viejo** (3133 bytes, idéntico en todos los
+  endpoints), que es un falso éxito peor que el 400. Hay que mirar qué manda base-api.
