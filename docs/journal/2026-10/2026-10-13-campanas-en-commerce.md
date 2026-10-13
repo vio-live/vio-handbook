@@ -67,12 +67,16 @@ poco más"), decidir dónde va dentro de Commerce y definir el modelo antes de t
 ## Mediciones pendientes (solo lectura; las corre Angelo en la MySQL de QA y prod)
 
 ```sql
--- 1. Conflictos de la unión: business con channels configurados distinto
+-- 1. Conflictos de la unión (corregida tras la revisión: LEFT JOIN para incluir channels
+--    sin fila de settings, que hoy ofrecen todo por defecto, e IFNULL para no perder NULLs)
 SELECT cu.user_id, COUNT(*) AS channels,
-       COUNT(DISTINCT CONCAT_WS(',', s.stripe_payment_intent, s.stripe_payment_link, s.klarna, s.vipps,
-             s.kustom, s.qliro, s.walley, s.nexi, s.adyen, s.google_pay, s.apple_pay)) AS variantes
+       COUNT(DISTINCT CONCAT(
+         IFNULL(s.stripe_payment_intent,'n'), IFNULL(s.stripe_payment_link,'n'), IFNULL(s.klarna,'n'),
+         IFNULL(s.vipps,'n'), IFNULL(s.kustom,'n'), IFNULL(s.qliro,'n'), IFNULL(s.walley,'n'),
+         IFNULL(s.nexi,'n'), IFNULL(s.adyen,'n'), IFNULL(s.google_pay,'n'), IFNULL(s.apple_pay,'n'),
+         IF(s.id IS NULL, '-sin-settings', ''))) AS variantes
 FROM channel_user cu
-JOIN channel_user_settings s ON s.id = cu.channel_user_settings_id
+LEFT JOIN channel_user_settings s ON s.id = cu.channel_user_settings_id
 WHERE cu.deleted_at IS NULL AND cu.active = 1
 GROUP BY cu.user_id HAVING variantes > 1;
 
@@ -99,6 +103,36 @@ ORDER BY sc.deleted_at DESC;
 
 -- 5. Liveshow
 SELECT (SELECT COUNT(*) FROM campaign) AS campaigns, (SELECT COUNT(*) FROM component) AS components;
+
+-- 6. Método encendido sin credencial propia activa = hoy cobra con la cuenta de Vio (ADR-0028).
+--    Un channel sin fila de settings cuenta como encendido para Stripe/Klarna/Vipps (default de api).
+--    Revisar el nombre exacto en options.name si algún método no aparece (Qliro/Adyen).
+SELECT t.user_id, t.metodo, COUNT(*) AS channels
+FROM (
+  SELECT cu.user_id, 'STRIPE' AS metodo FROM channel_user cu
+    LEFT JOIN channel_user_settings s ON s.id = cu.channel_user_settings_id
+    WHERE cu.deleted_at IS NULL AND cu.active = 1
+      AND (s.id IS NULL OR s.stripe_payment_intent = 1 OR s.stripe_payment_link = 1 OR s.google_pay = 1 OR s.apple_pay = 1)
+  UNION ALL SELECT cu.user_id, 'KLARNA' FROM channel_user cu
+    LEFT JOIN channel_user_settings s ON s.id = cu.channel_user_settings_id
+    WHERE cu.deleted_at IS NULL AND cu.active = 1 AND (s.id IS NULL OR s.klarna = 1)
+  UNION ALL SELECT cu.user_id, 'VIPPS' FROM channel_user cu
+    LEFT JOIN channel_user_settings s ON s.id = cu.channel_user_settings_id
+    WHERE cu.deleted_at IS NULL AND cu.active = 1 AND (s.id IS NULL OR s.vipps = 1)
+  UNION ALL SELECT cu.user_id, 'QLIRO' FROM channel_user cu
+    JOIN channel_user_settings s ON s.id = cu.channel_user_settings_id
+    WHERE cu.deleted_at IS NULL AND cu.active = 1 AND s.qliro = 1
+  UNION ALL SELECT cu.user_id, 'ADYEN' FROM channel_user cu
+    JOIN channel_user_settings s ON s.id = cu.channel_user_settings_id
+    WHERE cu.deleted_at IS NULL AND cu.active = 1 AND s.adyen = 1
+) t
+WHERE NOT EXISTS (
+  SELECT 1 FROM payment_method pm
+  WHERE pm.user_id = t.user_id AND pm.active = 1 AND pm.deleted_at IS NULL
+    AND UPPER(JSON_UNQUOTE(JSON_EXTRACT(pm.options, '$.name'))) = t.metodo
+)
+GROUP BY t.user_id, t.metodo
+ORDER BY t.metodo, t.user_id;
 ```
 
 ## Blockers / open questions
