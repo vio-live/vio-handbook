@@ -198,11 +198,9 @@ Entidades nuevas en el micro, en borrador. Los nombres de columnas se fijan al d
 **Pagos:** las credenciales de la brand quedan en `payment_method`, y sus encendidos pasan
 a `UserSettings`. El checkout de cada carrito cobra con la brand de sus productos.
 
-**Endpoints:** el micro mantiene las rutas de vio-backend (`/api/client-apps…`,
-`/api/campaigns…`, `/api/sponsors…`, `/v2/mobile/config`,
-`/v2/mobile/campaigns/:id/components`, manifest) y se importan las keys de surface tal
-como están. Así los SDKs, Vev y el web-sdk no cambian. La propuesta de host es
-`api.vio.live`, moviendo el DNS el día del corte (por confirmar).
+**Contrato:** mismas rutas que vio-backend en `api.vio.live`, `/v2/mobile/config`
+compatible más `campaigns[]`, y campañas simultáneas repartidas por slots livianos
+(ADR-0027).
 
 **Pendientes al pasar a MySQL:**
 
@@ -266,8 +264,10 @@ arreglar primero»*.
      cuyo id coincide con el userId;
    - `GET /api/channel/user/admin/by-shopify-url` no tiene auth y devuelve tokens de
      Shopify.
-1. **Definición.** Hecho: cuentas y dueños (ADR-0026). Falta: los tipos de plataforma de
-   surface y sus particularidades, los parámetros de campaña y el mapa de endpoints.
+1. **Definición.** Hechos: cuentas y dueños
+   ([ADR-0026](../decisions/0026-brand-publisher-channel-surface.md)), y contrato, slots,
+   tipos de plataforma y parámetros de campaña
+   ([ADR-0027](../decisions/0027-servicio-de-campanas-contrato-y-slots.md)).
 2. **Ajustes de Commerce:** pagos heredados, key por channel, vendedor = brand en shopcart,
    tipo de cuenta persistido.
 3. **Micro nuevo** con el paso 1 del modelo y las mismas rutas que vio-backend.
@@ -283,10 +283,6 @@ arreglar primero»*.
 
 ## 7. Preguntas abiertas
 
-- **Tipos de plataforma de surface:** qué distingue a web, Vev y custom web, y qué
-  particularidades tiene cada tipo.
-- **Parámetros de campaña:** qué define el publisher al crearla.
-- **Host:** ¿`api.vio.live` apunta al micro nuevo?
 - **Operadores y viewers:** ¿v1 con un solo usuario por cuenta?
 - **Comisión** (`referralFee`): quién la fija y cómo la cobra el publisher.
 - **Mediciones de solo lectura** en la MySQL de QA y prod (las corre Angelo): conflictos de
