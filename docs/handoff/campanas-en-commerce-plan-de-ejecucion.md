@@ -156,6 +156,19 @@ Angelo: *«lo puede hacer Miguel»*. Todo esto es **solo QA**; prod no se toca. 
    **En cada una:** subir los 7 `@vio-/*` a 1.0.270 (paso 3), correr `yarn install` con un token
    válido, commitear el `yarn.lock` y pushear. Después Claude abre los PRs en el orden de deploy.
 
+   > **Atajo sin token (comprobado por Claude el 14/10, 01:00, en local y sin pushear).** En api,
+   > users, payment-processors, orders y shopcart, el `package.json` de la rama solo difiere de
+   > `develop` en las versiones del kernel (y orders suma el script `test:unit`). Un
+   > `git merge origin/develop` resolviendo el conflicto de `package.json` a 1.0.270 deja
+   > `package.json` y `yarn.lock` idénticos a develop. Los tests unitarios pasaron después del merge:
+   > users 60/60, payment-processors 36/36, orders 17/17 y shopcart 595/595. En api pasan 224/225;
+   > las 3 suites rojas (`stripe-connect-oauth`, `vipps-verify`, `klarna-verify`) **fallan igual
+   > en develop pelado**, así que no vienen de la rama. base-api no toca `package.json`.
+   > **El micro es distinto:** develop sigue en 1.0.267 y el micro no está en el dispatch del kernel,
+   > así que no hay lock 1.0.270 que copiar. Su `kernel-bump.yml` escucha `kernel-published`: un
+   > dispatch solo a él con `version=1.0.270` deja develop con lock. Después `feature/typeorm` mergea
+   > develop y revierte `ed02245` (el `vendor/`, que se revierte sin conflictos).
+
 5. **Antes de desplegar orders:** la consulta 8 del journal del 13/10 (carritos cuyo dueño no es
    el dueño del channel).
 6. **Atribución a AI:** poner `"includeCoAuthoredBy": false` en `~/.claude/settings.json` y
