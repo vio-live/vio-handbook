@@ -148,7 +148,7 @@ servicio de mapeo de integraciones.
 | # | Qué |
 |---|---|
 | 3.2 🟡 | (En el mismo PR draft #17, `535f5b1`: las 9 tablas con CHECK de fechas, UNIQUE de default por surface y de slot; validadas en MySQL local, up/down idénticos.) Entidades en `package-database`, familia `surface_*` (ADR-0029): `surface`, `surface_platform`, `surface_channel`, `surface_slot`, `surface_campaign`, `surface_campaign_sponsor`, `surface_campaign_slot`, `brand_profile`. Van en **la misma release que 2.1**. OK de Angelo dado el 13/10 para trabajarlo en una rama local, sin publicar ni migrar hasta revisarlo. |
-| 3.3 🟡 | (PR [vio-campaigns-microservice#1](https://github.com/vio-live/vio-campaigns-microservice/pull/1) a develop, sobre la infra de Miguel (`3c62958`); 117 tests; [journal](../journal/2026-10/2026-10-13-micro-campanas-codigo.md). Las tablas todavía van en memoria; TypeORM en un PR aparte.) Auth propia: token de Firebase para el dashboard y key de surface para el SDK, sin pasar por el middleware. |
+| 3.3 🟡 | (PR [#1](https://github.com/vio-live/vio-campaigns-microservice/pull/1) **mergeado** (`d34368a`, deploy a QA en curso). **TypeORM**: rama local `feature/typeorm` (4 commits sobre `feature/app`): adaptadores de las 4 tablas, transacciones, errores de MySQL traducidos a errores de dominio, regla de sponsor con channel en la surface; 119 tests en memoria + 79 contra MySQL 8.0.21 efímero (`yarn test:mysql`), Lyko byte a byte. ⚠️ Usa el kernel empaquetado en `vendor/` (commit temporal `ed02245`) porque el token npm local da 401; con ese commit la imagen NO construye. Para subirla: revertir `ed02245` y bumpear los 7 `@vio-/*` a 1.0.270 (release `pkg=all`). Antes: sobre la infra de Miguel (`3c62958`); 117 tests; [journal](../journal/2026-10/2026-10-13-micro-campanas-codigo.md). Las tablas todavía van en memoria; TypeORM en un PR aparte.) Auth propia: token de Firebase para el dashboard y key de surface para el SDK, sin pasar por el middleware. |
 | 3.4 | Rutas iguales a las de vio-backend: `/api/client-apps…`, `/api/campaigns…`, `/api/sponsors…`, `/api/auth/me` (reexpone `accountType` de users), `/api/sponsor/me`, `/v2/mobile/config` (compatible + `campaigns[]`), `/v2/mobile/campaigns/:id/components`, `/v2/mobile/components/manifest` (con `platform` opcional), `/v2/web/brands`. El estado de campaña se calcula en un solo lugar, y se valida siempre que la campaña sea de la surface de la key. Los métodos de pago se le piden a api, con cache. |
 | 3.5 | Tests unitarios y de contrato contra las respuestas actuales de vio-backend. **Para salir de F3:** `/v2/mobile/config` de la campaña Lyko en el editor de Vev, idéntico byte a byte al de vio-backend (ADR-0029). |
 | 3.6 | Las rutas de vio-backend que no se portan responden **410** con un JSON explícito, desde un catálogo único (ADR-0029). |
@@ -337,6 +337,19 @@ Angelo decidió:
   (`WHERE payment_*_use_vio_account = 1`), no de la consulta 6.
 - **Antes de migrar QA o prod:** `SELECT * FROM role` (el id 3 tiene que estar libre) y
   `SHOW TABLES LIKE 'surface%'`.
+
+### Kernel: lo que encontró el agente de TypeORM del micro (13/10)
+
+Nada de esto se tocó todavía. Va a un PR chico del kernel.
+- ⚠️ **mysql2 1.5.2 ignora `timezone` al leer.** Escribe las fechas en UTC y las lee en la zona
+  del proceso. En prod no pasa porque los contenedores corren en UTC, pero es un **riesgo latente
+  para todos los micros** si alguno corre con otro `TZ`. El micro fija `TZ=UTC` al arrancar.
+- **`utf8mb4_bin` es PAD SPACE:** `'key '` es igual a `'key'` en el UNIQUE de `api_key`.
+  Sugerencia: `utf8mb4_0900_bin`. El micro recompara la key en JS.
+- **`starts_at`/`ends_at`/`deprecated_at` son DATETIME sin fracción:** MySQL redondea los
+  milisegundos.
+- **`src/migrations/index.ts` está abandonado desde 2022.** No afecta a `migration:execute`, que
+  usa `DB_MIGRATION_FILE` o un glob (`config/connect.ts:14`).
 
 ### Miguel (2026-10-13)
 
