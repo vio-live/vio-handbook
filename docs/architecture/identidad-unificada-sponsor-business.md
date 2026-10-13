@@ -7,6 +7,11 @@ status: draft
 
 # Unificar identidad: business (Commerce) ↔ sponsor (Vio)
 
+> **2026-10-13:** el modelo «espejo» queda reemplazado por
+> [ADR-0025](../decisions/0025-campanas-y-surfaces-se-reconstruyen-en-commerce.md): campañas y
+> surfaces se reconstruyen dentro de Commerce. Plan en
+> [campanas-y-surfaces-en-commerce](campanas-y-surfaces-en-commerce.md).
+
 Angelo (2026-09-08): *"queremos mezclar vio-backend con vio-commerce; los
 business de commerce ahora serán también los sponsors de vio-backend"*.
 Este doc mapea los dos modelos como están hoy y propone por dónde empezar.

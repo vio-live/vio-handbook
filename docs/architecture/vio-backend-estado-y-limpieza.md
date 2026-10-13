@@ -59,6 +59,10 @@ encarar 51.512 líneas con 15 tests y dos frentes abiertos a la vez. Migrar prim
 después se refactoriza sin fecha encima.
 
 ## Nota sobre integrarlo a Vio Commerce (evaluado y descartado el 2026-09-25)
+
+> **2026-10-13:** reabierto con otra premisa: no se porta, se reconstruyen ~9 tablas en un
+> micro nuevo de Commerce y vio-backend se retira. Ver
+> [ADR-0025](../decisions/0025-campanas-y-surfaces-se-reconstruyen-en-commerce.md).
 Se evaluó colgar backend de la MySQL de Commerce usando `@vio-/database`. **No conviene:** son dos
 motores y dos ORMs distintos (Commerce usa TypeORM 0.2.41 + mysql2, rama sin soporte; backend usa
 drizzle + pg). El costo concreto: 37 tablas y 1.703 líneas de schema a reescribir, **70 llamadas a
