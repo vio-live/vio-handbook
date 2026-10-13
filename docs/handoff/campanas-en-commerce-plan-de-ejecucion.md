@@ -140,14 +140,22 @@ Angelo: *«lo puede hacer Miguel»*. Todo esto es **solo QA**; prod no se toca. 
 3. **La release con los 7 paquetes juntos**, solo DESPUÉS del paso 2:
    `gh workflow run kernel-release.yml -R vio-live/package-database -f pkg=all`. Publica 1.0.270
    y dispara el bump a `develop` de los 11 micros, que se redespliegan en QA.
-4. **El token npm.** El de la laptop de Angelo da 401, y por eso ninguna rama nueva pudo
-   regenerar su `yarn.lock`. Hay dos salidas:
-   - poner un token de lectura válido de `@vio-` en el `~/.npmrc` de esa laptop, y Claude
-     regenera los locks; o
-   - que Claude pushee las ramas (sin PR) y regenerar los locks en otra máquina.
-   
-   Ramas `feature/brand-publisher`: api, users, shopcart (parte 2), payment-processors, orders y
-   base-api. Más `feature/typeorm` del micro. Todas pasan a 1.0.270 cuando salga el paso 3.
+4. **Los `yarn.lock` de las ramas nuevas.** El token npm de la laptop de Angelo da 401, así que
+   ninguna rama pudo regenerar su lock. Ya están **pusheadas, sin PR** (Angelo, 13/10):
+
+   | Repo | Rama | Commits |
+   |---|---|---|
+   | vio-api-microservice | `feature/brand-publisher` | 9 (F2.3) |
+   | vio-users-microservice | `feature/brand-publisher` | 4 (F2.2) |
+   | vio-payment-processors-microservice | `feature/brand-publisher` | 2 |
+   | vio-orders-microservice | `feature/brand-publisher` | 3 |
+   | vio-base-api | `feature/brand-publisher` | 2 (F2.6) |
+   | vio-shopcart-microservice | `feature/brand-publisher-part2` | 5 (los de #87 + la parte 2) |
+   | vio-campaigns-microservice | `feature/typeorm` | 4 (TypeORM; el commit `temporal: … vendor/` hay que revertirlo) |
+
+   **En cada una:** subir los 7 `@vio-/*` a 1.0.270 (paso 3), correr `yarn install` con un token
+   válido, commitear el `yarn.lock` y pushear. Después Claude abre los PRs en el orden de deploy.
+
 5. **Antes de desplegar orders:** la consulta 8 del journal del 13/10 (carritos cuyo dueño no es
    el dueño del channel).
 6. **Atribución a AI:** poner `"includeCoAuthoredBy": false` en `~/.claude/settings.json` y
@@ -158,8 +166,9 @@ Angelo: *«lo puede hacer Miguel»*. Todo esto es **solo QA**; prod no se toca. 
 y orders → shopcart parte 2 → webapp #50 (con los flags encendiéndose de a uno) → micro TypeORM.
 Middleware #10 y shopcart #87 (parte 1) son independientes y se pueden probar en QA ya.
 
-**Pendiente de Angelo:** si `CART_NOT_SINGLE_BRAND` (shopcart) queda estricto o se relaja a "una
-sola brand solo cuando vende una brand distinta del dueño del channel" (recomendado).
+**Decidido (Angelo, 13/10):** `CART_NOT_SINGLE_BRAND` se relaja. Se exige una sola brand solo cuando
+vende una brand distinta del dueño del channel; el dueño puede seguir vendiendo carritos con varias
+brands (`13565e6`).
 
 ### F3 — Microservicio `vio-campaigns-microservice`
 
