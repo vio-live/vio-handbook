@@ -133,6 +133,43 @@ WHERE NOT EXISTS (
 )
 GROUP BY t.user_id, t.metodo
 ORDER BY t.metodo, t.user_id;
+
+-- 7. Brands con productos vendidos por channels ajenos y ningún channel propio activo
+--    (las que el backfill antes dejaba con todo apagado). Correr ANTES de migrar y mirar cuánto tarda.
+SELECT p.user_id AS brand_id,
+       COUNT(DISTINCT cu.id) AS foreign_channels,
+       GROUP_CONCAT(DISTINCT cu.id ORDER BY cu.id) AS channel_user_ids
+FROM (
+  SELECT cg.channel_user_id, cg.product_id FROM channel_group cg
+    WHERE cg.deleted_at IS NULL AND cg.product_id IS NOT NULL
+  UNION
+  SELECT cg.channel_user_id, v.product_id FROM channel_group cg
+    JOIN variant v ON v.id = cg.variant_id AND v.deleted_at IS NULL
+    WHERE cg.deleted_at IS NULL
+  UNION
+  SELECT cg.channel_user_id, ci.product_id FROM channel_group cg
+    JOIN collection col ON col.id = cg.collection_id AND col.deleted_at IS NULL
+    JOIN collection_item ci ON ci.collection_id = col.id AND ci.deleted_at IS NULL
+    WHERE cg.deleted_at IS NULL
+  UNION
+  SELECT cg.channel_user_id, ci.product_id FROM channel_group cg
+    JOIN collection_shared csh ON csh.id = cg.collection_shared_id AND csh.deleted_at IS NULL
+    JOIN collection col ON col.id = csh.collection_id AND col.deleted_at IS NULL
+    JOIN collection_item ci ON ci.collection_id = col.id AND ci.deleted_at IS NULL
+    WHERE cg.deleted_at IS NULL
+  UNION
+  SELECT cup.channel_user_id, cup.product_id FROM channel_user_products cup
+    WHERE cup.deleted_at IS NULL
+) cp
+JOIN channel_user cu ON cu.id = cp.channel_user_id AND cu.deleted_at IS NULL AND cu.active = 1
+JOIN `user` o ON o.id = cu.user_id AND o.deleted_at IS NULL
+JOIN product p ON p.id = cp.product_id AND p.deleted_at IS NULL
+JOIN `user` b ON b.id = p.user_id AND b.deleted_at IS NULL
+WHERE cu.user_id <> p.user_id
+  AND NOT EXISTS (SELECT 1 FROM channel_user own
+                  WHERE own.user_id = p.user_id AND own.deleted_at IS NULL AND own.active = 1)
+GROUP BY p.user_id
+ORDER BY p.user_id;
 ```
 
 ## Blockers / open questions
