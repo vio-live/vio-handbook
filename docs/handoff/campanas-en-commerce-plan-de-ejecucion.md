@@ -71,10 +71,11 @@ fuera de `/v2/mobile/config` tiene tráfico real.
 
 | # | Qué | Repo | Depende de |
 |---|---|---|---|
-| 2.1 | Columnas de encendidos de pago en `UserSettings` (stripePaymentIntent, stripePaymentLink, klarna, vipps, kustom, qliro, walley, nexi, adyen, googlePay, applePay); migración con **backfill por unión** de los channels activos; fila de rol **Publisher**. | package-database | F1.1 + OK |
+| 2.0 | Middleware y `@vio-/service validateApiKey`: resolver el ChannelUser por su FK `user_channel_api_key`, no por el tipo de channel. Exención de suscripción para cuentas Publisher ([ADR-0028](../decisions/0028-orden-fallback-suscripcion-y-corte.md)). | middleware, package-service | — (la exención depende de 2.2) |
+| 2.1 | En `UserSettings`: columnas de encendidos de pago (stripePaymentIntent, stripePaymentLink, klarna, vipps, kustom, qliro, walley, nexi, adyen, googlePay, applePay) y un flag "cuenta de Vio" por método. Migración: encendido = unión ∩ credencial propia; encendido sin credencial propia = encendido con el flag marcado, más un listado para revisión (ADR-0028). Fila de rol **Publisher**. Campo de vendedor en el carrito. | package-database | F1.1 + OK |
 | 2.2 | Persistir el tipo de cuenta (Brand/Publisher) en el alta (`doSave`, hoy solo pone el claim) y rellenar las cuentas existentes desde los claims. `/api/users/me` devuelve `accountType` y `features`. | users | 2.1 |
 | 2.3 | `getAvailablePaymentMethods` lee los encendidos de la **brand**. Endpoint nuevo para los encendidos de la cuenta, que invalida las caches de todos sus channels. El settings del channel se queda sin pagos (markets, condiciones, email). **Una key por channel** (hoy es una por usuario y tipo). Se borra la propagación a `VIO_BACKEND_URL` y se arreglan los bugs de `postUptadeSettings`. | api | 2.1 |
-| 2.4 | `sellerOfCart` único = la brand de los productos del carrito, que se valida como una sola. Reemplaza las 4 fuentes de hoy, que incluyen `userId` del body y del path. Los 12 `orders/save` mandan `channelUserId`. Se valida del lado del servidor que el método esté encendido. | shopcart | 2.3 |
+| 2.4 | Una sola fuente de vendedor para init, capture, refund y webhooks: el campo del carrito, y si no existe, `cart.user`. El campo se llena con la brand de los productos al crear el checkout. Se acaba el `userId` que manda el cliente. Los `orders/save` siguen con reseller = publisher y mandan `channelUserId`. Se valida del lado del servidor que el método esté encendido. | shopcart | 2.1, 2.3 |
 | 2.5 | `ChannelDTO.settings` sigue lleno (desde la brand) para no romper el schema de los SDKs. | graphql | 2.3 |
 | 2.6 | Proxies y docs de los endpoints nuevos de encendidos. | base-api | 2.3 |
 | 2.7 | Settings › Payments gana los encendidos. El detalle del channel muestra los pagos heredados en solo lectura. "Channel" pasa a ser grupo de productos, y la cuenta "Channel" se llama **Publisher**. | webapp | 2.3, 2.6 |
@@ -107,7 +108,7 @@ slots) y Mi marca (`brand_profile`).
 
 - Migrar VG/Lyko y Aller al modelo nuevo: el publisher se conecta al catálogo, arma su
   channel y lo asigna a la surface. Las keys de surface se importan tal como están.
-- Mover el DNS de `api.vio.live` al micro.
+- Corte **por path** en el nginx de Oracle, empezando por prod (`api.vio.live`): las rutas portadas van al micro y el resto sigue en vio-backend. `api-staging` sigue en vio-backend por ahora (ADR-0028).
 - Reapuntar vio-analytics a MySQL.
 - Apagar vio-backend y su `client/`.
 
@@ -159,7 +160,13 @@ El rol de origen de catálogo (vio-sync, `EcomUser` y las conexiones) **no se to
 Hizo una revisión adversarial de los ADR-0025/0026/0027 y de este plan contra el código
 (`origin/develop`/`main`). Claude verificó a mano los puntos marcados con ✔.
 
-**Bloqueantes: hay que resolverlos antes de F2**
+**Bloqueantes (resueltos el 2026-10-13 en [ADR-0028](../decisions/0028-orden-fallback-suscripcion-y-corte.md))**
+
+Angelo decidió:
+- **B1:** los publishers quedan exentos de la suscripción.
+- **B2:** se permite la cuenta de Vio, pero solo como opción explícita.
+- **B3:** el publisher es el reseller y la brand cobra.
+- **B4:** staging sigue en Oracle y el corte empieza por prod.
 
 | # | Hallazgo | Qué cambia en el plan | Decisión de Angelo |
 |---|---|---|---|
