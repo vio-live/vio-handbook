@@ -73,7 +73,7 @@ fuera de `/v2/mobile/config` tiene tráfico real.
 | # | Qué | Repo | Depende de |
 |---|---|---|---|
 | 2.0 🟡 | Middleware: PR [#10](https://github.com/vio-live/vio-middleware-microservice/pull/10) a develop, falta probarlo en QA y `@vio-/service validateApiKey`: resolver el ChannelUser por su FK `user_channel_api_key`, no por el tipo de channel. Exención de suscripción para cuentas Publisher ([ADR-0028](../decisions/0028-orden-fallback-suscripcion-y-corte.md)). | middleware, package-service | — (la exención depende de 2.2) |
-| 2.1 | **Va en la misma release del kernel que las tablas del micro (3.2), por [ADR-0029](../decisions/0029-corte-por-dns-keys-de-surface-y-nombres.md).** En `UserSettings`: columnas de encendidos de pago (stripePaymentIntent, stripePaymentLink, klarna, vipps, kustom, qliro, walley, nexi, adyen, googlePay, applePay) y un flag "cuenta de Vio" por método. Migración: encendido = unión ∩ credencial propia; encendido sin credencial propia = encendido con el flag marcado, más un listado para revisión (ADR-0028). Fila de rol **Publisher**. Campo de vendedor en el carrito. | package-database | F1.1 + OK |
+| 2.1 🟡 | (Rama local `feature/brand-publisher` de package-database, `e538ba7`: columnas `payment_*` y `payment_*_use_vio_account` en `user_settings`, `cart.seller_id` y rol Publisher con id 3 (`StaticData.RoleId`); backfill idempotente validado en MySQL 8.0.21 local. ⚠️ Riesgo abierto: las brands sin channels propios quedan con todo apagado, ver Revisión.) **Va en la misma release del kernel que las tablas del micro (3.2), por [ADR-0029](../decisions/0029-corte-por-dns-keys-de-surface-y-nombres.md).** En `UserSettings`: columnas de encendidos de pago (stripePaymentIntent, stripePaymentLink, klarna, vipps, kustom, qliro, walley, nexi, adyen, googlePay, applePay) y un flag "cuenta de Vio" por método. Migración: encendido = unión ∩ credencial propia; encendido sin credencial propia = encendido con el flag marcado, más un listado para revisión (ADR-0028). Fila de rol **Publisher**. Campo de vendedor en el carrito. | package-database | F1.1 + OK |
 | 2.2 | Persistir el tipo de cuenta (Brand/Publisher) en el alta (`doSave`, hoy solo pone el claim) y rellenar las cuentas existentes desde los claims. `/api/users/me` devuelve `accountType` y `features`. | users | 2.1 |
 | 2.3 | **Incluye el reapunte de vio-analytics a MySQL (Miguel, cambio de código; ADR-0029).** `getAvailablePaymentMethods` lee los encendidos de la **brand**. Endpoint nuevo para los encendidos de la cuenta, que invalida las caches de todos sus channels. El settings del channel se queda sin pagos (markets, condiciones, email). **Una key por channel** (hoy es una por usuario y tipo). Se borra la propagación a `VIO_BACKEND_URL` y se arreglan los bugs de `postUptadeSettings`. | api | 2.1 |
 | 2.4 🟡 | (Primera parte en el PR [#87](https://github.com/vio-live/vio-shopcart-microservice/pull/87) a develop, falta probarlo en QA: `sellerOfCart` en todos los caminos y el `userId` del cliente ignorado. Claude verificó que graphql y base-api mandan el dueño de la key, igual a `cart.user`, en create y en pagos.) Una sola fuente de vendedor para init, capture, refund y webhooks: el campo del carrito, y si no existe, `cart.user`. El campo se llena con la brand de los productos al crear el checkout. Se acaba el `userId` que manda el cliente. Los `orders/save` siguen con reseller = publisher y mandan `channelUserId`. Se valida del lado del servidor que el método esté encendido. | shopcart | 2.1, 2.3 |
@@ -105,7 +105,7 @@ servicio de mapeo de integraciones.
 
 | # | Qué |
 |---|---|
-| 3.2 | Entidades en `package-database`, familia `surface_*` (ADR-0029): `surface`, `surface_platform`, `surface_channel`, `surface_slot`, `surface_campaign`, `surface_campaign_sponsor`, `surface_campaign_slot`, `brand_profile`. Van en **la misma release que 2.1**. OK de Angelo dado el 13/10 para trabajarlo en una rama local, sin publicar ni migrar hasta revisarlo. |
+| 3.2 🟡 | (Rama local `535f5b1`: las 9 tablas con CHECK de fechas, UNIQUE de default por surface y de slot; validadas en MySQL local, up/down idénticos.) Entidades en `package-database`, familia `surface_*` (ADR-0029): `surface`, `surface_platform`, `surface_channel`, `surface_slot`, `surface_campaign`, `surface_campaign_sponsor`, `surface_campaign_slot`, `brand_profile`. Van en **la misma release que 2.1**. OK de Angelo dado el 13/10 para trabajarlo en una rama local, sin publicar ni migrar hasta revisarlo. |
 | 3.3 ✅ | (Código hecho en local: `~/vio-commerce/worktrees/campaigns-microservice`, rama `feature/app`; 117 tests; [journal](../journal/2026-10/2026-10-13-micro-campanas-codigo.md). Espera el repo de Miguel y el adaptador TypeORM.) Auth propia: token de Firebase para el dashboard y key de surface para el SDK, sin pasar por el middleware. |
 | 3.4 | Rutas iguales a las de vio-backend: `/api/client-apps…`, `/api/campaigns…`, `/api/sponsors…`, `/api/auth/me` (reexpone `accountType` de users), `/api/sponsor/me`, `/v2/mobile/config` (compatible + `campaigns[]`), `/v2/mobile/campaigns/:id/components`, `/v2/mobile/components/manifest` (con `platform` opcional), `/v2/web/brands`. El estado de campaña se calcula en un solo lugar, y se valida siempre que la campaña sea de la surface de la key. Los métodos de pago se le piden a api, con cache. |
 | 3.5 | Tests unitarios y de contrato contra las respuestas actuales de vio-backend. **Para salir de F3:** `/v2/mobile/config` de la campaña Lyko en el editor de Vev, idéntico byte a byte al de vio-backend (ADR-0029). |
@@ -240,6 +240,21 @@ Angelo decidió:
 - `validateApiKey` y `verifyTokenGraph` loguean la key.
 - `docs/architecture/vio-vev-integration.md` tiene keys en claro (líneas ~137 y ~242), que hay que rotar o quitar.
 - Sobre F0.1: la conexión propia **sí** la borraba extensions. Las descripciones de los PRs ya se corrigieron.
+
+### Kernel F2.1/F3.2 (agente, 2026-10-13)
+
+- ⚠️ **Hay brands que venden a través de channels de otros y no tienen channels propios.** El
+  backfill calcula la unión solo con los channels **propios** de cada cuenta, así que esas brands
+  quedan con todo apagado. Si 2.4 cobra con la configuración de la brand, pierden el checkout.
+  - **Propuesta:** que la unión cuente también los channels activos que publican productos de
+    la brand (`ChannelGroup` / `ChannelUserProducts`). Hay que medirlo antes.
+- **Las 202 migraciones históricas de `package-database` no corren desde cero:** 492 sentencias
+  fallan, y `payment_method` no se crea por migración. Para validar hubo que armar la base desde
+  las entidades.
+- **El listado de "cuenta de Vio" sale de las columnas después de migrar**
+  (`WHERE payment_*_use_vio_account = 1`), no de la consulta 6.
+- **Antes de migrar QA o prod:** `SELECT * FROM role` (el id 3 tiene que estar libre) y
+  `SHOW TABLES LIKE 'surface%'`.
 
 ### Miguel (2026-10-13)
 
