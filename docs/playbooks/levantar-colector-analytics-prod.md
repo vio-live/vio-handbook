@@ -1,11 +1,23 @@
 ---
 title: "Levantar el colector de analytics en producción (Oracle)"
-last-updated: 2026-10-12
+last-updated: 2026-10-13
 owner: angelo
-status: live
+status: done
 ---
 
 # Levantar el colector de analytics en producción
+
+> **EJECUTADO.** El colector de producción está vivo desde el 2026-10-12
+> (`events.vio.live` → `127.0.0.1:5100`, systemd `vio-analytics.service`, ClickHouse
+> `vio_production`), y **Mixpanel quedó activado el 2026-10-13** con las claves del
+> proyecto `4055947` (`enabled:true`, fan-out verificado end-to-end).
+> Este playbook se conserva como referencia de cómo se hizo y para rehacerlo si la VM
+> se pierde. Lo que sigue describe el estado ANTERIOR al 12/10.
+> Detalle de la ejecución: [journal 12/10](../journal/2026-10/2026-10-12.md) ·
+> [journal 13/10](../journal/2026-10/2026-10-13.md).
+>
+> **Pendiente real que queda:** el colector no recibe eventos porque el espejo
+> server-side de `vio-backend` no tiene las variables `ANALYTICS_*` en producción.
 
 Hoy **no hay colector de producción**. Desde el rehost a Oracle, `events.vio.live`
 vive en la VM del backend (`82.70.54.151`) y devuelve `503
@@ -67,8 +79,8 @@ CLICKHOUSE_URL=https://analytics.vio.live
 CLICKHOUSE_USER=default
 CLICKHOUSE_PASSWORD=     # el mismo que usa el colector de staging
 CLICKHOUSE_DATABASE=vio_production
-MIXPANEL_PROJECT_TOKEN=  # proyecto "Vio Analytics" (prod), id 4055947 — lo pasa Angelo
-MIXPANEL_API_SECRET=     # idem
+MIXPANEL_PROJECT_TOKEN=  # proyecto "Vio Analytics" (prod), id 4055947 — NO lo usa ningún código
+MIXPANEL_API_SECRET=     # el que AUTENTICA el fan-out (Basic base64(secret:))
 INTERNAL_EVENTS_TOKEN=   # el del paso 1
 INTERNAL_READ_TOKENS=    # opcional, solo lectura
 ```
