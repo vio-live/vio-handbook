@@ -17,7 +17,8 @@ Leer la respuesta del equipo de integración de Vipps al checklist enviado el 08
   aprobación avisa al equipo de partners de Vipps, que puede contactar.
 - Vipps pregunta si vamos con **merchant keys o partner keys**, pide que avisemos en el mismo hilo cuando
   el **primer cliente salga en producción** (lo revisan en vivo) y recuerda la status page (ya suscrita).
-- El correo va dirigido a «Michael» y agradece un vídeo que no salió de esta sesión.
+- El hilo es de Michael: preguntó a Vipps cómo iba la revisión, Vipps pidió un vídeo de la integración y
+  Michael lo envió. La aprobación llega en respuesta a ese vídeo; la respuesta va en ese mismo hilo.
 
 ## Decisions
 
