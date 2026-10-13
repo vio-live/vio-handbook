@@ -2,7 +2,7 @@
 title: "Playbook — prueba de punta a punta de campañas en Commerce (QA)"
 last-updated: 2026-10-14
 owner: angelo
-status: draft
+status: live
 ---
 
 # Prueba de punta a punta: de la brand a la orden en Vev, sin vio-backend
@@ -59,7 +59,7 @@ export TOKEN_BRAND=... TOKEN_PUB=...
 | # | Bloqueante | Por qué importa | Quién |
 |---|---|---|---|
 | P1 | **El micro guarda en memoria.** `develop` usa `createInMemoryStore()` (`production-adapters.module.ts:30-60`) [V]. TypeORM vive en `feature/typeorm`, que necesita el lock 1.0.270. | Sin TypeORM, lo que se cree se pierde en cada restart o redeploy y **no queda en `surface_*`**. La regla "sponsor con channel en la surface" solo existe en esa rama. | Miguel: locks y dispatch. Claude: PR. Angelo: merge. |
-| P2 | **Tipo de cuenta en la base.** El micro reconoce a la brand por `is_business=1` o rol 2 (`typeorm-account-directory.ts:73`) [V]. Al publisher, por rol 3 **o** el claim `channel` (`account-type.ts:30-41`) [V]. | Con la brand como está, `POST /api/campaigns` da **404 `Primary sponsor not found`**. users F2.2 calcula el tipo **solo** desde la base. | ver §3.1 |
+| P2 | **Tipo de cuenta en la base.** El micro reconoce a la brand por `is_business=1` o rol 2 (`typeorm-account-directory.ts:73`) [V]. Al publisher, por rol 3 **o** el claim `channel` (`account-type.ts:30-41`) [V]. | Con la brand como está, `POST /api/campaigns` da **404 `Primary sponsor not found`**. users F2.2 calcula el tipo **solo** desde la base. | Angelo, con el token de la brand: `PATCH /users/1289 {isBusiness:true}` (§3.1) |
 | P3 | **Suscripción del publisher.** El middleware de develop la exige también con token de Firebase (`middleware.service.ts:136-189`) [V]. api develop exige cupo del plan para crear el channel (`channel.service.ts:180-190`) [V]. | 1312 tiene el plan 19 activo, así que **pasa**. Con otra cuenta de publisher, hay que suscribirla antes. | — |
 | P4 | **Pago de la brand.** La brand no tiene Stripe. | Hay que cargarle Stripe **test**. Ver §3.2 y §6. | Angelo (keys de test) |
 | P5 | **F2 desplegado en QA:** api F2.3, users F2.2, base-api F2.6, payment-processors, orders, shopcart parte 2, middleware #10. | Sin F2, **cobra el publisher** (o la cuenta de Vio), no la brand, y `cart.seller_id` queda NULL. Ver la matriz en §7. | Miguel: locks. Claude: PRs. Angelo: merges. |
@@ -79,7 +79,144 @@ export TOKEN_BRAND=... TOKEN_PUB=...
 
 **Si F2 no llega a las 10:00:** se corre igual. Se dan por probados la cadena brand → publisher → surface → campaña → Vev → orden y la autoría (reseller y supplier). El cobro en la brand y `cart.seller_id` quedan para después de los deploys (§7).
 
-<!-- §3 brand: pendiente del agente A -->
+## 3. Brand: catálogo, pago, colección y conexión
+
+**Desde cero o con lo que ya hay.** La foto del §1 muestra que la brand 1289 ya tiene productos con envío a NO, una colección compartida y la conexión con 1312. Igual conviene correr 3.2 a 3.5 **desde cero** con un producto y una colección nuevos, porque es lo que hay que demostrar. Si algo falla, se sigue con `EHKDuIDoU` y el producto 408910.
+
+**Suscripción [V].** Todas las rutas con `authentication` pasan por el middleware, que exige una suscripción `active`, `trialing` o `past_due` (`middleware.service.ts:136-186`). Si no hay ninguna, la primera llamada crea una (plan `'1'`) y responde **401**: hay que reintentar. Publicar y aceptar pasan además por `validateAction`: hace falta la fila `user_count_plan` y no pasarse del límite de SKUs o conexiones. La brand 1289 tiene el plan 21 activo.
+
+### 3.0 Tokens [V]
+
+El header es `authorization: <ID token de Firebase>`, **sin `Bearer`** (`middlewares.js:43-47`; webapp `src/lib/api.js:23-24`). Hay dos formas de sacarlo:
+
+- **Desde el dashboard:** logueado en `dashboard-staging.ecom.vio.live` → DevTools › Network → cualquier request a `api-ecom-staging` → copiar el header `authorization`. El token dura 1 h.
+- **Con la REST de Firebase** (solo cuentas con contraseña; la web API key es la pública del webapp de staging):
+
+  ```bash
+  read -r FB_EMAIL; read -rs FB_PASS
+  export TOKEN_BRAND=$(curl -sS "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=$FIREBASE_WEB_API_KEY" \
+    -H 'content-type: application/json' -d "$(jq -n --arg e "$FB_EMAIL" --arg p "$FB_PASS" '{email:$e,password:$p,returnSecureToken:true}')" | jq -r .idToken); unset FB_PASS
+  curl -s -o /dev/null -w '%{http_code}\n' -H "authorization: $TOKEN_BRAND" "$BASE/users/me"   # 200
+  ```
+
+`GET /users/me` además crea la fila `user_settings` si falta (users `user.service.ts:777-796`). Con F2.3, una brand sin esa fila no ofrece métodos de pago.
+
+### 3.1 Que la brand sea brand en la base (P2) [V]
+
+Hoy 1289 tiene `is_business=0` y ningún rol. Hay tres señales posibles:
+
+- **El claim `business`:** solo se pone en el alta (users `user.service.ts:606-627`).
+- **`is_business`:** la puede editar la propia cuenta (users `user-update.ts:32`; base-api `userRouter.js:342-349`).
+- **El rol 2:** lo pone un admin, y además manda el email "approved supplier".
+
+**`is_business` alcanza** para el micro (`typeorm-account-directory.ts:73`) y para users F2.2 (`account-type.ts:76-91`):
+
+```bash
+curl -sS -X PATCH "$BASE/users/$BRAND_ID" -H "authorization: $TOKEN_BRAND" -H 'content-type: application/json' -d '{"isBusiness":true}' | jq '{id}'
+```
+```sql
+SELECT id, is_business FROM `user` WHERE id = 1289;   -- esperado: 1
+```
+
+En develop, api, products, collection y shopcart **no miran** ninguna de las tres señales: catálogo, colecciones y compartir funcionan sin ellas.
+
+### 3.2 Clase de envío y producto, a mano [V]
+
+**La clase de envío va primero:** publicar un producto físico sin envío falla (products `product.service.ts:1544-1562`).
+
+```bash
+export SHIP_ID=$(curl -sS -X POST "$BASE/shipping/create" -H "authorization: $TOKEN_BRAND" -H 'content-type: application/json' \
+  -d '{"name":"E2E NO","amount":49,"currencyCode":"NOK","description":"E2E","customPriceEnabled":false,"countries":[{"country":"NO","amount":49,"currencyCode":"NOK"}]}' | jq -r .id)
+export PRODUCT_ID=$(curl -sS -X POST "$BASE/products" -H "authorization: $TOKEN_BRAND" -H 'content-type: application/json' -d "$(jq -n --arg s "$SHIP_ID" '{
+  title:"E2E Camiseta", description:"Prueba E2E 14/10", price:{amount:199,currencyCode:"NOK"},
+  quantity:50, referralFee:10, allowPurchaseOutOfStock:false,
+  images:[{image:"https://<url-publica>.jpg",order:0}], weight:1,width:10,height:10,depth:10,
+  shippingIds:[$s] }')" | jq -r .id)
+curl -sS -X PUT "$BASE/products/$PRODUCT_ID/publish" -H "authorization: $TOKEN_BRAND" | jq .   # {"status":1}
+```
+
+- **Respuesta del alta:** 201 `{id, title, status:0, price{amount,currencyCode}, quantity, images[], user{id:1289}}`. Queda `origin` NATIVE y `product.user` = la brand.
+- **Publicar:** pasa `status` a 1 y manda el email LISTING_PUBLISHED.
+- **Ojo:** **no** mandar `status:1` en el alta. Publica sin validar nada (`product.service.ts:791,987`).
+- **Imágenes y variantes:** una URL pública se guarda tal cual; un base64 se sube a Azure. Sin variantes para la prueba.
+- **Qué puede fallar:** "Can't publish without shipping class" o los límites del plan (`validateAction`).
+- **Si el alta a mano falla:** `POST $BASE/products/feed/google-merchant {url}`.
+
+```sql
+SELECT id, title, status, quantity, price_amount, price_currency_code, user_id, origin FROM product WHERE user_id = 1289 ORDER BY id DESC LIMIT 3;
+SELECT ps.product_id, sc.country FROM product_shipping ps JOIN shipping_country sc ON sc.shipping_id = ps.shipping_id
+ WHERE ps.product_id = :PRODUCT_ID AND ps.deleted_at IS NULL AND sc.deleted_at IS NULL;   -- esperado: NO
+```
+
+### 3.3 Método de pago: Stripe **test** de la brand (P4) [V]
+
+- **El body:** `POST $BASE/paymentmethod` con `{active:true, options:"<JSON como STRING>"}`. `options` lleva `name:"STRIPE"` (en mayúsculas) y **las dos keys**; con una sola key cobra la plataforma (shopcart `checkout.service.ts:246-262`).
+- **Se cifra al guardar** (api `paymentMethod.service.ts:124-142`).
+- **Las keys las pega un humano y no pasan por el historial:** `read -rs`.
+
+```bash
+read -r PK; read -rs SK
+OPTS=$(jq -n --arg pk "$PK" --arg sk "$SK" '{name:"STRIPE",publishKey:$pk,secretKey:$sk}')
+curl -sS -X POST "$BASE/paymentmethod/verify" -H "authorization: $TOKEN_BRAND" -H 'content-type: application/json' \
+  -d "$(jq -n --argjson o "$OPTS" '{name:"STRIPE",options:$o}')" | jq .status
+curl -sS -X POST "$BASE/paymentmethod" -H "authorization: $TOKEN_BRAND" -H 'content-type: application/json' \
+  -d "$(jq -n --argjson o "$OPTS" '{active:true,options:($o|tojson)}')" | jq '{id,active}'; unset SK
+```
+
+- **Una sola fila `STRIPE` por cuenta.** shopcart recorre **todas** las filas, sin mirar `active`, y se queda con la última (`checkout.service.ts:219-226`). Antes de crearla, mirar `GET $BASE/paymentmethod/byuser`.
+- **Klarna no sirve para la prueba.** El `verify` de api manda `Basic ${apiKey}` (`klarna-verify.ts:52`) y shopcart manda la key cruda (`klarnaConnector.service.ts:57,96`). Una key en base64 pasa el verify y da **401 en el checkout**. Es la causa probable del 401 de Klarna en QA [I].
+
+**Los encendidos dependen de lo que esté desplegado:**
+
+| | Dónde viven | Cómo se encienden |
+|---|---|---|
+| **QA hoy (develop)** | por channel; los pone el **dueño del channel** (el publisher) | `POST $BASE/channel/update/settings/$CHANNEL_ID {"stripePaymentIntent":true}` con `$TOKEN_PUB`. El channel tipo 10 nace con `stripePaymentIntent` y `klarna` encendidos (§4.2). El primer POST a un channel sin settings da un TypeError pero guarda: se repite. |
+| **Con api F2.3** | en la cuenta de la brand (`user_settings`; las columnas y el backfill ya están en QA) | `PUT $BASE/paymentmethod/account` con `$TOKEN_BRAND`. Body `{"switches":{"stripePaymentIntent":true},"useVioAccount":{"stripe":false}}`. Responde `{userId, switches, useVioAccount, ownCredential, effective}`. |
+
+```sql
+SELECT id, active, JSON_UNQUOTE(JSON_EXTRACT(options,'$.name')) metodo, deleted_at IS NULL vivo FROM payment_method WHERE user_id = 1289;
+SELECT us.payment_stripe_payment_intent, us.payment_stripe_use_vio_account
+  FROM `user` u JOIN user_settings us ON us.id = u.settings_id WHERE u.id = 1289;
+```
+
+### 3.4 Colección [V]
+
+```bash
+export COLL_ID=$(curl -sS -X POST "$BASE/collection" -H "authorization: $TOKEN_BRAND" -H 'content-type: application/json' -d '{"title":"E2E 14/10"}' | jq -r .id)
+curl -sS -X POST "$BASE/collection/item/add" -H "authorization: $TOKEN_BRAND" -H 'content-type: application/json' \
+  -d "{\"collection_id\":\"$COLL_ID\",\"product_id\":$PRODUCT_ID}" | jq '{id,totalItems,status}'
+```
+
+- **El id de la colección** es un string de 10 caracteres.
+- **⚠️ Un producto que no es de la brand** responde **200 con un objeto de error en el body**, porque el micro hace `return` y no `throw` (`collectionItem.service.ts:82-91`). Hay que mirar `totalItems`.
+- **Para varios productos:** `POST /collection/item/add/multiple {collection_id, items:[{product_id}]}`.
+
+### 3.5 Conexión con el publisher y compartir [V]
+
+**La conexión 1312 ↔ 1289 ya existe** (request 1483, connection 557). Un `POST /request` nuevo en la misma dirección da **409**. Por eso se va directo a compartir:
+
+```bash
+curl -sS -X POST "$BASE/collection/shared" -H "authorization: $TOKEN_BRAND" -H 'content-type: application/json' \
+  -d "{\"collection_id\":\"$COLL_ID\",\"user_id\":$PUB_ID}" | jq '[.[].id]'   # tiene que aparecer $COLL_ID
+```
+
+La respuesta lista las colecciones compartidas con el publisher, **filtradas a dueños conectados** (`collectionShared.service.ts:143-206`). Si `$COLL_ID` no aparece, falta la conexión. Compartir también crea los `custom_product` del publisher.
+
+**Con un publisher nuevo**, la conexión se hace en dos pasos:
+
+1. **El publisher pide acceso:** `POST $BASE/request {sender_id:$PUB_ID, receiver_id:$BRAND_ID}` con `$TOKEN_PUB`. Responde `state:0`.
+2. **La brand acepta:** `PUT $BASE/request {sender_id:$PUB_ID, receiver_id:$BRAND_ID, state:1}` con `$TOKEN_BRAND`. Crea la `connection`.
+
+En develop, un publisher sin plan recibe 401 al aceptar; la exención llega con F2.3.
+
+```sql
+SELECT id, sender_id, receiver_id, state FROM request WHERE (sender_id, receiver_id) IN ((1312,1289),(1289,1312));
+SELECT cs.id, cs.collection_id, cs.user_id FROM collection_shared cs JOIN collection c ON c.id = cs.collection_id
+ WHERE c.user_id = 1289 AND cs.user_id = 1312 AND cs.deleted_at IS NULL;
+```
+
+**Para el §4:** `export COLLECTION_ID=$COLL_ID` (o `EHKDuIDoU` si se usa la existente).
+
 
 ## 4. Publisher: el channel que vende la colección de la brand
 
@@ -140,7 +277,7 @@ SELECT cu.id, cu.custom_name, cu.channel_id, cu.active, LEFT(k.api_key,7) key_pr
 -- la brand del channel: tiene que dar solo 1289
 SELECT cg.channel_user_id, GROUP_CONCAT(DISTINCT p.user_id) brand_ids, COUNT(DISTINCT p.id) productos
   FROM channel_group cg
-  JOIN collection_shared cs ON cs.collection_id = cg.collection_shared_id OR cs.id = cg.collection_shared_id
+  JOIN collection_shared cs ON cs.id = cg.collection_shared_id   -- igual que CHANNEL_BRANDS_SQL de shopcart
   JOIN collection_item ci ON ci.collection_id = cs.collection_id AND ci.deleted_at IS NULL
   JOIN product p ON p.id = ci.product_id
  WHERE cg.channel_user_id = :CHANNEL_ID AND cg.deleted_at IS NULL GROUP BY 1;
@@ -374,3 +511,19 @@ GraphQL, middleware y shopcart **no llaman a vio-backend** [V] (grep de `vio.liv
    ```bash
    zcat -f /var/log/nginx/access.log* | awk '$4>="[14/Oct/2026:10:00" && $4<="[14/Oct/2026:12:00"' | awk '{print $1,$7,$9}' | sort | uniq -c | sort -rn | head
    ```
+
+## 9. Hallazgos de la preparación (no bloquean la prueba)
+
+Aparecieron verificando el código. Cada uno quedó como tarea aparte.
+
+- **GraphQL se salta la auth por nombre de operación.** Cualquier operación llamada `GetPurchaseConditions` pasa sin key (`graphql AuthPlugin.ts:22`). [V]
+- **base-api `/api/role/add`, `/role/to-disable` y `GET /role/:id` no tienen `verifyToken` ni `verifyAdminUser`** (`roleRouter.js:37-44,77-81,119`). Falta medir cuánto deja pasar el gate de la entrada. En el peor caso, cualquiera se da el rol 1. [V]
+- **Controles de dueño que faltan** [V según el agente; se verifican en la tarea]:
+  - `POST /collection/shared` (dueño de la colección)
+  - `POST` y `PUT /request` (sender o receiver)
+  - `PUT /products/:id/publish`
+- **shopcart tiene commiteado `.env.local.qa`, con secretos con valor** (Stripe y Klarna). Hay que rotarlos. [V]
+- **Klarna:** `verify` usa `Basic` y el checkout manda la key cruda. Es la causa probable del 401 de Klarna en QA. [I]
+- **payment-processors F2:** `sellerOfMetadata` lee `sellerId` o `seller_id`, pero shopcart escribe `vio_seller_id`. El log de discrepancia nunca salta. No cambia quién cobra, porque ese se lee de `origin_payment_body.sellerId`. Se corrige en la rama después de los locks. [V según el agente]
+- **GraphQL reintenta 3 veces también los POST** (`AxiosFetch.ts:16-21`). Un `payment-intent` lento puede duplicar órdenes PENDING. [V el retry; el duplicado sin observar]
+
