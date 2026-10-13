@@ -131,6 +131,17 @@ las altas y los detalles de Surfaces y Campañas, la nav por features y el flag 
 Faltan las vistas de solo lectura para business y los Channels como grupos de productos. Ver el
 journal `2026-10-13-front-commerce-surfaces-y-campanas`.
 
+**Segunda tanda** (`705017c`..`c079a0a`, sin push; PR #50 lo actualiza el coordinador):
+- matriz de visibilidad por tipo de cuenta;
+- publisher exento de suscripción;
+- orders del publisher en solo lectura;
+- Getting started del publisher;
+- UI V2 contra el micro, probada de punta a punta contra el micro en local.
+
+La propuesta para los pasos 1 y 2 del publisher (conectar con una brand y armar su channel)
+está en el journal `2026-10-13-front-commerce-acceso-por-tipo-y-v2`. ⚠️ Deja **F2.3 (una key
+por channel) en el camino crítico** para publishers con más de una brand.
+
 
 Pantallas de Surfaces (con plataformas y slots), Channels (grupos de productos de una
 brand, a partir de Connection + colecciones), Campañas (sponsors, channels, fechas y

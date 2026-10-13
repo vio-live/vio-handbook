@@ -140,20 +140,40 @@ journal `2026-10/2026-10-13-front-commerce-surfaces-y-campanas.md`.
   `/campaigns…` y `/sponsors`. El micro de campañas va a responder las mismas rutas (ADR-0027).
   Todo el contrato y sus gotchas están en las cabeceras de **`src/lib/surfaces.js`** y
   **`src/lib/campaigns.js`**: al cortar, se tocan esos dos archivos.
-- **Quién lo ve:** la nav arma el grupo *Publishing* con `navGroupsFor(account)` a partir de las
-  `features` de `/auth/me`: Surfaces con `surfaces:manage` y Campaigns con `campaigns:manage`
-  (publisher = `seller` e `internal`). `FeatureGate` cubre la URL directa. Sin `VIO_HOST` (prod
-  hoy) no aparece nada.
+- **Quién ve qué: una sola matriz, `src/lib/access.js`** (decisión de Angelo del 13/10; journal
+  `2026-10-13-front-commerce-acceso-por-tipo-y-v2`).
+  - `sectionsFor(account)` la usan la nav, el guard de rutas del AppShell y el rail de Settings.
+  - **Tipo de cuenta:** se normaliza `business→brand` y `seller→publisher` (el micro ya devuelve
+    `brand|publisher|internal`).
+  - **Lo que vive en Vio** (surfaces, campaigns, Settings › Brand) pide además la feature de
+    `/auth/me`.
+  - **URL directa a una sección ajena:** `/home?blocked=<sección>` con aviso.
+  - **Publisher:** está exento de suscripción (no va a `/user-deactivated`, ADR-0028) y ve
+    Orders en solo lectura.
+  - **Sin cuenta de Vio** (prod hoy, sin `VIO_HOST`): Commerce como siempre.
+  - **El shell espera `/auth/me`** (timeout de 8 s) antes de montar la vista.
+- **"Getting started" del publisher** en `/home` (`src/lib/onboarding.js`): 4 pasos con estado
+  real.
 - **Rutas:**
   - `/surfaces` y `/campaigns` son páginas;
   - `/surfaces/:id` y `/campaigns/:id` van por el catch-all;
   - `/campaigns?surface=<id>` abre el alta con esa surface elegida.
 - **Estado de campaña:** se calcula solo en `campaignStatus()`, con las fronteras de
-  `isCampaignActive` del server. `isPaused` llega como string.
-- **Flag `VIO_CAMPAIGNS_V2`** (`next.config.js → env`, apagado). Cubre channels de la campaña,
-  slots, campaña por defecto, markets de la surface y `custom-web`. Con el flag apagado no se
-  muestran ni se mandan, porque vio-backend no valida el POST de campañas y rechaza `custom-web`.
-  Se enciende con el micro.
+  `isCampaignActive` del server. `isPaused` llega como string en vio-backend y boolean en el
+  micro; se aceptan los dos.
+- **Flag `VIO_CAMPAIGNS_V2`** (`next.config.js → env`, apagado), contra el contrato del micro
+  (`campaigns-microservice` feature/app). Cubre:
+  - en la surface: channels asignados, slots de solo lectura, markets, dominios y `custom-web`;
+  - en la campaña: un channel por sponsor, la campaña por defecto y slots con ventana;
+  - el picker de sponsors, limitado a brands con un channel en la surface.
+
+  Con el flag apagado no se muestran ni se mandan: vio-backend no valida el POST de campañas y
+  rechaza `custom-web`. Se enciende con el micro.
+- **Borrar una surface:** el micro da 409 si tiene campañas (vio-backend las borraba en
+  cascada). El diálogo lo explica según el backend, y borrar campaña está en su detalle.
+- **Probar contra el micro sin Firebase ni MySQL:** compilarlo a un directorio aparte y
+  levantarlo con `MemoryAdaptersModule` + `InMemoryCommerce`. El token falso del harness pasa su
+  auth, porque el verificador en memoria compara strings. Detalle en el journal.
 
 ## Gotchas vigentes
 
