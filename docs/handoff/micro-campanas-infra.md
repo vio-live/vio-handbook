@@ -266,10 +266,43 @@ Key Vault no interviene: el env viaja por el blob.
    `[campaigns] missing environment variables: COMMERCE_GRAPHQL_PUBLIC_URL`. Es un fail-fast a
    propósito.
 
-**Lo que falta, del lado de Miguel:** cargar las variables nuevas en el `.env` de QA, es decir el
-blob `.env.local` de `containerqasc`, o el Secret `env-sc-campaigns` cuando exista. Después hay
-que relanzar el deploy: el Dockerfile baja el `.env` en el build, así que hace falta una imagen
-nueva.
+**HECHO (Miguel, 13/10 19:05). El micro responde en QA.** Verificado desde fuera:
+
+| Prueba | Resultado |
+|---|---|
+| `campaigns-staging.vio.live/health` | **200 `{"status":"ok"}`** |
+| `/v2/mobile/config` | **401 `API key required`** (su propia auth) |
+| CORS preflight desde `https://dashboard-staging.ecom.vio.live` | **204** con `access-control-allow-origin` de ese origen |
+| CORS preflight desde un origen no permitido | sin cabecera `access-control-allow-origin` |
+| `/v2/*` con cualquier origen | `access-control-allow-origin: *` |
+
+Variables cargadas en el blob `.env.local` de `containerqasc`, con respaldo previo en cada paso
+(`.env.local.backup-pre-campaigns-*` y `.env.local.backup-pre-cors-*`):
+
+- `COMMERCE_GRAPHQL_PUBLIC_URL= "https://graph-ql-staging.vio.live"`
+- `CAMPAIGNS_DASHBOARD_ORIGINS= "https://dashboard-staging.ecom.vio.live,http://localhost:5173"`
+  (le añadí el localhost del front para que se pueda desarrollar contra QA)
+
+Y los valores de **producción ya están en el blob `.env` de `containerproductionsc`**
+(`graph-ql.vio.live` y `dashboard.ecom.vio.live`), listos para cuando el micro llegue a `main`.
+Respaldo: `.env.backup-pre-campaigns-*`.
+
+**Corrección a la tabla:** `API_MICROSERVICE_URL` **sí estaba** en el blob de QA, como
+`API_MICROSERVICE_URL = 'http://api'` — con espacios alrededor del `=`. Un `grep "^VAR="` da un
+falso "falta" con ese formato; hay que buscar `^VAR\s*=`.
+
+**Sobre el Secret `env-sc-campaigns`:** en QA **no hace falta y no existe para ningún servicio** —
+ese cluster no tiene Secrets `env-sc-*`, el `.env` va horneado en la imagen, y el propio README del
+micro lo confirma (con `PROCESS_ENV=local`, `Env.load()` lee `.env` y luego **pisa** con el
+`.env.local` horneado). El Secret es un mecanismo **solo de producción**, y allí todavía no hay
+rama `main`. Lo creo en la misma pasada del primer deploy a `main`, desde el blob de prod ya
+actualizado: crearlo antes solo abre la puerta a que se desincronice si alguien toca el blob
+mientras tanto.
+
+**El detalle del re-run:** relanzar un run **no** redespliega, porque la etiqueta de la imagen es
+el número de run y no cambia; el manifiesto queda idéntico y Helm no hace nada. Hay que renovar
+los pods (`kubectl delete pod -l app.kubernetes.io/instance=campaigns`) o hacer un commit nuevo.
+Está anotado en el README del repo (campaigns#4).
 
 | Variable | QA | Prod |
 |---|---|---|
