@@ -1,0 +1,8 @@
+#!/bin/sh
+# Rechaza commits con atribución a AI (regla 6 de docs/onboarding/agents.md).
+# Se activa por clon con: git config core.hooksPath .githooks
+if grep -qiE '^Co-Authored-By:.*(claude|anthropic)' "$1"; then
+  echo "commit rechazado: sin 'Co-Authored-By: Claude' (regla 6, docs/onboarding/agents.md)." >&2
+  echo "Si lo agrega Claude Code, poné \"includeCoAuthoredBy\": false en ~/.claude/settings.json." >&2
+  exit 1
+fi

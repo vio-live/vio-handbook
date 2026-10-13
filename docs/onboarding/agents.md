@@ -71,7 +71,11 @@ These appear in the user's global memory too, but you should know them by heart:
 3. **No v1 fallbacks.** v2 is the target.
 4. **No hardcoded apiKeys.** Bootstrap from `/v2/mobile/config`.
 5. **No force-push** on shared branches.
-6. **No AI attribution** in commit messages (no `Co-Authored-By: Claude`).
+6. **No AI attribution** in commit messages (no `Co-Authored-By: Claude`). Claude Code adds it
+   by default: set `"includeCoAuthoredBy": false` in `~/.claude/settings.json`. The handbook and
+   the campaigns microservice ship a `commit-msg` hook that rejects it; enable it once per clone
+   with `git config core.hooksPath .githooks`. Commits already on shared branches are **not**
+   rewritten (no force-push; Angelo, 2026-10-13).
 7. **No new doc files** without justification (different *type* of doc, not duplicate content).
 8. **`npm run check:docs-drift`** before merging anything in socket-server.
 9. **Fetch first.** At session start run `git fetch` in the code repo and `git pull --rebase` in the handbook, so you know where things stand and what the others did. Pull again right before pushing to the handbook.
