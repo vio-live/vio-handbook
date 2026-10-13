@@ -24,14 +24,15 @@ Dos commits locales en `feature/brand-publisher` de vio-orders-microservice, enc
 - **Lo que ya había:** el controller pasa `channelUserId` a `save()` (`order.controller.ts:112-122`),
   y `save()` lo enganchaba con un `findOne` y sin validar nada. Si el id no existía, la orden quedaba
   sin channel y nadie se enteraba.
-- `c7d9359` **El channel de la orden.**
-  - `save()` resuelve el channel **antes** de tocar stock o base (`channelUserOfOrder`,
-    `order.service.ts:1928`).
-    - Si no existe, 400.
-    - Si no es del `reseller`, 400. `/save` convierte el error en `BadRequestException`.
-    - Un channel borrado (soft-delete) después de abrir el carrito **cuenta**, para no rechazar una
-      venta que puede estar pagada.
-    - Sin `channelUserId`, todo sigue igual.
+- `c7d9359` **El channel de la orden**, ajustado por `ac3251b` a pedido del coordinador.
+  - `save()` resuelve el channel al principio (`channelUserOfOrder`, `order.service.ts:1930`).
+  - Si es del `reseller`, lo engancha.
+  - Si no existe, no se puede leer o es de otro dueño, **la orden se guarda igual, sin
+    `channelUser`**. Queda un `logger.error` con los ids (channel, dueño y reseller), sin datos
+    personales, para investigarlo.
+  - **Nunca devuelve 400.** `/save` corre después del cobro, y el channel es solo atribución.
+  - Un channel borrado (soft-delete) después de abrir el carrito **cuenta**.
+  - Sin `channelUserId`, todo sigue igual.
   - `create()`, que es el bus de las tiendas que se retiran, mantiene el lookup laxo de antes
     (`{ channelOfReseller: false }`, `:3104`). Un rechazo ahí rebotaría por la DLQ sin fin, porque el
     consumer reencola cada mensaje muerto con un timestamp nuevo.
@@ -40,8 +41,8 @@ Dos commits locales en `feature/brand-publisher` de vio-orders-microservice, enc
     orden sin channel: nada.
 - `1c9bcdc` **Tests.**
   - `yarn test:unit` (`jest.unit.json`, `*.unit.spec.ts`) corre sin base, como en shopcart.
-  - Son 15 tests en `order-channel-user.unit.spec.ts`. Se comprobó que fallan si se quita cada
-    guarda.
+  - Son 17 tests en `order-channel-user.unit.spec.ts`. Se comprobó que fallan si se quita la
+    comprobación del dueño, si se vuelve al 400 o si se quita el filtro de tienda.
   - `tsc -p tsconfig.build.json` está limpio. Con `tsconfig.json` queda solo el error viejo del
     spec de siempre.
 
@@ -65,17 +66,19 @@ Dos commits locales en `feature/brand-publisher` de vio-orders-microservice, enc
 
 Las tomó el agente; Angelo puede objetarlas.
 
-- **La validación estricta solo corre en `/save`.** El bus queda como estaba, porque está en
-  retiro y porque ahí un rechazo se vuelve un bucle en la DLQ.
+- **El channel nunca rechaza la orden** (coordinador, `ac3251b`). Si el channel no es del
+  reseller, la orden se guarda sin channel y queda un error en el log. La primera versión
+  (`c7d9359`) devolvía 400, y eso dejaba un pago sin orden.
+- **La comprobación del dueño solo corre en `/save`.** El bus queda como estaba, porque está en
+  retiro.
 - **Un channel borrado es válido para `/save`.**
 - **El guard de tienda va al leer la orden, no al guardarla.** Así `order.channelUser` queda
   siempre puesto, para la atribución al publisher.
 
 ## Blockers / open questions
 
-- **Si `cart.user` no es el dueño de `cart.channelUser`, `/save` devuelve 400.** En los flujos que
-  guardan la orden después del cobro, eso es un pago sin orden. Antes del deploy hay que medirlo en
-  QA y en prod:
+- **Si `cart.user` no es el dueño de `cart.channelUser`, la orden queda sin channel** (y un
+  `logger.error`). Conviene medir cuántos carritos hay así:
 
   ```sql
   SELECT COUNT(*) FROM cart c JOIN channel_user cu ON cu.id = c.channel_user_id
