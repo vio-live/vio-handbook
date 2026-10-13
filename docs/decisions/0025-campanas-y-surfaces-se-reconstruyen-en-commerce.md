@@ -2,6 +2,7 @@
 title: "0025 — Campañas y surfaces se reconstruyen en Commerce; vio-backend se retira"
 date: 2026-10-13
 status: accepted
+amended-by: "0026 (punto 4)"
 owner: angelo
 deciders: [angelo]
 ---

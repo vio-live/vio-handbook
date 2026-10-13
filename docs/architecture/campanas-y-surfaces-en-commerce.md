@@ -142,13 +142,11 @@ referencias son a `vio-backend` @ `c79ae9a`.
 - **Socket de Commerce**: lo único que hay es el Socket.IO de base-api. Emite todo a todos
   (`io.emit` global), sin rooms ni auth de handshake. El módulo `socket` de `api` es un
   proxy HTTP. No sirve para empujar activaciones a las apps [V].
-- **Ni `ApiCredential` ni `ChannelUser`/`UserChannelApiKey` sirven como key de surface.**
+- **Ni `ApiCredential` ni `ChannelUser` sirven como surface.**
   - `ApiCredential` da acceso a todo el usuario, y terminaría embebida en una app pública.
-  - `ChannelUser` identifica el outlet de venta: con él vienen la atribución de órdenes, los
-    métodos de pago, la cuota del plan y una key por par (user, tipo de channel). Usarlo
-    haría al publisher reseller por accidente.
-  - Lo que sí encaja es que el **sponsor tenga una FK real a su `ChannelUser`**, en lugar
-    de la `commerceApiKey` pegada a mano [V modelo / I decisión].
+  - Resuelto en [ADR-0026](../decisions/0026-brand-publisher-channel-surface.md): la
+    surface es una entidad nueva con su propia key general. El channel es el grupo de
+    productos del publisher, con su propia key, y se asigna a una o más surfaces.
 - **Scheduler**: no hay `@nestjs/schedule` en ningún micro. El cron de base-api corre dos
   veces con 2 réplicas. El precedente bueno es el CronJob K8s de reconciliación de
   shopcart [V]. **Decisión: «activa» se calcula al leer**, no se materializa.
@@ -166,24 +164,45 @@ referencias son a `vio-backend` @ `c79ae9a`.
 
 **Elegido: `vio-campaigns-microservice`** (ADR-0025).
 
-## 4. Modelo de destino (borrador)
+## 4. Modelo de destino
 
-Tenancy: el publisher es dueño de surfaces y campañas, y es un `User` de Commerce con un
-rol nuevo en `UserRole`. Hoy el seller existe solo como claim de Firebase y hay que
-persistirlo. El brand/sponsor es un `User` business.
+El modelo de cuentas está fijado en
+[ADR-0026](../decisions/0026-brand-publisher-channel-surface.md):
+
+```
+Brand (business)                          Publisher (VG, Aller)
+ ├─ Catálogo + colecciones  ◄── Connection ──┤ recibe acceso al catálogo
+ ├─ Pagos (credenciales + encendidos)        ├─ Channels = grupos de productos
+ └─ Markets: a dónde envía                   │   (de una o varias brands) ── API key por channel
+                                             ├─ Surfaces ── API key general
+                                             │   ├─ plataformas iOS/Android/TV/Vev/web + slots
+                                             │   ├─ markets: dónde se muestra
+                                             │   └─ channels asignados (1..N)
+                                             └─ Campañas (en una surface): sponsor + parámetros
+SDK: key general (campañas) + keys de los channels de la surface (catálogo/checkout)
+```
+
+Entidades nuevas en el micro, en borrador. Los nombres de columnas se fijan al diseñar:
 
 | Entidad | Contenido | Paso |
 |---|---|---|
 | `brand_profile` | 1:1 con el `User` brand: nombre visible, logo, avatar, colores | 1 |
-| `surface` | publisher, nombre, descripción, icono, key, status (que de verdad se aplique) | 1 |
-| `surface_platform` | surface, kind como enum (web, Vev, custom web primero), identifier | 1 |
-| `campaign` | publisher, surface (NOT NULL), sponsor primario (FK al `User` brand + su `ChannelUser`), inicio y fin en UTC, `paused` boolean | 1 |
+| `surface` | publisher, nombre, descripción, icono, key general, status (que de verdad se aplique), markets | 1 |
+| `surface_platform` | surface, tipo como enum, campos propios del tipo, identifier | 1 |
+| `surface_channel` | surface ↔ `ChannelUser` del publisher (1..N) | 1 |
+| `campaign` | publisher, surface (NOT NULL), sponsor primario (`User` brand), channel del que salen sus productos, inicio y fin en UTC, `paused` boolean | 1 |
 | `campaign_sponsor` | solo los sponsors secundarios | 1 |
-| `placement_location`, `placement`, catálogo de templates | slots que declara el SDK y la tupla (template, slot, nombre) por surface | después |
-| `campaign_placement` (+ productos con FK a `Product`, validados contra el sponsor) | placement + sponsor + status como enum; un solo activo por (campaña, placement) mediante columna generada + UNIQUE | después |
+| `placement_location`, `placement`, catálogo de templates | slots que declara el SDK **por plataforma** y la tupla (template, slot, nombre) | después |
+| `campaign_placement` (+ productos del channel) | placement + sponsor + status como enum; un solo activo por (campaña, placement) mediante columna generada + UNIQUE | después |
 
-**Métodos de pago:** se leen de `ChannelUserSettings` del sponsor. Con eso no queda nada
-que propagar.
+**Pagos:** las credenciales de la brand quedan en `payment_method`, y sus encendidos pasan
+a `UserSettings`. El checkout de cada carrito cobra con la brand de sus productos.
+
+**Endpoints:** el micro mantiene las rutas de vio-backend (`/api/client-apps…`,
+`/api/campaigns…`, `/api/sponsors…`, `/v2/mobile/config`,
+`/v2/mobile/campaigns/:id/components`, manifest) y se importan las keys de surface tal
+como están. Así los SDKs, Vev y el web-sdk no cambian. La propuesta de host es
+`api.vio.live`, moviendo el DNS el día del corte (por confirmar).
 
 **Pendientes al pasar a MySQL:**
 
@@ -193,24 +212,48 @@ que propagar.
 
 ## 5. Ajustes en Commerce
 
-1. **`package-database`:** entidades nuevas + migración + una fila de rol, y retiro de
-   `campaign`/`component` de liveshow después de confirmar que están vacías en prod.
+1. **`package-database`:**
+   - entidades nuevas;
+   - encendidos de pago en `UserSettings` y su backfill por unión;
+   - una key por channel;
+   - una fila de rol Publisher;
+   - retiro de `campaign`/`component` de liveshow (si están vacías en prod);
+   - más tarde, el drop de los tipos de channel y de las FKs de tienda de reseller.
+
    Requiere OK y release con los 7 paquetes juntos
    ([ADR-0011](../decisions/0011-kernel-en-npm-de-vio.md)).
-2. **`api`:** retirar los módulos `campaign` y `components` y la propagación a
-   `VIO_BACKEND_URL` (`channel.service.ts:5291-5323`, más las llamadas en `:5349` y
-   `:5420`). Esa llamada además no tiene timeout.
-3. **base-api:** retirar `campaignRouter` y `componentsRouter` de liveshow y crear los
-   routers proxy del micro nuevo (dashboard y SDK).
-4. **`users`:** persistir el tipo de cuenta en `doSave` (hoy solo pone el claim), rellenar
-   las cuentas existentes y devolver `accountType`/`features` en `/api/users/me`.
-5. **Kernel:** sumar el micro nuevo a la lista de dispatch de los 7 `kernel-release.yml`.
-6. **vio-analytics:** resolver surface y sponsor contra MySQL en vez del Postgres de
+2. **shopcart:**
+   - una sola función que resuelva al vendedor = la brand de los productos del carrito
+     (hoy hay cuatro fuentes y el cliente puede elegir);
+   - mandar el channel en los 12 `orders/save`;
+   - validar del lado del servidor que el método esté encendido.
+3. **`api`:**
+   - los encendidos se leen de la brand;
+   - el settings del channel se queda solo con lo que no es de pago;
+   - el channel se crea sin tipo y con su propia key;
+   - se retiran `campaign`/`components` de liveshow y la propagación a `VIO_BACKEND_URL`;
+   - se arreglan los bugs de `postUptadeSettings`.
+4. **middleware:** se rehace la matriz de rutas por tipo de channel. Va al final del retiro
+   de 2/5/11, para no dar 401 a keys vivas.
+5. **base-api:**
+   - retirar los routers de liveshow y de tienda de reseller (Shopify salida, Woo salida,
+     Magento channel);
+   - cerrar los endpoints sin auth.
+6. **extensions, orders, products, collection, users:** quitar los caminos de tienda de
+   reseller. El de origen de catálogo (vio-sync, `EcomUser`, conexiones) se queda.
+7. **`users`:** persistir el tipo de cuenta (Brand o Publisher) y devolver
+   `accountType`/`features` en `/api/users/me`.
+8. **Kernel:** sumar el micro nuevo a la lista de dispatch de los 7 `kernel-release.yml`.
+9. **vio-analytics:** resolver surface y sponsor contra MySQL en vez del Postgres de
    vio-backend.
-7. **SDKs:** quitar el `DynamicComponentsService` de liveshow (Swift y Kotlin), rotar la key
-   escrita en el código, y cambiar el host. Hay que hablarlo con Alan y Miguel.
-8. **webapp:** pasar de `vioApi` a `api()`, y la pantalla Mi marca a `brand_profile`.
-   `CHANNEL_DASHBOARD_URL` deja de apuntar al dashboard viejo.
+10. **SDKs:** quitar el `DynamicComponentsService` de liveshow (Swift y Kotlin) y rotar la
+    key escrita en el código. Hay que hablarlo con Alan y Miguel.
+11. **webapp:**
+    - Settings › Payments gana los encendidos;
+    - el channel muestra lo heredado en solo lectura;
+    - Channels pasa a ser grupos de productos;
+    - pantallas nuevas de Surfaces y Campañas;
+    - Mi marca va a `brand_profile`.
 
 ## 6. Plan por pasos
 
@@ -218,26 +261,36 @@ Angelo (2026-10-13): *«vamos poco a poco; definir primero web, Vev, custom web,
 cómo lo vamos creando, los placements etc. Sí los quiero mantener, pero hay otras cosas que
 arreglar primero»*.
 
-1. **Definir las surfaces web: web, Vev y custom web.** Qué distingue a cada una, qué
-   identifica a cada plataforma y qué necesita cada una de Commerce. ← *siguiente paso*
-2. **Diseñar la key única por surface.** Commerce resuelve el sponsor y el `ChannelUser` de
-   cada carrito a partir de la surface y la campaña, del lado del servidor. Así el SDK deja de
-   recibir la `commerceApiKey` de cada sponsor y el carrito sigue siendo por sponsor
-   ([ADR-0006](../decisions/0006-storage-is-always-multi-sponsor-cart.md)). Toca middleware,
-   graphql y shopcart.
-3. **Micro nuevo con el paso 1 del modelo**, más una `/v2/mobile/config` compatible con el
-   web-sdk.
-4. **Front:** pantallas de Surfaces y Campañas en el webapp.
-5. **Corte:** recrear VG/Lyko y Aller en el servicio nuevo, cambiar el host en Vev, el
-   web-sdk y vio-web, reapuntar analytics, y apagar vio-backend y `client/`.
-6. **Placements**, cuando el SDK nativo los necesite.
+0. **Fixes urgentes**, aprobados el 2026-10-13, cada uno en su PR:
+   - `users disconnectShopifySalesChannel` hace `softDelete(userId)`, que borra la conexión
+     cuyo id coincide con el userId;
+   - `GET /api/channel/user/admin/by-shopify-url` no tiene auth y devuelve tokens de
+     Shopify.
+1. **Definición.** Hecho: cuentas y dueños (ADR-0026). Falta: los tipos de plataforma de
+   surface y sus particularidades, los parámetros de campaña y el mapa de endpoints.
+2. **Ajustes de Commerce:** pagos heredados, key por channel, vendedor = brand en shopcart,
+   tipo de cuenta persistido.
+3. **Micro nuevo** con el paso 1 del modelo y las mismas rutas que vio-backend.
+4. **Front:** pantallas de Surfaces, Channels y Campañas en el webapp.
+5. **Corte:**
+   - migrar VG/Lyko y Aller al modelo nuevo (Connection, channel del publisher, surface);
+   - mover el DNS;
+   - reapuntar analytics;
+   - apagar vio-backend y `client/`.
+6. **Retiro de Shopify, Woo y Magento como channels:** medir, cortar altas, borrar código y
+   dejar el middleware al final.
+7. **Placements**, cuando el SDK nativo los necesite.
 
 ## 7. Preguntas abiertas
 
-- ¿Qué distingue a **web**, **Vev** y **custom web**? (paso 1)
-- Diseño de la key única (paso 2).
-- **Operadores y viewers:** ¿v1 con un solo usuario por tenant?
+- **Tipos de plataforma de surface:** qué distingue a web, Vev y custom web, y qué
+  particularidades tiene cada tipo.
+- **Parámetros de campaña:** qué define el publisher al crearla.
+- **Host:** ¿`api.vio.live` apunta al micro nuevo?
+- **Operadores y viewers:** ¿v1 con un solo usuario por cuenta?
+- **Comisión** (`referralFee`): quién la fija y cómo la cobra el publisher.
+- **Mediciones de solo lectura** en la MySQL de QA y prod (las corre Angelo): conflictos de
+  encendidos, channels 2/5/11 vivos, conexiones de reseller con token, víctimas del
+  `softDelete(userId)` y filas de liveshow.
 - Confirmar con Miguel, vía el `access.log` de nginx, que nada fuera de `/v2/mobile/config`
   recibe tráfico real.
-- ¿Las tablas `campaign`/`component` de liveshow están vacías en prod?
-- Los agujeros de seguridad de vio-backend: ¿se arreglan o se aceptan hasta el corte?
