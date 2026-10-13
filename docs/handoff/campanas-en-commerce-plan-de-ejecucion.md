@@ -73,9 +73,9 @@ fuera de `/v2/mobile/config` tiene tráfico real.
 | # | Qué | Repo | Depende de |
 |---|---|---|---|
 | 2.0 🟡 | Middleware (rama local `feature/brand-publisher`, `cdd932b`, sin push) y `@vio-/service validateApiKey`: resolver el ChannelUser por su FK `user_channel_api_key`, no por el tipo de channel. Exención de suscripción para cuentas Publisher ([ADR-0028](../decisions/0028-orden-fallback-suscripcion-y-corte.md)). | middleware, package-service | — (la exención depende de 2.2) |
-| 2.1 | En `UserSettings`: columnas de encendidos de pago (stripePaymentIntent, stripePaymentLink, klarna, vipps, kustom, qliro, walley, nexi, adyen, googlePay, applePay) y un flag "cuenta de Vio" por método. Migración: encendido = unión ∩ credencial propia; encendido sin credencial propia = encendido con el flag marcado, más un listado para revisión (ADR-0028). Fila de rol **Publisher**. Campo de vendedor en el carrito. | package-database | F1.1 + OK |
+| 2.1 | **Va en la misma release del kernel que las tablas del micro (3.2), por [ADR-0029](../decisions/0029-corte-por-dns-keys-de-surface-y-nombres.md).** En `UserSettings`: columnas de encendidos de pago (stripePaymentIntent, stripePaymentLink, klarna, vipps, kustom, qliro, walley, nexi, adyen, googlePay, applePay) y un flag "cuenta de Vio" por método. Migración: encendido = unión ∩ credencial propia; encendido sin credencial propia = encendido con el flag marcado, más un listado para revisión (ADR-0028). Fila de rol **Publisher**. Campo de vendedor en el carrito. | package-database | F1.1 + OK |
 | 2.2 | Persistir el tipo de cuenta (Brand/Publisher) en el alta (`doSave`, hoy solo pone el claim) y rellenar las cuentas existentes desde los claims. `/api/users/me` devuelve `accountType` y `features`. | users | 2.1 |
-| 2.3 | `getAvailablePaymentMethods` lee los encendidos de la **brand**. Endpoint nuevo para los encendidos de la cuenta, que invalida las caches de todos sus channels. El settings del channel se queda sin pagos (markets, condiciones, email). **Una key por channel** (hoy es una por usuario y tipo). Se borra la propagación a `VIO_BACKEND_URL` y se arreglan los bugs de `postUptadeSettings`. | api | 2.1 |
+| 2.3 | **Incluye el reapunte de vio-analytics a MySQL (Miguel, cambio de código; ADR-0029).** `getAvailablePaymentMethods` lee los encendidos de la **brand**. Endpoint nuevo para los encendidos de la cuenta, que invalida las caches de todos sus channels. El settings del channel se queda sin pagos (markets, condiciones, email). **Una key por channel** (hoy es una por usuario y tipo). Se borra la propagación a `VIO_BACKEND_URL` y se arreglan los bugs de `postUptadeSettings`. | api | 2.1 |
 | 2.4 🟡 | (Primera parte en la rama local `feature/brand-publisher` de shopcart, `48788bf`, sin push: `sellerOfCart` en todos los caminos y el `userId` del cliente ignorado. Claude verificó que graphql y base-api mandan el dueño de la key, igual a `cart.user`, en create y en pagos.) Una sola fuente de vendedor para init, capture, refund y webhooks: el campo del carrito, y si no existe, `cart.user`. El campo se llena con la brand de los productos al crear el checkout. Se acaba el `userId` que manda el cliente. Los `orders/save` siguen con reseller = publisher y mandan `channelUserId`. Se valida del lado del servidor que el método esté encendido. | shopcart | 2.1, 2.3 |
 | 2.5 | `ChannelDTO.settings` sigue lleno (desde la brand) para no romper el schema de los SDKs. | graphql | 2.3 |
 | 2.6 | Proxies y docs de los endpoints nuevos de encendidos. | base-api | 2.3 |
@@ -105,10 +105,11 @@ servicio de mapeo de integraciones.
 
 | # | Qué |
 |---|---|
-| 3.2 | Entidades en `package-database`: `surface`, `surface_platform`, `surface_channel`, `slot` (por plataforma), `campaign`, `campaign_sponsor`, `campaign_slot`, `brand_profile`. Las de liveshow se retiran si F1.5 da 0 filas; si no, nombres nuevos (I8). Necesita OK de Angelo y release con los 7 paquetes juntos. |
+| 3.2 | Entidades en `package-database`, familia `surface_*` (ADR-0029): `surface`, `surface_platform`, `surface_channel`, `surface_slot`, `surface_campaign`, `surface_campaign_sponsor`, `surface_campaign_slot`, `brand_profile`. Van en **la misma release que 2.1**. OK de Angelo dado el 13/10 para trabajarlo en una rama local, sin publicar ni migrar hasta revisarlo. |
 | 3.3 🟡 | (La app se escribe en local: `~/vio-commerce/worktrees/campaigns-microservice`, rama `feature/app`.) Auth propia: token de Firebase para el dashboard y key de surface para el SDK, sin pasar por el middleware. |
 | 3.4 | Rutas iguales a las de vio-backend: `/api/client-apps…`, `/api/campaigns…`, `/api/sponsors…`, `/api/auth/me` (reexpone `accountType` de users), `/api/sponsor/me`, `/v2/mobile/config` (compatible + `campaigns[]`), `/v2/mobile/campaigns/:id/components`, `/v2/mobile/components/manifest` (con `platform` opcional), `/v2/web/brands`. El estado de campaña se calcula en un solo lugar, y se valida siempre que la campaña sea de la surface de la key. Los métodos de pago se le piden a api, con cache. |
-| 3.5 | Tests unitarios y de contrato contra las respuestas actuales de vio-backend. |
+| 3.5 | Tests unitarios y de contrato contra las respuestas actuales de vio-backend. **Para salir de F3:** `/v2/mobile/config` de la campaña Lyko en el editor de Vev, idéntico byte a byte al de vio-backend (ADR-0029). |
+| 3.6 | Las rutas de vio-backend que no se portan responden **410** con un JSON explícito, desde un catálogo único (ADR-0029). |
 
 ### F4 — Front (webapp)
 
@@ -130,11 +131,26 @@ slots) y Mi marca (`brand_profile`).
 
 ### F6 — Corte
 
-- Migrar VG/Lyko y Aller al modelo nuevo: el publisher se conecta al catálogo, arma su
-  channel y lo asigna a la surface. Las keys de surface se importan tal como están.
-- Corte **por path** en el nginx de Oracle, empezando por prod (`api.vio.live`): las rutas portadas van al micro y el resto sigue en vio-backend. `api-staging` sigue en vio-backend por ahora (ADR-0028).
-- Reapuntar vio-analytics a MySQL.
+✅ Cierre inmediato de vio-backend (Miguel, 13/10): `api.vio.live` a lista blanca y el dashboard
+viejo de staging cerrado, con el loop de Vev intacto.
+
+Corte, según [ADR-0029](../decisions/0029-corte-por-dns-keys-de-surface-y-nombres.md):
+- **Antes del corte:** exportar a un fichero las surfaces, keys y campañas de VG/Lyko y Aller
+  (Miguel), e importarlas tal cual al micro.
+- **Prod:** `api.vio.live` pasa por DNS (Cloudflare) al ingress de AKS, y el micro responde 410
+  en las rutas no portadas. Nada de proxy en Oracle.
+- **Staging:** split por path en el nginx de Oracle, donde vive el loop de Vev.
+- Reapuntar vio-analytics (ya en 2.3).
 - Apagar vio-backend y su `client/`.
+
+### F6b — Keys de surface en el checkout (después del corte)
+
+Objetivo de ADR-0029: el cliente lleva solo la key de surface, y las de channel son de catálogo
+en solo lectura.
+1. graphql, middleware y shopcart aceptan la key de surface en el checkout y resuelven del lado
+   del servidor el channel y la brand de cada carrito.
+2. Se actualizan el web-sdk, Vev y los SDKs.
+3. Se les quita el checkout a las keys de channel.
 
 ### F7 — Retiro de Shopify, Woo y Magento como channels
 

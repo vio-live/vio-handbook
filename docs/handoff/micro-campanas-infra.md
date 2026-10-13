@@ -103,15 +103,14 @@ dominios de los publishers. Las del dashboard (`/api/*`) solo desde los orígene
 `for repo in vio-users-microservice … vio-api-microservice; do`. Desde ahí, cada release del
 kernel sube **12** micros.
 
-**9. Corte (F6, más adelante).** En la VM de prod de Oracle (`82.70.54.151`, nginx
-`sites-available/vio-backend`, `server_name api.vio.live`):
-- un `location` por cada ruta portada → `proxy_pass` a `https://campaigns.vio.live`, con el
-  header `Host` correcto. El resto sigue al `:5000` de vio-backend.
-- **Rollback:** quitar los `location`.
-- **`api-staging` no se toca** por ahora (ADR-0028).
-- Ojo con la lección del 28/09: `events.vio.live` quedó en el mismo `server_name` por error
-  (journal 2026-10-12). Server blocks separados.
-- La lista exacta de rutas sale del PR de código.
+**9. Corte (F6).** *Reescrito por [ADR-0029](../decisions/0029-corte-por-dns-keys-de-surface-y-nombres.md), que acepta la propuesta de Miguel.*
+- **Prod:** `api.vio.live` pasa en Cloudflare al ingress de AKS (Gateway + TLS por DNS-01 para
+  ese host). El micro responde todas las rutas y las no portadas devuelven **410**. Sin
+  `proxy_pass` en Oracle.
+- **Staging:** el split por path sí va en el nginx de Oracle (`api-staging`), donde vive el loop
+  de Vev. Server blocks separados (lección de `events.vio.live`, journal 2026-10-12).
+- **Antes:** exportar a un fichero las surfaces, keys y campañas de VG/Lyko y Aller.
+- **Rollback:** revertir el registro de Cloudflare.
 
 **10. QA de noche.** El cluster QA se apaga de noche y los fines de semana
 ([qa-aks-scheduler](../infrastructure/qa-aks-scheduler.md)), y `campaigns-qa` se cae con él.
