@@ -60,7 +60,7 @@ export TOKEN_BRAND=... TOKEN_PUB=...
 |---|---|---|---|
 | P1 | **El micro guarda en memoria.** `develop` usa `createInMemoryStore()` (`production-adapters.module.ts:30-60`) [V]. TypeORM vive en `feature/typeorm`, que necesita el lock 1.0.270. | Sin TypeORM, lo que se cree se pierde en cada restart o redeploy y **no queda en `surface_*`**. La regla "sponsor con channel en la surface" solo existe en esa rama. | Miguel: locks y dispatch. Claude: PR. Angelo: merge. |
 | P2 | **Tipo de cuenta en la base.** El micro reconoce a la brand por `is_business=1` o rol 2 (`typeorm-account-directory.ts:73`) [V]. Al publisher, por rol 3 **o** el claim `channel` (`account-type.ts:30-41`) [V]. | Con la brand como está, `POST /api/campaigns` da **404 `Primary sponsor not found`**. users F2.2 calcula el tipo **solo** desde la base. | Angelo, con el token de la brand: `PATCH /users/1289 {isBusiness:true}` (§3.1) |
-| P3 | **Suscripción del publisher.** El middleware de develop la exige también con token de Firebase (`middleware.service.ts:136-189`) [V]. api develop exige cupo del plan para crear el channel (`channel.service.ts:180-190`) [V]. | 1312 tiene el plan 19 activo, así que **pasa**. Con otra cuenta de publisher, hay que suscribirla antes. | — |
+| P3 | **Suscripción del publisher.** La exención de ADR-0028 **no está en el gateway**: middleware #10 no la toca, y la de api F2.3 es solo para crear el channel [V]. El middleware de develop la exige también con token de Firebase (`middleware.service.ts:136-189`) [V]. api develop exige cupo del plan para crear el channel (`channel.service.ts:180-190`) [V]. | 1312 tiene el plan 19 activo, así que **pasa**. Con otra cuenta de publisher, hay que suscribirla antes. | — |
 | P4 | **Pago de la brand.** La brand no tiene Stripe. | Hay que cargarle Stripe **test**. Ver §3.2 y §6. | Angelo (keys de test) |
 | P5 | **F2 desplegado en QA:** api F2.3, users F2.2, base-api F2.6, payment-processors, orders, shopcart parte 2, middleware #10. | Sin F2, **cobra el publisher** (o la cuenta de Vio), no la brand, y `cart.seller_id` queda NULL. Ver la matriz en §7. | Miguel: locks. Claude: PRs. Angelo: merges. |
 | P6 | **Vev lee del micro.** Hoy el SDK sale a `api-staging` (vio-backend) y ninguna prop cambia el host [V]. | Rama lista: `vev` `feature/campaigns-staging-env` (c4d168c, local, sin pushear). Agrega el entorno **"Staging (Commerce campaigns)"**. Es opt-in por página: el loop de VG no cambia. Build verificado. | Claude: deploy al **sandbox** con OK. Angelo: republicar. |
@@ -178,6 +178,17 @@ SELECT id, active, JSON_UNQUOTE(JSON_EXTRACT(options,'$.name')) metodo, deleted_
 SELECT us.payment_stripe_payment_intent, us.payment_stripe_use_vio_account
   FROM `user` u JOIN user_settings us ON us.id = u.settings_id WHERE u.id = 1289;
 ```
+
+**Checklist para que con F2 cobre la brand y no Vio** [V salvo donde dice I]:
+
+1. **El channel de 1312 publica solo productos de 1289.** Si publicara alguno propio, vende 1312 (`brand-of-channel.ts:47-56`).
+2. **El `user_settings` de 1289 (vía `user.settings_id`)** tiene `payment_stripe_payment_intent=1` y `payment_stripe_use_vio_account=0`. Con el flag de Vio en 0 y sin credencial propia, api no ofrece Stripe y shopcart parte 2 lo bloquea en vez de cobrar en Vio.
+3. **Una sola fila `STRIPE` de 1289:**
+   - `active=1`
+   - `publishKey` pk_test y `secretKey` sk_test (en claro, o con `enc:v1:` si se cifró con la `PAYMENT_SECRETS_KEY` del entorno)
+   - `mode` ausente o `'keys'`, nunca `'connect'`
+4. **api F2.3 y shopcart parte 2 se despliegan juntos** [I]. Con solo la parte 2, api entrega la publishable key equivocada, aunque el intent devuelve la correcta (`checkout.service.ts:1941`). orders va para que se guarde `channel_user_id`, y payment-processors para que el reembolso use la misma cuenta.
+5. **Hace falta un webhook en la Stripe de la brand?** Para la prueba no: el cobro se captura solo y GetCheckout lo cierra (§6.1, paso 9). Hay además un cron cada 10 min para checkouts de más de 15 min. El webhook sí hace falta para enterarse de reembolsos o disputas hechos en el dashboard de Stripe.
 
 ### 3.4 Colección [V]
 
