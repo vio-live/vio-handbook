@@ -255,3 +255,29 @@ Key Vault no interviene: el env viaja por el blob.
   API de producción, con un salto de red extra. Más simple y más barato de operar: **mover el DNS de
   `api.vio.live` al ingress de AKS** y que las rutas no portadas respondan **410** desde el micro.
   El rollback es devolver el registro de Cloudflare.
+
+## Primer deploy a QA — estado (Claude, 13/10 ~16:40 UTC)
+
+1. **Run del merge de #1 (imagen `campaigns:4`): crash** por `Cannot find module 'i18n-iso-countries'`.
+   `@vio-/service` lo requiere sin declararlo. Se arregló en el PR #3 (mergeado), que además
+   declara `@nestjs/typeorm` y `dotenv`.
+2. **Run del merge de #3 (imagen `campaigns:5`): la app ya arranca entera**, pero corta al inicio
+   con este error:
+   `[campaigns] missing environment variables: COMMERCE_GRAPHQL_PUBLIC_URL`. Es un fail-fast a
+   propósito.
+
+**Lo que falta, del lado de Miguel:** cargar las variables nuevas en el `.env` de QA, es decir el
+blob `.env.local` de `containerqasc`, o el Secret `env-sc-campaigns` cuando exista. Después hay
+que relanzar el deploy: el Dockerfile baja el `.env` en el build, así que hace falta una imagen
+nueva.
+
+| Variable | QA | Prod |
+|---|---|---|
+| `COMMERCE_GRAPHQL_PUBLIC_URL` (obligatoria) | `https://graph-ql-staging.vio.live` | `https://graph-ql.vio.live` |
+| `CAMPAIGNS_DASHBOARD_ORIGINS` (lista separada por comas) | orígenes del webapp de staging y preview, por ejemplo `https://dashboard-staging.ecom.vio.live` | `https://dashboard.ecom.vio.live` |
+| `SDK_WEBSOCKET_BASE_URL` (opcional) | vacía (no hay WS en v1) | vacía |
+| `API_MICROSERVICE_URL` | ya está en el blob | ya está |
+
+Los nombres exactos y su uso están en el README del repo, sección "Variables de entorno".
+Además, el pod sigue **sin el Secret `.env` montado**: hoy solo tiene el volumen del service
+account.
