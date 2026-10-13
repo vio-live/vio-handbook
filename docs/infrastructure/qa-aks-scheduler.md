@@ -1,6 +1,6 @@
 ---
 title: Encendido y apagado automático del cluster QA (kubernetesqa)
-last-updated: 2026-09-30
+last-updated: 2026-10-13
 owner: miguel
 ---
 
@@ -43,8 +43,32 @@ az containerapp job start -g qa -n job-qa-aks-start
 # logs
 az monitor log-analytics query -w $(az monitor log-analytics workspace show -g qa -n log-qa-ops --query customerId -o tsv) \
   --analytics-query "ContainerAppConsoleLogs_CL | where ContainerJobName_s startswith 'job-qa-aks' | project TimeGenerated, ContainerJobName_s, Log_s | order by TimeGenerated desc | take 20"
-# pausar el horario (por ejemplo, una demo nocturna): suspender el job
 ```
+
+## Dejar QA arriba una noche concreta (receta, 2026-10-13)
+
+Los jobs de Container Apps **no tienen un "enabled"** que se pueda bajar y subir. Lo que sí
+funciona, y es quirúrgico, es **sacar ese día de la semana del cron** y devolverlo después:
+
+```bash
+# un martes por la noche, para que no se apague
+az containerapp job update -g rg-vio-qa-sc -n job-qa-sc-aks-stop   --cron-expression '0 23 * * 1,3,4,5'
+az containerapp job update -g rg-vio-qa-sc -n job-qa-sc-mysql-stop --cron-expression '15 23 * * 1,3,4,5'
+# a la mañana siguiente, restaurar
+az containerapp job update -g rg-vio-qa-sc -n job-qa-sc-aks-stop   --cron-expression '0 23 * * 1-5'
+az containerapp job update -g rg-vio-qa-sc -n job-qa-sc-mysql-stop --cron-expression '15 23 * * 1-5'
+```
+
+**No hay que tocar los jobs de arranque:** son idempotentes, así que a la mañana siguiente ven el
+cluster ya `Running` y no hacen nada.
+
+**La restauración hay que garantizarla**, porque el olvido no se nota hasta el martes siguiente:
+el 13/10 lo hice con un cron de OpenClaw para la mañana del 14 **y** una entrada en el
+`HEARTBEAT.md` como segunda red. Ojo con el cron de OpenClaw: al crearlo **descarta `exec`** del
+`toolsAllow`, así que hay que corregirlo con
+`openclaw cron edit <id> --tools exec,read,write,message` o el aviso llega sin poder ejecutar nada.
+
+**Cuesta dinero:** una noche extra de cluster más base. No hay créditos de Azure desde el 16/09.
 
 ## La MySQL de staging ya tenía sus propios jobs (corrección del 2026-09-30)
 
