@@ -166,6 +166,14 @@ journal `2026-10/2026-10-13-front-commerce-surfaces-y-campanas.md`.
 
   Commerce no guarda la brand del channel: se deriva de los dueños de sus colecciones
   compartidas.
+- **Pagos a nivel cuenta (F2.7, flag `ACCOUNT_PAYMENTS`, apagado):** `src/lib/account-payments.js`
+  contra `GET`/`PUT /paymentmethod/account` (api F2.3, proxy de base-api F2.6).
+  - Settings › Payments: los 11 encendidos de la cuenta con lo que realmente se ofrece
+    (`effective`) y el opt-in "Use Vio's account" con confirmación.
+  - El channel no tiene switches: lista heredada de solo lectura, con el aviso de markets de
+    Kustom y Adyen (solo NO).
+  - "No payment method" es una condición de la cuenta.
+  - Con el flag apagado, todo sigue por channel (api viejo).
 - **Rutas:**
   - `/surfaces` y `/campaigns` son páginas;
   - `/surfaces/:id` y `/campaigns/:id` van por el catch-all;

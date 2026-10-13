@@ -15,6 +15,22 @@ Un método solo llega al checkout si **ambos** están resueltos: hay
 credencial utilizable (propia o de plataforma) **y** el canal lo tiene
 encendido.
 
+> **Cambia con F2.3 + F2.7 (en ramas, 2026-10-13; ADR-0026 y ADR-0028).** La activación pasa
+> de `channel_user_settings` a la **cuenta** (`user_settings.payment*`): cobra la brand, y cada
+> channel que vende sus productos hereda sus encendidos.
+> - **Sin fallback implícito:** Stripe, Klarna, Vipps, Qliro y Adyen caen a la cuenta de Vio
+>   solo con el opt-in explícito `payment*UseVioAccount`.
+> - **api** (`feature/brand-publisher`) expone `GET`/`PUT /paymentmethod/account`, que devuelve
+>   `{ switches, useVioAccount, ownCredential, effective }`, y el settings del channel ignora los
+>   campos de pago.
+> - **El webapp** (`7468ebf`, detrás del flag `ACCOUNT_PAYMENTS`):
+>   - Settings › Payments tiene los encendidos de la cuenta y "Use Vio's account" con
+>     confirmación;
+>   - el detalle del channel los muestra en solo lectura;
+>   - "No payment method" es una condición de la cuenta.
+>
+> Ver los journals `2026-10-13-api-brand-publisher-f23` y `2026-10-13-front-commerce-pagos-cuenta-f27`.
+
 ## Credenciales por seller (`payment_method`)
 
 `options` es un **STRING JSON**. El campo `name` de dentro es lo que casan
