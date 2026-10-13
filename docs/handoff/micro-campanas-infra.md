@@ -149,7 +149,7 @@ tráfico a un pod que todavía no levantó y el rolling no te salva de nada.
 que está vivo**: `registry.tf` declara `reachuprod2` y `reachuqa2` (los registries de Noruega, que
 ya no existen) y `aks.tf` los clusters viejos. Los de verdad son `vioprodsc`/`vioqasc` y
 `vio-commerce-prod-sc`/`kubernetesqa-sc`. Agregar el micro ahí sería escribir ficción encima de
-ficción (ver [audit de IaC](../journal/2026-09/2026-09-09-audit-iac.md) si existe, y ADR-0016).
+ficción (ver [ADR-0016](../decisions/0016-consolidacion-secretos-terraform.md)).
 El DNS tampoco vive en Terraform: está en **Cloudflare**, y lo manejo con el token de DNS.
 Key Vault no interviene: el env viaja por el blob.
 
@@ -160,7 +160,7 @@ Key Vault no interviene: el env viaja por el blob.
   Helm (el `values.yaml` del tgz trae `volumes: []` y el objeto vivo sí tiene el volumen).
   Sobrevive a los `helm upgrade` por el merge de tres vías, pero es exactamente el tipo de estado
   fuera de banda que rompe el siguiente upgrade
-  ([lección](../lessons/kubectl-patch-rompe-helm.md)). En campaigns nace en el chart.
+  ([lección](../lessons/kubectl-patch-rompe-el-siguiente-helm-upgrade.md)). En campaigns nace en el chart.
 - **El chart que se despliega es el `.tgz`, no el directorio.** `helm upgrade --install` usa
   `./charts/$APP_PREFIX-0.1.0.tgz`. Editar `charts/campaigns/values.yaml` sin reempaquetar no cambia
   nada — y los valores del directorio en `develop` de varios repos están desactualizados respecto
