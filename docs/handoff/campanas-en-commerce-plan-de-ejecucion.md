@@ -49,8 +49,8 @@ Estado: ⬜ pendiente · 🟡 en curso · ✅ hecho · ⏸ bloqueado.
 
 | # | Qué | Repo | Estado |
 |---|---|---|---|
-| 0.1 | `disconnectShopifySalesChannel` hace `softDelete(userId)`, que borra la `shopify_connection` cuyo **id** coincide con el userId (puede ser la de otro merchant), y deja viva la del que se desconecta. vio-sync lo llama al desconectar. | users | 🟡 |
-| 0.2 | `GET /api/channel/user/admin/by-shopify-url` no tiene auth y devuelve la `shopifyConnection` con `accessToken`/`refreshToken`. Se arregla en dos lados: api no devuelve tokens, y base-api pide auth si ningún llamador legítimo la usa sin auth. | api, base-api | 🟡 |
+| 0.1 | `disconnectShopifySalesChannel` hace `softDelete(userId)`, que borra la `shopify_connection` cuyo **id** coincide con el userId (puede ser la de otro merchant). La propia la borra extensions `deleteAccount`. vio-sync lo llama al desconectar. | users: [#19](https://github.com/vio-live/vio-users-microservice/pull/19) (develop), [#20](https://github.com/vio-live/vio-users-microservice/pull/20) (master) | 🟡 PR abierto |
+| 0.2 | `GET /api/channel/user/admin/by-shopify-url` no tiene auth y devuelve la `shopifyConnection` con `accessToken`/`refreshToken`. Se arregla en dos lados: api solo selecciona ids, y base-api pide `verifyToken` + `verifyAdminUser` y codifica el `shop`. No hay llamadores en ningún repo. | api: [#42](https://github.com/vio-live/vio-api-microservice/pull/42)/[#43](https://github.com/vio-live/vio-api-microservice/pull/43); base-api: [#30](https://github.com/vio-live/vio-base-api/pull/30)/[#31](https://github.com/vio-live/vio-base-api/pull/31) | 🟡 PR abierto |
 
 ### F1 — Mediciones (antes de migrar o borrar datos)
 
@@ -154,4 +154,41 @@ El rol de origen de catálogo (vio-sync, `EcomUser` y las conexiones) **no se to
 
 ## Revisión
 
-*(Comentarios de Miguel y del agente revisor.)*
+### Agente revisor (2026-10-13)
+
+Hizo una revisión adversarial de los ADR-0025/0026/0027 y de este plan contra el código
+(`origin/develop`/`main`). Claude verificó a mano los puntos marcados con ✔.
+
+**Bloqueantes: hay que resolverlos antes de F2**
+
+| # | Hallazgo | Qué cambia en el plan | Decisión de Angelo |
+|---|---|---|---|
+| B1 ✔ | El middleware resuelve una key de channel **a través del tipo de channel**: `verifyTokenGraph` hace un join `userChannelApiKey.channel → channel.channelUser` (`middleware.service.ts:224-240`) y `verifyToken` compara con la matriz de tipos. Un channel sin tipo da 401 en toda la API. Además, el dueño de la key tiene que tener una suscripción activa. | El cambio del middleware y de `@vio-/service validateApiKey` (resolver el ChannelUser por su FK `user_channel_api_key`) pasa a F2, **antes** de 2.3. No se deja para F7. | ¿Los publishers (VG, Aller) necesitan plan o suscripción para que sus keys funcionen? |
+| B2 | "Cobra la brand" + backfill por unión = cobrar en la cuenta de Vio sin querer. Los channels nacen con Klarna, Stripe y link en true, y Stripe, Klarna, Vipps, Qliro y Adyen caen a la credencial de plataforma si la brand no tiene la suya. Además, la consulta 1 del journal tiene dos fallos: el JOIN interno deja fuera a los channels sin settings, y `CONCAT_WS` se salta los NULL. | Antes de 2.1, un ADR corto sobre el fallback cuando vende la brand. Para los métodos con fallback, el backfill sería la unión ∩ la credencial propia activa. Sumar la medición "toggle ON sin credencial propia" por método y corregir la consulta 1. | ¿Una brand puede vender con la cuenta de Vio (fallback), o solo con la suya? |
+| B3 | ADR-0026 no define cómo queda la **orden**. Hoy los `orders/save` mandan `reseller` = `cart.user`, el supplier es `product.user`, el `referralFee` sale del producto, y los listados, el profit y el revenue dependen de reseller/supplier. Si `reseller` pasa a ser la brand, el publisher deja de ver sus ventas. Surface y campaña no tienen columnas en la orden. | Antes de 2.4, un ADR sobre la orden: quién es el reseller, quién el vendedor de registro, qué ve cada uno, y si surface y campaña van en la orden o solo en analytics. El vendedor se persiste en el carrito al crear el checkout, y **no** se reescribe `cart.user` en los carritos viejos (payment-processors resuelve capture y refund por ahí). | Sí: el modelo de la orden. |
+| B4 | "Mismas rutas y mover el DNS" deja afuera rutas que los clientes nativos llaman hoy: `/ws/:campaignId`, `register-device`, `/v1/sdk/broadcast`, `/v1/engagement/*`, `/v1/campaigns/:id/config`, `/v1/localization`, `lineup`, `/v2/tv/*` y `/objects/*`. El único tráfico real va a **`api-staging`**, no a `api.vio.live`. El cluster de QA se apaga de noche y los fines de semana; vio-backend en Oracle corre 24/7. | El corte se hace **por path** en el nginx de Oracle: las rutas portadas van al micro y el resto sigue en vio-backend hasta retirarlas. Así el rollback es revertir un `location`. Los hosts se mapean uno a uno (api-staging ↔ QA, api ↔ prod, api-dev como alias). | ¿QA tiene que estar arriba 24/7 para que VG y Aller tengan config, o el corte de staging apunta a prod? |
+
+**Importantes**
+
+| # | Hallazgo | Acción |
+|---|---|---|
+| I1 ✔ | **Contradicciones.** ADR-0027 dice que el web-sdk y Vev guardan un carrito por API key, pero en `main` el web-sdk lo guarda por `sponsorId` (`cart-manager.ts:34`, `vio.cart.v1`); `CartsByKey` solo existe en una rama de Vev. El channel es "de una o varias brands" (0026) y "una brand" (0027). `accountType`/`features` quedan en dos lados (users F2.2 y `/api/auth/me` del micro). ADR-0025 dice que el webapp va por base-api y 0027 lo revierte. | Esta tabla deja registradas las correcciones (los ADRs no se editan). Hay que mantener **ids de sponsor estables** en la config, porque el carrito guardado los usa. `accountType` sale de **users**; el `/api/auth/me` del micro lo reexpone. |
+| I2 | **Hay tres juegos de markets.** Kustom y Adyen filtran por los markets del channel, en api y en shopcart (`MARKET_NOT_IN_CHANNEL`), pero la brand no tiene dónde guardar los suyos. | Una sola función de markets y su columna, dentro de F2. |
+| I3 | **Nada obliga a "una brand por channel".** `ChannelGroup` no tiene supplier. | Validar al agregar productos y colecciones al channel. Validar que el sponsor de la campaña sea la brand de sus channels. |
+| I4 | **Key por channel.** Hay tres caminos de creación, y `customApiToken` engancha cualquier key existente **sin comprobar el dueño** (`channel.service.ts:282-292`, bug de seguridad aparte). No se definió qué channel conserva el valor de una key compartida (la de Lyko está pegada en VG). vio-analytics mapea los sponsors por esa key. | Definir la migración de keys, y reapuntar analytics junto con 2.3, no en F6. |
+| I5 | **El vendedor sale de 5 o más fuentes en shopcart.** Vipps arranca el pago con `ChannelUser.user` pero captura con `cart.user`. | Una sola fuente para init, capture, refund y webhooks (2.4). |
+| I6 | **El manifest del SDK no manda la plataforma.** Registrarlo por plataforma obliga a cambiar el SDK o a tener keys por plataforma. Kotlin usa los `paymentMethods` de la config, así que el micro tendría que llamar a api o replicar `getAvailablePaymentMethods`. | Definir en F3: el micro le pide los métodos a api, con cache. El manifest acepta un `platform` opcional, y el default es la surface. |
+| I7 | **Apple Pay.** Si cobra la brand, cada dominio de surface se registra en la cuenta Stripe de cada brand. | Documentarlo en el alta de surfaces. |
+| I8 | **Reusar el nombre `campaign`** de liveshow es riesgoso con micros en kernels distintos. | Usar nombres nuevos, o este orden estricto: quitar llamadores, liberar el kernel, hacer el drop y recién ahí crear. |
+| I9 | **Kernel.** F2.1 y F3.2 son dos releases con migraciones. Las de prod se van a acumular, y el backfill es una foto. | Hacer el backfill idempotente y re-ejecutable, y planificar la puesta al día de prod. |
+
+**Menores**
+
+- El audit decía que base-api `statsService` lee Postgres: no lo hace, pasa por el colector de analytics.
+- `validateApiKey` y `verifyTokenGraph` loguean la key.
+- `docs/architecture/vio-vev-integration.md` tiene keys en claro (líneas ~137 y ~242), que hay que rotar o quitar.
+- Sobre F0.1: la conexión propia **sí** la borraba extensions. Las descripciones de los PRs ya se corrigieron.
+
+### Miguel
+
+*(Pendiente. Se le pidió revisar la infra del micro, el `access.log` y el modelo.)*

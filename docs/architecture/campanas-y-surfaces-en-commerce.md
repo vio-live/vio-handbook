@@ -40,7 +40,7 @@ vio-backend corre desde el 2026-09-28 en VMs de Oracle
 | Dashboard viejo `client/` para dar de alta surfaces, sponsors y campañas, más el proxy de catálogo `/v2/commerce/...` y la subida de imágenes | Operación interna | Staging |
 | `GET /api/auth/me`, `GET/PATCH /api/sponsor/me` | webapp (`src/lib/vio.js`), pantalla Settings › Mi marca | Solo staging: en prod el host no se deriva [V] |
 | `POST /api/campaign/payments/apikey/:apiKey` | `vio-api-microservice` `channel.service.ts:5291-5323` (propaga los métodos de pago) | Acople; desaparece si los sponsors viven en MySQL [V] |
-| Lectura directa del Postgres (`client_apps.api_key`, `sponsors.commerce_*`) | vio-analytics `src/auth.ts:38,92,133` y base-api `statsService.ts:13` | Acople; hay que reapuntarlo a MySQL [V] |
+| Lectura directa del Postgres (`client_apps.api_key`, `sponsors.commerce_*`) | vio-analytics `src/auth.ts:38,92,133`. base-api `statsService.ts` pasa por el colector, no lee Postgres (corregido el 13/10). | Acople; hay que reapuntarlo a MySQL [V] |
 | Engagement (polls, contests, lineup), WebSocket `/ws/:campaignId`, TV (subscribe, cart-intent, session), manifest de slots, componentes por campaña, register-device, `/v1/sdk/broadcast` | Solo SDKs nativos en ramas `develop` y apps de demo contra `api-dev` | **Ninguna surface en producción.** [I: falta confirmarlo con el `access.log` de nginx] |
 
 **Datos en prod:** unas 600 filas (12 users, 18 broadcasts, 85 cart_intents) y 0 filas en
