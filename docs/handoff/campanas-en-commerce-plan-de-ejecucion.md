@@ -123,6 +123,44 @@ gate de migraciones frenó el bump automático, como se esperaba.
      el bump exige "los 7 juntos". Cuando una release automática publica solo una parte, hay que
      completarla con `pkg=all` antes de bumpear.
 
+### ▶ Runbook para Miguel: lo que destraba todo (13/10, noche)
+
+Angelo: *«lo puede hacer Miguel»*. Todo esto es **solo QA**; prod no se toca. Va en este orden:
+
+1. **El micro en QA.**
+   - Cargar `COMMERCE_GRAPHQL_PUBLIC_URL` y `CAMPAIGNS_DASHBOARD_ORIGINS` en el `.env` de QA (tabla
+     al final de [micro-campanas-infra](./micro-campanas-infra.md)), montar el Secret
+     `env-sc-campaigns` y relanzar el deploy. Hace falta una imagen nueva, porque el `.env` se baja
+     en el build.
+   - Comprobar: `/health` → 200, `/v2/mobile/config` sin key → 401, `/v1/engagement/config` → 410.
+   - Si te parece, mergear el PR #5 del micro (el hook `commit-msg`).
+2. **Las migraciones del kernel en QA**, de a una y en orden (sección "Release del kernel 1.0.269"
+   de este plan): `1791899686000`, `1791899686001` (guardar el log con el listado de "cuenta de
+   Vio") y `1791900705000`. Comprobar el rol 3 y las tablas `surface_*`.
+3. **La release con los 7 paquetes juntos**, solo DESPUÉS del paso 2:
+   `gh workflow run kernel-release.yml -R vio-live/package-database -f pkg=all`. Publica 1.0.270
+   y dispara el bump a `develop` de los 11 micros, que se redespliegan en QA.
+4. **El token npm.** El de la laptop de Angelo da 401, y por eso ninguna rama nueva pudo
+   regenerar su `yarn.lock`. Hay dos salidas:
+   - poner un token de lectura válido de `@vio-` en el `~/.npmrc` de esa laptop, y Claude
+     regenera los locks; o
+   - que Claude pushee las ramas (sin PR) y regenerar los locks en otra máquina.
+   
+   Ramas `feature/brand-publisher`: api, users, shopcart (parte 2), payment-processors, orders y
+   base-api. Más `feature/typeorm` del micro. Todas pasan a 1.0.270 cuando salga el paso 3.
+5. **Antes de desplegar orders:** la consulta 8 del journal del 13/10 (carritos cuyo dueño no es
+   el dueño del channel).
+6. **Atribución a AI:** poner `"includeCoAuthoredBy": false` en `~/.claude/settings.json` y
+   activar el hook del handbook con `git config core.hooksPath .githooks` (regla 6 de
+   `onboarding/agents.md`).
+
+**Orden de deploy del resto**, cuando estén los locks: api F2.3 + base-api 2.6 → payment-processors
+y orders → shopcart parte 2 → webapp #50 (con los flags encendiéndose de a uno) → micro TypeORM.
+Middleware #10 y shopcart #87 (parte 1) son independientes y se pueden probar en QA ya.
+
+**Pendiente de Angelo:** si `CART_NOT_SINGLE_BRAND` (shopcart) queda estricto o se relaja a "una
+sola brand solo cuando vende una brand distinta del dueño del channel" (recomendado).
+
 ### F3 — Microservicio `vio-campaigns-microservice`
 
 **División (Angelo, 2026-10-13): Miguel se encarga de la configuración y la infra del micro;
