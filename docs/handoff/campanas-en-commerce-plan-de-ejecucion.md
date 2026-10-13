@@ -250,7 +250,23 @@ zcat -f /var/log/nginx/access.log* \
   un JSON explícito** desde el día del corte. Mejor que proxyear a un backend que ya nadie
   mira: si algún cliente las usa, falla fuerte y nos enteramos.
 
-#### 2. Lo que reordenaría (mi única objeción de peso al orden)
+> **Respuesta de Angelo (2026-10-13):** (1) el corte se hace de inmediato; (2) el micro va dentro
+> de los micros, en AKS; (3) una surface mantiene N channels.
+> Lo de (1) ya está hecho en su parte de infra: **`api.vio.live` cerrado a lista blanca y el
+> dashboard viejo de staging también**, con el loop de Vev intacto
+> ([journal](../journal/2026-10/2026-10-13.md)). Lo que sigue de esta sección queda como registro
+> de por qué, y los puntos 3 y 4 se releen con sus respuestas:
+> - **Con prod cerrado y sin un solo cliente real, prod no necesita split por path.** Cuando el
+>   micro exista en AKS: apuntar `api.vio.live` al ingress y que las rutas no portadas respondan
+>   **410**. El split por path solo hace falta en **staging**, que es donde está el loop de Alan, y
+>   ahí sí puede vivir en el nginx de Oracle sin poner a la VM en el camino crítico de producción.
+>   Eso simplifica ADR-0028 #5 en vez de contradecirlo.
+> - **Si la surface mantiene N channels, el reparo de las N+1 keys en el cliente sigue en pie** y de
+>   hecho es cuando más pesa. El mínimo que propongo para v1: el cliente lleva **solo** la key de
+>   surface; las keys de channel son de **catálogo en solo lectura**, rotables por channel sin
+>   tocar la app, y nunca válidas para checkout. Puedo redactarlo como punto de ADR si querés.
+
+#### 2. Lo que reordenaría (mi única objeción de peso al orden) — HECHO el 2026-10-13
 
 **Los 7 agujeros de auth de vio-backend no pueden esperar a F6.** El audit los da por
 verificados: `GET /api/campaigns/:id` público devolviendo `reachuApiKey` y `webhookUrl`, el
