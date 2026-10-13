@@ -125,6 +125,21 @@ Pantallas de Surfaces (con plataformas y slots), Channels (grupos de productos d
 brand, a partir de Connection + colecciones), Campañas (sponsors, channels, fechas y
 slots) y Mi marca (`brand_profile`).
 
+### F4b — Visibilidad por tipo de cuenta y flujo del publisher (Angelo, 13/10)
+
+La matriz está en [cuentas-y-capacidades](../architecture/cuentas-y-capacidades.md). Se avanza
+paso a paso, **primero el publisher**:
+- 🟡 **P1:** la matriz en el webapp (nav, rutas y Settings) con una sola función, y el publisher
+  sin el bloqueo por suscripción.
+- 🟡 **P2:** el "getting started" del publisher en el Dashboard (connection → channel → surface →
+  campaña).
+- 🟡 **P3/P4:** inventario y propuesta de Connections (pedir y aceptar acceso) y de Channels
+  como grupo de productos de una brand. En v1 el channel se crea por debajo con tipo "Vio SDK"
+  (10), para que su key pase el middleware.
+- ⬜ **P5/P6:** surface ↔ channels y campaña con sponsor conectado. Llegan con el micro (flag
+  `VIO_CAMPAIGNS_V2`).
+- ⬜ **Backend:** F2.2 (tipo de cuenta guardado y guards). Depende de la release del kernel.
+
 ### F5 — Clientes
 
 - **web-sdk:** un build IIFE/CDN para el tipo `web` (snippet) y el atributo `slot` en los

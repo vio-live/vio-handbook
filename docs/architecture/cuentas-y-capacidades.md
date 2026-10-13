@@ -1,11 +1,63 @@
 ---
 title: "Cuentas unificadas y capacidades por tipo (Commerce + Vio)"
-last-updated: 2026-09-16
+last-updated: 2026-10-13
 owner: angelo
 status: draft
 ---
 
 # Cuentas unificadas y capacidades por tipo
+
+## Vigente desde 2026-10-13: Brand, Publisher, Internal
+
+Con [ADR-0025](../decisions/0025-campanas-y-surfaces-se-reconstruyen-en-commerce.md) a
+[ADR-0029](../decisions/0029-corte-por-dns-keys-de-surface-y-nombres.md) cambian los tipos de
+cuenta:
+- **Brand** (antes business o supplier): tiene catálogo, cobra y envía.
+- **Publisher** (antes "Channel" o seller): tiene surfaces, channels (grupos de productos) y
+  campañas.
+- **Internal:** el equipo de Vio.
+
+Todo vive en Commerce: el micro de campañas reemplaza a vio-backend.
+
+Angelo (13/10): *«limitar las opciones de los tipos de usuarios: si es un publisher, que vea las
+opciones de publisher; y vamos paso a paso creando el flow»*.
+
+| Sección | Brand | Publisher | Internal |
+|---|---|---|---|
+| Dashboard | sus ventas y su catálogo | sus surfaces y campañas, más el "getting started" | todo |
+| Products | ✅ gestiona su catálogo | ❌ (ve productos dentro de Channels) | ✅ |
+| Collections | ✅ | ✅ (con el catálogo al que tiene acceso) | ✅ |
+| Orders | ✅ como supplier | 👁 sus ventas como reseller | ✅ |
+| Channels | ❌ (ya no crea channels) | ✅ grupos de productos de una brand | ✅ |
+| Connections | ✅ recibe y acepta pedidos de acceso | ✅ pide acceso a catálogos | ✅ |
+| Surfaces / Campaigns | ❌ (después: solo donde aparece) | ✅ | ✅ |
+| Settings › Brand | ✅ | ❌ | ✅ |
+| Settings › Payments, Shipping, Integrations, Import tools | ✅ | ❌ | ✅ |
+| Settings › Plan & billing | ✅ | ❌ (exento de suscripción, ADR-0028) | ✅ |
+| Settings › API & SDK | ✅ (su key para vio-sync) | ✅ (keys de sus surfaces y channels) | ✅ |
+| Settings › Profile, Company, Notifications, Team | ✅ | ✅ | ✅ |
+
+- **El front esconde, pero la garantía está en el backend.** Hace falta el tipo de cuenta
+  guardado en la base (`UserRole`: Admin 1, Supplier 2, Publisher 3) y guards en los servicios
+  (F2.2 del [plan](../handoff/campanas-en-commerce-plan-de-ejecucion.md)).
+- **De dónde sale el tipo:** `accountType`/`features` salen de users (`/api/users/me`). El
+  `/api/auth/me` del micro los reexpone. Mientras tanto el front normaliza los valores viejos:
+  `business`→`brand` y `seller`→`publisher`.
+
+### Flujo del publisher (el primero que se construye)
+
+1. **Registro** como Publisher. Sin suscripción.
+2. **Connections:** pide acceso al catálogo de una brand, y la brand acepta.
+3. **Channels:** arma un grupo de productos de esa brand. El channel tiene su key.
+4. **Surfaces:** crea su surface (web, Vev, custom web, apps, TV) y le asigna channels.
+5. **Campaigns:** crea la campaña en la surface. El sponsor es una brand con Connection, y los
+   productos salen del channel de esa brand.
+
+---
+
+*Lo que sigue es el modelo del 2026-09-16 (seller/business con dos backends). Queda como
+historia; lo reemplaza la sección de arriba.*
+
 
 Decisiones de Angelo del 2026-09-16. Contexto:
 [relevamiento del dashboard de Vio](relevamiento-dashboard-vio.md),
