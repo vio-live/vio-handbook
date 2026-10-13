@@ -4,7 +4,7 @@ description: Restaurar un cluster AKS de Vio Commerce desde cero
 category: playbook
 tags: [kubernetes, azure, disaster-recovery]
 status: active
-last-updated: 2026-05-27
+last-updated: 2026-10-14
 ---
 
 # Cluster Restore Playbook
@@ -105,6 +105,34 @@ helm upgrade --install <name> /tmp/<name>.tgz \
 
 Repos que SÍ pueden redesplegar vía pipeline (empty commit en develop/master):
 - `vio-live/graphql`
+
+---
+
+## Paso 6 bis — El micro de campañas (añadido 2026-10-14)
+
+`campaigns` es el **único micro que se expone al público** (lo llaman los SDKs, Vev y el webapp),
+así que restaurarlo no termina con el `helm upgrade`: sin su Gateway, su VirtualService y su
+certificado, el deployment arranca pero **nadie llega**.
+
+```bash
+# 1) el servicio, como los demas pero con su ACR
+gh api repos/vio-live/vio-campaigns-microservice/contents/charts/campaigns-0.1.0.tgz --jq '.content'   | base64 -d > /tmp/campaigns.tgz
+helm upgrade --install campaigns /tmp/campaigns.tgz   --set image.repository=vioprodsc.azurecr.io/campaigns --set image.tag=latest   # vioqasc en QA
+
+# 2) la exposicion publica (esto es lo que se olvida)
+kubectl apply -f PROD/cert-manager-campaigns/certificate-prod.yaml
+kubectl apply -f PROD/istio-gateway-campaigns.yml                                # QA/ en el otro cluster
+```
+
+Los dos ficheros viven en `vio-live/vio-kubernetes-config`. Comprobar antes de cantar victoria:
+
+```bash
+kubectl get certificate -n istio-system cert-campaigns -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+curl -s https://campaigns.vio.live/health    # 200 {"status":"ok"}; 503 = falta el Service
+```
+
+**El `.env` de producción lo monta el Secret `env-sc-campaigns`**, no la imagen: si no existe, el
+pod arranca sin configuración ([lección](../lessons/env-del-blob-no-llega-a-la-imagen-al-reconstruir.md)).
 
 ---
 

@@ -7,7 +7,7 @@ status: live
 
 # Vio Commerce — Arquitectura del código
 
-**Última revisión:** 2026-07-01 (Claude, deep-dive de los 13 servicios)
+**Última revisión:** 2026-10-14 (Miguel: añadido el micro de campañas, 14º servicio, y retirado `msrvc-p`). Deep-dive original de los 13: 2026-07-01 (Claude)
 **Estado:** 🟢 Completo — 13 servicios leídos a fondo, con brief por servicio + lógica de negocio.
 
 > **Detalle por servicio:** este doc es el mapa. El **brief profundo de cada servicio**
@@ -73,6 +73,24 @@ El grueso del backend commerce se pusheó el **2026-06-30** (los "fix timeout" /
 | **vio-tracking-microservice** | `/tracking` | ⚠️ **NO trackea envíos** — es un proxy de eventos de analítica a **Mixpanel**. El tracking de envío real (Postmen/AfterShip) está en `base-api` |
 | **vio-template-microservice** | `/templates` | auth (creds de tienda externa), **data-mapping**, webhook — motor de mapeo de integraciones (plantillas JSON en S3 → esquema canónico) |
 | **vio-middleware-microservice** | `/middleware` | ⚠️ **NO es un proxy** — es el **gate de auth central** (forward-auth): valida API key / Firebase token / suscripción activa → 200/401 |
+| **vio-campaigns-microservice** | *(ninguno: host propio)* | **Campañas y surfaces** (ADR-0025 a 0029), la reconstrucción de lo que hoy vive en vio-backend. Creado el **13/10/2026** |
+
+> **El de campañas es distinto de los otros 11** y conviene tenerlo claro:
+> - **Se expone al público** en `campaigns.vio.live` / `campaigns-staging.vio.live`, porque lo
+>   llaman los SDKs, Vev y el webapp. Los demás solo son internos.
+> - **Hace su propia auth**, sin pasar por el middleware: token de Firebase para el dashboard y
+>   key de surface para el SDK.
+> - **Su rama de prod es `main`** (como `collection`), no `master`.
+> - **Su deploy hace rolling update de verdad** (tag por número de run, `maxUnavailable: 0`), en
+>   vez del `image.tag=latest` + `kubectl delete pod` de los demás, que cuesta ~1 min de 503
+>   ([lección](../lessons/las-replicas-no-evitan-el-corte-del-deploy.md)).
+>
+> Config e infra: [micro-campanas-infra](../handoff/micro-campanas-infra.md). Restaurarlo tras una
+> pérdida de cluster: paso 6 bis de [cluster-restore](../playbooks/cluster-restore.md).
+
+**`msrvc.vio.live` / `msrvc-p.vio.live` ya no existe** (verificado 2026-10-14: sin registro en
+Cloudflare ni Gateway). Los 11 micros son hoy **solo internos**; se les llega desde base-api y
+graph-ql dentro del cluster.
 
 > **Tokens de Shopify de las apps custom (desde 2026-09-24).** Para las tiendas listadas en
 > `VIO_CUSTOM_APPS` (`.env` de `extensions`, blob de Azure), `extensions` **no guarda ni
