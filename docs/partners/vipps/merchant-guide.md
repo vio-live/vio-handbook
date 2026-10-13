@@ -78,5 +78,10 @@ if you let Vio refund.
 shipping rates cover (with dynamic shipping) or the country of the checkout (with fixed options),
 so add a rate for every country you want to serve.
 
+**Keyboard shoppers on Safari.** Vio's product page, cart and checkout can be used with the keyboard
+(Tab, Enter, Esc). Inside the payment widgets of Qliro, Nexi and Klarna, Safari applies its own rule and
+skips buttons unless *Press Tab to highlight each item* is on (Safari → Settings → Advanced), or with
+Option+Tab. Chrome and Edge need nothing.
+
 **Something failed.** The order page and your Vio dashboard show the Vipps reference
 (`VIO-…`): give it to Vio support. You never need the Vipps portal for day-to-day work.

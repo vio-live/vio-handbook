@@ -36,7 +36,8 @@ Standard), 9d2PI25R, y los 12 puntos viejos.
 
 ## Blockers
 
-- Ninguno técnico.
+- Ninguno técnico. Angelo: la tarjeta de teclado cerrada en Done con la nota de Safari (y la guía de
+  merchant con la limitación); lo demás lo habla él con Alan.
 
 ## Next session
 
