@@ -1,0 +1,38 @@
+---
+date: 2026-10-13
+session: "Vipps aprueba el checklist ePayment: listos para producción"
+participants: [angelo, claude]
+status: live
+---
+
+# Vipps aprueba el checklist ePayment
+
+## Goal
+
+Leer la respuesta del equipo de integración de Vipps al checklist enviado el 08/10 y decidir qué contestar.
+
+## Done
+
+- **Checklist aprobado**: «from technical perspective you are ready to proceed into production». La
+  aprobación avisa al equipo de partners de Vipps, que puede contactar.
+- Vipps pregunta si vamos con **merchant keys o partner keys**, pide que avisemos en el mismo hilo cuando
+  el **primer cliente salga en producción** (lo revisan en vivo) y recuerda la status page (ya suscrita).
+- El correo va dirigido a «Michael» y agradece un vídeo que no salió de esta sesión.
+
+## Decisions
+
+- Respuesta propuesta: **partner keys como modelo por defecto** (lo que ya construimos: unidad bajo el
+  acuerdo de partner, partner keys + `Merchant-Serial-Number`, el comercio no ve claves ni MSN), y
+  **merchant keys** para el comercio que ya tiene su propio acuerdo (modo own). Pedir partner keys de
+  producción y acceso a la Management API (product orders) para el alta de comercios.
+
+## Blockers
+
+- Producción: release pendiente (prod va muy por detrás de QA), partner keys en el entorno
+  (`VIPPS_PARTNER_*`), registrar el webhook de partner (`scope: 'partner'` → `VIPPS_PARTNER_WEBHOOK_SECRET`),
+  `EMAIL_DELIVERY=on`, `PAYMENT_SECRETS_KEY` en prod. Elegir el primer comercio que sale en vivo.
+
+## Next session
+
+- Con las partner keys: plan de release a producción por servicio, y avisar a Vipps en el hilo cuando el
+  primer comercio esté en vivo.
