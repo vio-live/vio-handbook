@@ -27,7 +27,67 @@ webapp no cambien. Por eso, a diferencia de los otros 11 micros, **es público**
 - **Sin tablas todavía:** van en `package-database` cuando Angelo dé el OK. Hasta entonces, la
   app corre con un adaptador en memoria.
 
-## Estado de la infra (Miguel, 2026-10-13 17:00)
+## Estado de la infra (Miguel, 2026-10-13 17:50)
+
+**El repo existe y el pipeline funciona hasta donde hace falta el código.**
+[`vio-live/vio-campaigns-microservice`](https://github.com/vio-live/vio-campaigns-microservice),
+privado, rama `develop`. Primer push: **solo infra**, nada de `src/` ni `package.json`.
+
+| # | Pieza | Estado |
+|---|---|---|
+| — | SP propio `sp-campaigns-ci` | ✅ 6 asignaciones: AcrPush, Cluster User y Blob Data Reader en QA **y** prod |
+| 1 | Repo + rama `develop` | ✅ creado y pusheado |
+| 2 | Dockerfile | ✅ copia de `collection` |
+| 3 | Chart `campaigns` + `.tgz` | ✅ `helm lint` limpio; probes en `/health`, 80→8000 |
+| 4 | `deploy.yml` + `kernel-bump.yml` | ✅ `develop`→QA, `main`→prod, sin `pre-develop` |
+| 5 | Secrets de GitHub | ✅ **25** cargados (no 39: sobraban los `_STAGING` y `AZ_RG_*`, que este workflow no usa). `ORG_DISPATCH_TOKEN` y `NPM_AUTOMATION_TOKEN` **ya los ve el repo** como secretos de organización: no hay que cargarlos |
+| 7 | DNS, certs, Gateway, VirtualService | ✅ aplicados en los dos clusters + [vio-kubernetes-config#1](https://github.com/vio-live/vio-kubernetes-config/pull/1) |
+| 6 | `env-sc-campaigns` en prod | ⬜ cuando llegue a `main` (en QA no hace falta: el `.env` va horneado) |
+| 8 | Dispatch del kernel (7 PRs) | ⬜ **a propósito: ver abajo** |
+
+**Prueba del pipeline:** el push disparó el deploy y llega hasta
+`COPY package.json ./` → `"/package.json": not found`. O sea **resolvió los 25 secrets, hizo
+`docker login` contra `vioqasc` con el SP nuevo, escribió el `.npmrc` y arrancó el build**. Lo
+único que falta es la app. Ese fallo es el esperado y se vuelve verde solo cuando entre el código.
+
+**Un fallo mío por el camino, documentado para que no se repita:** `NPM_CONTENT_FILE` es el `.npmrc`
+completo y tiene **dos líneas**. Sin comillas, el salto de línea parte el comando y
+`docker build` se queda sin el argumento del contexto (`.`), fallando con
+`docker buildx build requires 1 argument`. En este repo va entre comillas. Los otros 13 funcionan
+porque su secreto es de una sola línea.
+
+### Lo que necesito del código (Claude)
+
+1. **`package.json` con estos cuatro scripts**, porque los secrets apuntan a ellos:
+   `build:integration` y `start:integration` (QA), `build:prod` y `start:prod` (prod). Es la
+   convención real de los demás micros, la saqué de las variables de un pod vivo de `collections`.
+2. **`GET /health` escuchando en el 8000**, que es lo que miran readiness y liveness.
+3. Las dependencias `@vio-/*` en `package.json`: sin ellas, `kernel-bump` aborta con
+   *"No @vio-/\* deps found"*.
+
+### Por qué el dispatch del kernel NO está hecho todavía
+
+Si agrego `vio-campaigns-microservice` a la lista de los 7 `kernel-release.yml` **antes** de que
+el repo tenga `package.json`, la siguiente release del kernel le despacha `kernel-published` y el
+job de bump **falla** (`exit 1` por "No @vio-/* deps found"). Y la siguiente release del kernel es
+justo la de `package-database#17`. Los 7 PRs los abro en cuanto el `package.json` esté en `develop`;
+son 5 minutos.
+
+### Decisiones mías que conviene saber
+
+- **`APP_NAME` sin "reachu".** La convención viva es `qa-reachu-collections-microservices` /
+  `reachu-collections-microservices`. Para el micro nuevo usé
+  **`qa-vio-campaigns-microservice`** y **`vio-campaigns-microservice`**: Reachu no existe y no
+  tiene sentido arrastrar la marca muerta a un servicio nuevo. Si algo del código clava el prefijo,
+  decidme y lo cambio en un minuto.
+- **El SP ya tiene permisos de prod** (ACR push, Cluster User, Blob Reader), para que el día que
+  haya `main` no haya que pararse a pedir accesos. Sigue siendo mínimo privilegio: solo esos tres
+  roles, y solo sobre los recursos de Commerce.
+- **Pendiente heredado, no introducido por mí:** el Dockerfile recibe `SV_PASSWORD` por `ARG`+`ENV`,
+  así que la credencial queda en el historial de la imagen (el propio build lo avisa:
+  `SecretsUsedInArgOrEnv`). Lo copié tal cual para no ser yo el motivo de un pipeline rojo. Se
+  arregla con `RUN --mount=type=secret` o un build multi-stage, y es mejor hacerlo cuando el build
+  esté verde y se pueda comprobar.
 
 | # | Pieza | Estado |
 |---|---|---|
