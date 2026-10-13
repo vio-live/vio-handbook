@@ -164,3 +164,28 @@ Hay 4 commits locales sobre `af2c39f`, sin push, en el worktree
 - El coordinador actualiza el PR #50.
 - Si Angelo aprueba la propuesta de P4: el wizard "New channel" del publisher, "Accept and share
   collections", y las tareas para api (validar una brand por channel) y middleware (tipo 10).
+
+## Addendum (tarde): cada sponsor con su channel (`f658c69`)
+
+El micro (feature/typeorm `95bf21a`, "solo brands con Connection") exige que cada sponsor,
+primario y secundarios, lleve elegido un channel de esa brand asignado a la surface. Si no, da
+400:
+- `SPONSOR_NOT_ON_SURFACE`;
+- `SPONSOR_CHANNEL_REQUIRED` (el mensaje lista los posibles);
+- `CHANNEL_NOT_OF_SPONSOR`.
+
+Ya no existe `SPONSOR_HAS_CHANNEL`: quitar un secundario saca también su channel.
+
+En el webapp, detrás de `VIO_CAMPAIGNS_V2`:
+- el secundario se agrega con su `channelId`;
+- no hay "sin channel";
+- el alta y la edición no mandan mientras falte un channel (`missingSponsorChannels`);
+- los errores se muestran con el texto del micro (`campaignErrorOf`).
+
+Lo probé contra el micro compilado en `95bf21a`:
+- con curl: los 3 códigos, con la forma `{message, code}`;
+- en el navegador: `POST secondary-sponsors {sponsorId:501, channelId:492}` → 201 y `DELETE` → 200.
+
+Con el flag apagado no cambia nada. Bug de paso: el auto-elegir del channel dependía de la
+identidad del array y borraba la elección en cada render.
+
