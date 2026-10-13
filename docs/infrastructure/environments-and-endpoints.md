@@ -50,6 +50,8 @@ Routing real (Istio, `istio-system`, no hay `Ingress` — todo es `VirtualServic
 
 ## Vio Backend (socket-server) — Azure Container Apps, NO AKS
 
+> **Desactualizado:** desde el 2026-09-28 vio-backend corre en Oracle, no en Azure Container Apps. Ver [vio-backend-oracle](./vio-backend-oracle.md) y [vio-staging-oracle](./vio-staging-oracle.md). Se va a retirar (ADR-0025).
+
 | Entorno | RG | URL |
 |---|---|---|
 | Prod | `rg-api-vio-production` | `api.vio.live` → `ca-api-vio-production...azurecontainerapps.io` |

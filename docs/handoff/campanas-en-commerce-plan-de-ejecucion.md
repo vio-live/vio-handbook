@@ -84,7 +84,8 @@ fuera de `/v2/mobile/config` tiene tráfico real.
 ### F3 — Microservicio `vio-campaigns-microservice`
 
 **División (Angelo, 2026-10-13): Miguel se encarga de la configuración y la infra del micro;
-Claude, del código.**
+Claude, del código.** La lista detallada para Miguel está en
+[micro-campanas-infra](./micro-campanas-infra.md).
 
 **Miguel: configuración e infra.** Se toma `collection` como referencia, porque es el micro
 más chico. No hay repo starter, y `vio-template-microservice` **no** es un template: es el
@@ -105,11 +106,14 @@ servicio de mapeo de integraciones.
 | # | Qué |
 |---|---|
 | 3.2 | Entidades en `package-database`: `surface`, `surface_platform`, `surface_channel`, `slot` (por plataforma), `campaign`, `campaign_sponsor`, `campaign_slot`, `brand_profile`. Las de liveshow se retiran si F1.5 da 0 filas; si no, nombres nuevos (I8). Necesita OK de Angelo y release con los 7 paquetes juntos. |
-| 3.3 | Auth propia: token de Firebase para el dashboard y key de surface para el SDK, sin pasar por el middleware. |
+| 3.3 🟡 | (La app se escribe en local: `~/vio-commerce/worktrees/campaigns-microservice`, rama `feature/app`.) Auth propia: token de Firebase para el dashboard y key de surface para el SDK, sin pasar por el middleware. |
 | 3.4 | Rutas iguales a las de vio-backend: `/api/client-apps…`, `/api/campaigns…`, `/api/sponsors…`, `/api/auth/me` (reexpone `accountType` de users), `/api/sponsor/me`, `/v2/mobile/config` (compatible + `campaigns[]`), `/v2/mobile/campaigns/:id/components`, `/v2/mobile/components/manifest` (con `platform` opcional), `/v2/web/brands`. El estado de campaña se calcula en un solo lugar, y se valida siempre que la campaña sea de la surface de la key. Los métodos de pago se le piden a api, con cache. |
 | 3.5 | Tests unitarios y de contrato contra las respuestas actuales de vio-backend. |
 
 ### F4 — Front (webapp)
+
+🟡 Desde el 2026-10-13 hay un agente de front en la rama local `feature/brand-publisher` del webapp, sin push. Construye Surfaces y Campañas contra el contrato actual de vio-backend, que el micro mantiene. Lo nuevo de ADR-0027 queda detrás de un flag.
+
 
 Pantallas de Surfaces (con plataformas y slots), Channels (grupos de productos de una
 brand, a partir de Connection + colecciones), Campañas (sponsors, channels, fechas y
