@@ -364,6 +364,15 @@ El rol de origen de catálogo (vio-sync, `EcomUser` y las conexiones) **no se to
 
 ### Ronda de mejoras (salida de la prueba de punta a punta del 14/10)
 
+> **Estado al 14/10, tarde (todo en QA):**
+> - ✅ **1:** micro [#8](https://github.com/vio-live/vio-campaigns-microservice/pull/8) más webapp [#53](https://github.com/vio-live/webapp-vio-commerce/pull/53). La campaña asigna su channel a la surface; hay `GET /api/channels`; el formulario ofrece todos los sponsors.
+> - ✅ **2:** api [#44](https://github.com/vio-live/vio-api-microservice/pull/44). `REQUEST_ACCEPTED` va solo a quien envió la solicitud.
+> - ✅ **5:** webapp #53. `FormDialog` en 10 modales.
+> - ✅ **7:** micro #8. El nombre por defecto del sponsor ya no es un email; la 1289 sale "Fedrik Louisa".
+> - ⏳ **3:** 123 conexiones "brand↔brand" en QA. Casi todas son sellers viejos con `is_business=1`; se recuentan después del backfill de users F2.2.
+> - ⏳ **4:** 19 clases de envío en otra moneda. Dos son de Alan (1295 y 1299) y el resto son cuentas de prueba viejas.
+> - ⏳ **6:** se cierra desplegando F2.
+
 Angelo las pidió durante la prueba. Van **después** de cerrar Vev, y la primera es la primera.
 
 1. **La campaña se arma sin pasar por la surface.** Hoy hay que entrar al detalle de la
