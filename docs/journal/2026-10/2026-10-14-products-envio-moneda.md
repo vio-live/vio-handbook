@@ -36,6 +36,24 @@ la de su dueño. Una de ellas dice EUR sobre países en NOK.
 - `npx tsc --noEmit` da 0 errores. Ojo: el `node_modules` es el del clon principal y tiene el kernel
   1.0.258, no el 1.0.270 del `package.json`.
 - Brief `products.md` actualizado (workspace `5a9f975`).
+- **Contrato con el webapp (b3bfd47)**, commit **`6a1bd55`**. El `PUT /shipping/:id` lleva
+  `currencyCode` en la raíz además de en cada país:
+  `{"name":"Express","amount":33,"currencyCode":"NOK","countries":[{"country":"NO","amount":33,"currencyCode":"NOK"}]}`.
+  - El DTO ya declara `currencyCode` en la raíz (`dtos/shipping-dto.ts`). No hay `ValidationPipe`
+    ni whitelist, así que nada lo filtra.
+  - Lo verifiqué en base-api `origin/develop`, en solo lectura y a pedido del coordinador.
+    `shippingController.ts` `putUpdateShipping` manda `{ ...req.body, userId }` y
+    `shippingService.js:494` lo envuelve como `{ data }`. No se filtra nada.
+    `userId` sale del token, también en el create: el fallback a la moneda de la cuenta funciona vía base-api.
+  - base-api con `full: true` devuelve el status de products tal cual: un rechazo llega al
+    webapp como 417 con el mensaje.
+  - 3 tests con ese body exacto, todos en verde (19/19 en total):
+    - la clase EUR de la brand 1289 queda toda en NOK;
+    - una clase que decía EUR sobre un país en NOK se corrige en la misma fila;
+    - una clase que ya estaba en NOK solo cambia montos.
+
+    Con el servicio viejo también pasan, porque `currencyCode` en la raíz ya se copiaba. Son
+    guardas de contrato: el arreglo no rompe ese body.
 
 ## Decisions
 
@@ -60,8 +78,8 @@ la de su dueño. Una de ellas dice EUR sobre países en NOK.
   sigue mandando EUR explícito. Habría que quitar el `|| 'EUR'` en el lane del webapp.
 - **Riesgo nuevo de 400 en el `update`.** Si algún cliente edita mandando `currencyCode` de la
   clase vieja (EUR) y países en la moneda nueva (NOK), ahora recibe 400 (417 en la red). Antes
-  quedaba la clase incoherente. Falta comprobar qué manda el webapp al editar. No lo leí: no es mi
-  lane.
+  quedaba la clase incoherente. El body del webapp b3bfd47 es coherente y no cae ahí. Quedan
+  otros clientes, como el sync de Shopify, que no verifiqué.
 - **Siguen abiertos `POST /add-country` y `PUT /edit/country`.** Pueden meter un país en otra
   moneda; quedan fuera del alcance.
 - **Los datos existentes no se corrigen solos.** Las 20 clases de QA (y las de prod) siguen como
@@ -72,6 +90,6 @@ la de su dueño. Una de ellas dice EUR sobre países en NOK.
 
 ## Next session
 
-- OK de Angelo para push y PR de `fix/envio-moneda-e-iva`.
-- Lane webapp: quitar el `|| 'EUR'` y comprobar el payload del editar clase.
+- OK de Angelo para push y PR de `fix/envio-moneda-e-iva` (`df95ed6` + `6a1bd55`).
+- Lane webapp: quitar el `|| 'EUR'` del create (el payload del editar ya está cubierto).
 - Decidir el data patch de las 20 clases de QA (y contarlas en prod).
