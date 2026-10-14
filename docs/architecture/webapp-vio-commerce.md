@@ -201,6 +201,13 @@ journal `2026-10/2026-10-13-front-commerce-surfaces-y-campanas.md`.
   se sustituyen donde se declaran). `color-scheme` scoped a `.vio-app`.
 - Primitivas en `src/ui/` (NO `components/ui`: colisión case-insensitive
   en Linux). NUNCA `next build` con `next dev` corriendo.
+- **`next build` en un worktree con `node_modules` symlinkeado** falla en "Collecting page data"
+  (`TypeError: c(...) is not a function` en `_app.js`, 2026-10-14): `next/font/local` resuelve
+  fuera del proyecto. Para el build, copiar `node_modules` con `cp -cR` (clon APFS).
+- **Clases de envío (Settings › Shipping): la moneda es la de la cuenta, sin fallback**
+  (2026-10-14, `b3bfd47`). Sin `me.settings.currency.code` no se guarda. El POST y el PUT llevan
+  `currencyCode` arriba y en cada país, y editar una clase en otra moneda la pasa a la de la
+  cuenta. Antes, un `|| 'EUR'` dejaba clases en EUR en cuentas NOK.
 - Catch-all: path por `useRouter().asPath` + `key={path}` en los detalles
   (remount en transiciones cliente).
 - Puppeteer: clicks reales para triggers Radix; native value-setter para
