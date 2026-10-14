@@ -381,6 +381,8 @@ Angelo las pidió durante la prueba. Van **después** de cerrar Vev, y la primer
    - Repos: micro y webapp, rama común.
 2. **Notificación al aceptar:** quien acepta una solicitud también recibe `REQUEST_ACCEPTED`
    (QA, solicitud 1485: Aller recibió "received" y "accepted"). Hay que decidir si es lo que queremos.
+   > [claude, 2026-10-14] Decidido (Angelo): solo el sender. Fix en api-ms `feature/mejoras-e2e-1410`
+   > `fc74b1b`, local y sin push. Ver [journal](../journal/2026-10/2026-10-14-api-request-accepted-solo-sender.md).
 3. **Conexiones brand↔brand del modelo viejo:** por ejemplo 1317 → 1289, con 3 colecciones compartidas
    con la brand. Hay que decidir qué hacer con las existentes.
 4. **Las 20 clases de envío de QA con una moneda distinta a la de su cuenta**, y contarlas en prod.
