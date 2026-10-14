@@ -328,7 +328,7 @@ Corte, según [ADR-0029](../decisions/0029-corte-por-dns-keys-de-surface-y-nombr
 - **Prod:** `api.vio.live` pasa por DNS (Cloudflare) al ingress de AKS, y el micro responde 410
   en las rutas no portadas. Nada de proxy en Oracle.
 - **Staging:** split por path en el nginx de Oracle, donde vive el loop de Vev.
-- Reapuntar vio-analytics (ya en 2.3).
+- ✅ Reapuntar vio-analytics: en código el 15/10 (vio-analytics #16, base-api #35, micro #9); falta el despliegue del colector en Oracle (Miguel) y apagar el outbox de vio-backend.
 - Apagar vio-backend y su `client/`.
 
 ### F6b — Keys de surface en el checkout (después del corte)

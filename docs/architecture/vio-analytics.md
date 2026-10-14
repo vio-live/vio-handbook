@@ -179,7 +179,7 @@ campaña/sponsor/broadcast/placement. CTR e impresiones por campaña salen de
 
 ### Fase 1 — Contrato + scaffold del servicio *(desbloquea todo lo demás)*
 1. `shared/analytics-schema.ts` en vio-backend: tipos Zod del evento + taxonomía (validación server, tipos client via export).
-2. `analytics-server/`: Express TS mínimo. `POST /v1/events`: valida Zod → auth api key (lookup `client_apps` por `pg` + cache TTL 60s) → 202 inmediato → buffer.
+2. `analytics-server/`: Express TS mínimo. `POST /v1/events`: valida Zod → auth api key (desde el 15/10: `GET /v2/mobile/surface` del micro de campañas con la misma key, cache TTL 60 s, sin base de datos; antes, `client_apps` por `pg`) → 202 inmediato → buffer.
 3. Writer ClickHouse: tabla `events` (MergeTree, `ORDER BY (client_app_id, ts)`, columnas tipadas para context + `props` JSON), insert batched (flush 1s/1000 rows). `docker-compose.dev.yml` con ClickHouse local.
 4. Fan-out Mixpanel: cola en memoria → `import` batch API, async, nunca bloquea la ingesta, drop-with-log si Mixpanel cae.
 5. `/health`, Dockerfile, workflow GH Actions (`ca-analytics-server-<env>`), Jest para validación/auth/batching.

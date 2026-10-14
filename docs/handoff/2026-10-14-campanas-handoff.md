@@ -57,16 +57,29 @@ status: live
 3. ✅ **La carrera del bootstrap en `vio-web-sdk`, arreglada y desplegada en Vev 0.327 (15/10).** vio-web-sdk 0.20.4 ([#79](https://github.com/vio-live/vio-web-sdk/pull/79), contador de generación en `bootstrap()`) y rebundle en Vev ([#62](https://github.com/vio-live/vev/pull/62)), los dos mergeados el 14/10. `vev build` OK. Las páginas ya publicadas la cogen al republicarlas. Ver el [journal](../journal/2026-10/2026-10-14-vio-web-sdk-carrera-del-bootstrap.md).
 4. **SDK y Vev: mostrar "fra X"** con el mínimo de las variantes si el producto llega en 0. Es defensa extra; con products-ms ya no debería pasar.
 5. **Precio "desde" que queda viejo:** si se borra la variante más barata de un producto con precio derivado, no se recalcula, porque no hay columna que distinga un precio derivado de uno explícito. Hace falta `price_derived` en package-database (con OK de Angelo y release `pkg=all`).
-6. **¿Qué hace shopcart con una variante en 0 de un producto importado?** Hay que confirmar que no se pueda comprar a 0.
+6. ✅ ~~¿Qué hace shopcart con una variante en 0 de un producto importado?~~ **Se podía comprar a 0; arreglado** (shopcart [#90](https://github.com/vio-live/vio-shopcart-microservice/pull/90), en QA): `notForSale` al añadir una variante sin precio de un producto que no es NATIVE.
 7. **Borrar el flag `ACCOUNT_PAYMENTS`** cuando F2 esté en prod y encendido en los dos entornos.
 8. **Clases de envío en otra moneda:** 19 en QA. Dos son de Alan (1295 y 1299) y las arregla él; el resto son cuentas de prueba viejas.
 9. **Alan:** prueba y estrés de todo, en su [tarjeta de Trello](https://trello.com/c/ftrrjOW0). Su loop de VG necesita una surface nueva en el dashboard.
 10. **Prod:** el mismo corte (ADR-0029/0030), F2, las migraciones del kernel (con el `group_concat_max_len` de la revisión de Miguel) y `PAYMENT_SECRETS_KEY`. Nada de esto está en prod.
-11. **Hallazgos de seguridad** (tareas aparte, sin hacer):
-   - en base-api, `/api/role/add` no pide token ni rol admin;
-   - en graphql, la auth se salta con la operación `GetPurchaseConditions`;
-   - shopcart tiene commiteado `.env.local.qa` con secretos.
+11. **Hallazgos de seguridad** — los tres de la lista, **arreglados el 15/10** (en QA):
+   - base-api [#34](https://github.com/vio-live/vio-base-api/pull/34): `/api/role/add`, `/role/to-disable`, `GET /role/:id` **y `POST /api/admin/users/token`** (daba un custom token de Firebase de cualquier uid) exigen admin;
+   - graphql [#26](https://github.com/vio-live/graphql/pull/26): lo público se decide por el documento, no por el nombre (`GetPurchaseConditions` e `IntrospectionQuery`);
+   - shopcart [#89](https://github.com/vio-live/vio-shopcart-microservice/pull/89): `.env.local.qa` fuera del repo. **Falta rotar las credenciales (Miguel)**: siguen en el historial.
+   - **Nuevos, sin hacer:** las otras rutas de `/upload/*` en base-api no piden cuenta; los errores de graphql en QA traen el stack trace en `extensions`; `.env.test` de shopcart lleva valores con pinta de reales; los endpoints de roles y custom token de users-ms no tienen guard (solo los cubre base-api).
 12. ✅ ~~Plugin de Woo: una variación editada desde el admin no llegaba bien a Vio~~. **Arreglado en 1.0.2** (vio-woocommerce-sync #2, en wp.org el 14/10). El auto-sync corre una vez al final de la petición y ya no hay candado de 5 s. Verificado en el panel real con Save changes y con Update; el detalle está en el [journal del release](../journal/2026-10/2026-10-14-woo-sync-release-1-0-1.md). Falta que Alan lo pruebe en su tienda (pasos 3, 4 y 5 de su tarjeta).
+
+## Noche del 14→15/10 (sprint nocturno, [journal](../journal/2026-10/2026-10-15-sprint-nocturno-seguridad-analytics-privacidad.md))
+
+| Qué | Dónde | Estado y siguiente paso |
+|---|---|---|
+| **Analytics sin vio-backend**: el colector resuelve la key contra el micro (`GET /v2/mobile/surface`) y las stats van por `sponsor_id` = id de la brand | micro [#9](https://github.com/vio-live/vio-campaigns-microservice/pull/9), base-api [#35](https://github.com/vio-live/vio-base-api/pull/35) (QA), vio-analytics [#16](https://github.com/vio-live/vio-analytics/pull/16) (`main`) | ⏳ **Miguel despliega el colector** en Oracle: `CAMPAIGNS_URL=https://api-staging.vio.live`, quitar `DATABASE_URL`, y **apagar o reapuntar el outbox de vio-backend** (`ANALYTICS_EVENTS_URL`): sus `client_app_id` no son los del micro |
+| **Privacidad por surface** (Nørs): `surface.privacy_mode`, `privacyMode` en client-apps y en `/v2/mobile/surface`, selector en el webapp; el colector ya lo aplica (`minimal`) | package-database [#19](https://github.com/vio-live/package-database/pull/19), micro [#10](https://github.com/vio-live/vio-campaigns-microservice/pull/10), webapp [#58](https://github.com/vio-live/webapp-vio-commerce/pull/58) | ⏸ **En orden, con Angelo:** (1) mergear #19 = release del kernel (1.0.271, `pkg=all`); (2) migración en QA; (3) `kernel-bump.yml` sube los micros; (4) mergear micro #10, verificar `GET /v2/mobile/surface` con `privacyMode`; (5) mergear webapp #58 |
+| **Logo de la marca** | base-api [#36](https://github.com/vio-live/vio-base-api/pull/36), webapp [#57](https://github.com/vio-live/webapp-vio-commerce/pull/57) | ✅ en QA/staging. Probar: subir un PNG en Settings › Brand, Save brand, y verlo como `logo` del sponsor en `/v2/mobile/config` |
+| **Variante a 0 de un importado** | shopcart [#90](https://github.com/vio-live/vio-shopcart-microservice/pull/90) | ✅ en QA |
+| **Seguridad** | base-api #34, graphql #26, shopcart #89 | ✅ en QA; rotación de secretos pendiente (Miguel); hallazgos nuevos en el punto 11 |
+
+**Probar el micro contra un kernel sin publicar:** `jest.kernel-local.config.js` + `tsconfig.kernel-local.json` en el worktree `campaigns-privacidad` (fuera de git): `moduleNameMapper`/`paths` de `@vio-/database` al `dist` del worktree del kernel. Es como corrió la suite de #10 contra #19.
 
 ## Reglas que siguen valiendo
 
