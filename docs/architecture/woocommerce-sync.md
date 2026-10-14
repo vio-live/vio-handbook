@@ -18,9 +18,11 @@ status: live
 - **What:** a **WordPress/WooCommerce plugin** that syncs a merchant's WooCommerce
   catalog (products, variants, prices, stock, images) into the Vio commerce platform.
   It is a **ground-up rewrite of the old `Reachu Export` plugin (v3.8)** rebranded to Vio.
-- **Latest (2026-10-14):** **v1.0.1** on [wordpress.org](https://wordpress.org/plugins/vio-sync-for-woocommerce)
+- **Latest (2026-10-14):** **v1.0.2** on [wordpress.org](https://wordpress.org/plugins/vio-sync-for-woocommerce)
   (slug `vio-sync-for-woocommerce`), tested up to WordPress 7.1. A variable product sends the price
-  of its cheapest variation ([ADR-0032](../decisions/0032-precio-de-productos-con-variantes.md)).
+  of its cheapest variation ([ADR-0032](../decisions/0032-precio-de-productos-con-variantes.md)), and
+  auto-sync runs once per request, at the end, so variations edited from the admin arrive with their
+  final data (1.0.2).
   How to ship a version: [release playbook](../playbooks/wordpress-org-plugin-release.md). The
   sections below date from June and keep their dates.
 - **State (2026-06-10):** **v1.0.0**, **public** and on `main` (`00bee82`). A **dedicated Vio admin
@@ -128,7 +130,10 @@ Namespace `Vio\WooSync`; class-per-file loaded by explicit `require_once` in the
   `save_options()`, diagnostics, logs, and the `webhook_exists()` / `currency_options()` helpers.
 - **`Products_Table`** — sync-status column (Synced icon / **"Sent"** / empty), **Vio Sync** /
   **Delete from Vio** bulk actions, and auto-sync hooks (`woocommerce_update_product`,
-  `woocommerce_new_product`, `wp_trash_post`, `before_delete_post`).
+  `woocommerce_new_product`, `wp_trash_post`, `before_delete_post`). Since 1.0.2 the save hooks (and
+  the variation save hooks, for the parent) only queue the product; `flush_pending()` syncs each one
+  once on `shutdown` (priority 20, after WooCommerce's deferred product sync at 10). WooCommerce
+  saves a variable parent before and after its variations, so syncing on the first save sent stale data.
 - **`Ajax`** — `vio_connect`, `vio_save_config`, `vio_health`, `vio_stats`, `vio_pending_ids`,
   `vio_logs`, `vio_sync`, `vio_delete`, `vio_finish_sync`, `vio_logout`; **every** handler checks a
   nonce + `current_user_can()`, and none registers a `nopriv` variant.

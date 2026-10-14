@@ -43,7 +43,7 @@ status: live
 |---|---|---|
 | **ADR-0031**: el publisher filtra qué métodos de la brand se ven en cada channel | api #46, base-api #33, webapp #55 | ✅ en QA. El channel 505 ofrece Vipps; `GET /api/channel/:id/payment-methods` sin token da 401 |
 | **Precio de productos con variantes**: si falta, el mínimo de las variantes; la herencia solo en NATIVE | products #23 | ✅ en QA. **Backfill aplicado: 333 productos** (301 Woo, 10 Magento y 22 nativos), 0 errores, idempotente. El 411959 de Alan pasó a 110 NOK |
-| Plugin de Woo: el producto variable manda el precio de su variación más barata | vio-woocommerce-sync #1 → **1.0.1 en wp.org** | ✅ **publicado el 14/10.** Tag `1.0.1` y Action en verde en 30 s; la API de wp.org da 1.0.1, `tested 7.1.3`. Probado en wp-env con WordPress 7.1.3: 20/20 tests, y los 6 nuevos fallan con el código viejo. Plugin Check 0/0. Las tiendas lo reciben al actualizar el plugin. Ver el [journal del release](../journal/2026-10/2026-10-14-woo-sync-release-1-0-1.md) |
+| Plugin de Woo: el producto variable manda el precio de su variación más barata | vio-woocommerce-sync #1 → **1.0.1 en wp.org**, y #2 → **1.0.2** | ✅ **publicado el 14/10.** Tag `1.0.1` y Action en verde en 30 s; la API de wp.org da 1.0.1, `tested 7.1.3`. Probado en wp-env con WordPress 7.1.3: 20/20 tests, y los 6 nuevos fallan con el código viejo. Plugin Check 0/0. Las tiendas lo reciben al actualizar el plugin. Ver el [journal del release](../journal/2026-10/2026-10-14-woo-sync-release-1-0-1.md) |
 | Dashboard: en importados, una variante en 0 sale "Not for sale" (alinea #54 con products #23) | webapp #56 | ✅ en staging |
 | `ACCOUNT_PAYMENTS=true` en Vercel staging | Miguel | ✅ encendido. Verificado en el bundle de las 17:06 UTC. El dominio se quedaba en builds viejos porque el proyecto usa un **entorno custom** `staging` y el dominio estaba atado por `gitBranch`. Miguel lo ató por `customEnvironmentId` y ahora sigue a develop solo. Ver la [lección](../lessons/dominio-de-vercel-en-entorno-custom-no-sigue-a-gitbranch.md) |
 
@@ -65,10 +65,7 @@ status: live
    - en base-api, `/api/role/add` no pide token ni rol admin;
    - en graphql, la auth se salta con la operación `GetPurchaseConditions`;
    - shopcart tiene commiteado `.env.local.qa` con secretos.
-12. **Plugin de Woo: una variación editada desde el admin no llega bien a Vio (verificado el 14/10, también en 1.0.0).** Probado en wp-env, interceptando las llamadas a Vio:
-    - **Panel Variations › Save changes:** no se manda nada. WooCommerce guarda el padre **antes** que las variaciones (`WC_Meta_Box_Product_Data::save_variations()`); el plugin sincroniza en ese primer `woocommerce_update_product`, con los datos viejos. El guardado bueno del final llega en menos de 5 s y lo descarta el candado anti-duplicado (`viosync_updating_<id>`, en `Products_Table::on_save_product`).
-    - **Botón Update:** se manda el cambio **anterior**, no el actual (el plugin va siempre un cambio por detrás). La petición del formulario también cae dentro de los 5 s del candado.
-    - **Arreglo propuesto (1.0.2):** marcar el producto como pendiente en `woocommerce_update_product`, `woocommerce_new_product` y `woocommerce_update_product_variation` (este último, el padre), y sincronizar una sola vez por petición en `shutdown` con prioridad > 10, después del sync diferido de WooCommerce. El candado de 5 s sobra. Los productos simples no tienen el problema.
+12. ✅ ~~Plugin de Woo: una variación editada desde el admin no llegaba bien a Vio~~. **Arreglado en 1.0.2** (vio-woocommerce-sync #2, en wp.org el 14/10). El auto-sync corre una vez al final de la petición y ya no hay candado de 5 s. Verificado en el panel real con Save changes y con Update; el detalle está en el [journal del release](../journal/2026-10/2026-10-14-woo-sync-release-1-0-1.md). Falta que Alan lo pruebe en su tienda (pasos 3, 4 y 5 de su tarjeta).
 
 ## Reglas que siguen valiendo
 

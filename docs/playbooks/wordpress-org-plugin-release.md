@@ -18,6 +18,7 @@ Live: https://wordpress.org/plugins/vio-sync-for-woocommerce
 |---|---|---|---|
 | 1.0.0 | 2026-08-18 | First public release | SVN rev `3653373` |
 | 1.0.1 | 2026-10-14 | Variable products send the price of their cheapest variation ([ADR-0032](../decisions/0032-precio-de-productos-con-variantes.md)); `Tested up to: 7.1`; `Domain Path` header removed | PR #1, tag `1.0.1`, Action run `38607801791` (30 s) |
+| 1.0.2 | 2026-10-14 | Variations edited from the admin sync their final data: auto-sync runs once per request on `shutdown`, and the 5 s lock is gone | PR #2, tag `1.0.2`, Action run `38611111524` (39 s) |
 
 ## 0. Invariants
 
@@ -170,6 +171,14 @@ products.
      ```
      For a fix, also run its new tests against the old code: they must fail there.
    - **Plugin Check 0/0** on the build from git (step 2).
+   - **Sync behaviour in the real admin**, when the change touches what goes to Vio. ⚠️ The dev store
+     is connected to **QA with a real API key**, so editing a linked product calls QA. Intercept
+     the Vio API first: a temporary mu-plugin with `pre_http_request` that logs the call and
+     answers with a fake product, as `tests/ProductsTableTest.php` does. The stored site URL is
+     the tunnel (`woo-dev.vio.live`); to use the admin on `localhost:8888` with the tunnel down,
+     the same mu-plugin filters `option_home` / `option_siteurl` and rewrites `plugins_url`,
+     `content_url`, `script_loader_src` and `style_loader_src`. Those URLs are `http://woo-dev…`,
+     without the s. Log in with a temporary admin user, and delete everything afterwards.
 6. Ship — the Action does the SVN work:
    ```bash
    git commit -am "Release x.y.z: …"        # on the PR branch; merge the PR
