@@ -1,6 +1,6 @@
 ---
 title: "Cuentas unificadas y capacidades por tipo (Commerce + Vio)"
-last-updated: 2026-10-13
+last-updated: 2026-10-14
 owner: angelo
 status: draft
 ---
@@ -63,6 +63,18 @@ Decisiones de Angelo del 2026-09-16. Contexto:
 [relevamiento del dashboard de Vio](relevamiento-dashboard-vio.md),
 [identidad sponsor ↔ business](identidad-unificada-sponsor-business.md),
 journal `2026-09/2026-09-16-unir-fronts-login.md`.
+
+## Pagos por tipo de cuenta (desde el 14/10)
+
+[ADR-0028](../decisions/0028-orden-fallback-suscripcion-y-corte.md) y
+[ADR-0031](../decisions/0031-pagos-de-la-brand-filtrables-por-channel.md).
+
+| | Brand | Publisher |
+|---|---|---|
+| Credenciales (`payment_method`) | Las carga en **Settings › Payments** | No tiene ni ve |
+| Qué métodos existen | **Interruptores de su cuenta** (`user_settings.payment_*`), en Settings › Payments. Flag `ACCOUNT_PAYMENTS`: encendido en staging, apagado en prod hasta que llegue F2 | — |
+| Qué se muestra en cada channel | — | **Channel › Settings › "Payment methods in this channel"**: filtra entre lo que ofrece la brand |
+| Quién cobra | La brand (`cart.seller`), con su credencial o con la "cuenta de Vio" explícita | Nadie: es el reseller de la orden |
 
 ## Arquitectura
 

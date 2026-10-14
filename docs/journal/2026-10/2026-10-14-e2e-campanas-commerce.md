@@ -1,10 +1,18 @@
 ---
 title: "2026-10-14: prueba de punta a punta de campañas en Commerce, de la brand a la orden en Vev"
 date: 2026-10-14
-owner: angelo
+session: full-day
+participants: [angelo, claude, miguel]
+status: live
 ---
 
 # Prueba de punta a punta: de la brand a la orden pagada en Vev, sin vio-backend
+
+## Goal
+Terminar el 14/10 el flujo completo de campañas en Commerce, sin vio-backend: una brand carga
+productos y pago, crea y comparte una colección, un publisher arma su channel, su surface y su
+campaña, Vev muestra la campaña y entra una orden pagada. Después, la ronda de mejoras que salió
+de probarlo.
 
 - **Quién:** Angelo (pruebas en el dashboard y en Vev, decisiones), Claude (coordinación, código vía agentes, verificación en la base de QA) y Miguel (TypeORM del micro y corte de `api-staging`).
 - **Dónde:** QA (`kubernetesqa-sc`, MySQL de QA), dashboard de staging y Vev (paquete compartido).
@@ -46,7 +54,41 @@ Antes, por API, hubo órdenes de control: 4548, 4549 y 4550, sin F2, cobradas po
 9. **Vev:** el sponsor sale de la config de la key y cambiar de key funciona (vev #61). Desplegado en el paquete compartido **0.326**, con rollback a la 0.325.
 10. **Orden 4551 desde Vev.** ✅
 
-## Lo que queda
+## Después de la orden 4551 (tarde)
+
+- **ADR-0031, pagos de la brand filtrables por channel** (pedido de Angelo: "como un filtro; en
+  iOS nativo solo funciona uno"): api #46, base-api #33, webapp #55. Verificado: el channel 505
+  ofrece Vipps.
+- **`ACCOUNT_PAYMENTS` encendido en Vercel staging** (Miguel): la brand enciende sus métodos en
+  Settings › Payments. El dominio de staging no seguía a develop por el entorno custom; Miguel lo
+  arregló y escribió la [lección](../../lessons/dominio-de-vercel-en-entorno-custom-no-sigue-a-gitbranch.md).
+- **ADR-0032, precio de productos con variantes** (reporte de Alan: Woo variable → "0 NOK"):
+  - la causa era el plugin `vio-woocommerce-sync`;
+  - products #23 deriva el mínimo cuando falta, con herencia solo en nativos;
+  - **backfill aplicado en QA: 333 productos**;
+  - webapp #54 y #56 en el dashboard;
+  - plugin #1 abierto (falta el test con wp-env y el release en wp.org).
+- **Alan:** [tarjeta de Trello](https://trello.com/c/ftrrjOW0) con el contexto, el checklist del
+  flujo, el checklist "Pagos: flujos a estresar" y avisos de cada arreglo.
+- **Hallazgos de seguridad**, con tareas aparte:
+  - en base-api, `/api/role/add` no pide token ni rol admin;
+  - en graphql, la auth se salta por el nombre de operación `GetPurchaseConditions`;
+  - shopcart tiene `.env.local.qa` commiteado.
+
+## Decisions
+- [ADR-0030](../../decisions/0030-api-staging-por-dns-al-micro-y-hosts-vio-api-vs-commerce.md):
+  `api-staging` por DNS al micro, sin migrar. Vio API frente a Commerce.
+- [ADR-0031](../../decisions/0031-pagos-de-la-brand-filtrables-por-channel.md): los pagos son de la
+  brand y el publisher filtra por channel.
+- [ADR-0032](../../decisions/0032-precio-de-productos-con-variantes.md): el precio de un producto
+  con variantes es el mínimo cuando falta, y la herencia solo en nativos.
+- Sin migración de las surfaces viejas de staging (Angelo: "no hace falta migrar nada").
+- La prueba se corre con todo arriba, sin apagar vio-backend (Angelo).
+
+## Blockers / Next session
+
+El estado completo y el siguiente paso de cada cosa están en el [handoff](../../handoff/2026-10-14-campanas-handoff.md).
+
 
 - **Ronda de mejoras** (en el [plan](../../handoff/campanas-en-commerce-plan-de-ejecucion.md)):
   - punto 3, brand↔brand, se recuenta después del backfill de users F2.2;

@@ -1,6 +1,6 @@
 ---
 title: "Campañas y surfaces en Commerce — audit de vio-backend y plan"
-last-updated: 2026-10-13
+last-updated: 2026-10-14
 owner: angelo
 status: draft
 ---
@@ -12,6 +12,20 @@ y conectarla al front; de vio-backend quiero hacer campañas, registrar surfaces
 más»*. La decisión está en
 [ADR-0025](../decisions/0025-campanas-y-surfaces-se-reconstruyen-en-commerce.md). Este
 doc junta el audit que la sostiene y el plan por pasos.
+
+> **[claude, 2026-10-14] Estado: funcionando de punta a punta en QA.** La orden 4551 se pagó desde
+> Vev y cobró la brand. Lo que cambió respecto de este audit del 13/10:
+> - **Hosts** ([ADR-0030](../decisions/0030-api-staging-por-dns-al-micro-y-hosts-vio-api-vs-commerce.md)):
+>   `api-staging.vio.live` **ya es el micro de campañas** (DNS a AKS QA, sin migrar datos de
+>   vio-backend). La **Vio API** va en `api(-staging)` y **Commerce** en `api-ecom` / `graph-ql`.
+>   `api-dev` y `api.vio.live` siguen en Oracle.
+> - **Pagos** ([ADR-0031](../decisions/0031-pagos-de-la-brand-filtrables-por-channel.md)): los
+>   métodos son de la **cuenta de la brand** (F2, desplegado), y el **publisher filtra** cuáles se
+>   ven en cada channel. Lo ofrecido = lo efectivo de la brand ∩ lo visible en el channel.
+> - **Campaña:** el channel ya no hace falta asignarlo antes a la surface; la campaña lo asigna
+>   (micro #8).
+> - **Precio de productos con variantes:** [ADR-0032](../decisions/0032-precio-de-productos-con-variantes.md).
+> - **Estado y pendientes:** [handoff del 14/10](../handoff/2026-10-14-campanas-handoff.md).
 
 **Base del audit:** se hizo solo con lectura, leyendo código. Refs:
 

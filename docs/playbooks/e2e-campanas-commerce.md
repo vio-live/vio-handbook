@@ -17,6 +17,23 @@ status: live
 > de solo lectura de la base de QA. Marca **[V]** = verificado en código o con curl,
 > **[I]** = inferido.
 
+> **[claude, 2026-10-14] Ejecutado de punta a punta el 14/10:** orden 4551 desde Vev, cobró la
+> brand. Ver el [journal](../journal/2026-10/2026-10-14-e2e-campanas-commerce.md). Si lo repetís,
+> esto cambió respecto de lo que dice abajo:
+> - **Host:** `MICRO` es **`https://api-staging.vio.live`** (ADR-0030). `campaigns-staging` sigue
+>   funcionando como alias técnico.
+> - **P6 (Vev) ya no aplica:** Vev en "Staging" lee del micro sin cambios de código. La rama del
+>   entorno extra se descartó. El paquete compartido 0.326 resuelve el sponsor según la key.
+> - **P5 (F2) está desplegado.** El channel ofrece los métodos de la **brand**, filtrados por el
+>   publisher (ADR-0031). Con eso el §4.4 cambia: Vipps se marca en Channel › Settings ›
+>   "Payment methods in this channel", y la brand enciende sus métodos en Settings › Payments.
+> - **§5.3 (campaña):** el channel ya no hace falta asignarlo antes a la surface; la campaña lo
+>   asigna.
+> - **Producto con variantes:** el precio se deriva de las variantes (ADR-0032).
+> - **Orden de prueba por API con Vipps:** el script del §6.1 devuelve un `payment_url` que hay que
+>   aprobar con la app Vipps MT. **Vence en unos 10 minutos**; si se pasa, el checkout queda en
+>   CANCEL y hay que crear otro carrito.
+
 ## 0. Cuentas, hosts y variables
 
 | Papel | Cuenta de QA | id |

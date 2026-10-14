@@ -371,6 +371,8 @@ El rol de origen de catálogo (vio-sync, `EcomUser` y las conexiones) **no se to
 > - ✅ **7:** micro #8. El nombre por defecto del sponsor ya no es un email; la 1289 sale "Fedrik Louisa".
 > - ⏳ **3:** 123 conexiones "brand↔brand" en QA. Casi todas son sellers viejos con `is_business=1`; se recuentan después del backfill de users F2.2.
 > - ⏳ **4:** 19 clases de envío en otra moneda. Dos son de Alan (1295 y 1299) y el resto son cuentas de prueba viejas.
+> - ✅ **ADR-0031** (pedido de Angelo, 14/10): el publisher filtra los métodos de la brand por channel. api #46, base-api #33, webapp #55.
+> - ✅ **ADR-0032:** precio de productos con variantes. products #23 con backfill de 333, webapp #56, plugin de Woo #1 (PR abierto, falta el release en wp.org).
 > - ✅ **6:** F2 desplegado en QA el 14/10: api #45, base-api #32, users #21, middleware #10, payment-processors #12, orders #21 y shopcart #87. El channel ofrece los métodos de la brand (el 505 de Aller muestra solo el Vipps de la brand).
 
 Angelo las pidió durante la prueba. Van **después** de cerrar Vev, y la primera es la primera.

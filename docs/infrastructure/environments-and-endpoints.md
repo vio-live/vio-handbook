@@ -51,7 +51,7 @@ No existe namespace `vio-commerce-dev` en ningún cluster (verificado: `kubectl 
 |---|---|---|
 | base-api | `api-ecom.vio.live` | `api-ecom-staging.vio.live` = `api-ecom-dev.vio.live` |
 | graph-ql | `graph-ql.vio.live` | `graph-ql-staging.vio.live` = `graph-ql-dev.vio.live` |
-| **campaigns** (nuevo, 13/10) | `campaigns.vio.live` | `campaigns-staging.vio.live` = `campaigns-dev.vio.live` |
+| **campaigns** (nuevo, 13/10) | `campaigns.vio.live` | `campaigns-staging.vio.live` = `campaigns-dev.vio.live` = **`api-staging.vio.live`** (desde el 14/10, [ADR-0030](../decisions/0030-api-staging-por-dns-al-micro-y-hosts-vio-api-vs-commerce.md)) |
 | microservicios (11) | **solo internos**: `msrvc-p.vio.live` **ya no existe** | solo internos, sin VirtualService propio |
 
 > **`msrvc-p.vio.live` desapareció** (verificado 2026-10-14: **0 registros en Cloudflare** y
@@ -85,7 +85,7 @@ Nombres actualizados 2026-10-14:
 | Entorno | Dónde | URL | Acceso |
 |---|---|---|---|
 | Prod | VM Oracle `82.70.54.151` | `api.vio.live` | **cerrado: lista blanca por IP** desde el 13/10 |
-| Staging | VM Oracle `129.151.196.99` | `api-staging.vio.live`, `api-dev.vio.live` (alias) | público solo `/v1/`, `/v2/`, `/ws`, `/api/auth/`, `/api/sponsor/`; el resto de `/api/` en lista blanca |
+| Staging | VM Oracle `129.151.196.99` | `api-dev.vio.live`. **`api-staging.vio.live` ya no:** desde el 14/10 apunta por DNS al micro de campañas en AKS QA (`74.158.41.166`, ADR-0030) | público solo `/v1/`, `/v2/`, `/ws`, `/api/auth/`, `/api/sponsor/`; el resto de `/api/` en lista blanca |
 
 **Por qué está cerrado** (13/10): 15 días de `access.log` dieron **cero clientes reales en prod**
 y vio-backend arrastra 7 agujeros de auth sin arreglar. Lo restringido devuelve **403 con un JSON**

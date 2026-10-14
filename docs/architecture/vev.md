@@ -1,6 +1,6 @@
 ---
 title: "Vev — los bloques, el paquete y cómo se despliega"
-last-updated: 2026-09-08
+last-updated: 2026-10-14
 owner: angelo
 status: live
 ---
@@ -20,6 +20,26 @@ status: live
 - **No hay CI.** Cada despliegue es `npm run deploy` a mano desde un portátil, y llega a
   los editores en cuanto termina.
 - La marcha atrás existe y es del CLI: `vev versions` + `vev restore`.
+
+## Estado al 14/10: 0.326 y el sponsor según la key
+
+- **Paquete compartido `cq1lXld-TA9` en 0.326** (vev [#61](https://github.com/vio-live/vev/pull/61)).
+  Rollback: `vev restore` a la 0.325.
+- **"Staging" ya lee la config del micro de campañas:** `api-staging.vio.live` es el micro desde
+  [ADR-0030](../decisions/0030-api-staging-por-dns-al-micro-y-hosts-vio-api-vs-commerce.md).
+  Las keys de surface se crean en el dashboard de Commerce.
+- **El sponsor activo siempre sale de la config de la key conectada**
+  (`resolveSponsorId(guardado, ids, primary)` en `vio-helpers.ts`):
+  - si el guardado (prop "Active Sponsor", `localStorage` o el del producto elegido) no está en la
+    config, se usa el **primary**;
+  - sin config no se pide nada a Commerce: no hay sponsor 4 por defecto.
+- **Al cambiar de key** se limpian `vio.sponsorId`, `vio.sponsors` y los carritos, y se hace el
+  bootstrap de nuevo. Los sponsors ahora son **ids de usuario de la brand** (por ejemplo 1289),
+  no los ids de vio-backend (4, 5).
+- **Una página que viene de vio-backend:** cambiar la key en el Config, elegir el sponsor (o dejar
+  el primary) y **republicar**.
+- **Pendiente:** una carrera del SDK. `bootstrap()` no invalida uno en vuelo de la key vieja. Se
+  arregla en `vio-web-sdk` y después se rebundlea.
 
 ## El repo y el paquete
 

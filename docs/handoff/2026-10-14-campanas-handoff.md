@@ -15,7 +15,7 @@ status: live
 
 | Qué | Doc |
 |---|---|
-| Decisiones | ADR [0025](../decisions/0025-campanas-y-surfaces-se-reconstruyen-en-commerce.md) a [0031](../decisions/0031-pagos-de-la-brand-filtrables-por-channel.md). Las de hoy: **0030** (`api-staging` por DNS al micro, Vio API frente a Commerce) y **0031** (pagos de la brand, filtrables por channel) |
+| Decisiones | ADR [0025](../decisions/0025-campanas-y-surfaces-se-reconstruyen-en-commerce.md) a [0032](../decisions/0032-precio-de-productos-con-variantes.md). Las de hoy: **0030** (`api-staging` por DNS al micro, Vio API frente a Commerce), **0031** (pagos de la brand, filtrables por channel) y **0032** (precio de productos con variantes) |
 | Plan, fases y ronda de mejoras | [campanas-en-commerce-plan-de-ejecucion](./campanas-en-commerce-plan-de-ejecucion.md) |
 | Prueba de punta a punta, paso a paso | [playbook e2e-campanas-commerce](../playbooks/e2e-campanas-commerce.md) |
 | Lo que pasó el 14/10 | [journal 2026-10-14-e2e-campanas-commerce](../journal/2026-10/2026-10-14-e2e-campanas-commerce.md), más los journals por repo del mismo día |
@@ -45,14 +45,14 @@ status: live
 | **Precio de productos con variantes**: si falta, el mínimo de las variantes; la herencia solo en NATIVE | products #23 | ✅ en QA. **Backfill aplicado: 333 productos** (301 Woo, 10 Magento y 22 nativos), 0 errores, idempotente. El 411959 de Alan pasó a 110 NOK |
 | Plugin de Woo: el producto variable manda el precio de su variación más barata | vio-woocommerce-sync **#1** | ⏳ **PR abierto sin mergear.** Falta correr `tests/ProductMapperTest.php` con wp-env, mergear y publicar en wp.org con un tag (playbook `wordpress-org-plugin-release`). Mergear no publica: el deploy corre solo con un tag |
 | Dashboard: en importados, una variante en 0 sale "Not for sale" (alinea #54 con products #23) | webapp #56 | ✅ en staging |
-| `ACCOUNT_PAYMENTS=true` en Vercel staging | Miguel | ✅ encendido. Verificado en el bundle de las 17:06 UTC. Ojo: su redeploy dejó el dominio clavado a un build viejo un rato; el deploy de #56 lo destrabó |
+| `ACCOUNT_PAYMENTS=true` en Vercel staging | Miguel | ✅ encendido. Verificado en el bundle de las 17:06 UTC. El dominio se quedaba en builds viejos porque el proyecto usa un **entorno custom** `staging` y el dominio estaba atado por `gitBranch`. Miguel lo ató por `customEnvironmentId` y ahora sigue a develop solo. Ver la [lección](../lessons/dominio-de-vercel-en-entorno-custom-no-sigue-a-gitbranch.md) |
 
 **Backfill de precios:** se corre con `node dist/scripts/recompute-variant-prices.js` en el pod de products, anteponiendo `PROCESS_ENV=local` (el pod usa `.env.local`). Es dry-run por defecto; `--apply` escribe. Filtros: `--ids`, `--user`, `--limit`, `--json`.
 
 ## Pendiente (siguiente paso concreto)
 
 1. **Backfill del rol Publisher** (users F2.2): `POST /admin/backfill-publisher-roles` con un admin, primero en dry-run. Después, recontar las conexiones "brand↔brand" (mejora 3 del plan).
-2. ✅ ~~`ACCOUNT_PAYMENTS=true` en Vercel staging~~, hecho el 14/10. **Lección:** un "Redeploy" en Vercel reconstruye el commit de *ese* deployment y puede dejar el dominio clavado. Después de tocar variables, verificar que `dashboard-staging` sirva el último commit de develop.
+2. ✅ ~~`ACCOUNT_PAYMENTS=true` en Vercel staging~~, hecho el 14/10. Después de tocar variables o dominios en Vercel, verificar que `dashboard-staging` sirva el último commit de develop. La causa de que no lo hiciera está en la [lección de Miguel](../lessons/dominio-de-vercel-en-entorno-custom-no-sigue-a-gitbranch.md).
 3. **La carrera del bootstrap en `vio-web-sdk`:** un bootstrap viejo en vuelo pisa el nuevo. Se arregla con un contador de generación y rebundleando en Vev.
 4. **SDK y Vev: mostrar "fra X"** con el mínimo de las variantes si el producto llega en 0. Es defensa extra; con products-ms ya no debería pasar.
 5. **Precio "desde" que queda viejo:** si se borra la variante más barata de un producto con precio derivado, no se recalcula, porque no hay columna que distinga un precio derivado de uno explícito. Hace falta `price_derived` en package-database (con OK de Angelo y release `pkg=all`).
