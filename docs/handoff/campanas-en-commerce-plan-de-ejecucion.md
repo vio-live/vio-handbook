@@ -200,7 +200,7 @@ Angelo: *«lo puede hacer Miguel»*. Todo esto es **solo QA**; prod no se toca. 
    > **Después del deploy en QA:** `/health` 200. Crear una surface por API (playbook §5.1) y comprobar la fila
    > en `surface`. Reiniciar el pod y comprobar que `GET /api/client-apps` la sigue devolviendo.
    >
-   > **El micro es distinto:** develop sigue en 1.0.267 y el micro no está en el dispatch del kernel,
+   > *(Superado por el PR #6, se deja como historia.)* **El micro era distinto a la 01:00:** develop seguía en 1.0.267 y el micro no está en el dispatch del kernel,
    > así que no hay lock 1.0.270 que copiar. Su `kernel-bump.yml` escucha `kernel-published`: un
    > dispatch solo a él con `version=1.0.270` deja develop con lock. Después `feature/typeorm` mergea
    > develop y revierte `ed02245` (el `vendor/`, que se revierte sin conflictos).
