@@ -194,9 +194,38 @@ kernel sube **12** micros.
 - **Antes:** exportar a un fichero las surfaces, keys y campañas de VG/Lyko y Aller.
 - **Rollback:** revertir el registro de Cloudflare.
 
+### 9b. Corte de `api-staging` (ADR-0030)
+
+*Decidido por Angelo el 14/10. Reemplaza el split por path en Oracle de arriba: staging se
+corta por DNS igual que prod, y sin migrar nada.* Lo hace **Miguel**.
+
+1. **Antes de cortar (5 min):** sacar del `access.log` de nginx de la VM de staging qué rutas y
+   qué keys le pegaron a `api-staging` en los últimos 7 días, y guardar la lista en el journal.
+   Sirve para saber qué se rompe y avisar.
+   - Opcional: exportar a un fichero las surfaces, keys y campañas de vio-backend staging, como
+     respaldo.
+2. **TLS y host en AKS QA:** agregar `api-staging.vio.live` al `Gateway` y al `VirtualService`
+   del micro de campañas, con el mismo mecanismo de cert que `campaigns-staging`. Los manifiestos
+   van en `vio-kubernetes-config`.
+3. **DNS en Cloudflare:** `api-staging.vio.live` apunta a la IP del ingress de AKS QA, la misma
+   que `campaigns-staging`. Registro A sin proxy, TTL 60.
+4. **Verificar desde fuera:**
+   - `https://api-staging.vio.live/health` → **200** (micro).
+   - `curl https://api-staging.vio.live/v2/mobile/config -H 'X-API-Key: <key de la surface "Vev" de Aller>'`
+     → **200** con la campaña 2 "Test vev". Angelo tiene la key.
+   - `/v1/engagement/config` → **410**.
+   - Preflight CORS desde `https://editor.vev.design` → `access-control-allow-origin: *`.
+   - El cert presenta `CN=api-staging.vio.live`.
+5. **Webapp:** quitar el override `VIO_API_HOST` de Vercel staging. Para `reachu-qa` el webapp
+   ya deriva `api-staging` solo. Redeploy, porque el export es estático.
+6. **Avisar a Alan:** su loop de VG en Vev deja de responder hasta que recree la surface en el
+   dashboard y pegue la key nueva.
+7. **Ojo con el horario:** `api-staging` queda sujeto al apagado de QA (noches y fines de semana).
+8. **Rollback:** revertir el registro A al de la VM de Oracle.
+
 **10. QA de noche.** El cluster QA se apaga de noche y los fines de semana
 ([qa-aks-scheduler](../infrastructure/qa-aks-scheduler.md)), y `campaigns-qa` se cae con él.
-Está bien así: las surfaces de staging siguen en Oracle hasta decidir.
+Desde ADR-0030 eso incluye `api-staging`: las surfaces de staging ya no quedan en Oracle.
 
 ## Preguntas para Miguel
 
