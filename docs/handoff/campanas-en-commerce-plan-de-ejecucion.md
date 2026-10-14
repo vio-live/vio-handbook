@@ -385,6 +385,18 @@ Angelo las pidió durante la prueba. Van **después** de cerrar Vev, y la primer
    con la brand. Hay que decidir qué hacer con las existentes.
 4. **Las 20 clases de envío de QA con una moneda distinta a la de su cuenta**, y contarlas en prod.
    El código ya no las crea (products #22, webapp #52). Falta decidir el data patch con cada brand.
+5. **El modal de "nuevo channel" se cierra al hacer clic fuera y se pierde lo cargado** (Angelo,
+   14/10). En `webapp src/views/channels/new-channel.jsx:215`, el `Dialog` cierra con cualquier
+   `onOpenChange`, salvo mientras guarda. Propuesta: si el formulario tiene cambios, no cerrar
+   al hacer clic fuera (`onInteractOutside` → `preventDefault`) y pedir confirmación con Esc o con la X.
+   Revisar el mismo patrón en los otros modales de alta: surface, campaña, envío y colección.
+6. **El publisher no puede encender pagos en su channel desde el dashboard** hasta que se
+   despliegue F2. El front ya muestra "Payments… come from the brand", pero el backend todavía
+   los lee por channel, y los channels tipo 10 nacen sin Vipps. Se cierra desplegando F2. Mientras
+   tanto, por API: `POST /channel/update/settings/:id {"vipps":true}`.
+7. **El sponsor sale con el email** (`fredrikoglouisa@test.no`) mientras la brand no carga su
+   perfil de marca. Propuesta: el default debería ser el nombre de la cuenta o de la empresa, no el
+   username.
 
 ## Riesgos
 
