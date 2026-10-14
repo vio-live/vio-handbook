@@ -409,6 +409,18 @@ Angelo las pidió durante la prueba. Van **después** de cerrar Vev, y la primer
    perfil de marca. Propuesta: el default debería ser el nombre de la cuenta o de la empresa, no el
    username.
 
+8. **Vev con sponsors viejos (en curso, 14/10).** Las páginas armadas con vio-backend guardan
+   ids de sponsor viejos (4, 5) en la prop "Active Sponsor", en `localStorage` y en los productos
+   elegidos. Además hay defaults fijos a 4 (`vio-config.tsx:307`, `getActiveSponsorId(fallback = 4)`).
+   Con la key nueva fallan ("Sponsor 5 not found in bootstrap" y 500 en GraphQL). Arreglo: el
+   sponsor activo siempre es uno de la config de la key actual, si no el primary, y al cambiar de
+   key se limpia el estado (rama de Vev `fix/sponsor-segun-la-key`).
+9. **GraphQL responde 500 con una key que no es de channel** (por ejemplo, la de plataforma). Debería
+   responder 401/`UNAUTHENTICATED`, como cuando falla la auth.
+10. **Productos con variantes que no se pueden publicar** (Alan, 14/10): el precio queda en 0,00 y
+    Publish exige más de 0. En curso (webapp `fix/publicar-con-variantes`; se revisa si el backend
+    también lo exige).
+
 ## Riesgos
 
 | Riesgo | Mitigación |
