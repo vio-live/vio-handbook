@@ -52,7 +52,6 @@ plugin de Woo y wp.org".
 
 ## Blockers
 - **Verificado después, en la misma sesión:** una variación editada desde el admin no llega bien a Vio. Con Save changes no se manda nada, y con Update se manda el cambio anterior. Viene de antes de 1.0.1: el plugin sincroniza en el primer guardado del padre, que WooCommerce hace antes que las variaciones, y un candado de 5 s descarta el guardado bueno. El detalle y el arreglo propuesto están en el pendiente 12 del handoff.
-  dispara el auto-sync del padre. Es el pendiente 12 del handoff.
 
 ## Next session
 - Las tiendas reciben 1.0.1 al actualizar el plugin. Los productos que ya estaban en 0 en QA los
