@@ -222,7 +222,10 @@ brands (`13565e6`).
 ### F3 — Microservicio `vio-campaigns-microservice`
 
 **División (Angelo, 2026-10-13): Miguel se encarga de la configuración y la infra del micro;
-Claude, del código.** La lista detallada para Miguel está en
+Claude, del código.**
+**Ampliado (Angelo, 2026-10-14): "lo tomamos nosotros, tu config, infra y PR por mi" — la
+prueba funcional de punta a punta (la que necesita sesión logueada) la corren ellos; Miguel llega
+hasta la verificación técnica sin credenciales y lo dice explícitamente.** La lista detallada para Miguel está en
 [micro-campanas-infra](./micro-campanas-infra.md).
 
 **Miguel: configuración e infra.** Se toma `collection` como referencia, porque es el micro
