@@ -1,6 +1,6 @@
 ---
 title: "Plan de ejecución — campañas y surfaces en Commerce"
-last-updated: 2026-10-13
+last-updated: 2026-10-14
 owner: angelo
 status: draft
 ---
@@ -158,7 +158,7 @@ Angelo: *«lo puede hacer Miguel»*. Todo esto es **solo QA**; prod no se toca. 
    | vio-orders-microservice | `feature/brand-publisher` | 3 |
    | vio-base-api | `feature/brand-publisher` | 2 (F2.6) |
    | vio-shopcart-microservice | `feature/brand-publisher-part2` | 5 (los de #87 + la parte 2) |
-   | vio-campaigns-microservice | `feature/typeorm` | 4 (TypeORM; el commit `temporal: … vendor/` hay que revertirlo) |
+   | vio-campaigns-microservice | `feature/typeorm` | ✅ **hecho 14/10 (Miguel): PR [#7](https://github.com/vio-live/vio-campaigns-microservice/pull/7)**, `vendor/` revertido, `yarn.lock` igual a develop, 119/119 + 79/79 |
 
    **En cada una:** subir los 7 `@vio-/*` a 1.0.270 (paso 3), correr `yarn install` con un token
    válido, commitear el `yarn.lock` y pushear. Después Claude abre los PRs en el orden de deploy.
