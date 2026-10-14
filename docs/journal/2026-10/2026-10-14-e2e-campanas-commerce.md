@@ -42,7 +42,7 @@ Antes, por API, hubo órdenes de control: 4548, 4549 y 4550, sin F2, cobradas po
    - el sponsor no muestra el email: micro #8;
    - GraphQL 401 en vez de 500: graphql #25;
    - productos con variantes que no se podían publicar (bug de Alan): webapp #54.
-8. **F2 desplegado:** api #45, base-api #32, users #21, middleware #10, payment-processors #12, orders #21 y shopcart #87. El locks se resolvió mergeando develop, sin token npm. Desde aquí el channel ofrece los métodos de la brand y cobra la brand.
+8. **F2 desplegado:** api #45, base-api #32, users #21, middleware #10, payment-processors #12, orders #21 y shopcart #87. Los locks se resolvieron mergeando develop, sin token npm. Desde aquí el channel ofrece los métodos de la brand y cobra la brand.
 9. **Vev:** el sponsor sale de la config de la key y cambiar de key funciona (vev #61). Desplegado en el paquete compartido **0.326**, con rollback a la 0.325.
 10. **Orden 4551 desde Vev.** ✅
 
