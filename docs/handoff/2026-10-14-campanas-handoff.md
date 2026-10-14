@@ -51,6 +51,7 @@ status: live
 
 ## Pendiente (siguiente paso concreto)
 
+0. **16/10: Angelo prueba Vev 0.327** (la carrera del bootstrap al cambiar de clave), en el editor. La receta está en el [journal](../journal/2026-10/2026-10-14-vio-web-sdk-carrera-del-bootstrap.md) (Next session). Si algo falla: `vev restore` a la 0.326.
 1. **Backfill del rol Publisher** (users F2.2): `POST /admin/backfill-publisher-roles` con un admin, primero en dry-run. Después, recontar las conexiones "brand↔brand" (mejora 3 del plan).
 2. ✅ ~~`ACCOUNT_PAYMENTS=true` en Vercel staging~~, hecho el 14/10. Después de tocar variables o dominios en Vercel, verificar que `dashboard-staging` sirva el último commit de develop. La causa de que no lo hiciera está en la [lección de Miguel](../lessons/dominio-de-vercel-en-entorno-custom-no-sigue-a-gitbranch.md).
 3. ✅ **La carrera del bootstrap en `vio-web-sdk`, arreglada y desplegada en Vev 0.327 (15/10).** vio-web-sdk 0.20.4 ([#79](https://github.com/vio-live/vio-web-sdk/pull/79), contador de generación en `bootstrap()`) y rebundle en Vev ([#62](https://github.com/vio-live/vev/pull/62)), los dos mergeados el 14/10. `vev build` OK. Las páginas ya publicadas la cogen al republicarlas. Ver el [journal](../journal/2026-10/2026-10-14-vio-web-sdk-carrera-del-bootstrap.md).
