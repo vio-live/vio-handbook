@@ -183,9 +183,17 @@ journal `2026-10/2026-10-13-front-commerce-surfaces-y-campanas.md`.
   micro; se aceptan los dos.
 - **Flag `VIO_CAMPAIGNS_V2`** (`next.config.js → env`, apagado), contra el contrato del micro
   (`campaigns-microservice` feature/app). Cubre:
-  - en la surface: channels asignados, slots de solo lectura, markets, dominios y `custom-web`;
+  - en la surface: channels asignados, slots de solo lectura, markets, dominios y `custom-web`.
+    En el alta se pueden elegir sus channels: viajan en el mismo `POST /client-apps`;
   - en la campaña: un channel por sponsor, la campaña por defecto y slots con ventana;
-  - el picker de sponsors, limitado a brands con un channel en la surface.
+  - **alta de campaña sin pasar por la surface** (2026-10-14, `53d8f94`):
+    - el primary sponsor sale de todas las brands del publisher (`/sponsors`);
+    - su channel, de `GET /channels` del micro (`usePublisherChannels`), esté o no en la surface;
+    - el micro asigna a la surface, en la misma transacción del POST, el que no estaba;
+    - el webapp no puede salir antes que el micro con `GET /channels`;
+    - el secundario, en el detalle, sigue pidiendo un channel que ya esté en la surface.
+  - Los errores de sponsor y channel se muestran con un texto claro por código
+    (`CAMPAIGN_ERROR_TEXT`); el del micro queda en `detail`.
 
   Con el flag apagado no se muestran ni se mandan: vio-backend no valida el POST de campañas y
   rechaza `custom-web`. Se enciende con el micro.
@@ -208,6 +216,13 @@ journal `2026-10/2026-10-13-front-commerce-surfaces-y-campanas.md`.
   (2026-10-14, `b3bfd47`). Sin `me.settings.currency.code` no se guarda. El POST y el PUT llevan
   `currencyCode` arriba y en cada país, y editar una clase en otra moneda la pasa a la de la
   cuenta. Antes, un `|| 'EUR'` dejaba clases en EUR en cuentas NOK.
+- **Modales de alta o edición: `FormDialog`, no `Dialog`** (`src/ui/dialog.jsx`, 2026-10-14,
+  `35552f0`). Con `dirty`, un clic fuera no cierra, y Esc o la X piden "Discard changes?". El
+  `dirty` sale de `formState.isDirty` o de `formChanged` (`src/lib/utils.js`). Dos trampas que
+  solo se ven en Chrome, no en jsdom:
+  - un clic fuera "prevenido" igual manda el foco a `<body>` (el `mousedown` del overlay);
+  - un `AlertDialog` sin trigger, al cerrarse, deja el foco en `<body>`.
+  `FormDialog` resuelve las dos.
 - Catch-all: path por `useRouter().asPath` + `key={path}` en los detalles
   (remount en transiciones cliente).
 - Puppeteer: clicks reales para triggers Radix; native value-setter para
@@ -219,7 +234,11 @@ journal `2026-10/2026-10-13-front-commerce-surfaces-y-campanas.md`.
   clave `firebase:authUser:<apiKey>:[DEFAULT]`, con un `accessToken` falso y `expirationTime`
   futuro. Hay que abortar `identitytoolkit` (`accounts:lookup`): ante `network-request-failed`
   Firebase conserva el user. Después se interceptan base-api y vio-backend con fixtures, con CORS
-  y respuesta al OPTIONS.
+  y respuesta al OPTIONS. Más trampas (2026-10-14):
+  - el `Combobox` no usa `role="option"`: hay que clickear por texto;
+  - después de editar archivos, el primer `goto` de `next dev` puede dar `ERR_ABORTED` o errores de
+    hidratación: esperar y repetir antes de culpar al cambio;
+  - para ver el flujo V2: `VIO_CAMPAIGNS_V2=true` y `VIO_API_HOST`/`API_HOST` falsos en `next dev`.
 - `AVATAR_PLACEHOLDER` (signup Google sin foto) apunta hardcoded al
   container de staging (`outshifter-uploads-qa`) — flaggeado, sin decidir.
 
