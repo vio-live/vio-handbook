@@ -38,8 +38,10 @@ status: live
   no los ids de vio-backend (4, 5).
 - **Una página que viene de vio-backend:** cambiar la key en el Config, elegir el sponsor (o dejar
   el primary) y **republicar**.
-- **Pendiente:** una carrera del SDK. `bootstrap()` no invalida uno en vuelo de la key vieja. Se
-  arregla en `vio-web-sdk` y después se rebundlea.
+- **La carrera del SDK al cambiar de key, arreglada (14/10) y sin desplegar:** el `bootstrap()` de una key
+  reemplazada ya no entra en la caché ni bloquea 5 s la nueva. Está en vio-web-sdk 0.20.4
+  ([#79](https://github.com/vio-live/vio-web-sdk/pull/79)) y rebundleado en Vev
+  ([#62](https://github.com/vio-live/vev/pull/62)). Falta el `vev deploy` del compartido y republicar las páginas.
 
 ## El repo y el paquete
 
