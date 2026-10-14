@@ -371,7 +371,7 @@ El rol de origen de catálogo (vio-sync, `EcomUser` y las conexiones) **no se to
 > - ✅ **7:** micro #8. El nombre por defecto del sponsor ya no es un email; la 1289 sale "Fedrik Louisa".
 > - ⏳ **3:** 123 conexiones "brand↔brand" en QA. Casi todas son sellers viejos con `is_business=1`; se recuentan después del backfill de users F2.2.
 > - ⏳ **4:** 19 clases de envío en otra moneda. Dos son de Alan (1295 y 1299) y el resto son cuentas de prueba viejas.
-> - ⏳ **6:** se cierra desplegando F2.
+> - ✅ **6:** F2 desplegado en QA el 14/10: api #45, base-api #32, users #21, middleware #10, payment-processors #12, orders #21 y shopcart #87. El channel ofrece los métodos de la brand (el 505 de Aller muestra solo el Vipps de la brand).
 
 Angelo las pidió durante la prueba. Van **después** de cerrar Vev, y la primera es la primera.
 
@@ -409,15 +409,18 @@ Angelo las pidió durante la prueba. Van **después** de cerrar Vev, y la primer
    perfil de marca. Propuesta: el default debería ser el nombre de la cuenta o de la empresa, no el
    username.
 
-8. **Vev con sponsors viejos (en curso, 14/10).** Las páginas armadas con vio-backend guardan
+8. **Vev con sponsors viejos: en `main` (vev [#61](https://github.com/vio-live/vev/pull/61), 14/10), sin desplegar; lo prueba Alan.** Las páginas armadas con vio-backend guardan
    ids de sponsor viejos (4, 5) en la prop "Active Sponsor", en `localStorage` y en los productos
    elegidos. Además hay defaults fijos a 4 (`vio-config.tsx:307`, `getActiveSponsorId(fallback = 4)`).
    Con la key nueva fallan ("Sponsor 5 not found in bootstrap" y 500 en GraphQL). Arreglo: el
    sponsor activo siempre es uno de la config de la key actual, si no el primary, y al cambiar de
    key se limpia el estado (rama de Vev `fix/sponsor-segun-la-key`).
-9. **GraphQL responde 500 con una key que no es de channel** (por ejemplo, la de plataforma). Debería
+   Pendiente: una carrera del SDK (`vio-web-sdk`). `bootstrap()` no invalida un bootstrap en vuelo de
+   la key vieja, que puede pisar el nuevo. Arreglo: un contador de generación en `bootstrap()`, y
+   rebundlear en Vev.
+9. ✅ graphql [#25](https://github.com/vio-live/graphql/pull/25). **GraphQL responde 500 con una key que no es de channel** (por ejemplo, la de plataforma). Debería
    responder 401/`UNAUTHENTICATED`, como cuando falla la auth.
-10. **Productos con variantes que no se pueden publicar** (Alan, 14/10): el precio queda en 0,00 y
+10. ✅ webapp [#54](https://github.com/vio-live/webapp-vio-commerce/pull/54). **Productos con variantes que no se pueden publicar** (Alan, 14/10): el precio queda en 0,00 y
     Publish exige más de 0. En curso (webapp `fix/publicar-con-variantes`; se revisa si el backend
     también lo exige).
 
