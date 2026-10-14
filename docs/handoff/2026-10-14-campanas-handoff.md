@@ -44,15 +44,15 @@ status: live
 | **ADR-0031**: el publisher filtra qué métodos de la brand se ven en cada channel | api #46, base-api #33, webapp #55 | ✅ en QA. El channel 505 ofrece Vipps; `GET /api/channel/:id/payment-methods` sin token da 401 |
 | **Precio de productos con variantes**: si falta, el mínimo de las variantes; la herencia solo en NATIVE | products #23 | ✅ en QA. **Backfill aplicado: 333 productos** (301 Woo, 10 Magento y 22 nativos), 0 errores, idempotente. El 411959 de Alan pasó a 110 NOK |
 | Plugin de Woo: el producto variable manda el precio de su variación más barata | vio-woocommerce-sync **#1** | ⏳ **PR abierto sin mergear.** Falta correr `tests/ProductMapperTest.php` con wp-env, mergear y publicar en wp.org con un tag (playbook `wordpress-org-plugin-release`). Mergear no publica: el deploy corre solo con un tag |
-| Dashboard: en importados, una variante en 0 sale "Not for sale" (alinea #54 con products #23) | webapp `fix/variantes-importadas` | ⏳ agente trabajando. Revisar, PR y merge |
-| `ACCOUNT_PAYMENTS=true` en Vercel staging | Miguel | ⏳ pedido. Con eso la brand enciende sus métodos en Settings › Payments |
+| Dashboard: en importados, una variante en 0 sale "Not for sale" (alinea #54 con products #23) | webapp #56 | ✅ en staging |
+| `ACCOUNT_PAYMENTS=true` en Vercel staging | Miguel | ✅ encendido. Verificado en el bundle de las 17:06 UTC. Ojo: su redeploy dejó el dominio clavado a un build viejo un rato; el deploy de #56 lo destrabó |
 
 **Backfill de precios:** se corre con `node dist/scripts/recompute-variant-prices.js` en el pod de products, anteponiendo `PROCESS_ENV=local` (el pod usa `.env.local`). Es dry-run por defecto; `--apply` escribe. Filtros: `--ids`, `--user`, `--limit`, `--json`.
 
 ## Pendiente (siguiente paso concreto)
 
 1. **Backfill del rol Publisher** (users F2.2): `POST /admin/backfill-publisher-roles` con un admin, primero en dry-run. Después, recontar las conexiones "brand↔brand" (mejora 3 del plan).
-2. **`ACCOUNT_PAYMENTS=true` en Vercel staging**, y redeploy (Miguel). Así la brand gestiona sus pagos de cuenta en Settings › Payments.
+2. ✅ ~~`ACCOUNT_PAYMENTS=true` en Vercel staging~~, hecho el 14/10. **Lección:** un "Redeploy" en Vercel reconstruye el commit de *ese* deployment y puede dejar el dominio clavado. Después de tocar variables, verificar que `dashboard-staging` sirva el último commit de develop.
 3. **La carrera del bootstrap en `vio-web-sdk`:** un bootstrap viejo en vuelo pisa el nuevo. Se arregla con un contador de generación y rebundleando en Vev.
 4. **SDK y Vev: mostrar "fra X"** con el mínimo de las variantes si el producto llega en 0. Es defensa extra; con products-ms ya no debería pasar.
 5. **Precio "desde" que queda viejo:** si se borra la variante más barata de un producto con precio derivado, no se recalcula, porque no hay columna que distinga un precio derivado de uno explícito. Hace falta `price_derived` en package-database (con OK de Angelo y release `pkg=all`).
