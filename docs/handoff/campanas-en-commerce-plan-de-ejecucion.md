@@ -362,6 +362,30 @@ El rol de origen de catálogo (vio-sync, `EcomUser` y las conexiones) **no se to
 - Operadores y viewers.
 - Comisión (`referralFee`).
 
+### Ronda de mejoras (salida de la prueba de punta a punta del 14/10)
+
+Angelo las pidió durante la prueba. Van **después** de cerrar Vev, y la primera es la primera.
+
+1. **La campaña se arma sin pasar por la surface.** Hoy hay que entrar al detalle de la
+   surface y asignarle el channel **antes** de crear la campaña. Si no, el formulario dice
+   "No brand has a channel on this surface yet", porque filtra los sponsors por los channels de la
+   surface (`webapp src/views/campaigns/form.jsx:152`). Propuesta (Angelo, 14/10: "no me
+   gustó, deberíamos mejorarlo"):
+   - **Formulario de campaña:** el primary sponsor sale de todas las brands de los channels del
+     publisher (`/sponsors` ya lo devuelve). Al elegirlo aparecen sus channels.
+   - **Micro:** `POST /campaigns` asigna a la surface, en la misma transacción, un channel propio y de
+     una sola brand que todavía no esté. Hoy da 400 `CHANNEL_NOT_IN_SURFACE`. Así también funciona
+     por API.
+   - **Alta de surface:** se pueden elegir los channels desde el principio.
+   - La tarjeta "Channels" del detalle de la surface queda para revisar y quitar.
+   - Repos: micro y webapp, rama común.
+2. **Notificación al aceptar:** quien acepta una solicitud también recibe `REQUEST_ACCEPTED`
+   (QA, solicitud 1485: Aller recibió "received" y "accepted"). Hay que decidir si es lo que queremos.
+3. **Conexiones brand↔brand del modelo viejo:** por ejemplo 1317 → 1289, con 3 colecciones compartidas
+   con la brand. Hay que decidir qué hacer con las existentes.
+4. **Las 20 clases de envío de QA con una moneda distinta a la de su cuenta**, y contarlas en prod.
+   El código ya no las crea (products #22, webapp #52). Falta decidir el data patch con cada brand.
+
 ## Riesgos
 
 | Riesgo | Mitigación |
