@@ -31,7 +31,7 @@ status: live
   - webapp #53 (formulario de campaña y modales), webapp #54 (publicar con variantes desde el dashboard);
   - api #44 (`REQUEST_ACCEPTED` solo al sender) y graphql #25 (401 en vez de 500);
   - products #22, webapp #52, shopcart #88 y graphql #24 (moneda de envío, `total_tax` y descripciones neto/bruto).
-- **Vev:** paquete compartido `cq1lXld-TA9` en la **0.326** (vev #61, el sponsor sale de la config de la key). Rollback: `vev restore` a la 0.325.
+- **Vev:** paquete compartido `cq1lXld-TA9` en la **0.327** (15/10: SDK 0.20.4, la carrera del bootstrap; vev #62). La 0.326 es vev #61, el sponsor sale de la config de la key. Rollback: `vev restore` a la 0.326.
 
 **Cuentas y datos de prueba en QA:**
 - **Brand:** Fredrik & Louisa (1289, `is_business=1`, Vipps partner MSN 545865, envíos Express 0 NOK y Standard 100 NOK). Se muestra como "Fedrik Louisa".
@@ -53,7 +53,7 @@ status: live
 
 1. **Backfill del rol Publisher** (users F2.2): `POST /admin/backfill-publisher-roles` con un admin, primero en dry-run. Después, recontar las conexiones "brand↔brand" (mejora 3 del plan).
 2. ✅ ~~`ACCOUNT_PAYMENTS=true` en Vercel staging~~, hecho el 14/10. Después de tocar variables o dominios en Vercel, verificar que `dashboard-staging` sirva el último commit de develop. La causa de que no lo hiciera está en la [lección de Miguel](../lessons/dominio-de-vercel-en-entorno-custom-no-sigue-a-gitbranch.md).
-3. ✅ **La carrera del bootstrap en `vio-web-sdk`, arreglada y sin desplegar.** vio-web-sdk 0.20.4 ([#79](https://github.com/vio-live/vio-web-sdk/pull/79), contador de generación en `bootstrap()`) y rebundle en Vev ([#62](https://github.com/vio-live/vev/pull/62)), los dos mergeados el 14/10. `vev build` OK. **Falta el `vev deploy` del paquete compartido** (lo prueba Angelo antes) y republicar las páginas. Ver el [journal](../journal/2026-10/2026-10-14-vio-web-sdk-carrera-del-bootstrap.md).
+3. ✅ **La carrera del bootstrap en `vio-web-sdk`, arreglada y desplegada en Vev 0.327 (15/10).** vio-web-sdk 0.20.4 ([#79](https://github.com/vio-live/vio-web-sdk/pull/79), contador de generación en `bootstrap()`) y rebundle en Vev ([#62](https://github.com/vio-live/vev/pull/62)), los dos mergeados el 14/10. `vev build` OK. Las páginas ya publicadas la cogen al republicarlas. Ver el [journal](../journal/2026-10/2026-10-14-vio-web-sdk-carrera-del-bootstrap.md).
 4. **SDK y Vev: mostrar "fra X"** con el mínimo de las variantes si el producto llega en 0. Es defensa extra; con products-ms ya no debería pasar.
 5. **Precio "desde" que queda viejo:** si se borra la variante más barata de un producto con precio derivado, no se recalcula, porque no hay columna que distinga un precio derivado de uno explícito. Hace falta `price_derived` en package-database (con OK de Angelo y release `pkg=all`).
 6. **¿Qué hace shopcart con una variante en 0 de un producto importado?** Hay que confirmar que no se pueda comprar a 0.

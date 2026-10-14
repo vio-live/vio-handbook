@@ -21,9 +21,9 @@ status: live
   los editores en cuanto termina.
 - La marcha atrás existe y es del CLI: `vev versions` + `vev restore`.
 
-## Estado al 14/10: 0.326 y el sponsor según la key
+## Estado al 15/10: 0.327 (sponsor según la key y bootstrap al cambiar de key)
 
-- **Paquete compartido `cq1lXld-TA9` en 0.326** (vev [#61](https://github.com/vio-live/vev/pull/61)).
+- **Paquete compartido `cq1lXld-TA9` en 0.327** (15/10: SDK 0.20.4, vev [#62](https://github.com/vio-live/vev/pull/62)). La 0.326 es vev [#61](https://github.com/vio-live/vev/pull/61). Rollback: `vev restore` a la 0.326.
   Rollback: `vev restore` a la 0.325.
 - **"Staging" ya lee la config del micro de campañas:** `api-staging.vio.live` es el micro desde
   [ADR-0030](../decisions/0030-api-staging-por-dns-al-micro-y-hosts-vio-api-vs-commerce.md).
@@ -38,10 +38,10 @@ status: live
   no los ids de vio-backend (4, 5).
 - **Una página que viene de vio-backend:** cambiar la key en el Config, elegir el sponsor (o dejar
   el primary) y **republicar**.
-- **La carrera del SDK al cambiar de key, arreglada (14/10) y sin desplegar:** el `bootstrap()` de una key
+- **La carrera del SDK al cambiar de key, arreglada y desplegada en la 0.327 (15/10):** el `bootstrap()` de una key
   reemplazada ya no entra en la caché ni bloquea 5 s la nueva. Está en vio-web-sdk 0.20.4
   ([#79](https://github.com/vio-live/vio-web-sdk/pull/79)) y rebundleado en Vev
-  ([#62](https://github.com/vio-live/vev/pull/62)). Falta el `vev deploy` del compartido y republicar las páginas.
+  ([#62](https://github.com/vio-live/vev/pull/62)). Las páginas ya publicadas la cogen al republicarlas.
 
 ## El repo y el paquete
 

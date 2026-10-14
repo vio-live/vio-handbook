@@ -57,8 +57,9 @@ todo! hasta el build y lo pruebo, pero merges y todo".
   `@vev/silke` va en `latest`. No rompe el build.
 
 ## Next session
-- **Angelo prueba el build.** Después, `vev deploy` del compartido (`npm run deploy` en
-  `~/Documents/GitHub/vio-vev`), con su OK, y republicar las páginas.
+- **Desplegado (15/10):** con el OK de Angelo ("despliégalo al compartido"), `vev deploy` del compartido
+  `cq1lXld-TA9` → **0.327**, actual. Rollback: `vev restore` a la 0.326. Las páginas ya publicadas cogen
+  el arreglo al republicarlas.
 - **Cómo verlo en el editor:**
   - cambia la clave en Vio Config: los productos de la nueva salen sin recargar y sin
     `bootstrap recently failed` en la consola;

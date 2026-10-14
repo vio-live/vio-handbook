@@ -417,7 +417,7 @@ Angelo las pidió durante la prueba. Van **después** de cerrar Vev, y la primer
    Con la key nueva fallan ("Sponsor 5 not found in bootstrap" y 500 en GraphQL). Arreglo: el
    sponsor activo siempre es uno de la config de la key actual, si no el primary, y al cambiar de
    key se limpia el estado (rama de Vev `fix/sponsor-segun-la-key`).
-   ✅ La carrera del SDK (`vio-web-sdk`) está arreglada en 0.20.4 (#79) y rebundleada en Vev (#62). Falta el `vev deploy`.
+   ✅ La carrera del SDK (`vio-web-sdk`) está arreglada en 0.20.4 (#79) y rebundleada en Vev (#62), desplegada en la 0.327 el 15/10.
 9. ✅ graphql [#25](https://github.com/vio-live/graphql/pull/25). **GraphQL responde 500 con una key que no es de channel** (por ejemplo, la de plataforma). Debería
    responder 401/`UNAUTHENTICATED`, como cuando falla la auth.
 10. ✅ webapp [#54](https://github.com/vio-live/webapp-vio-commerce/pull/54). **Productos con variantes que no se pueden publicar** (Alan, 14/10): el precio queda en 0,00 y
