@@ -161,7 +161,8 @@ journal `2026-10/2026-10-13-front-commerce-surfaces-y-campanas.md`.
   - la brand usa "Accept and share" (acepta y comparte en un paso);
   - el asistente "New channel" crea un channel **tipo 10 por debajo**, sin tipo visible, con
     colecciones compartidas o productos de UNA brand;
-  - el channel del publisher no muestra provider, sync ni pagos;
+  - el channel del publisher no muestra provider ni sync; los pagos son de la brand y el
+    publisher los filtra por channel (ver abajo, ADR-0031);
   - hasta F2.3 la key es una por usuario y tipo: se avisa con `CHANNEL_KEY_SHARED_PER_TYPE`.
 
   Commerce no guarda la brand del channel: se deriva de los dueños de sus colecciones
@@ -174,6 +175,20 @@ journal `2026-10/2026-10-13-front-commerce-surfaces-y-campanas.md`.
     Kustom y Adyen (solo NO).
   - "No payment method" es una condición de la cuenta.
   - Con el flag apagado, todo sigue por channel (api viejo).
+- **Pagos de la brand filtrables por channel (ADR-0031, 2026-10-14, rama local
+  `feature/pagos-filtro-por-channel`, `0b11a22`, sin push):** `src/lib/channel-payments.js`
+  contra `GET /channel/:id/payment-methods` (`{ method, offeredByBrand, reason?, visible,
+  effective }` por método) y el `POST update/settings` parcial, que guarda la visibilidad
+  (`google_pay`/`apple_pay` en snake_case). Contrato aún sin verificar contra backend real: la
+  ruta y la forma están aisladas en la lib.
+  - En `PublisherSettingsTab`, la tarjeta "Payment methods in this channel" tiene un check por
+    método ofrecido, que guarda al instante con cambio optimista y rollback.
+  - Los métodos que la brand no ofrece salen deshabilitados, con la razón.
+  - Muestra "N of M shown to buyers" y, si no queda ninguno visible, el aviso "Nothing can be
+    paid in this channel".
+  - En la lista, el badge "No payment method" sale del fan-out `useChannelsPaymentMethods`.
+    Un channel que falla no se marca.
+  - Sin flag: el webapp no debe salir antes que api y base-api.
 - **Rutas:**
   - `/surfaces` y `/campaigns` son páginas;
   - `/surfaces/:id` y `/campaigns/:id` van por el catch-all;
@@ -212,6 +227,11 @@ journal `2026-10/2026-10-13-front-commerce-surfaces-y-campanas.md`.
 - **`next build` en un worktree con `node_modules` symlinkeado** falla en "Collecting page data"
   (`TypeError: c(...) is not a function` en `_app.js`, 2026-10-14): `next/font/local` resuelve
   fuera del proyecto. Para el build, copiar `node_modules` con `cp -cR` (clon APFS).
+- **El build y `next dev` no necesitan el `.env` real** (2026-10-14): con variables ficticias
+  en el entorno (`FIREBASE_API_KEY=dummy …`, `API_HOST=https://api.fake.test`) el
+  `next build` pasa "Collecting page data". El `auth/invalid-api-key` sale solo si la key
+  está **vacía**. Para el harness de puppeteer alcanza con usar la misma key ficticia en la
+  clave de IndexedDB. Así no hay que copiar secretos al worktree.
 - **Clases de envío (Settings › Shipping): la moneda es la de la cuenta, sin fallback**
   (2026-10-14, `b3bfd47`). Sin `me.settings.currency.code` no se guarda. El POST y el PUT llevan
   `currencyCode` arriba y en cada país, y editar una clase en otra moneda la pasa a la de la
