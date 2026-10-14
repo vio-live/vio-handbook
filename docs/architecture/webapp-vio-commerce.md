@@ -216,6 +216,13 @@ journal `2026-10/2026-10-13-front-commerce-surfaces-y-campanas.md`.
   (2026-10-14, `b3bfd47`). Sin `me.settings.currency.code` no se guarda. El POST y el PUT llevan
   `currencyCode` arriba y en cada país, y editar una clase en otra moneda la pasa a la de la
   cuenta. Antes, un `|| 'EUR'` dejaba clases en EUR en cuentas NOK.
+- **Producto con variantes: el gate de Publish es del front, y el precio del producto también**
+  (2026-10-14, `0f7f259`, rama `fix/publicar-con-variantes`). El micro de products no deriva el
+  `price` del producto de las variantes: un alta con variantes queda en `null`, y tras un PUT sin
+  `price`, en `"0.00"`. Además, `publish` no valida precio. Por eso `computeMissingDetail` mira el
+  precio de cada variante (una vacía hereda el del producto) y `withVariantPrice` guarda el mínimo
+  como precio del producto cuando todas tienen el suyo. En un importado solo lo completa si falta.
+  La lista (`variants=false`) no ve variantes y marca "Variant prices".
 - **Modales de alta o edición: `FormDialog`, no `Dialog`** (`src/ui/dialog.jsx`, 2026-10-14,
   `35552f0`). Con `dirty`, un clic fuera no cierra, y Esc o la X piden "Discard changes?". El
   `dirty` sale de `formState.isDirty` o de `formChanged` (`src/lib/utils.js`). Dos trampas que
