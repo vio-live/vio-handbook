@@ -43,7 +43,7 @@ status: live
 |---|---|---|
 | **ADR-0031**: el publisher filtra qué métodos de la brand se ven en cada channel | api #46, base-api #33, webapp #55 | ✅ en QA. El channel 505 ofrece Vipps; `GET /api/channel/:id/payment-methods` sin token da 401 |
 | **Precio de productos con variantes**: si falta, el mínimo de las variantes; la herencia solo en NATIVE | products #23 | ✅ en QA. **Backfill aplicado: 333 productos** (301 Woo, 10 Magento y 22 nativos), 0 errores, idempotente. El 411959 de Alan pasó a 110 NOK |
-| Plugin de Woo: el producto variable manda el precio de su variación más barata | vio-woocommerce-sync **#1** | ⏳ **PR abierto sin mergear.** Falta correr `tests/ProductMapperTest.php` con wp-env, mergear y publicar en wp.org con un tag (playbook `wordpress-org-plugin-release`). Mergear no publica: el deploy corre solo con un tag |
+| Plugin de Woo: el producto variable manda el precio de su variación más barata | vio-woocommerce-sync #1 → **1.0.1 en wp.org** | ✅ **publicado el 14/10.** Tag `1.0.1` y Action en verde en 30 s; la API de wp.org da 1.0.1, `tested 7.1.3`. Probado en wp-env con WordPress 7.1.3: 20/20 tests, y los 6 nuevos fallan con el código viejo. Plugin Check 0/0. Las tiendas lo reciben al actualizar el plugin. Ver el [journal del release](../journal/2026-10/2026-10-14-woo-sync-release-1-0-1.md) |
 | Dashboard: en importados, una variante en 0 sale "Not for sale" (alinea #54 con products #23) | webapp #56 | ✅ en staging |
 | `ACCOUNT_PAYMENTS=true` en Vercel staging | Miguel | ✅ encendido. Verificado en el bundle de las 17:06 UTC. El dominio se quedaba en builds viejos porque el proyecto usa un **entorno custom** `staging` y el dominio estaba atado por `gitBranch`. Miguel lo ató por `customEnvironmentId` y ahora sigue a develop solo. Ver la [lección](../lessons/dominio-de-vercel-en-entorno-custom-no-sigue-a-gitbranch.md) |
 
@@ -65,6 +65,7 @@ status: live
    - en base-api, `/api/role/add` no pide token ni rol admin;
    - en graphql, la auth se salta con la operación `GetPurchaseConditions`;
    - shopcart tiene commiteado `.env.local.qa` con secretos.
+12. **Plugin de Woo:** confirmar que cambiar solo el precio de una variación (con el AJAX del panel Variations) dispara el auto-sync del padre (`woocommerce_update_product`). Si no lo dispara, el precio en Vio se queda viejo hasta el siguiente guardado del producto. No está verificado (journal de extensions del 14/10).
 
 ## Reglas que siguen valiendo
 

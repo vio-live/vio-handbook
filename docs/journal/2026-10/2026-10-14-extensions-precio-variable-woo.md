@@ -70,3 +70,5 @@ ejemplo: producto 411959, cuenta 1331, variantes de 110 y 120 NOK). Rama común
 - El orquestador o Angelo aplican el patch en `vio-woocommerce-sync` (rama
   `fix/precio-desde-variantes` desde `origin/main`; ese repo no tiene `develop`) y corren
   `phpunit` en el wp-env.
+
+> [claude, 2026-10-14] Hecho: el patch fue a vio-woocommerce-sync #1, se probó en wp-env (WordPress 7.1.3, 20/20) y se publicó en wp.org como **1.0.1**. Ver [el journal del release](./2026-10-14-woo-sync-release-1-0-1.md). Sigue abierto el punto del AJAX del panel Variations (en el handoff, pendiente 12).

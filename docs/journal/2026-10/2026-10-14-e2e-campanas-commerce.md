@@ -67,7 +67,7 @@ Antes, por API, hubo órdenes de control: 4548, 4549 y 4550, sin F2, cobradas po
   - products #23 deriva el mínimo cuando falta, con herencia solo en nativos;
   - **backfill aplicado en QA: 333 productos**;
   - webapp #54 y #56 en el dashboard;
-  - plugin #1 abierto (falta el test con wp-env y el release en wp.org).
+  - plugin #1 mergeado y **1.0.1 publicado en wp.org** ([journal del release](./2026-10-14-woo-sync-release-1-0-1.md)).
 - **Alan:** [tarjeta de Trello](https://trello.com/c/ftrrjOW0) con el contexto, el checklist del
   flujo, el checklist "Pagos: flujos a estresar" y avisos de cada arreglo.
 - **Hallazgos de seguridad**, con tareas aparte:

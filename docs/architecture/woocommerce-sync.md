@@ -1,6 +1,6 @@
 ---
 title: "Vio WooCommerce Sync — architecture, structure & status"
-last-updated: 2026-06-10
+last-updated: 2026-10-14
 owner: angelo
 status: live
 ---
@@ -18,6 +18,11 @@ status: live
 - **What:** a **WordPress/WooCommerce plugin** that syncs a merchant's WooCommerce
   catalog (products, variants, prices, stock, images) into the Vio commerce platform.
   It is a **ground-up rewrite of the old `Reachu Export` plugin (v3.8)** rebranded to Vio.
+- **Latest (2026-10-14):** **v1.0.1** on [wordpress.org](https://wordpress.org/plugins/vio-sync-for-woocommerce)
+  (slug `vio-sync-for-woocommerce`), tested up to WordPress 7.1. A variable product sends the price
+  of its cheapest variation ([ADR-0032](../decisions/0032-precio-de-productos-con-variantes.md)).
+  How to ship a version: [release playbook](../playbooks/wordpress-org-plugin-release.md). The
+  sections below date from June and keep their dates.
 - **State (2026-06-10):** **v1.0.0**, **public** and on `main` (`00bee82`). A **dedicated Vio admin
   page** (top-level menu) replaces the settings tab; the **connect/disconnect lifecycle works
   end-to-end** (one-step Connect → OAuth; disconnect tears down **both** sides — local *and* the
@@ -108,7 +113,9 @@ Namespace `Vio\WooSync`; class-per-file loaded by explicit `require_once` in the
   pointing at the configured backend host, so the backend-named "Outshifter" hooks are caught).
 - **`Api_Client`** — environment-aware HTTP. See [Environments](#environments-prod--staging).
 - **`Product_Mapper`** — `to_dto()` builds the product payload (images, variants, options,
-  price/compareAt, inventory); `diff()` computes only the changed fields before an update;
+  price/compareAt, inventory). For a **variable** product, which has no price of its own,
+  price/compareAt come from its cheapest active variation (`price_from_variants()`, since 1.0.1).
+  `diff()` computes only the changed fields before an update and never sends an empty amount;
   `get_remote_product_id()` reads the `vio-product-id` meta.
 - **`Sync`** — business logic: `push_products()` (batch export via `create-sqs`),
   `update_product()` (auto-sync on save, no-op until a `product-id` exists),

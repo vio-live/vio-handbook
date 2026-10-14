@@ -1,6 +1,6 @@
 ---
 title: "Playbook: release the Vio WooCommerce plugin to the WordPress.org directory"
-last-updated: 2026-08-18
+last-updated: 2026-10-14
 owner: angelo
 status: live
 ---
@@ -12,6 +12,13 @@ published** (2026-08-18, SVN rev `3653373`), and how to ship future versions.
 Plugin repo: `vio-live/vio-woocommerce-sync`. Slug: **`vio-sync-for-woocommerce`**.
 Live: https://wordpress.org/plugins/vio-sync-for-woocommerce
 
+**Releases:**
+
+| Version | Date | What | Deploy |
+|---|---|---|---|
+| 1.0.0 | 2026-08-18 | First public release | SVN rev `3653373` |
+| 1.0.1 | 2026-10-14 | Variable products send the price of their cheapest variation ([ADR-0032](../decisions/0032-precio-de-productos-con-variantes.md)); `Tested up to: 7.1`; `Domain Path` header removed | PR #1, tag `1.0.1`, Action run `38607801791` (30 s) |
+
 ## 0. Invariants
 
 - **Folder/slug** = `vio-sync-for-woocommerce`. The dev folder is `vio-woocommerce-sync`;
@@ -22,6 +29,9 @@ Live: https://wordpress.org/plugins/vio-sync-for-woocommerce
   verifies "Vio" brand ownership — Guideline 17). `Contributors: violive` in `readme.txt`.
 - The runtime **API key is a secret** — never commit it. The reviewer test key lives only in
   the submission's "Additional Information".
+- **No `Domain Path` header** (removed in 1.0.1). The plugin ships no `.mo` files, and
+  translations come from the wp.org language packs. Add the header back only together with a
+  tracked `languages/` folder that has files in it.
 
 ## 1. Pre-flight checklist
 
@@ -53,10 +63,17 @@ Live: https://wordpress.org/plugins/vio-sync-for-woocommerce
 
 ## 2. Build the ZIP + verify Plugin Check (the real check)
 
-The dev folder name pollutes Plugin Check; verify on a correctly-named copy:
+The dev folder name pollutes Plugin Check; verify on a correctly-named copy.
+
+**Build from git, not from the dev clone.** The Action publishes what is in git, and the dev
+clone can hold untracked files that hide problems. For 1.0.0 the clone had an empty, untracked
+`languages/` folder, so Plugin Check passed. The build from git never had that folder, so the
+`Domain Path` warning only showed up in 1.0.1. Use a worktree (or the release branch's own
+worktree) on the exact commit you will tag:
 
 ```bash
-SRC=~/Documents/GitHub/vio-woocommerce-sync
+git -C ~/Documents/GitHub/vio-woocommerce-sync worktree add /tmp/vio-release <commit>
+SRC=/tmp/vio-release            # remove later: git worktree remove /tmp/vio-release
 DEST=/tmp/build/vio-sync-for-woocommerce
 rm -rf /tmp/build && mkdir -p "$DEST"
 rsync -a --exclude='/.git' --exclude='/.github' --exclude='/.gitignore' \
@@ -69,7 +86,7 @@ rsync -a --exclude='/.git' --exclude='/.github' --exclude='/.gitignore' \
 ( cd /tmp/build && zip -rqX vio-sync-for-woocommerce.zip vio-sync-for-woocommerce )
 
 # Plugin Check on the correctly-named copy (needs the wp-env container + plugin-check plugin):
-CID=$(docker ps --format '{{.Names}}' | grep -- '-cli-1')   # e.g. wp-env-woo-vio-7004bcb1-cli-1
+CID=wp-env-woo-vio-7004bcb1-cli-1   # by name: other WordPress projects run on this laptop too (dami-wordpress-*, don't touch)
 docker cp "$DEST" "$CID":/tmp/vio-sync-for-woocommerce
 docker exec "$CID" wp plugin check /tmp/vio-sync-for-woocommerce --path=/var/www/html 2>&1 \
   | grep -E 'ERROR|WARNING' || echo "0/0 clean"
@@ -128,19 +145,44 @@ products.
 
 ## 5. Ship a new version (the routine flow)
 
-1. Make the code changes on `main`.
+1. Make the code changes on a branch with a PR (the repo has no `develop`; `main` history is
+   linear, so merge with **rebase**). Merging does not publish anything: only a tag does.
 2. Bump the version in **three** places — they MUST match:
    - `vio-sync-for-woocommerce.php` header `Version: x.y.z`
    - `readme.txt` `Stable tag: x.y.z`  ← this decides which version users download
    - `define( 'VIOSYNC_VERSION', 'x.y.z' )` (asset cache-bust)
 3. Add a `== Changelog ==` entry at the top of `readme.txt`.
-4. Bump `Tested up to:` if you tested a newer WordPress.
-5. Verify: Plugin Check **0/0** (step 2) + test in the local env.
+4. **`Tested up to:`** Once a new WordPress is out, Plugin Check flags the old value as an
+   **ERROR** (it hides the plugin from search). Don't just bump the number: update the
+   wp-env core first, run the suite, then bump. The wp-env has been on 7.1.3 since 2026-10-14.
+   ```bash
+   docker exec wp-env-woo-vio-7004bcb1-cli-1 wp core update --path=/var/www/html
+   docker exec wp-env-woo-vio-7004bcb1-cli-1 wp core update-db --path=/var/www/html
+   ```
+5. Verify, in the local env (start it with `docker compose up -d mysql wordpress cli` from
+   `~/.wp-env/wp-env-woo-vio-7004bcb1/`; stop it when done):
+   - **Tests.** The env mounts `~/Documents/GitHub/vio-woocommerce-sync`, so check out the
+     commit you are releasing there. The plugin folder inside the container is
+     `vio-woocommerce-sync` (not the slug that `tests/README.md` says):
+     ```bash
+     cd ~/.wp-env/wp-env-woo-vio-7004bcb1 && docker compose exec -T cli sh -c \
+       'cd /var/www/html/wp-content/plugins/vio-woocommerce-sync && phpunit'
+     ```
+     For a fix, also run its new tests against the old code: they must fail there.
+   - **Plugin Check 0/0** on the build from git (step 2).
 6. Ship — the Action does the SVN work:
    ```bash
-   git commit -am "Release x.y.z: …"
-   git push origin main
-   git tag x.y.z && git push origin x.y.z    # → 10up Action deploys (~1–2 min)
+   git commit -am "Release x.y.z: …"        # on the PR branch; merge the PR
+   git fetch origin                          # check origin/main's tree == the tested commit's tree
+   git tag x.y.z origin/main && git push origin x.y.z    # → 10up Action deploys (~30 s – 2 min)
+   gh run watch <run-id> --exit-status
+   ```
+7. Verify on wp.org (the API updates within a minute):
+   ```bash
+   curl -s "https://api.wordpress.org/plugins/info/1.2/?action=plugin_information&request%5Bslug%5D=vio-sync-for-woocommerce" \
+     | python3 -c 'import sys,json; d=json.load(sys.stdin); print(d["version"], d["tested"], d["last_updated"])'
+   curl -s https://plugins.svn.wordpress.org/vio-sync-for-woocommerce/tags/x.y.z/   # runtime files only
+   ```
    ```
 
 **Rules:** the version must always increase (or WP won't offer the update); `Stable tag`
