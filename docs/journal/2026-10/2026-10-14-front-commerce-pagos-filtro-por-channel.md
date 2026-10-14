@@ -94,9 +94,8 @@ Un commit local, **`0b11a22`**, **sin push ni PR**:
 
 ## Blockers / open questions
 
-- **El contrato no está verificado contra un backend real**: está escrito sobre lo que pasó el
-  coordinador. Hay que confirmar con la rama de api y base-api la ruta, la forma de la lista y
-  los valores de `reason`.
+- **El contrato no está verificado contra un backend levantado.** Se alineó al de api `3cb6fa9` y
+  base-api `ddb70b9` (ver abajo), pero solo con datos simulados.
 - **El webapp no debería salir antes que base-api y api.** Sin el endpoint, el publisher ve un
   error en la tarjeta de pagos de cada channel. Si hace falta salir antes, la salida es un flag
   como el de `ACCOUNT_PAYMENTS`.
@@ -108,6 +107,50 @@ Un commit local, **`0b11a22`**, **sin push ni PR**:
   Markets. No lo cambié porque está fuera del alcance. Lo tiene que decidir Angelo.
 - **`PaymentIcon` no tiene icono para Qliro, Walley ni Nexi** y muestra "?". Ya pasaba en
   `InheritedPaymentsCard`.
+
+## Alineación al contrato real (segundo commit, `54c8b8d`)
+
+El coordinador pasó el contrato implementado en api `3cb6fa9` y base-api `ddb70b9`:
+
+- `GET /api/channel/:id/payment-methods` → 200
+  `{ channelUserId, brandId, methods: [{ method, offeredByBrand, reason?, visible, effective }] }`.
+  - Vienen siempre los 11, en el orden de api. El webapp los reordena al orden de pantalla de la
+    cuenta.
+  - `effective` = `offeredByBrand` ∧ market ok ∧ `visible`.
+- `reason` aparece solo si el método no puede llegar al checkout por algo que el publisher no
+  controla:
+  - `no-switch`: "The brand hasn't enabled X";
+  - `no-credential`: "The brand turned X on but can't charge it yet";
+  - `market`: la brand lo ofrece, pero el channel no vende en NO (Kustom y Adyen). Texto: "Not
+    available in this channel's markets".
+- Errores `{ code, message }`, que antes eran todos 417:
+  - en el GET: 401, 400 por id no numérico, 403 `CHANNEL_NOT_OWNED` y 404 `CHANNEL_NOT_FOUND`;
+  - en el `POST update/settings`: 400 `INVALID_CHANNEL_SETTINGS`, 403 y 404. El POST responde 200
+    con la fila completa.
+
+Cambios del segundo commit:
+
+- **Con `reason`, el check va deshabilitado**, aunque `offeredByBrand` sea `true` (caso `market`).
+  En la lib es el campo `selectable`.
+- El "N of M" cuenta como M solo los elegibles.
+- La sección de deshabilitados pasa a llamarse "Not available in this channel".
+- **Errores:** se muestra el `message` del backend. Si no vino, un texto por código
+  (`channelPaymentsError`).
+- **Aviso cuando la brand ofrece métodos pero ninguno llega a este channel** (por ejemplo, por
+  market): "None of the brand's methods can be used in this channel yet".
+
+Verificación:
+
+- `npx jest`: 566 verdes, más los 2 rojos de siempre. Los tests de la lib y la vista ya son 25.
+- eslint limpio y `next build` verde.
+- El harness, con la forma real, pasó en Chrome:
+  - Kustom por market aparece deshabilitado y fuera de M;
+  - el 400 se ve en el toast con su `message`;
+  - el 403 se ve en la tarjeta con su `message`;
+  - no hubo errores de consola.
+
+**Sigue sin verificarse contra un backend levantado de verdad**: el contrato lo pasó el
+coordinador. El riesgo de salir antes que el backend sigue igual.
 
 ## Next session
 

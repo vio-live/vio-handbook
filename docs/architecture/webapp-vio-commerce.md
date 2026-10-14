@@ -176,16 +176,20 @@ journal `2026-10/2026-10-13-front-commerce-surfaces-y-campanas.md`.
   - "No payment method" es una condición de la cuenta.
   - Con el flag apagado, todo sigue por channel (api viejo).
 - **Pagos de la brand filtrables por channel (ADR-0031, 2026-10-14, rama local
-  `feature/pagos-filtro-por-channel`, `0b11a22`, sin push):** `src/lib/channel-payments.js`
-  contra `GET /channel/:id/payment-methods` (`{ method, offeredByBrand, reason?, visible,
-  effective }` por método) y el `POST update/settings` parcial, que guarda la visibilidad
-  (`google_pay`/`apple_pay` en snake_case). Contrato aún sin verificar contra backend real: la
-  ruta y la forma están aisladas en la lib.
+  `feature/pagos-filtro-por-channel`, `0b11a22` + `54c8b8d`, sin push):**
+  `src/lib/channel-payments.js`, contra el contrato de api `3cb6fa9` y base-api `ddb70b9`.
+  - `GET /channel/:id/payment-methods` → `{ channelUserId, brandId, methods }`, siempre con los 11
+    métodos.
+  - `reason` vale `no-switch`, `no-credential` o `market`. Un método con `reason` no se elige,
+    aunque la brand lo ofrezca.
+  - El `POST update/settings` parcial guarda la visibilidad (`google_pay`/`apple_pay`).
+  - Los errores llegan como `{ code, message }`.
+  - Todavía no se probó contra un backend levantado.
   - En `PublisherSettingsTab`, la tarjeta "Payment methods in this channel" tiene un check por
-    método ofrecido, que guarda al instante con cambio optimista y rollback.
-  - Los métodos que la brand no ofrece salen deshabilitados, con la razón.
-  - Muestra "N of M shown to buyers" y, si no queda ninguno visible, el aviso "Nothing can be
-    paid in this channel".
+    método elegible, que guarda al instante con cambio optimista y rollback.
+  - Los métodos con `reason` salen deshabilitados, con su texto.
+  - Muestra "N of M shown to buyers", donde M son los elegibles, y, si no queda ninguno
+    visible, el aviso "Nothing can be paid in this channel".
   - En la lista, el badge "No payment method" sale del fan-out `useChannelsPaymentMethods`.
     Un channel que falla no se marca.
   - Sin flag: el webapp no debe salir antes que api y base-api.
