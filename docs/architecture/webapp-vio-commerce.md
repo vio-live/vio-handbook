@@ -247,6 +247,16 @@ journal `2026-10/2026-10-13-front-commerce-surfaces-y-campanas.md`.
   precio de cada variante (una vacía hereda el del producto) y `withVariantPrice` guarda el mínimo
   como precio del producto cuando todas tienen el suyo. En un importado solo lo completa si falta.
   La lista (`variants=false`) no ve variantes y marca "Variant prices".
+  - **La herencia es solo de los nativos** (2026-10-14, `a8d86c6`, rama
+    `fix/variantes-importadas`, espejo de products-ms #23). `inheritsVariantPrices(product)`:
+    nativo es `origin` NATIVE o vacío, y sin `originId`. El feed (NATIVE con `originId`) es
+    importado. En un importado, una variante en 0 no se vende:
+    - se marca "Not for sale (no price in <origen>)", sin precio heredado;
+    - no bloquea Publish mientras una variante activa tenga precio. Sin ninguna, bloquea;
+    - sin precio de producto, "Price from" es el mínimo de las activas con precio (la derivación
+      del micro).
+
+    El webapp no puede salir a un entorno antes que products-ms #23.
 - **Modales de alta o edición: `FormDialog`, no `Dialog`** (`src/ui/dialog.jsx`, 2026-10-14,
   `35552f0`). Con `dirty`, un clic fuera no cierra, y Esc o la X piden "Discard changes?". El
   `dirty` sale de `formState.isDirty` o de `formChanged` (`src/lib/utils.js`). Dos trampas que
