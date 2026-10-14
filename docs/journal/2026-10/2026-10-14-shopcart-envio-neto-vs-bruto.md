@@ -66,3 +66,6 @@ webapp `88ad8ad`). No se tocó código.
 ## Next session
 
 - Con OK de Angelo, el arreglo de `total_tax` en una rama `agent/shopcart/<slug>`, con su test.
+
+> [claude, 2026-10-14] Hecho en `fix/envio-moneda-e-iva` (`2cfd2d8`, sin push), ver
+> [2026-10-14-shopcart-total-tax-misma-regla](2026-10-14-shopcart-total-tax-misma-regla.md).
