@@ -58,26 +58,24 @@ export TOKEN_BRAND=... TOKEN_PUB=...
 
 | # | Bloqueante | Por qué importa | Quién |
 |---|---|---|---|
-| P1 | **El micro guarda en memoria.** `develop` usa `createInMemoryStore()` (`production-adapters.module.ts:30-60`) [V]. TypeORM vive en `feature/typeorm`, que necesita el lock 1.0.270. | Sin TypeORM, lo que se cree se pierde en cada restart o redeploy y **no queda en `surface_*`**. La regla "sponsor con channel en la surface" solo existe en esa rama. | Miguel: locks y dispatch. Claude: PR. Angelo: merge. |
+| P1 | **El micro guarda en memoria.** `develop` usa `createInMemoryStore()` (`production-adapters.module.ts:30-60`) [V]. TypeORM vive en `feature/typeorm`. Desde el PR #6 (develop ya está en 1.0.270), se destraba con revert + merge, **sin token**; la receta comprobada está en el [plan](../handoff/campanas-en-commerce-plan-de-ejecucion.md). | Sin TypeORM, lo que se cree se pierde en cada restart o redeploy y **no queda en `surface_*`**. La regla "sponsor con channel en la surface" solo existe en esa rama. | **Miguel** lo hace y revisa. Angelo: merge. |
 | P2 | **Tipo de cuenta en la base.** El micro reconoce a la brand por `is_business=1` o rol 2 (`typeorm-account-directory.ts:73`) [V]. Al publisher, por rol 3 **o** el claim `channel` (`account-type.ts:30-41`) [V]. | Con la brand como está, `POST /api/campaigns` da **404 `Primary sponsor not found`**. users F2.2 calcula el tipo **solo** desde la base. | Angelo, con el token de la brand: `PATCH /users/1289 {isBusiness:true}` (§3.1) |
 | P3 | **Suscripción del publisher.** La exención de ADR-0028 **no está en el gateway**: middleware #10 no la toca, y la de api F2.3 es solo para crear el channel [V]. El middleware de develop la exige también con token de Firebase (`middleware.service.ts:136-189`) [V]. api develop exige cupo del plan para crear el channel (`channel.service.ts:180-190`) [V]. | 1312 tiene el plan 19 activo, así que **pasa**. Con otra cuenta de publisher, hay que suscribirla antes. | — |
-| P4 | **Pago de la brand.** La brand no tiene Stripe. | Hay que cargarle Stripe **test**. Ver §3.2 y §6. | Angelo (keys de test) |
+| P4 | **El pago es con Vipps** (Angelo, 14/10). La brand ya tiene su fila Vipps **partner** con el MSN de la unidad de prueba de QA (545865), y `payment_vipps=1` [V, base de QA]. | El channel tipo 10 nace **sin Vipps**: el publisher tiene que encenderlo (§4.4). Hace falta la **app Vipps MT** (test) con un usuario de prueba para aprobar el pago. | Angelo (app MT) |
 | P5 | **F2 desplegado en QA:** api F2.3, users F2.2, base-api F2.6, payment-processors, orders, shopcart parte 2, middleware #10. | Sin F2, **cobra el publisher** (o la cuenta de Vio), no la brand, y `cart.seller_id` queda NULL. Ver la matriz en §7. | Miguel: locks. Claude: PRs. Angelo: merges. |
 | P6 | **Vev lee del micro.** Hoy el SDK sale a `api-staging` (vio-backend) y ninguna prop cambia el host [V]. | Rama lista: `vev` `feature/campaigns-staging-env` (c4d168c, local, sin pushear). Agrega el entorno **"Staging (Commerce campaigns)"**. Es opt-in por página: el loop de VG no cambia. Build verificado. | Claude: deploy al **sandbox** con OK. Angelo: republicar. |
-| P7 | **vio-backend apagado durante la ventana.** | Es la prueba de que no hace falta. Ver §8. | Miguel. Avisar a Alan, porque su loop de VG se cae. |
+| P7 | **Con todo arriba** (Angelo, 14/10): no se apaga ni se bloquea vio-backend. Así va a ser siempre; los casos extremos van después. | La prueba de que no hace falta es pasiva: el flujo nunca le pega, y se mira el `access.log` después (§8). | — |
 
 **Orden de la mañana (propuesta):**
 
 | Hora | Paso |
 |---|---|
-| 08:00 | QA arriba |
-| 08:00–09:30 | PRs de F2 + TypeORM en orden de deploy: api F2.3 + base-api F2.6 → users F2.2 + middleware #10 → payment-processors + orders → shopcart parte 2 → micro TypeORM |
-| 09:30–10:00 | Cuentas (P2) y Stripe test (P4) |
-| 10:00–11:00 | Pasos 4 a 9 por API |
-| 11:00–11:45 | Vev y órdenes |
-| 11:45 | Evidencia de que vio-backend no recibió nada |
+| ahora | Miguel: micro TypeORM (P1). En paralelo, Angelo: brand como brand (P2) y §3 |
+| después | §4 y §5 por API (channel, Vipps encendido, surface, channel asignado, campaña) |
+| después | Vev en el sandbox (P6) y la orden con Vipps (§6) |
+| cierre | `access.log` de vio-backend (§8) |
 
-**Si F2 no llega a las 10:00:** se corre igual. Se dan por probados la cadena brand → publisher → surface → campaña → Vev → orden y la autoría (reseller y supplier). El cobro en la brand y `cart.seller_id` quedan para después de los deploys (§7).
+**Re-plan del 14/10, 10:20:** F2 no llega antes de las 12 (los locks de las 7 ramas siguen sin subir), así que **la prueba se corre sin F2**. Se dan por probados la cadena brand → publisher → surface → campaña → Vev → orden y la autoría (reseller y supplier). Que cobre la brand con su Vipps, `cart.seller_id` y el channel en la orden quedan para cuando se despliegue F2 (§7).
 
 ## 3. Brand: catálogo, pago, colección y conexión
 
@@ -148,7 +146,25 @@ SELECT ps.product_id, sc.country FROM product_shipping ps JOIN shipping_country 
  WHERE ps.product_id = :PRODUCT_ID AND ps.deleted_at IS NULL AND sc.deleted_at IS NULL;   -- esperado: NO
 ```
 
-### 3.3 Método de pago: Stripe **test** de la brand (P4) [V]
+### 3.3 Método de pago de la brand: **Vipps** (P4) [V]
+
+**Ya está cargado; no hay que hacer nada para la prueba.** La fila Vipps de 1289 (`payment_method` id 8) está activa y en modo **partner**: el MSN es el de la unidad de prueba de QA (545865), con `express` encendido y `captureMode` `shipment`. Además, `user_settings.payment_vipps=1`. En modo partner, Vio escribe el MSN y el merchant no puede editarlo (`vipps-config.ts`). En QA, las keys partner caen a las de la unidad de prueba y lo que cambia es la cabecera MSN.
+
+```sql
+SELECT id, active, JSON_UNQUOTE(JSON_EXTRACT(options,'$.mode')) modo,
+       JSON_EXTRACT(options,'$.merchantSerialNumber') IS NOT NULL tiene_msn
+  FROM payment_method WHERE user_id = 1289 AND deleted_at IS NULL;
+SELECT us.payment_vipps, us.payment_vipps_use_vio_account FROM `user` u JOIN user_settings us ON us.id = u.settings_id WHERE u.id = 1289;
+```
+
+**Quién cobra con Vipps** [V]:
+
+| | De quién es la config | Resultado |
+|---|---|---|
+| **QA hoy (develop)** | `getConfigByChannelUser` → dueño del channel = **publisher 1312** (`vippsConnector.service.ts:251-264`) | 1312 no tiene fila Vipps → **unidad de Vio** (`platform`) |
+| **Con shopcart parte 2** | `sellerOfCart` → **brand 1289**; además, el channel de la ruta tiene que ser el del carrito, o 403 `VIPPS_CHANNEL_MISMATCH` | fila partner de 1289 (`partner`, su MSN) |
+
+#### Alternativa: Stripe test (no se usa hoy)
 
 - **El body:** `POST $BASE/paymentmethod` con `{active:true, options:"<JSON como STRING>"}`. `options` lleva `name:"STRIPE"` (en mayúsculas) y **las dos keys**; con una sola key cobra la plataforma (shopcart `checkout.service.ts:246-262`).
 - **Se cifra al guardar** (api `paymentMethod.service.ts:124-142`).
@@ -179,7 +195,9 @@ SELECT us.payment_stripe_payment_intent, us.payment_stripe_use_vio_account
   FROM `user` u JOIN user_settings us ON us.id = u.settings_id WHERE u.id = 1289;
 ```
 
-**Checklist para que con F2 cobre la brand y no Vio** [V salvo donde dice I]:
+**Con F2, para que cobre la brand con Vipps** [V]: el channel de 1312 publica solo productos de 1289 (`brand-of-channel.ts:47-56`), 1289 tiene `payment_vipps=1` y su fila partner con MSN (las dos ya están), y se despliegan juntos api F2.3 y shopcart parte 2, más orders y payment-processors.
+
+**Checklist equivalente para Stripe** [V salvo donde dice I]:
 
 1. **El channel de 1312 publica solo productos de 1289.** Si publicara alguno propio, vende 1312 (`brand-of-channel.ts:47-56`).
 2. **El `user_settings` de 1289 (vía `user.settings_id`)** tiene `payment_stripe_payment_intent=1` y `payment_stripe_use_vio_account=0`. Con el flag de Vio en 0 y sin credencial propia, api no ofrece Stripe y shopcart parte 2 lo bloquea en vez de cobrar en Vio.
@@ -279,6 +297,16 @@ curl -sS -X POST "$BASE/channel/multi-group/v2?page=1&size=1&variants=false" -H 
   - 417 `User do not have connected this channel.`
   - Con F2.3, si se mezclan brands: 400 `CHANNEL_NOT_SINGLE_BRAND`.
 
+**4.4 Encender Vipps en el channel** [V] (api `channel.service.ts:5356-5420`; ofrecido si `channelUserSettings.vipps == true`, `:5678`)
+
+El channel tipo 10 nace con Klarna y Stripe encendidos, pero **sin Vipps**. Hoy (develop) lo enciende el dueño del channel. Es una actualización parcial, así que solo cambia `vipps`:
+
+```bash
+curl -sS -X POST "$BASE/channel/update/settings/$CHANNEL_ID" -H "Authorization: $TOKEN_PUB" -H 'Content-Type: application/json' -d '{"vipps":true}'
+```
+
+Ojo: este guardado también dispara el `POST ${VIO_BACKEND_URL}/api/campaign/payments/apikey/:key` a vio-backend. Lo hace api en segundo plano y se traga los errores (§8). Con F2.3, los encendidos pasan a ser de la brand (§3.3).
+
 **Verificación (SQL, solo lectura)**
 
 ```sql
@@ -369,7 +397,7 @@ Esperado (forma verificada; los valores son los de esta prueba):
   "endpoints": {"webSocketBase":"wss://campaigns-staging.vio.live","commerceGraphQL":"https://graph-ql-staging.vio.live"},
   "campaign": {"id": 1, "name": "E2E 14/10", "isActive": true, "isPaused": false, "startDate": "2026-10-14T00:00:00.000Z", "endDate": "2026-10-31T23:59:59.000Z"},
   "primarySponsor": {"id": 1289, "name": "Fredrik & Louisa", "logoUrl": null,
-    "commerce": {"apiKey": "<CHANNEL_KEY>", "channelId": "<CHANNEL_ID>", "paymentMethods": ["stripe", "klarna"]}},
+    "commerce": {"apiKey": "<CHANNEL_KEY>", "channelId": "<CHANNEL_ID>", "paymentMethods": ["klarna", "stripe", "vipps"]}},
   "secondarySponsors": [],
   "features": {"shoppable": true, "lineup": false},
   "campaigns": [{"id": 1, "isDefault": true, "status": "active", "primarySponsor": {"…": "igual"}, "secondarySponsors": [], "slots": []}]
@@ -408,56 +436,38 @@ SHIP=<id de available_shippings (shipping_country)>
 gql '{"query":"mutation($id:String!,$d:[DataUpdateShippingsBySupplier!]!){Cart{UpdateShippingsBySupplier(cart_id:$id,data:$d){cart_id}}}","variables":{"id":"'$CART'","d":[{"supplier_id":1289,"shipping_id":"'$SHIP'"}]}}'
 # 4 checkout (con shopcart parte 2: acá se escribe cart.seller_id = 1289)
 CO=$(gql '{"query":"mutation($id:String!){Checkout{CreateCheckout(cart_id:$id){id status}}}","variables":{"id":"'$CART'"}}' | jq -r '.data.Checkout.CreateCheckout.id')
-# 5 email + DIRECCIONES. Las dos direcciones son obligatorias en la práctica: el intent lee billing y shipping first_name sin null-check.
-gql '{"query":"mutation($c:String!,$e:String,$a:AddressArgs,$pm:String){Checkout{UpdateCheckout(checkout_id:$c,email:$e,shipping_address:$a,billing_address:$a,payment_method:$pm,buyer_accepts_purchase_conditions:true,buyer_accepts_terms_conditions:true){id status}}}","variables":{"c":"'$CO'","e":"e2e+1410@vio.live","pm":"Stripe","a":{"first_name":"Test","last_name":"E2E","address1":"Karl Johans gate 1","city":"Oslo","zip":"0154","country_code":"NO"}}}'
-# 6 métodos que ofrece el channel (Stripe con config.mode = native|link)
+# 5 email + direcciones + método
+gql '{"query":"mutation($c:String!,$e:String,$a:AddressArgs,$pm:String){Checkout{UpdateCheckout(checkout_id:$c,email:$e,shipping_address:$a,billing_address:$a,payment_method:$pm,buyer_accepts_purchase_conditions:true,buyer_accepts_terms_conditions:true){id status}}}","variables":{"c":"'$CO'","e":"e2e+1410@vio.live","pm":"Vipps","a":{"first_name":"Test","last_name":"E2E","address1":"Karl Johans gate 1","city":"Oslo","zip":"0154","country_code":"NO"}}}'
+# 6 métodos del channel: tiene que aparecer {"name":"Vipps","config":[{"name":"express",...}]} (si no, falta §4.4)
 gql '{"query":"query{Payment{GetAvailablePaymentMethods{name config{name value}}}}"}' | jq
-# 7 PaymentIntent: crea la orden PENDING en orders y devuelve client_secret + publishable_key de la cuenta que cobra
-gql '{"query":"mutation($c:String!){Payment{CreatePaymentIntentStripe(checkout_id:$c){client_secret publishable_key}}}","variables":{"c":"'$CO'"}}' > pi.json
+# 7 pago Vipps (flujo estándar, sin express): devuelve la URL a la que va el comprador
+gql '{"query":"mutation($c:String!,$e:String,$r:String!,$x:Boolean){Payment{CreatePaymentVipps(checkout_id:$c,email:$e,return_url:$r,express:$x){payment_url reference express reason}}}","variables":{"c":"'$CO'","e":"e2e+1410@vio.live","r":"https://example.com/vipps-return","x":false}}' | jq
 ```
 
-**Las mutaciones y los argumentos están verificados** [V]: resolvers en `graphql src/Infra/Resolvers/Sdk/{Cart,Checkout}`, args en `CreateCart.args.ts`, `UpdateCheckout.args.ts` y `Address.args.ts`. Los tipos de input `LineItemInput` y `DataUpdateShippingsBySupplier`, y los campos de `available_shippings`, salen de `vio-web-sdk src/core/api/cart-queries.ts:76-79,368-382,438-441` [V].
+- **Mutaciones y argumentos [V]:** salen de `vio-web-sdk src/core/api/cart-queries.ts:76-79,368-382,438-441` (carrito) y `src/core/checkout/payments/vipps.ts:18-29` (Vipps). La auth la verifican los resolvers de graphql (`src/Infra/Resolvers/Sdk/*`).
+- **Qué hace `CreatePaymentVipps` [V]** (`vipps.service.ts:180-300`):
+  - Crea el pago en Vipps con la referencia `VIO-<checkout>` y la metadata `vio_checkout`, `vio_channel` y `vio_seller`.
+  - Guarda en el checkout `origin_payment_id = <reference>`, `payment_method = 'Vipps'`, y en `origin_payment_body` `{mode, msn, sellerId, channelUserId, supplierId, amountMinor, …}`.
 
-**8. Pagar sin navegador** [I]. Stripe permite confirmar con la publishable key y el `client_secret`, en modo test, con la tarjeta de prueba `pm_card_visa`:
+**8. Aprobar en Vipps.** Abrir `payment_url` en el teléfono, o en el navegador que muestra el QR, y aprobar con la **app Vipps MT** (test) y un usuario de prueba.
+
+**9. Cierre.** La orden se crea cuando Vipps autoriza (`paymentVippsOk`, `checkout.service.ts:4843-4968`). Llega por el webhook o por la reconciliación que corre al leer el checkout (rama Vipps de `GetCheckoutById`, `:3364`) [V]:
 
 ```bash
-PI=$(jq -r '.data.Payment.CreatePaymentIntentStripe.client_secret' pi.json); PK=$(jq -r '.data.Payment.CreatePaymentIntentStripe.publishable_key' pi.json)
-curl -sS "https://api.stripe.com/v1/payment_intents/${PI%%_secret_*}/confirm" -u "$PK:" \
-  -d client_secret="$PI" -d payment_method=pm_card_visa -d return_url=https://example.com | jq '{id,status}'
-# esperado: "succeeded"
+gql '{"query":"query($c:String!){Payment{GetVippsStatus(checkout_id:$c){state}}}","variables":{"c":"'$CO'"}}' | jq     # AUTHORIZED
+gql '{"query":"query($c:String!){Checkout{GetCheckout(checkout_id:$c){status order_id}}}","variables":{"c":"'$CO'"}}' | jq   # SUCCESS + order_id
 ```
 
-**9. Cierre:** GetCheckout reconcilia con Stripe una vez cada 5 s por checkout (`checkout.service.ts:3435-3456`) [V], así que **no hace falta webhook** para que se complete.
-
-```bash
-gql '{"query":"query($c:String!){Checkout{GetCheckout(checkout_id:$c){status order_id}}}","variables":{"c":"'$CO'"}}' | jq
-# esperado: status "SUCCESS" (el order_id ya existe desde el paso 7, así que "pagado" lo dice el status, no el order_id)
-```
-
-### 6.2 Qué cuenta de Stripe cobra [V]
-
-`getStripeApiKeys(userId)` (shopcart `checkout.service.ts:195-284`) lee las filas `payment_method` de ese usuario **sin filtrar por `active`**, en este orden:
-
-1. `STRIPE` con `mode:'connect'` y un `acct_`: Connect.
-2. `STRIPE` con `publishKey` **y** `secretKey`: la cuenta propia.
-3. Si no hay ninguna de las dos: la cuenta de **Vio** (`STRIPE_API_SECRET` de shopcart).
-
-| | ¿De quién son las keys? | Resultado en esta prueba |
-|---|---|---|
-| **QA hoy (develop)** | `dto.userId` = dueño de la key = **publisher 1312** | 1312 no tiene Stripe, así que **cobra la cuenta de Vio** |
-| **Con shopcart parte 2** | `sellerOf(cart)` = `cart.seller ?? cart.user` = **brand 1289** | cobra **la Stripe de la brand**, si tiene una fila `STRIPE` con las dos keys (§3.2) |
-
-**El webhook** entra por base-api `POST /api/shopcart/checkout/payment/webhook` → shopcart. Valida la firma con el `webhookSecret` de la fila `STRIPE` del vendedor, o con el secreto de plataforma. Si ninguno aplica, vuelve a leer el evento desde Stripe antes de confiar en él (`checkout.service.ts:2592-2671`; `stripe-webhook.ts:92-131`) [V].
-
-Para la prueba no hace falta registrar un webhook en la Stripe de la brand: alcanza con el polling de GetCheckout del paso 9.
+La captura **no** pasa en el checkout. Con la unidad de Vio (develop), el default es `account`: se captura desde el portal. Con la fila de 1289 (F2) es `shipment`: se captura al despachar la orden. Para la prueba alcanza con la autorización.
 
 ### 6.3 Verificar la orden (SQL de solo lectura; columnas verificadas en las entidades del kernel)
 
 ```sql
 -- checkout → cart → order
 SELECT co.id, co.status, co.order_id, co.payment_method, co.cart_id,
+       co.origin_payment_id referencia_vipps,
        JSON_UNQUOTE(JSON_EXTRACT(co.origin_payment_body,'$.sellerId')) seller_que_cobro,
-       JSON_UNQUOTE(JSON_EXTRACT(co.origin_payment_body,'$.paymentIntentId')) pi
+       JSON_UNQUOTE(JSON_EXTRACT(co.origin_payment_body,'$.mode')) modo_vipps
   FROM checkout co WHERE co.id = :CO;
 SELECT id, user_id, channel_user_id, seller_id FROM cart WHERE id = :CART;
 SELECT id, channel, channel_id, payment_processor, reseller_id, channel_user_id, price_amount, currency
@@ -471,10 +481,10 @@ SELECT id, product_id, supplier_id, status, price, quantity FROM order_item WHER
 | `order.reseller_id` | **1312** | **1312** |
 | `order_item.supplier_id` | **1289** | **1289** |
 | `order_item.status` | `PROCESSING` (`processOrderPaidByCustomer`) | igual |
-| `order.channel_id` | `pi_…` | `pi_…` |
+| `order.channel_id` | la referencia Vipps (`VIO-…`) | igual |
 | `order.channel_user_id` | **NULL**: shopcart no manda `channelUserId` | **$CHANNEL_ID**: shopcart parte 2 lo manda y orders comprueba el dueño |
 | `cart.seller_id` | **NULL** (la columna existe; nadie la escribe) | **1289** |
-| `origin_payment_body.sellerId` / cuenta Stripe | 1312, cuenta de **Vio** | **1289**, Stripe **de la brand** |
+| `origin_payment_body.sellerId` / `mode` | **1312** / `platform` (unidad de Vio) | **1289** / `partner` (la fila de la brand) |
 | captura y reembolso (payment-processors) | con `cart.user` | con el vendedor del pago (`origin_payment_body.sellerId`), si no `cart.seller ?? cart.user` |
 
 ### 6.4 En Vev (el recorrido del usuario)
@@ -485,7 +495,7 @@ SELECT id, product_id, supplier_id, status, price, quantity FROM order_item WHER
    - **Active Sponsor:** elegir el que trae la config (1289).
    - Publicar o republicar la página: un deploy no alcanza a una página ya publicada.
 2. Abrir la página publicada **en un perfil limpio**. `localStorage` guarda `vio.cart.v1`, `vio.sponsorId` y `vio.environment` de antes.
-3. Con *Request blocking* de `*api-staging.vio.live*` puesto (§8): añadir 408910 → checkout → dirección → pagar con **4242 4242 4242 4242**, una fecha futura y cualquier CVC (para 3DS: 4000 0027 6000 3184).
+3. Añadir 408910 → checkout → **Vipps** → aprobar en la app Vipps MT. (Con todo arriba: no se bloquea nada; ver §8.)
 4. Verificar con las consultas de §6.3.
 
 ## 7. Qué queda probado según lo que esté desplegado
@@ -497,7 +507,7 @@ SELECT id, product_id, supplier_id, status, price, quantity FROM order_item WHER
 | Vev lee la campaña sin vio-backend | ✅ (P6) | ✅ |
 | Orden con reseller = publisher y supplier = brand | ✅ | ✅ |
 | La orden queda atada al channel (`order.channel_user_id`) | ❌ | ✅ |
-| **La brand cobra** con su pago (`cart.seller_id`, su Stripe) | ❌, cobra Vio | ✅ |
+| **La brand cobra** con su Vipps (`cart.seller_id`, su fila partner) | ❌, cobra la unidad de Vio | ✅ |
 | Los métodos ofrecidos son los de la brand | ❌, los del channel o el publisher | ✅ (api F2.3) |
 
 ## 8. Que vio-backend no hace falta
@@ -513,14 +523,13 @@ SELECT id, product_id, supplier_id, status, price, quantity FROM order_item WHER
 
 GraphQL, middleware y shopcart **no llaman a vio-backend** [V] (grep de `vio.live|VIO_BACKEND|api-staging` en develop).
 
-**La prueba, en tres capas:**
+**La prueba, con todo arriba** (Angelo, 14/10: no se apaga ni se bloquea nada; los casos extremos van después):
 
-1. **Cliente:** en Chrome DevTools → Network → *Request blocking*, bloquear `*api-staging.vio.live*` y hacer config → carrito → pago en la página de Vev.
-2. **Servidor (Miguel):** durante la ventana, `sudo systemctl stop vio-backend` en la VM de staging (`vio-backend.service`, `:5000`; ver [vio-staging-oracle](../infrastructure/vio-staging-oracle.md)). No toca el colector (`:5100`). **Avisar a Alan**: su loop de VG se cae mientras tanto.
-3. **Después:** el `access.log` de nginx de la VM, filtrado a la ventana, no tiene que mostrar peticiones desde la IP de la prueba:
+1. **El flujo no depende de vio-backend:** config del micro, GraphQL de Commerce, shopcart y Vipps.
+2. **Después, el `access.log` de nginx de la VM de staging** ([vio-staging-oracle](../infrastructure/vio-staging-oracle.md)), filtrado a la ventana de la prueba. Desde la IP de la prueba y la página de Vev no tiene que haber peticiones a `/v2/mobile/*`. La única llamada esperable es la de api en el §4.4 (`/api/campaign/payments/apikey/…`), que sale del cluster y no de la página.
 
    ```bash
-   zcat -f /var/log/nginx/access.log* | awk '$4>="[14/Oct/2026:10:00" && $4<="[14/Oct/2026:12:00"' | awk '{print $1,$7,$9}' | sort | uniq -c | sort -rn | head
+   zcat -f /var/log/nginx/access.log* | awk '$4>="[14/Oct/2026:10:00" && $4<="[14/Oct/2026:13:00"' | awk '{print $1,$7,$9}' | sort | uniq -c | sort -rn | head -30
    ```
 
 ## 9. Hallazgos de la preparación (no bloquean la prueba)

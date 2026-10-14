@@ -171,6 +171,35 @@ Angelo: *«lo puede hacer Miguel»*. Todo esto es **solo QA**; prod no se toca. 
    > users 60/60, payment-processors 36/36, orders 17/17 y shopcart 595/595. En api pasan 224/225;
    > las 3 suites rojas (`stripe-connect-oauth`, `vipps-verify`, `klarna-verify`) **fallan igual
    > en develop pelado**, así que no vienen de la rama. base-api no toca `package.json`.
+   > **Micro TypeORM, receta comprobada el 14/10 a las 10:30 (Claude, ensayo local sin pushear).**
+   > Desde el PR #6 (`7515927`, develop en 1.0.270 con lock), **no hace falta token**:
+   >
+   > ```bash
+   > cd vio-campaigns-microservice && git fetch origin && git checkout feature/typeorm && git pull --ff-only
+   > git revert --no-edit ed02245      # saca el kernel de vendor/ (sale sin conflictos)
+   > git merge --no-edit origin/develop  # trae 1.0.270 + yarn.lock (sale sin conflictos)
+   > ls vendor                          # no tiene que existir
+   > git diff origin/develop -- yarn.lock   # vacío
+   > yarn install --frozen-lockfile && yarn build && yarn test && yarn test:mysql
+   > git push origin feature/typeorm    # y PR a develop
+   > ```
+   >
+   > En el ensayo: `package.json` igual a develop salvo el script `test:mysql` y el `testPathIgnorePatterns`
+   > de jest; 119/119 tests unitarios y `tsc` limpio. `test:mysql` levanta un MySQL 8 efímero en
+   > Docker y prueba el adaptador contra el esquema real.
+   >
+   > **Para la revisión:**
+   > - `ProductionAdaptersModule` ya no usa `createInMemoryStore()`.
+   > - Cada escritura con hijos (surface, campaña, plataformas, channels, slots) va en **una** transacción.
+   > - Las columnas generadas (`platform_key`, `default_surface_id`) no se escriben nunca.
+   > - Marcar una campaña por defecto desmarca la anterior en la misma transacción.
+   > - `mysql-errors.ts` traduce las restricciones: UNIQUE → 409, CHECK de fechas → 400 `INVALID_WINDOW`, FK → 409.
+   > - La regla nueva "cada sponsor necesita su channel en la surface" (`channel-brand.ts`) devuelve 400 `SPONSOR_NOT_ON_SURFACE` o `SPONSOR_CHANNEL_REQUIRED`.
+   > - No necesita variables de entorno nuevas: develop ya conecta a la MySQL para leer cuentas y channels.
+   >
+   > **Después del deploy en QA:** `/health` 200. Crear una surface por API (playbook §5.1) y comprobar la fila
+   > en `surface`. Reiniciar el pod y comprobar que `GET /api/client-apps` la sigue devolviendo.
+   >
    > **El micro es distinto:** develop sigue en 1.0.267 y el micro no está en el dispatch del kernel,
    > así que no hay lock 1.0.270 que copiar. Su `kernel-bump.yml` escucha `kernel-published`: un
    > dispatch solo a él con `version=1.0.270` deja develop con lock. Después `feature/typeorm` mergea
