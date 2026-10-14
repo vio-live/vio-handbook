@@ -37,13 +37,17 @@ status: live
 - **Brand:** Fredrik & Louisa (1289, `is_business=1`, Vipps partner MSN 545865, envíos Express 0 NOK y Standard 100 NOK). Se muestra como "Fedrik Louisa".
 - **Publisher:** Aller (1312), con el channel 505, la surface 3 "Vev" y la campaña 2 "Test vev".
 
-## En curso al escribir esto (lo actualizo al cerrar)
+## Hecho después del primer cierre (14/10, tarde)
 
-| Qué | Repo / rama | Estado |
+| Qué | Dónde | Estado |
 |---|---|---|
-| Precio del producto = mínimo de las variantes cuando falta (todas las fuentes), con backfill de los 333 de QA | products-ms `fix/precio-desde-variantes` | agente trabajando |
-| El plugin de Woo manda el precio de los productos variables | `vio-woocommerce-sync` `fix/precio-desde-variantes` | agente trabajando. **Publicarlo en wp.org es aparte** (playbook `wordpress-org-plugin-release`) |
-| ADR-0031: filtro de pagos por channel | api y base-api `feature/pagos-filtro-por-channel`, webapp, misma rama | agentes trabajando |
+| **ADR-0031**: el publisher filtra qué métodos de la brand se ven en cada channel | api #46, base-api #33, webapp #55 | ✅ en QA. El channel 505 ofrece Vipps; `GET /api/channel/:id/payment-methods` sin token da 401 |
+| **Precio de productos con variantes**: si falta, el mínimo de las variantes; la herencia solo en NATIVE | products #23 | ✅ en QA. **Backfill aplicado: 333 productos** (301 Woo, 10 Magento y 22 nativos), 0 errores, idempotente. El 411959 de Alan pasó a 110 NOK |
+| Plugin de Woo: el producto variable manda el precio de su variación más barata | vio-woocommerce-sync **#1** | ⏳ **PR abierto sin mergear.** Falta correr `tests/ProductMapperTest.php` con wp-env, mergear y publicar en wp.org con un tag (playbook `wordpress-org-plugin-release`). Mergear no publica: el deploy corre solo con un tag |
+| Dashboard: en importados, una variante en 0 sale "Not for sale" (alinea #54 con products #23) | webapp `fix/variantes-importadas` | ⏳ agente trabajando. Revisar, PR y merge |
+| `ACCOUNT_PAYMENTS=true` en Vercel staging | Miguel | ⏳ pedido. Con eso la brand enciende sus métodos en Settings › Payments |
+
+**Backfill de precios:** se corre con `node dist/scripts/recompute-variant-prices.js` en el pod de products, anteponiendo `PROCESS_ENV=local` (el pod usa `.env.local`). Es dry-run por defecto; `--apply` escribe. Filtros: `--ids`, `--user`, `--limit`, `--json`.
 
 ## Pendiente (siguiente paso concreto)
 
@@ -51,10 +55,13 @@ status: live
 2. **`ACCOUNT_PAYMENTS=true` en Vercel staging**, y redeploy (Miguel). Así la brand gestiona sus pagos de cuenta en Settings › Payments.
 3. **La carrera del bootstrap en `vio-web-sdk`:** un bootstrap viejo en vuelo pisa el nuevo. Se arregla con un contador de generación y rebundleando en Vev.
 4. **SDK y Vev: mostrar "fra X"** con el mínimo de las variantes si el producto llega en 0. Es defensa extra; con products-ms ya no debería pasar.
-5. **Clases de envío en otra moneda:** 19 en QA. Dos son de Alan (1295 y 1299) y las arregla él; el resto son cuentas de prueba viejas.
-6. **Alan:** prueba y estrés de todo, en su [tarjeta de Trello](https://trello.com/c/ftrrjOW0). Su loop de VG necesita una surface nueva en el dashboard.
-7. **Prod:** el mismo corte (ADR-0029/0030), F2, las migraciones del kernel (con el `group_concat_max_len` de la revisión de Miguel) y `PAYMENT_SECRETS_KEY`. Nada de esto está en prod.
-8. **Hallazgos de seguridad** (tareas aparte, sin hacer):
+5. **Precio "desde" que queda viejo:** si se borra la variante más barata de un producto con precio derivado, no se recalcula, porque no hay columna que distinga un precio derivado de uno explícito. Hace falta `price_derived` en package-database (con OK de Angelo y release `pkg=all`).
+6. **¿Qué hace shopcart con una variante en 0 de un producto importado?** Hay que confirmar que no se pueda comprar a 0.
+7. **Borrar el flag `ACCOUNT_PAYMENTS`** cuando F2 esté en prod y encendido en los dos entornos.
+8. **Clases de envío en otra moneda:** 19 en QA. Dos son de Alan (1295 y 1299) y las arregla él; el resto son cuentas de prueba viejas.
+9. **Alan:** prueba y estrés de todo, en su [tarjeta de Trello](https://trello.com/c/ftrrjOW0). Su loop de VG necesita una surface nueva en el dashboard.
+10. **Prod:** el mismo corte (ADR-0029/0030), F2, las migraciones del kernel (con el `group_concat_max_len` de la revisión de Miguel) y `PAYMENT_SECRETS_KEY`. Nada de esto está en prod.
+11. **Hallazgos de seguridad** (tareas aparte, sin hacer):
    - en base-api, `/api/role/add` no pide token ni rol admin;
    - en graphql, la auth se salta con la operación `GetPurchaseConditions`;
    - shopcart tiene commiteado `.env.local.qa` con secretos.
