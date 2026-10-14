@@ -22,10 +22,11 @@ y va en paralelo a [`2026-10-14-extensions-precio-variable-woo`](2026-10-14-exte
 ## Done
 
 Rama `fix/precio-desde-variantes` desde `origin/develop` `0002037`. Worktree en
-`~/vio-commerce/worktrees/products-precio`. Dos commits locales, **sin push ni PR**:
+`~/vio-commerce/worktrees/products-precio`. Tres commits locales, **sin push ni PR**:
 
 - `ed3750a`: la regla, los caminos y el arreglo del `baseAmount`;
-- `b1d8206`: el backfill y los tests de caminos.
+- `b1d8206`: el backfill y los tests de caminos;
+- `c5280b8`: la herencia queda sólo para productos nativos del dashboard (ver Decisions).
 
 ### La regla, en un solo lugar
 
@@ -35,7 +36,9 @@ una escritura:
 1. **Precio propio del producto** (`productOwnPrice`): el del request si es > 0; si no, el
    guardado si es > 0.
 2. **Herencia** (`inheritedVariantPrice`): una variante sin precio (<= 0) toma ese precio
-   propio, traiga o no `price` el request.
+   propio, traiga o no `price` el request. **Sólo en un nativo del dashboard**
+   (`inheritsVariantPrices`: `origin` NATIVE o vacío, y sin `originId`). En un importado
+   (Woo, Shopify, Magento, feed, scraper, BigCommerce) una variante en 0 queda en 0.
 3. **Derivación** (`productPriceFromVariants`): **sólo si el producto no tiene precio propio**,
    toma el mínimo de los precios > 0 de sus variantes activas (sin borrar ni desactivar). Es la
    decisión del coordinador: un precio > 0 no se pisa (el de Shopify, el que puso el seller o el
@@ -124,8 +127,18 @@ El contenedor se borró.
   - coincide con el dashboard (#54) y con el patch del plugin de Woo, que manda el precio
     **activo** más bajo. products-ms usa el mismo criterio: `price_amount` de cada variante,
     que el plugin mapea como precio activo.
-- **Sin herencia en los imports de Shopify, Magento y el feed.** En el origen una variante en 0
-  tiene precio 0. La herencia sigue en `doUpdate` y `newUpdate`, donde ya estaba.
+- **La herencia, sólo en productos nativos del dashboard** (`c5280b8`, decisión del
+  coordinador al cierre de la sesión).
+  - **Qué es nativo**: `origin` NATIVE o vacío, y sin `originId`. El feed guarda NATIVE con el
+    `g:id` en `originId`, así que cuenta como importado.
+  - **Importados**: la variante refleja el origen; en 0 queda en 0, porque no se vende algo que
+    el merchant no puso a la venta.
+  - **Cambio respecto de develop**: allí la vacía tomaba el precio del request (p. ej. un
+    `bulkUpdate`) en cualquier origen; ahora, en un importado, no.
+  - **Sin cambios**: la derivación sigue para todos los orígenes, y el backfill también (sólo
+    deriva).
+  - **Tests**: 4 nuevos (Woo en alta y edición, con precio en el request, la escritura siguiente
+    y el feed). Fallan contra `b1d8206`. 128/128 de los specs puros en verde.
 - **Monedas mezcladas: no se adivina.** Mismo criterio que la clase de envío.
 - **`syncProduct` lee con query builder, no con `findOne({ relations })`.** En TypeORM 0.2.41
   `relations` arrastra las relaciones eager de lo que une (el `user` trae una docena de joins).
@@ -145,11 +158,15 @@ El contenedor se borró.
   - Si se quiere que siga solo, hace falta una columna `price_derived` en `package-database` (no
     tocado), o aceptar el riesgo de seguir al mínimo cuando el precio coincide con el mínimo
     anterior.
-- **Herencia de un precio derivado en la escritura siguiente.** Una variante vacía hereda el
-  mínimo en el próximo `newUpdate`. Esto es nuevo para Woo: una variación de Woo sin precio (no
-  comprable en Woo) quedaría comprable en Vio al precio "desde" después de un re-sync.
-  - No se sabe qué hace shopcart con una variante en 0: si la vende a 0, heredar es mejor.
-  - Si la bloquea, convendría limitar la herencia a NATIVE. Hay que decidirlo.
+- ~~Herencia de un precio derivado en variaciones de Woo~~: resuelto en `c5280b8`. La herencia
+  queda sólo en nativos.
+  - **En nativos sigue**: una variante vacía hereda el mínimo derivado en el próximo `newUpdate`.
+  - **Pendiente**: no se sabe qué hace shopcart con una variante en 0 de un importado (¿la vende
+    a 0 o la bloquea?).
+- **El gate del webapp (#54) supone herencia en todos los orígenes.** "Falta precio sólo si una
+  variante no tiene el suyo y el producto tampoco", y la matriz muestra el precio heredado como
+  placeholder. En un importado ya no se hereda: el lane de front-commerce tiene que tratar esa
+  variante en 0 como sin precio (no a la venta) cuando `origin` no es nativo.
 - **El backfill no propaga a canales.** No emite `listing-product:updated`, así que los
   productos listados en Shopify/Woo de terceros siguen en 0 allá hasta el próximo update.
 - **`doUpdate` heredado**: un alta sin moneda de producto guarda las variantes en EUR (la
@@ -161,10 +178,11 @@ El contenedor se borró.
 
 ## Next session
 
-- OK de Angelo para push y PR de `fix/precio-desde-variantes` (`ed3750a` + `b1d8206`).
+- OK de Angelo para push y PR de `fix/precio-desde-variantes` (`ed3750a` + `b1d8206` + `c5280b8`).
 - Después del deploy a QA, correr el backfill en el pod (instrucciones en el brief):
   1. dry-run;
   2. revisar la lista: tienen que salir los 333;
   3. `--ids=411959 --apply`, y comprobar en el catálogo;
   4. `--apply`.
-- Decidir la herencia en productos importados (ver arriba) y si hace falta `price_derived`.
+- Decidir si hace falta `price_derived`.
+- Front-commerce: ajustar el gate y el placeholder de la matriz para productos no nativos.
