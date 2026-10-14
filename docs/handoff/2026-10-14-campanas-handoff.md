@@ -65,7 +65,10 @@ status: live
    - en base-api, `/api/role/add` no pide token ni rol admin;
    - en graphql, la auth se salta con la operación `GetPurchaseConditions`;
    - shopcart tiene commiteado `.env.local.qa` con secretos.
-12. **Plugin de Woo:** confirmar que cambiar solo el precio de una variación (con el AJAX del panel Variations) dispara el auto-sync del padre (`woocommerce_update_product`). Si no lo dispara, el precio en Vio se queda viejo hasta el siguiente guardado del producto. No está verificado (journal de extensions del 14/10).
+12. **Plugin de Woo: una variación editada desde el admin no llega bien a Vio (verificado el 14/10, también en 1.0.0).** Probado en wp-env, interceptando las llamadas a Vio:
+    - **Panel Variations › Save changes:** no se manda nada. WooCommerce guarda el padre **antes** que las variaciones (`WC_Meta_Box_Product_Data::save_variations()`); el plugin sincroniza en ese primer `woocommerce_update_product`, con los datos viejos. El guardado bueno del final llega en menos de 5 s y lo descarta el candado anti-duplicado (`viosync_updating_<id>`, en `Products_Table::on_save_product`).
+    - **Botón Update:** se manda el cambio **anterior**, no el actual (el plugin va siempre un cambio por detrás). La petición del formulario también cae dentro de los 5 s del candado.
+    - **Arreglo propuesto (1.0.2):** marcar el producto como pendiente en `woocommerce_update_product`, `woocommerce_new_product` y `woocommerce_update_product_variation` (este último, el padre), y sincronizar una sola vez por petición en `shutdown` con prioridad > 10, después del sync diferido de WooCommerce. El candado de 5 s sobra. Los productos simples no tienen el problema.
 
 ## Reglas que siguen valiendo
 
