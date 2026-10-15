@@ -82,9 +82,15 @@ Angelo: "¿puede ir con estos dos?" (el socket de base-api sin auth y `/upload/*
   env no vacías. El cliente del webapp manda `auth.token`, lo renueva en cada intento y, como socket.io-client no
   reintenta tras un rechazo del servidor, reconecta a mano con tope de 6 intentos y pausa hasta volver a la pestaña.
   Detalle por repo: [base-api](2026-10-15-base-api-socket-con-auth-y-uploads.md), [webapp](2026-10-15-front-commerce-socket-con-token.md).
-- **Fase 2 (en curso esta misma noche):** `POST /api/users/socket/:userId` y `GET …/counters/:userId` siguen abiertas
-  porque cinco micros las llaman sin `identification-microservice`; se añade la cabecera en users, products, extensions,
-  api y orders (todos tienen ya `MICROSERVICE_TOKEN`) y después base-api aplica `requireMicroserviceOrSelf`.
+- **Fase 2, hecha y verificada la misma noche:** los cinco micros que llaman a `POST /api/users/socket/:userId` y
+  `GET …/counters/:userId` mandan ya `identification-microservice` (extensions [#23](https://github.com/vio-live/vio-extensions-microservice/pull/23),
+  api [#48](https://github.com/vio-live/vio-api-microservice/pull/48), users [#22](https://github.com/vio-live/vio-users-microservice/pull/22),
+  orders [#24](https://github.com/vio-live/vio-orders-microservice/pull/24), products [#25](https://github.com/vio-live/vio-products-microservice/pull/25);
+  los cinco desplegados en QA), el `MICROSERVICE_TOKEN` es el mismo en los seis servicios (comparado por longitud y
+  hash) y base-api aplica `requireMicroserviceOrSelf` ([#38](https://github.com/vio-live/vio-base-api/pull/38)): sin cabecera
+  → 401, `:userId` no entero → 400. **Riesgo que queda apuntado:** en products, users y extensions esos avisos son
+  `lastValueFrom(post)` sin `.catch` y no hay handler de `unhandledRejection`; si algún día el token difiere, un 401
+  reinicia el pod. Blindarlos con `.catch` es una mejora aparte.
 - **Una comprobación mal hecha, corregida:** dije que `MICROSERVICE_TOKEN` no estaba en ningún pod (patrón `^KEY=`
   estricto y un `node -e` que no carga dotenv). Está en los seis. Por eso el endurecimiento se quedó y la fase 2 es
   solo código.
