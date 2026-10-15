@@ -39,6 +39,12 @@ Alan para que vuelva a probar".
 | shopcart | [#91](https://github.com/vio-live/vio-shopcart-microservice/pull/91) | En el flujo embebido el PaymentIntent se crea **antes** de `orders/save` y la orden nace con `channelId: pi_…` (como Vipps); `rememberStripeReference` idempotente; el webhook escribe la referencia que falte antes de avisar "pagado" |
 | orders | [#23](https://github.com/vio-live/vio-orders-microservice/pull/23) | `POST /:orderId/update` respondía **500 a todas las llamadas** (`No entity column "customer"`): `update()` mandaba la relación `customer` y claves `undefined` al `repository.update`. Por eso ninguna orden de Stripe tuvo nunca su referencia (y el dashboard tampoco podía usar ese endpoint) |
 
+**Verificado en QA al cierre (10:30 UTC):** todos los pipelines en verde y los pods reiniciados;
+`POST /stripe/refund/pi_x` responde el 400 nuevo (ruta viva); `POST orders/4554/update` responde 200 y
+la 4554 lleva ya su `pi_3UQXwACtc7XMW6Ft0GYmPoVJ` (antes, 500 y `channel_id` vacío); el channel 508 tiene
+4 filas en la foto y GraphQL devuelve los dos productos de la colección vieja. Comentario a Alan en su
+tarjeta con qué reprobar (15/10, 10:35 UTC).
+
 **Un choque de contrato cazado a tiempo:** Woo reporta el **total acumulado** reembolsado, y el
 endpoint nuevo reembolsaba exactamente lo recibido: un segundo parcial habría devuelto de más.
 Decisión: `refundedTotalMinor` como objetivo ("deja el total reembolsado en X"), que además es
