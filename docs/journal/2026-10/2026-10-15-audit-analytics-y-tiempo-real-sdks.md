@@ -72,6 +72,23 @@ Resultado en el handbook:
   plazo de 8 s y caché de 45 s. SDK **0.21.0 en npm** (Angelo) y Vev **0.328**. Handoff con el prompt para Replit:
   [replit-y-demo-web-a-commerce](../../handoff/2026-10-15-replit-y-demo-web-a-commerce.md). vio-backend PR #66 cerrado.
 
+### Los dos hallazgos de seguridad (noche)
+Angelo: "¿puede ir con estos dos?" (el socket de base-api sin auth y `/upload/*` sin auth).
+- **Fase 1, en QA y verificada desde fuera** (base-api [#37](https://github.com/vio-live/vio-base-api/pull/37) + webapp
+  [#61](https://github.com/vio-live/webapp-vio-commerce/pull/61)): el handshake de socket.io exige el token de Firebase
+  (sin token → `connect_error: unauthorized`), cada socket se une a su sala `user:<id>` y los 16 emisores emiten solo a
+  su dueño (nombres de evento intactos); fuera las cuatro rutas de prueba que publicaban sin auth (404);
+  `authentication` en todo `/upload/*` (401) y producto propio en `/upload/:id`; `verifyMicroService` exige cabecera y
+  env no vacías. El cliente del webapp manda `auth.token`, lo renueva en cada intento y, como socket.io-client no
+  reintenta tras un rechazo del servidor, reconecta a mano con tope de 6 intentos y pausa hasta volver a la pestaña.
+  Detalle por repo: [base-api](2026-10-15-base-api-socket-con-auth-y-uploads.md), [webapp](2026-10-15-front-commerce-socket-con-token.md).
+- **Fase 2 (en curso esta misma noche):** `POST /api/users/socket/:userId` y `GET …/counters/:userId` siguen abiertas
+  porque cinco micros las llaman sin `identification-microservice`; se añade la cabecera en users, products, extensions,
+  api y orders (todos tienen ya `MICROSERVICE_TOKEN`) y después base-api aplica `requireMicroserviceOrSelf`.
+- **Una comprobación mal hecha, corregida:** dije que `MICROSERVICE_TOKEN` no estaba en ningún pod (patrón `^KEY=`
+  estricto y un `node -e` que no carga dotenv). Está en los seis. Por eso el endurecimiento se quedó y la fase 2 es
+  solo código.
+
 ## Decisions
 - **La validación de tenancy en el colector es por pertenencia, no por vigencia** (revisión del PR #12): con
   "activa ahora" se rechazarían la cola offline del SDK tras `endsAt`, las conversiones tardías y el último
