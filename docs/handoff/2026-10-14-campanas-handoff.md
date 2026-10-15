@@ -93,6 +93,10 @@ Solo la VM de **staging** (`129.151.196.99`). Prod no: no hay micro de campañas
 
 **Desplegar el colector**: vio-analytics `main` en **`22458c2`** (PR [#17](https://github.com/vio-live/vio-analytics/pull/17), mergeado 15/10 por la tarde), según `docs/DESPLIEGUE.md`, y reiniciar. Comprobar `https://events-staging.vio.live/health` → `ready:true`, `clickhouse.lastError: null`, y que aparece `tenancy` en la respuesta.
 
+### Tarde del 15/10: Vev, web y Replit contra Commerce
+
+Vev **0.328** desplegada (SDK 0.21.0, solo analytics); `@vio-live/web-sdk` **0.21.0** en npm; el micro sirve el catálogo del CMS de Aller (micro [#13](https://github.com/vio-live/vio-campaigns-microservice/pull/13)). Lo que necesita cada host web y el prompt para el agente de Replit: [replit-y-demo-web-a-commerce](2026-10-15-replit-y-demo-web-a-commerce.md). Falta: una surface por host (Replit y vio-demo) con su key, creadas por Angelo.
+
 ## Mañana del 15/10: los 5 reportes de Alan ([journal](../journal/2026-10/2026-10-15-revision-de-alan-y-arreglos.md))
 
 | Reporte | Qué era | Estado |

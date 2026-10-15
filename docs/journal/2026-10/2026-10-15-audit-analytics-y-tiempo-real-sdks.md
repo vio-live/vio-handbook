@@ -64,6 +64,14 @@ Resultado en el handbook:
 - 7 · El publisher (dueño de la surface) no tiene analytics en el dashboard de Commerce: ruta nueva en base-api
   y una vista. Pendiente de decidir prioridad.
 
+### Vev, web y Replit contra Commerce (tarde)
+- Angelo: "el foco es Vev, web y Replit; que funcione y olvidarnos de vio-backend". Inventario: Vev (bundle), el CMS de
+  Aller "Mote & Livsstil" en Replit (npm 0.19.0) y la demo de ventas `vio-web` (Replit/Vercel). El CMS usaba tres rutas
+  de vio-backend; la del **catálogo del CMS** (`/v2/commerce/sponsors/:id/catalog`) daba 410 en el micro → micro
+  [#13](https://github.com/vio-live/vio-campaigns-microservice/pull/13): misma respuesta, ahora con key de surface,
+  plazo de 8 s y caché de 45 s. SDK **0.21.0 en npm** (Angelo) y Vev **0.328**. Handoff con el prompt para Replit:
+  [replit-y-demo-web-a-commerce](../../handoff/2026-10-15-replit-y-demo-web-a-commerce.md). vio-backend PR #66 cerrado.
+
 ## Decisions
 - **La validación de tenancy en el colector es por pertenencia, no por vigencia** (revisión del PR #12): con
   "activa ahora" se rechazarían la cola offline del SDK tras `endsAt`, las conversiones tardías y el último

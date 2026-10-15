@@ -1,0 +1,75 @@
+---
+title: "Replit (Mote & Livsstil) y la demo web: pasar a Vio Commerce"
+date: 2026-10-15
+owner: angelo
+status: live
+---
+
+# Replit (Mote & Livsstil) y la demo web: pasar a Vio Commerce
+
+Qué necesita cada host web que embebe el SDK para funcionar solo contra Commerce, y el prompt listo
+para pegar al agente de Replit. Contexto: [web-sdk](../architecture/web-sdk.md),
+[ADR-0030](../decisions/0030-api-staging-por-dns-al-micro-y-hosts-vio-api-vs-commerce.md),
+[journal del 15/10](../journal/2026-10/2026-10-15-audit-analytics-y-tiempo-real-sdks.md).
+
+## Qué cambia para un host web
+
+| Pieza | Antes (vio-backend) | Ahora (Commerce) |
+|---|---|---|
+| Host | `api-staging.vio.live` servido por vio-backend en Oracle | mismo host, micro de campañas en AKS QA (se apaga de noche y fines de semana) |
+| Key | key de client app de vio-backend | **key de surface** del dashboard de Commerce (Surfaces). Las viejas → `401 Invalid API key` |
+| SDK | `@vio-live/web-sdk` 0.19.0 | **0.21.0** (npm, 15/10): `campaign_id` real, `order_id` solo de Vio, `X-Api-Key` en el fetch; API de `init`, componentes y eventos `vio:*` sin cambios; solo se quita el tipo `BootstrapResponse.campaignId` |
+| `GET /v2/web/brands` | key | igual |
+| `GET /v2/mobile/config` | lo llama el SDK | igual |
+| `GET /v2/commerce/sponsors/:id/catalog` | **sin auth** | **key de surface** y el `id` tiene que ser brand de la surface; misma respuesta; Commerce caído → **502** en 8 s (antes 200 con `total: 0` tras 40 s); caché de 45 s. Micro [#13](https://github.com/vio-live/vio-campaigns-microservice/pull/13), mergeado 15/10 tarde |
+| Ids de brand | `sponsors.id` de vio-backend | id de usuario de la brand en Commerce: **los `vio_sponsor_id` guardados en artículos viejos ya no corresponden** |
+| Analytics | `events-staging` con la key vieja | `events-staging` con la key de surface; el colector la valida contra el micro |
+
+**Lo que hace falta de nuestro lado antes de que el host pueda probar:** una surface por host en el
+dashboard (publisher Aller, tipo web) con una campaña cuya brand tenga channel con key, y pasarle la key
+al agente. Sin campaña, `/v2/web/brands` devuelve `[]` y el bootstrap da 404 `NO_ACTIVE_CAMPAIGN`.
+
+## Prompt para el agente de Replit (Mote & Livsstil)
+
+> **Contexto en dos líneas.** El backend de Vio al que apuntabas (`api-staging.vio.live` servido por *vio-backend*) ha sido sustituido por Vio Commerce: mismo host, otro servidor. Las keys antiguas ya no valen, el SDK tiene versión nueva y una de las tres rutas que usas cambia de auth. Nada más cambia en tu integración.
+> 
+> ## 1. SDK: `@vio-live/web-sdk` 0.19.0 → **0.21.0**
+> ```bash
+> pnpm add @vio-live/web-sdk@0.21.0
+> ```
+> - Sin cambios en `Vio.init(...)`, en los componentes ni en los eventos `vio:*` que escuchas. La única eliminación es de tipos: `BootstrapResponse.campaignId` (nunca existió en la respuesta; si lo leías, era `undefined`).
+> - Nuevo (opcional): el `detail` de `vio:payment-success` trae `checkoutId`; exports `resolveCampaignId` y `purchaseFromPaymentSuccess` si quieres la misma atribución que el SDK.
+> - Qué arregla para ti: los eventos de analytics llevan `campaign_id` real (antes siempre 0), `order_id` consistente (siempre el id de Vio, nunca el del proveedor de pago) y la key viaja en la cabecera `X-Api-Key` (antes el colector os limitaba por IP).
+> 
+> ## 2. Key y entorno
+> - **Key nueva**: `VIO_API_KEY=<key de la surface "Mote & Livsstil (Replit)">` (te la pasa Angelo; viene del dashboard de Commerce → Surfaces). La anterior responde `401 Invalid API key`.
+> - `Vio.init({ apiKey, environment: 'testing' })` como hasta ahora. No pongas `apiBase`/`graphQLBase` a mano.
+> - Comprobación de arranque: `curl -s -H "X-Api-Key: $VIO_API_KEY" https://api-staging.vio.live/v2/web/brands` → `{ "surface": {...}, "brands": [ ... ] }` con la brand que Angelo os asigne. Si sale `[]`, la surface aún no tiene campaña con esa brand: avisad.
+> 
+> ## 3. Las tres rutas
+> | Ruta | Antes | Ahora |
+> |---|---|---|
+> | `GET /v2/web/brands` | key en `X-Api-Key` | igual |
+> | `GET /v2/mobile/config` | la llama el SDK | igual |
+> | `GET /v2/commerce/sponsors/{id}/catalog` | **sin auth** | **requiere `X-Api-Key`** con la key de la surface, y el `{id}` tiene que ser una brand de esa surface (si no, 404). Misma respuesta y mismos errores (`422 SPONSOR_MISSING_COMMERCE_KEY`, `502`). Llamadla desde vuestro servidor, donde ya vive la key, no desde el navegador. |
+> 
+> `{id}` sigue siendo el `id` que devuelve `/v2/web/brands` (el `vio_sponsor_id` que guardáis en el artículo). Ojo: **los ids de brand cambiaron** con la migración a Commerce: los `vio_sponsor_id` guardados en artículos antiguos ya no corresponden. Revisadlos contra `/v2/web/brands` y reasignad la brand en los artículos de prueba.
+> 
+> ## 4. Horario
+> `api-staging` se apaga de noche (23:00 UTC) y los fines de semana. Fuera de ese horario el bootstrap del SDK y el picker fallan; el colector de analytics sigue aceptando eventos de keys conocidas.
+> 
+> ## 5. Qué probar y reportar (con ids: surface, checkout, orden)
+> 1. Arranque: `/v2/web/brands` con la key nueva → la brand; artículo con bloque de productos → el picker lista productos (precio, imagen).
+> 2. Página pública: carrusel/ficha/carrito/checkout con Vipps y Stripe test (la key de commerce del checkout la da el bootstrap; no la pegáis vosotros).
+> 3. Vuelta de pago por query string (Qliro/Kustom/Walley) → `vio:payment-success` con `checkoutId`.
+> 4. Analytics: en un rato, Angelo comprueba en el dashboard de Commerce que llegan vistas, clics y compras con `campaign_id` ≠ 0.
+> 5. Klarna sigue en 401 en QA: es la credencial de la brand en Klarna, no vuestro código. Marcadlo y seguid.
+
+## La demo de ventas `vio-web` (`vio-demo.vercel.app`)
+
+El repo de GitHub `angelosv/vio-web` (12/08) es una cáscara de desarrollo que aliasa el SDK desde un
+checkout local, no desde npm: no refleja lo que está publicado. La copia que se despliega vive en Replit.
+Mismo prompt que arriba, con su propia surface, y además: pasar de `environment: 'development'` a
+`'testing'`, sacar `apiBase`/`graphQLBase` del `init` (con `environment` basta) y, si la base del demo
+sigue en 0.5.x, revisar la API usada (`Vio.cart.addManual`, `Vio.checkout.startKlarnaInstant`,
+`resumeKlarnaReturn`, `selectPaymentMethod`) contra 0.21.0 antes de subir.
