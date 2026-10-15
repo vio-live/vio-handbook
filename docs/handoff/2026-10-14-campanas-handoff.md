@@ -81,6 +81,12 @@ status: live
 
 **Probar el micro contra un kernel sin publicar:** `jest.kernel-local.config.js` + `tsconfig.kernel-local.json` en el worktree `campaigns-privacidad` (fuera de git): `moduleNameMapper`/`paths` de `@vio-/database` al `dist` del worktree del kernel. Es como corrió la suite de #10 contra #19.
 
+### Pedido a Miguel (15/10, después del release del kernel)
+
+1. **Colector de staging** (VM `129.151.196.99`, [DESPLIEGUE.md](https://github.com/vio-live/vio-analytics/blob/main/docs/DESPLIEGUE.md)): desplegar `main` (`ecb115b`, PR [#16](https://github.com/vio-live/vio-analytics/pull/16)). Antes del restart, en `/opt/vio-analytics/.env`: añadir `CAMPAIGNS_URL=https://api-staging.vio.live` (**obligatoria**: sin ella no arranca), quitar `DATABASE_URL` (ya no se lee), **mantener** `INTERNAL_EVENTS_TOKEN` (lo usa el proxy de stats de base-api). Opcionales con default: `CAMPAIGNS_TIMEOUT_MS=3000`, `API_KEY_CACHE_TTL_MS=60000`, `API_KEY_NEGATIVE_CACHE_TTL_MS=10000`. Comprobar `events-staging.vio.live/health` → `ready:true`. **Prod todavía no**: no hay micro de campañas en prod y `CAMPAIGNS_URL` es obligatoria.
+2. **Outbox de vio-backend en la VM de staging**: quitar `ANALYTICS_EVENTS_URL` y `ANALYTICS_INTERNAL_TOKEN` del `.env` de vio-backend y reiniciar (sin las dos, el espejo queda apagado). Sus `client_app_id` son los de vio-backend, no las surfaces del micro. En prod ya no están (journal de Miguel del 13/10).
+3. **Rotar los secretos de shopcart**: `.env.local.qa` estuvo en `vio-shopcart-microservice` (privado) del 2026-04-21 al 2026-10-15 y sigue en el historial. Primero `STRIPE_API_SECRET`/`STRIPE_WEBHOOK_SECRET`, `AWS_ACCESS_KEY`/`AWS_SECRET_ACCESS_KEY`, `FIREBASE_PRIVATE_KEY` (service account) y `FIREBASE_API_KEY`, `DB_PASSWORD`/`TYPEORM_PASSWORD` (MySQL de QA, compartida por todos los micros vía los Secrets `env-sc-*`). Después: `MAILJET_API_KEY`/`MAILJET_SECRET_KEY`, `SHOPIFY_CLIENT_SECRET_EXPORT`/`_IMPORT`, `KLARNA_AUTH_KEY`, `VIPPS_CLIENT_SECRET`/`VIPPS_SUBSCRIPTION_KEY`, `SPREEDLY_KEY`/`SPREEDLY_SECRET`, `FACEBOOK_APP_SECRET`, `NEW_RELIC_LICENSE_KEY`, `DATADOG_API_KEY`, `AFTERSHIP_API_KEY`, `POSTMEN_API_KEY`, `EXCHANGE_RATE_API_KEY`. `.env.test` sigue en el repo con valores de las mismas familias que parecen reales: revisar; si lo son, rotar y los sustituimos por dummies en un PR.
+
 ## Mañana del 15/10: los 5 reportes de Alan ([journal](../journal/2026-10/2026-10-15-revision-de-alan-y-arreglos.md))
 
 | Reporte | Qué era | Estado |
