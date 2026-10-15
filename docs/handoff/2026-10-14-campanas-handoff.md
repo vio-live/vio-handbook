@@ -65,7 +65,7 @@ status: live
 11. **Hallazgos de seguridad** — los tres de la lista, **arreglados el 15/10** (en QA):
    - base-api [#34](https://github.com/vio-live/vio-base-api/pull/34): `/api/role/add`, `/role/to-disable`, `GET /role/:id` **y `POST /api/admin/users/token`** (daba un custom token de Firebase de cualquier uid) exigen admin;
    - graphql [#26](https://github.com/vio-live/graphql/pull/26): lo público se decide por el documento, no por el nombre (`GetPurchaseConditions` e `IntrospectionQuery`);
-   - shopcart [#89](https://github.com/vio-live/vio-shopcart-microservice/pull/89): `.env.local.qa` fuera del repo. **Falta rotar las credenciales (Miguel)**: siguen en el historial.
+   - shopcart [#89](https://github.com/vio-live/vio-shopcart-microservice/pull/89): `.env.local.qa` fuera del repo. No se rota nada: era QA (Angelo, 15/10).
    - **Nuevos, sin hacer:** las otras rutas de `/upload/*` en base-api no piden cuenta; los errores de graphql en QA traen el stack trace en `extensions`; `.env.test` de shopcart lleva valores con pinta de reales; los endpoints de roles y custom token de users-ms no tienen guard (solo los cubre base-api).
 12. ✅ ~~Plugin de Woo: una variación editada desde el admin no llegaba bien a Vio~~. **Arreglado en 1.0.2** (vio-woocommerce-sync #2, en wp.org el 14/10). El auto-sync corre una vez al final de la petición y ya no hay candado de 5 s. Verificado en el panel real con Save changes y con Update; el detalle está en el [journal del release](../journal/2026-10/2026-10-14-woo-sync-release-1-0-1.md). Falta que Alan lo pruebe en su tienda (pasos 3, 4 y 5 de su tarjeta).
 
