@@ -69,8 +69,19 @@ y `closeSocket()` en el logout.
 
 Contratos (base-api `userService.userSocket` / `notificationService`):
 
-- Los eventos llevan el userId **en el nombre**: `${event}/${userId}` — no
-  hay rooms, hay que suscribirse al nombre exacto.
+- **Handshake autenticado (2026-10-15):** el cliente manda `auth: { token }`
+  con el mismo ID token de Firebase que va en la cabecera `authorization`
+  (sin "Bearer"); fuente única `authToken()` en `src/lib/api.js`. `auth` va
+  como función: socket.io-client la llama en cada (re)conexión y el token se
+  renueva solo. Sin sesión no se abre el socket. Sin token el servidor
+  responde `connect_error` con `unauthorized`.
+- Tras un rechazo del handshake socket.io-client **no reintenta solo**
+  (destruye el socket, `active === false`); `socket.js` reconecta a mano con
+  espera creciente y token fresco, y si la sesión ya no existe cierra sin
+  bucle. Las caídas de transporte sí las reintenta socket.io.
+- El servidor emite a la room del usuario, pero los eventos siguen llevando
+  el userId **en el nombre**: `${event}/${userId}` — hay que suscribirse al
+  nombre exacto.
 - El payload de `users/socket/:id` viene **envuelto**:
   `{ event, data: { status, data } }` → el estado está en
   `payload.data.status`.
