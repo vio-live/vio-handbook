@@ -76,6 +76,13 @@ journal `2026-09/2026-09-16-unir-fronts-login.md`.
 | Qué se muestra en cada channel | — | **Channel › Settings › "Payment methods in this channel"**: filtra entre lo que ofrece la brand |
 | Quién cobra | La brand (`cart.seller`), con su credencial o con la "cuenta de Vio" explícita | Nadie: es el reseller de la orden |
 
+**Cuándo se comprueba el método (15/10, reporte 4 de Alan).** shopcart valida que el método esté
+ofrecido en el channel **al iniciar el pago** (`payment-method-gate.ts`, `PAYMENT_METHOD_NOT_AVAILABLE`),
+con una caché por channel de 60 s de la lista de api. No se vuelve a comprobar al completarlo: una
+sesión ya abierta en Qliro, Vipps o Stripe termina en el proveedor aunque el publisher apague el método
+mientras tanto. Es el comportamiento esperado (como en cualquier tienda); el único hueco real es el
+minuto de caché para *iniciar* un pago con un método recién apagado.
+
 ## Arquitectura
 
 - **Un solo front**: `webapp-vio-commerce`. El dashboard viejo de Vio se

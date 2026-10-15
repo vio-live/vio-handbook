@@ -81,6 +81,18 @@ status: live
 
 **Probar el micro contra un kernel sin publicar:** `jest.kernel-local.config.js` + `tsconfig.kernel-local.json` en el worktree `campaigns-privacidad` (fuera de git): `moduleNameMapper`/`paths` de `@vio-/database` al `dist` del worktree del kernel. Es como corrió la suite de #10 contra #19.
 
+## Mañana del 15/10: los 5 reportes de Alan ([journal](../journal/2026-10/2026-10-15-revision-de-alan-y-arreglos.md))
+
+| Reporte | Qué era | Estado |
+|---|---|---|
+| Stripe no cancela/reembolsa desde Woo | Hueco de siempre (solo había gancho de Vipps; `'Stripe'` vs `'STRIPE'`; sin referencia del pago en la orden; `orders/:id/update` daba 500 siempre) | ✅ payment-processors #13/#14, orders #22, shopcart #91 en QA; **orders `update()` en PR**. Falta probar con dinero: una orden nueva de Stripe desde Vev, cancelarla y reembolsar parcial desde Woo |
+| Crear surface falla la primera vez | Transitorio (pool de MySQL) | ✅ endurecido: micro #11 (503 `DB_UNAVAILABLE`, reintento, keepalive) y webapp #59 (timeout, revalidar, texto). Si vuelve, ahora hay rastro en el log |
+| Productos de una colección compartida no llegan a Vev; no puede quitarla | Bug real: GraphQL lee una **foto** que no se rehacía al cambiar items | ✅ products #24, api #47, collection #12 en QA. El channel 508 de Alan, reparado (4 filas; GraphQL los devuelve) |
+| Pagar con un método recién apagado | Diseño: se valida al iniciar el pago | ✅ documentado en [cuentas-y-capacidades](../architecture/cuentas-y-capacidades.md) |
+| `CHANNEL_IN_USE` al quitar un channel | No es bug: un channel vive en varias surfaces | ✅ micro #11 (`details`) + webapp #59 (aviso con enlace; selector de channel de la campaña) |
+
+**Pendientes nuevos:** backfill de la referencia de Stripe en las órdenes anteriores (desde `checkout.origin_payment_body.paymentIntentId`); vigilar Klarna (al normalizar mayúsculas entra en su camino legacy sin try/catch; en 401 en QA); `deleteChannelGroupId` en api sigue buscando `collection_shared` por PK (el webapp no lo usa).
+
 ## Reglas que siguen valiendo
 
 - **PRs y merges** en repos de código, con OK de Angelo. Angelo da OK en lote ("mergea y sube"), pero **un cambio sobre trabajo de Alan necesita confirmación explícita**.
