@@ -85,7 +85,7 @@ status: live
 
 | Reporte | Qué era | Estado |
 |---|---|---|
-| Stripe no cancela/reembolsa desde Woo | Hueco de siempre (solo había gancho de Vipps; `'Stripe'` vs `'STRIPE'`; sin referencia del pago en la orden; `orders/:id/update` daba 500 siempre) | ✅ payment-processors #13/#14, orders #22, shopcart #91 en QA; **orders `update()` en PR**. Falta probar con dinero: una orden nueva de Stripe desde Vev, cancelarla y reembolsar parcial desde Woo |
+| Stripe no cancela/reembolsa desde Woo | Hueco de siempre (solo había gancho de Vipps; `'Stripe'` vs `'STRIPE'`; sin referencia del pago en la orden; `orders/:id/update` daba 500 siempre) | ✅ payment-processors #13/#14, orders #22 y #23 (`update()` daba 500 siempre), shopcart #91 en QA. Falta probar con dinero: una orden nueva de Stripe desde Vev, cancelarla y reembolsar parcial desde Woo |
 | Crear surface falla la primera vez | Transitorio (pool de MySQL) | ✅ endurecido: micro #11 (503 `DB_UNAVAILABLE`, reintento, keepalive) y webapp #59 (timeout, revalidar, texto). Si vuelve, ahora hay rastro en el log |
 | Productos de una colección compartida no llegan a Vev; no puede quitarla | Bug real: GraphQL lee una **foto** que no se rehacía al cambiar items | ✅ products #24, api #47, collection #12 en QA. El channel 508 de Alan, reparado (4 filas; GraphQL los devuelve) |
 | Pagar con un método recién apagado | Diseño: se valida al iniciar el pago | ✅ documentado en [cuentas-y-capacidades](../architecture/cuentas-y-capacidades.md) |
