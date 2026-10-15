@@ -21,9 +21,9 @@ status: live
   los editores en cuanto termina.
 - La marcha atrás existe y es del CLI: `vev versions` + `vev restore`.
 
-## Estado al 15/10 (tarde): 0.328 (SDK 0.21.0, analytics atribuido bien)
+## Estado al 16/10: 0.329 (SDK 0.22.0, stepper del carrito serializado)
 
-- **Paquete compartido `cq1lXld-TA9` en 0.328** (15/10 tarde: SDK 0.21.0, vev [#63](https://github.com/vio-live/vev/pull/63); solo analytics, nada visual). La 0.327 es vev [#62](https://github.com/vio-live/vev/pull/62) (SDK 0.20.4, bootstrap al cambiar de key) y la 0.326 vev [#61](https://github.com/vio-live/vev/pull/61). Rollback: `vev restore` a la 0.327.
+- **Paquete compartido `cq1lXld-TA9` en 0.329** (16/10: SDK 0.22.0, vev [#64](https://github.com/vio-live/vev/pull/64); el stepper del carrito no se descoordina con clics rápidos: una mutación en vuelo por línea, coalescencia del último objetivo, respuestas viejas no pisan el estado, timeout de 15 s en las mutaciones, el checkout espera las mutaciones). La 0.328 es vev [#63](https://github.com/vio-live/vev/pull/63) (SDK 0.21.0, analytics) y la 0.327 vev [#62](https://github.com/vio-live/vev/pull/62). Rollback: `vev restore` a la 0.328. **npm sigue en 0.21.0**: la 0.22.0 (`adjustQuantity`) la publica Angelo cuando toque.
   Rollback: `vev restore` a la 0.325.
 - **"Staging" ya lee la config del micro de campañas:** `api-staging.vio.live` es el micro desde
   [ADR-0030](../decisions/0030-api-staging-por-dns-al-micro-y-hosts-vio-api-vs-commerce.md).
