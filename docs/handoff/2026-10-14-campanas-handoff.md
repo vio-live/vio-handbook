@@ -91,7 +91,7 @@ Solo la VM de **staging** (`129.151.196.99`). Prod no: no hay micro de campañas
 3. Comprobar que el usuario de la unit `vio-analytics.service` puede escribir en `/opt/vio-analytics` (para el fichero de caché; si no puede, el colector avisa en el log y sigue solo con memoria).
 4. **Cortar el histórico de ClickHouse de staging**: las filas anteriores al corte llevan `client_app_id`/`sponsor_id` de vio-backend, que colisionan con los ids nuevos del micro y de Commerce (ADR-0025 ya daba por aceptado perder esas ~4.000 filas). En la VM, con el cliente de ClickHouse contra `vio_staging`: `ALTER TABLE vio.events DELETE WHERE received_at < '2026-10-15 00:00:00'` (exportar antes a un fichero si se quiere conservar).
 
-**Cuando vio-analytics [#17](https://github.com/vio-live/vio-analytics/pull/17) esté en `main`** (aviso con el commit): desplegar `main` según `docs/DESPLIEGUE.md` y reiniciar. Comprobar `https://events-staging.vio.live/health` → `ready:true`, `clickhouse.lastError: null`, y que aparece `tenancy` en la respuesta.
+**Desplegar el colector**: vio-analytics `main` en **`22458c2`** (PR [#17](https://github.com/vio-live/vio-analytics/pull/17), mergeado 15/10 por la tarde), según `docs/DESPLIEGUE.md`, y reiniciar. Comprobar `https://events-staging.vio.live/health` → `ready:true`, `clickhouse.lastError: null`, y que aparece `tenancy` en la respuesta.
 
 ## Mañana del 15/10: los 5 reportes de Alan ([journal](../journal/2026-10/2026-10-15-revision-de-alan-y-arreglos.md))
 

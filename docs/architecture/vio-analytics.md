@@ -1,5 +1,24 @@
 # Vio Analytics — arquitectura y estado (v1)
 
+> **Estado al 15/10 (tarde).** Audit completo en el [journal](../journal/2026-10/2026-10-15-audit-analytics-y-tiempo-real-sdks.md).
+> Lo que cambió hoy, ya en `main` de cada repo:
+> - **La key se resuelve contra el micro de campañas** (`GET /v2/mobile/surface`, `CAMPAIGNS_URL`), sin Postgres.
+>   Si el micro no responde (QA se apaga de noche) se sirve la última surface conocida hasta 72 h
+>   (`API_KEY_STALE_IF_ERROR_MS`), con caché en disco por `sha256(key)` (`API_KEY_CACHE_FILE`). `/health` → `auth`.
+> - **Tenencia**: `sponsor_id`/`campaign_id` que no pertenezcan a la surface de la key se ponen a 0 (`tenancy.dropped`);
+>   el micro devuelve `sponsorIds`/`campaignIds` de todas las campañas de la surface (pertenencia, no vigencia).
+> - **`minimal`** descarta `content_url`, `content_title`, `items[].name/brand`, `props`, `external_user_id`,
+>   `location_id`, `content_id`, y no manda nada a Mixpanel.
+> - **SDK 0.21.0**: `campaign_id` real (antes siempre 0), `order_id` solo con ids de Vio, `value` = suma de ítems
+>   del carrito (sin envío), `X-Api-Key` en el fetch. Vev rebundleado en `main`, **sin desplegar** (0.328, OK de Angelo).
+> - El dashboard de Commerce solo usa `/v1/commerce-stats/*` (por `sponsor_id`): no depende de `ad_activation` ni
+>   `cart_intent`, que eran de TV y ya no los emite nadie.
+>
+> **Pendiente**: despliegue del colector de staging (Miguel; lista en el [handoff](../handoff/2026-10-14-campanas-handoff.md)),
+> `order_paid` server-side desde orders (el `purchase` solo sale del navegador), analytics del publisher en el
+> dashboard (hoy solo hay stats por brand), e2e con la key de Vev.
+
+
 > Estado: **EN IMPLEMENTACIÓN — F1+F4 construidos, F2 en PR** (2026-08-20; plan
 > original aprobado 2026-07-27). Servicio propio de telemetría para toda la
 > plataforma: impresiones, clicks, funnel de compra y performance de campañas, desde
