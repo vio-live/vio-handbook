@@ -46,7 +46,7 @@ Resultado en el handbook:
 | 3 · `campaign_id` siempre 0 (el SDK leía un `campaignId` que la config nunca tuvo) | vio-web-sdk [#80](https://github.com/vio-live/vio-web-sdk/pull/80) (**0.21.0**): `resolveCampaignId` | ✅ `main` |
 | 6 · `order_id` incoherente en `purchase` (cuatro emisores, tres formas; mezclaba el id de checkout de Vio con el de orden del proveedor) | vio-web-sdk #80: `purchaseFromPaymentSuccess`, solo ids de Vio, `value` siempre del carrito | ✅ `main` |
 | 13 · rate limit por IP (la key iba solo en el body) | vio-web-sdk #80: `X-Api-Key` en el fetch | ✅ `main` |
-| 11 · Vev no reenviaba `remove_from_cart` ni `sdk_error`; sponsor persistido sin validar; su `purchase` no usaba la normalización | vev [#63](https://github.com/vio-live/vev/pull/63) + rebundle 0.21.0 | ✅ `main`, **sin `vev deploy`** (0.328, OK de Angelo) |
+| 11 · Vev no reenviaba `remove_from_cart` ni `sdk_error`; sponsor persistido sin validar; su `purchase` no usaba la normalización | vev [#63](https://github.com/vio-live/vev/pull/63) + rebundle 0.21.0 | ✅ **desplegado como 0.328** en el compartido (OK de Angelo, 15/10 tarde); rollback `vev restore` 0.327 |
 | 12 · KPIs "0.0M"/"0K" con cifras pequeñas | webapp [#60](https://github.com/vio-live/webapp-vio-commerce/pull/60): `compactParts` | ✅ staging |
 | 4 · resolución de key frágil (QA apagado de noche → 503 y se pierde la ingesta) | vio-analytics [#17](https://github.com/vio-live/vio-analytics/pull/17): stale-if-error 72 h, hold tras fallo, dedupe, caché en disco por `sha256(key)`, `auth` en `/health` | ✅ `main` (`22458c2`); **despliegue: Miguel** |
 | 8 · `minimal` no descartaba `external_user_id` ni `location_id` | vio-analytics #17 | ✅ `main` |
@@ -78,6 +78,7 @@ Resultado en el handbook:
   el evento server-side `order_paid` (pendiente). Antes variaba por método de pago.
 
 ## Blockers
+- **SDK 0.21.0 publicado en npm por Angelo** (15/10 tarde); el CMS de Replit sigue en 0.19.0 hasta que su agente suba.
 - `vev deploy` del compartido (0.328 con el SDK 0.20.5) necesita OK de Angelo.
 - Sin e2e contra un colector real hasta que Miguel despliegue; la verificación en 12 pasos está en el informe
   del audit y se repite en [vio-analytics](../../architecture/vio-analytics.md).

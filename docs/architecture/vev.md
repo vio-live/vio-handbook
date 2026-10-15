@@ -21,11 +21,10 @@ status: live
   los editores en cuanto termina.
 - La marcha atrás existe y es del CLI: `vev versions` + `vev restore`.
 
-## Estado al 15/10: 0.327 (sponsor según la key y bootstrap al cambiar de key)
+## Estado al 15/10 (tarde): 0.328 (SDK 0.21.0, analytics atribuido bien)
 
-- **Paquete compartido `cq1lXld-TA9` en 0.327** (15/10: SDK 0.20.4, vev [#62](https://github.com/vio-live/vev/pull/62)). La 0.326 es vev [#61](https://github.com/vio-live/vev/pull/61). Rollback: `vev restore` a la 0.326.
+- **Paquete compartido `cq1lXld-TA9` en 0.328** (15/10 tarde: SDK 0.21.0, vev [#63](https://github.com/vio-live/vev/pull/63); solo analytics, nada visual). La 0.327 es vev [#62](https://github.com/vio-live/vev/pull/62) (SDK 0.20.4, bootstrap al cambiar de key) y la 0.326 vev [#61](https://github.com/vio-live/vev/pull/61). Rollback: `vev restore` a la 0.327.
   Rollback: `vev restore` a la 0.325.
-- **`main` de vev va por delante del compartido (15/10 tarde):** vev [#63](https://github.com/vio-live/vev/pull/63) rebundlea el SDK **0.21.0** (vio-web-sdk [#80](https://github.com/vio-live/vio-web-sdk/pull/80): `campaign_id` real, `order_id` solo con ids de Vio, `X-Api-Key` en el fetch) y el `purchase` de Vev usa la misma normalización; reenvía `remove_from_cart` y `sdk_error`. **Sin `vev deploy`**: sería la 0.328 y necesita OK de Angelo. Hasta entonces la 0.327 sigue mandando `campaign_id: 0`.
 - **"Staging" ya lee la config del micro de campañas:** `api-staging.vio.live` es el micro desde
   [ADR-0030](../decisions/0030-api-staging-por-dns-al-micro-y-hosts-vio-api-vs-commerce.md).
   Las keys de surface se crean en el dashboard de Commerce.
