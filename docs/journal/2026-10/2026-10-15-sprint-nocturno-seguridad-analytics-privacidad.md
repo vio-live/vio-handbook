@@ -60,7 +60,7 @@ antes de la release.
 - **El PR del kernel no se mergea de noche:** `kernel-release.yml` corre con cada push a `develop`.
 
 ## Blockers
-- **Miguel:** desplegar vio-analytics `main` en Oracle con `CAMPAIGNS_URL=https://api-staging.vio.live` y sin `DATABASE_URL`; **apagar o reapuntar el outbox de vio-backend** (`ANALYTICS_EVENTS_URL`), porque sus `client_app_id` no son los del micro; rotar las credenciales de `.env.local.qa` de shopcart (siguen en el historial).
+- **Miguel:** desplegar vio-analytics `main` en Oracle con `CAMPAIGNS_URL=https://api-staging.vio.live` y sin `DATABASE_URL`; **apagar o reapuntar el outbox de vio-backend** (`ANALYTICS_EVENTS_URL`), porque sus `client_app_id` no son los del micro. Las credenciales de `.env.local.qa` de shopcart **no se rotan**: eran de QA (Angelo, 15/10 por la mañana).
 - **Angelo:** release del kernel (#19 → 1.0.271, `pkg=all`), migración en QA, bump automático en los micros, y entonces mergear micro #10 y webapp #58.
 - **Hallazgos nuevos, sin hacer:** las otras rutas de `/upload/*` en base-api no piden cuenta (cualquiera sube ficheros al storage); los errores de graphql en QA traen el stack trace en `extensions`; `.env.test` de shopcart lleva valores con pinta de reales (Firebase, Mailjet, Aftership, Klarna, Vipps, Datadog).
 - Mis PRs micro #9/#10 dejaron `src/modules/sdk/*.ts` y dos tests con comillas dobles (prettier sin config); no pasar prettier por todo el repo.

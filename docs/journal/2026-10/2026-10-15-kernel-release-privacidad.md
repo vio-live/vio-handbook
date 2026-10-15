@@ -58,8 +58,8 @@ borrado al terminar. Verificado después con `information_schema` y `SELECT * FR
 - **Versiones huérfanas en npm**: `@vio-/database`/`testing` 1.0.271, `@vio-/utils`/`config`/`logger`
   1.0.272, y en `package-definitions` un commit "implement version 1.0.271" sin tag. Nadie las pinea;
   no hay que hacer nada, pero que no sorprendan en `npm view`.
-- Sigue pendiente de Miguel: colector en Oracle con `CAMPAIGNS_URL` (es quien aplica el modo `minimal`),
-  apagar el outbox de vio-backend, rotar los secretos de shopcart.
+- Sigue pendiente de Miguel: colector de staging con `CAMPAIGNS_URL` (es quien aplica el modo `minimal`)
+  y apagar el outbox de vio-backend en esa VM. Las credenciales de QA no se rotan (Angelo, 15/10).
 
 ## Next session
 - Angelo o Alan: probar el selector de privacidad en el dashboard de staging (crear surface y detalle),
