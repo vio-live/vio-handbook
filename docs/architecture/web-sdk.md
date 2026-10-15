@@ -22,14 +22,23 @@ status: live
 
 ## The two repos & how they relate
 
-| Repo | Vis. | What | State (2026-06-09) |
+| Repo | Vis. | What | State (2026-10-15) |
 |---|---|---|---|
-| **`vio-live/vio-web-sdk`** | public | the SDK itself (local clone: `/Users/angelo/vio`) | `main` @ `3131287` — **matches npm `0.1.0`** |
-| **`angelosv/vio-web`** | private | the "Mote & Livsstil" demo (used for sales) — live at **`vio-demo.vercel.app`** | `main` @ `077f84c` — **local-only** (deliberately unpushed) |
+| **`vio-live/vio-web-sdk`** | public | the SDK itself | `main` @ `52f361e` = **npm `0.21.0`** (15/10: `campaign_id` real, `order_id` solo de Vio, `X-Api-Key` en el fetch; 0.20.x nunca se publicó). Publica Angelo con `npm login` (el token local es de solo lectura) |
+| **`angelosv/vio-web`** | private | the "Mote & Livsstil" demo (used for sales) — live at **`vio-demo.vercel.app`** | GitHub `main` @ `8e532a7` (12/08) es una cáscara de desarrollo que **aliasa el SDK desde un checkout local** (`vite.config.ts`), no npm. La copia que se publica vive en Replit; el estado real de la demo no está en GitHub |
 
 The demo **consumes the published package** (`@vio-live/web-sdk@^0.1.0`), NOT a local
 source alias. That decouples the live sales demo from in-flight SDK work — see
 [Decisions](#decisions).
+
+## Hosts por `environment` (15/10)
+
+`Vio.init({ apiKey, environment })`: `testing` y `staging` → `api-staging.vio.live` (micro de campañas de Commerce,
+[ADR-0030](../decisions/0030-api-staging-por-dns-al-micro-y-hosts-vio-api-vs-commerce.md)), `events-staging.vio.live`
+(colector) y el GraphQL de Commerce; `production` → `api.vio.live` / `events.vio.live`. **La `apiKey` es la key de una
+surface** creada en el dashboard de Commerce (Surfaces); las keys viejas de vio-backend ya no valen. Los hosts que
+embeben el SDK hoy: Vev (bundle vendorizado, no npm), el CMS de Aller "Mote & Livsstil" en Replit (npm, 0.19.0 → debe
+subir a 0.21.0) y la demo de ventas `vio-web`.
 
 ## Package structure
 
