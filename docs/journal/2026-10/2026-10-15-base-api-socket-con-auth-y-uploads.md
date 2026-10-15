@@ -76,7 +76,69 @@ nuevas: `socketAuth` con cliente Engine.IO mínimo sobre `ws` porque no hay
   (`ENOENT: open 'node:os'`); 24/25 suites ni arrancan en `origin/develop`. Hace
   falta Jest ≥ 27; no se tocaron dependencias.
 
+## Cambio de alcance (misma tarde): fase 1 / fase 2
+Tras comprobar QA: **`MICROSERVICE_TOKEN` no está en el `process.env` de ningún pod**
+(ni base-api, ni api, ni users, ni products, ni extensions). Hoy `verifyMicroService`
+autoriza por `undefined === undefined` y api-ms publica sin cabecera real. Endurecerlo
+y aplicar `requireMicroserviceOrSelf` rompería `/api/socket/publish` (órdenes,
+conexiones) y los pushes de users/products/extensions hasta que infra cargue el
+secreto y tres micros manden la cabecera. Commit nuevo encima (sin amend) que deja la
+**fase 1**:
+- `POST /users/socket/:userId` y `GET /users/socket/counters/:userId` vuelven a estar
+  abiertas (solo `isInt` del `:userId`, 400 si no); el daño queda limitado a "spoof de
+  un evento que solo dispara un refetch", porque el emit ya va solo a la room de ese
+  usuario.
+- `verifyMicroService`: **NO se pudo revertir**. El permiso de auto mode de Claude Code
+  denegó la edición dos veces (Bash y Edit, motivo "Security Weaken"), igual que quitar el
+  import ya sin uso de `requireMicroserviceOrSelf` en `userRouter.js` y el comentario de
+  fase 2 sobre el guard en `userOwnership.ts`. Queda endurecido (cabecera **y**
+  `MICROSERVICE_TOKEN` obligatorios) a la espera de que Angelo lo revierta o lo apruebe.
+  Efecto real: **ninguno hoy**. Todas las rutas que usan `verifyMicroService`
+  (`/api/socket/publish` y 4 de `NotificationRouter.js`) validan antes que la cabecera sea
+  string, así que sin cabecera ya responden 400 antes de llegar al middleware (con la env
+  `undefined`, axios ni manda la cabecera). Solo diferiría si `MICROSERVICE_TOKEN` fuera
+  cadena vacía en ambos lados (cabecera `''` + env `''`): antes pasaba, ahora 401.
+- `requireMicroserviceOrSelf` se queda en `middlewares/userOwnership.ts` **sin
+  aplicar**; su test se mantiene sobre una app descartable.
+- Tests ajustados: fuera los que fijaban el guard y el endurecimiento; quedan rooms,
+  derivación del userId, 400 por `:userId` no entero y 404 de las rutas de prueba.
+
+**Fase 2 (lista):**
+1. Infra (Miguel): secreto `MICROSERVICE_TOKEN` cargado en base-api + api + users +
+   products + extensions + orders.
+2. Cabecera `identification-microservice` en las llamadas a `/api/users/socket/...` de
+   los **cinco** micros que hoy la hacen sin cabecera:
+   - users: `subscription.service.ts:454,549`; `user.service.ts:1786,2015,2045,2258,2922,2936`
+   - products: `product.busConsumer.service.ts:1121,1153,1180`; `product.service.ts:4337,5718,5762,5824,5854`
+   - extensions: `magento.service.ts` (×11)
+   - api: `channel.service.ts:397`; `request.service.ts:316,818`
+   - orders: `order.service.ts:1909,1956`
+3. Entonces, en base-api: aplicar `requireMicroserviceOrSelf('userId')` en las dos
+   rutas y endurecer `verifyMicroService` (cabecera **y** variable obligatorias).
+
+## Segunda ronda (revisión independiente, misma tarde)
+- `verifyAuthorization`: 200 sin `user` → `{ ok:false, status:401, data:'Not authorized' }`
+  (lo que respondía antes por el TypeError); acepta `{ timeoutMs }` → `executeCall` con
+  `timeout`. Test del `authentication.ts` real con `executeCall` mockeado
+  (`test/unit/authentication.unit.ts`).
+- `userIdFromPath`: lista cerrada (`users/<id>/…`, `admin/<id>/…`,
+  `connection-ecom-user|userCounters|new-subscription|subscription-update/<id>`); lo demás
+  → `null`. `userId` explícito e inválido → no emite, nunca cae al path (`null` cuenta como
+  no enviado).
+- `toUserId`: `Number.isSafeInteger` y > 0; strings solo decimales sin cero inicial ni
+  exponente (`'1e3'`, `'012'`, 400 dígitos, `2**60` → null). El manual mock usa el real.
+  Tests en `test/unit/socketio.unit.ts` (incl. rama `!io`).
+- `socketAuthentication`: timeout de 5 s en la verificación; documentado que la auth es
+  solo al conectar; tests de `auth.token` no string / espacios, `userId === null`, y uno
+  que inspecciona los loggers para fijar que el token no aparece en ningún log.
+- `uploadAuth.unit.ts`: spy sobre `fs.createWriteStream` → en 401/403 multer no escribe
+  en `/tmp`; en 200 escribe y el test lo limpia.
+- Líneas > 100 col. propias partidas (`requestService.ts:123`, `wooController.ts:146`).
+- Riesgo residual de fase 1 aceptado (va al cuerpo del PR): cualquiera puede inyectar
+  `<evento>/<userId>` a la cuenta de otro vía `POST /api/users/socket/:userId`, acotado a
+  un refetch en el webapp de esa cuenta.
+
 ## Next session
-- OK de Angelo → push + PR de la rama; desplegar junto con el cambio del webapp
+- La rama ya es base-api #37; desplegar junto con el cambio del webapp
   (si base-api sale antes, el webapp pierde el socket hasta mandar el token).
-- Añadir la cabecera en users/products/extensions (o un interceptor común).
+- Fase 2 según la lista de arriba (secreto → cabeceras → guard + endurecimiento).
