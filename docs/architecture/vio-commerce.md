@@ -271,3 +271,12 @@ Otros repos de `vio-live` que orbitan commerce pero no son el backend de runtime
 6. **MySQL, no Postgres** aquí (ojo: el resto de Vio backend / socket-server usa Neon/Postgres — no mezclar).
 7. **Dos gateways:** `base-api` (REST legacy, Express) y `graphql` (Apollo). El nuevo
    frontend debería ir por GraphQL; lo legacy sigue en base-api hasta terminar de migrar.
+8. **Los channels sirven una foto, no la colección en vivo.** GraphQL (`Channel.GetProducts`,
+   lo que ve Vev) lee `channel_user_products`, que products-ms rehace solo cuando alguien
+   llama `POST {PRODUCTS}/channel-process/collections/update { collectionsId }`. Cualquier
+   escritura que cambie qué productos tiene una colección o quién la ve (items, compartir,
+   des-compartir) tiene que proyectar; en collection-ms lo centraliza
+   `ChannelProjectionService` (2026-10-15, ver
+   [journal](../journal/2026-10/2026-10-15-collection-foto-coleccion.md)). Además
+   `channel_group` referencia `collection_shared` **por id**: des-compartir es soft-delete y
+   re-compartir debe **restaurar** esa fila, no crear otra.
