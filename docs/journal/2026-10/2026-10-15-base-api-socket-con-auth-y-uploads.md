@@ -8,6 +8,13 @@ service: base-api
 
 # Session — 2026-10-15 — base-api: socket con auth y /upload con sesión
 
+> [claude, 2026-10-15 noche] **Corrección a la premisa de la fase 1/fase 2:** `MICROSERVICE_TOKEN` SÍ está cargado con
+> valor en los `.env`/`.env.local` de QA de base-api, api, users, products, extensions y orders. Las dos comprobaciones
+> que decían lo contrario estaban mal hechas (patrón `^KEY=` estricto y un `node -e` que no carga dotenv). Por eso el
+> endurecimiento de `verifyMicroService` quedó en el PR (es seguro) y la fase 2 es solo código en los cinco micros, sin
+> infra. Merge de #37 el 15/10 por la noche.
+
+
 ## Goal
 Cerrar dos agujeros de seguridad de `vio-base-api`: (1) el socket.io aceptaba
 cualquier conexión sin token y todos los emisores hacían `io.emit` a todos los
