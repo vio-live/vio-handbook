@@ -81,11 +81,17 @@ status: live
 
 **Probar el micro contra un kernel sin publicar:** `jest.kernel-local.config.js` + `tsconfig.kernel-local.json` en el worktree `campaigns-privacidad` (fuera de git): `moduleNameMapper`/`paths` de `@vio-/database` al `dist` del worktree del kernel. Es como corrió la suite de #10 contra #19.
 
-### Pedido a Miguel (15/10, después del release del kernel)
+### Pedido a Miguel (15/10, actualizado por la tarde)
 
-1. **Colector de staging** (VM `129.151.196.99`, [DESPLIEGUE.md](https://github.com/vio-live/vio-analytics/blob/main/docs/DESPLIEGUE.md)): desplegar `main` (`ecb115b`, PR [#16](https://github.com/vio-live/vio-analytics/pull/16)). Antes del restart, en `/opt/vio-analytics/.env`: añadir `CAMPAIGNS_URL=https://api-staging.vio.live` (**obligatoria**: sin ella no arranca), quitar `DATABASE_URL` (ya no se lee), **mantener** `INTERNAL_EVENTS_TOKEN` (lo usa el proxy de stats de base-api). Opcionales con default: `CAMPAIGNS_TIMEOUT_MS=3000`, `API_KEY_CACHE_TTL_MS=60000`, `API_KEY_NEGATIVE_CACHE_TTL_MS=10000`. Comprobar `events-staging.vio.live/health` → `ready:true`. **Prod todavía no**: no hay micro de campañas en prod y `CAMPAIGNS_URL` es obligatoria.
-2. **Outbox de vio-backend en la VM de staging**: quitar `ANALYTICS_EVENTS_URL` y `ANALYTICS_INTERNAL_TOKEN` del `.env` de vio-backend y reiniciar (sin las dos, el espejo queda apagado). Sus `client_app_id` son los de vio-backend, no las surfaces del micro. En prod ya no están (journal de Miguel del 13/10).
-(Las credenciales de QA/staging **no se rotan**: decisión de Angelo, 15/10. El fichero `.env.local.qa` ya no está en el repo y con eso basta.)
+Solo la VM de **staging** (`129.151.196.99`). Prod no: no hay micro de campañas en prod y `CAMPAIGNS_URL` es obligatoria.
+
+**Ahora, sin esperar a nada:**
+1. **Outbox de vio-backend**: quitar `ANALYTICS_EVENTS_URL` y `ANALYTICS_INTERNAL_TOKEN` del `.env` de vio-backend en esa VM y reiniciarlo (sin las dos, el espejo queda apagado). Sus `client_app_id` son los de vio-backend, no las surfaces del micro.
+2. **`.env` del colector** (`/opt/vio-analytics/.env`, 600): añadir `CAMPAIGNS_URL=https://api-staging.vio.live` (obligatoria), `API_KEY_CACHE_FILE=/opt/vio-analytics/.keycache.json`; quitar `DATABASE_URL`; mantener `INTERNAL_EVENTS_TOKEN`; comprobar que `INTERNAL_READ_TOKENS` contiene el token que usa base-api (`ANALYTICS_INTERNAL_TOKEN` del Secret `env-sc-base-api` de QA). Opcionales con default: `CAMPAIGNS_TIMEOUT_MS=1500`, `API_KEY_CACHE_TTL_MS=60000`, `API_KEY_NEGATIVE_CACHE_TTL_MS=30000`, `API_KEY_STALE_IF_ERROR_MS=259200000` (72 h: lo que aguanta con `api-staging` apagado).
+3. Comprobar que el usuario de la unit `vio-analytics.service` puede escribir en `/opt/vio-analytics` (para el fichero de caché; si no puede, el colector avisa en el log y sigue solo con memoria).
+4. **Cortar el histórico de ClickHouse de staging**: las filas anteriores al corte llevan `client_app_id`/`sponsor_id` de vio-backend, que colisionan con los ids nuevos del micro y de Commerce (ADR-0025 ya daba por aceptado perder esas ~4.000 filas). En la VM, con el cliente de ClickHouse contra `vio_staging`: `ALTER TABLE vio.events DELETE WHERE received_at < '2026-10-15 00:00:00'` (exportar antes a un fichero si se quiere conservar).
+
+**Cuando vio-analytics [#17](https://github.com/vio-live/vio-analytics/pull/17) esté en `main`** (aviso con el commit): desplegar `main` según `docs/DESPLIEGUE.md` y reiniciar. Comprobar `https://events-staging.vio.live/health` → `ready:true`, `clickhouse.lastError: null`, y que aparece `tenancy` en la respuesta.
 
 ## Mañana del 15/10: los 5 reportes de Alan ([journal](../journal/2026-10/2026-10-15-revision-de-alan-y-arreglos.md))
 
