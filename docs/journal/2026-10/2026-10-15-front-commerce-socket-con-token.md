@@ -53,6 +53,40 @@ que fallan (`test/payments/payments-lib.test.js` "Vipps manda sus cuatro credenc
 **ya fallan en `origin/develop` `049187a` limpio** (comprobado en un worktree temporal con el
 mismo `node_modules`); no son de este cambio.
 
+## Segunda ronda (misma tarde): tope al reintento y tests que faltaban
+
+La primera versión salió como **webapp #61** (`007c1f5`). La revisión independiente aprobó
+con puntos; van en un commit nuevo encima, sin amend ni push:
+
+- **Tope al reintento tras rechazo del handshake:** 6 reintentos con esperas
+  `[1, 2, 4, 8, 10, 10] s` (`RETRY_DELAYS_MS`); `getIdToken(true)` **solo en el primero**
+  (`rejections === 1`: si también lo rechazan, el problema no es el token). Al séptimo rechazo,
+  **pausa**: sin timers, y se reanuda (contador a 0) solo con `visibilitychange` a visible,
+  `online`, o cambio de sesión (`closeSocket()` + nueva suscripción). `console.warn` solo en el
+  primer rechazo (`[socket] handshake rechazado (<mensaje>); reintentando`) y al pausar
+  (`[socket] rechazado 7 veces seguidas; en pausa hasta volver a la pestaña`); nunca el token.
+  El `catch` del `auth` avisa con `e.code` (`[socket] sin token para el handshake: <code>`).
+  `closeSocket()` quita también los listeners de reanudación.
+- **Tests nuevos** (`test/lib/socket-con-token.test.js`, 12 tests): `closeSocket()` con
+  reintento pendiente (sin `connect()` y `jest.getTimerCount() === 0`); las 6 esperas exactas y
+  el token fresco solo en el primer reintento; el séptimo rechazo para (sin timers, sin
+  `close()`); el **log entero** de `console.warn` comparado con `toEqual` (sustituye a la
+  aserción vacua `not.toContain('tok-123')`); reanudación por `visibilitychange` (ignorada si
+  la pestaña sigue oculta) y por `online`, una sola vez por pausa, con la serie arrancando de
+  nuevo (1 s y token fresco); `closeSocket()` en pausa quita los listeners; la rama
+  `.catch(() => cb({}))` con el aviso por código. **`test/lib/socket-sesion-inicial.test.js`**
+  (fichero aparte, módulo de auth recién cargado): con `sessionResolved` false el socket se
+  abre y el handshake entrega el token cuando Firebase resuelve.
+- **Comentarios:** `api.js` ya no dice "única fuente" (`vio.js:34` y `stats.js:26` siguen con
+  su `getIdToken()` contra otros hosts) sino "la fuente para `api()` y el socket";
+  `socket.js` y `subscription-events.test.js` describen el contrato como "base-api exige
+  `auth.token` y emite por rooms (PR de base-api del 15/10)"; `isSignedOut()` documenta que
+  depende de `useSession` montado para enterarse de que la sesión se fue.
+
+Verificación: eslint limpio sobre lo tocado; `npx jest test/lib test/plan/subscription-events.test.js`
+5 suites / 18 tests OK; suite completa igual que antes (solo los 2 fallos preexistentes de
+pagos).
+
 ## Decisions
 
 - **La premisa "deja que socket.io reintente tras `unauthorized`" no se cumple.** Verificado
@@ -81,9 +115,7 @@ mismo `node_modules`); no son de este cambio.
   pendiente: entrar, ver `connect` en la pestaña WS con el `auth` en el CONNECT packet,
   disparar `POST /api/users/socket/:userId` y ver llegar el evento; cerrar sesión y entrar
   con otra cuenta → el CONNECT lleva el token nuevo.
-- Reintento manual sin tope: con sesión viva y servidor que rechaza siempre, un intento cada
-  10 s por pestaña (con `getIdToken(true)` cada vez). Aceptable como "discreto"; si molesta,
-  tope de N intentos.
+- ~~Reintento manual sin tope~~ → resuelto en la segunda ronda (tope de 6 y pausa).
 - Push, PR y merge: pendientes de OK de Angelo.
 
 ## Next session
