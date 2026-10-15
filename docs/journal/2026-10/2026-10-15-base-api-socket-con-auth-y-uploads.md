@@ -145,7 +145,25 @@ secreto y tres micros manden la cabecera. Commit nuevo encima (sin amend) que de
   `<evento>/<userId>` a la cuenta de otro vía `POST /api/users/socket/:userId`, acotado a
   un refetch en el webapp de esa cuenta.
 
+## Fase 2 (noche): rama `fix/socket-guard-interno-fase-2`
+Fase 1 mergeada (#37 → develop `637f888`) y verificada en QA. Los cinco micros ya mandan
+(o están mandando) `identification-microservice`: extensions #23, api #48 y users #22
+mergeados; products y orders en camino. Worktree nuevo
+`~/vio-commerce/worktrees/base-api-socket-guard` desde `origin/develop`, **1 commit local,
+sin push** (lo mergea Angelo cuando los cinco deploys estén en verde):
+- `requireMicroserviceOrSelf('userId')` aplicado a `POST /users/socket/:userId` y
+  `GET /users/socket/counters/:userId`, manteniendo `isInt`; comentarios de "fase 2
+  pendiente" fuera de `userRouter.js` y `socketRouter.js`.
+- `verifyMicroService` ya estaba endurecido en develop (quedó así en #37): con
+  `MICROSERVICE_TOKEN` sin configurar en base-api la cabecera no pasa.
+- Un micro con token vacío manda `{}` (sin cabecera) o cabecera `''` → **401**, no 400 ni 500
+  (estas rutas no tienen validador de cabecera y los dos caminos de auth capturan errores).
+- `userSocketRoutes.unit.ts` restaurado con el guard: micro con cabecera OK sin sesión;
+  cabecera mala 401 aunque haya sesión; anónimo 401; cabecera ausente/vacía 401; token de
+  base-api sin configurar 401; la propia cuenta 200; otra cuenta y admin 403; `:userId` no
+  entero 400. Suite unitaria: 17 suites / 252 tests OK; `tsc` limpio (salvo `@azure` preexistente).
+
 ## Next session
 - La rama ya es base-api #37; desplegar junto con el cambio del webapp
   (si base-api sale antes, el webapp pierde el socket hasta mandar el token).
-- Fase 2 según la lista de arriba (secreto → cabeceras → guard + endurecimiento).
+- Merge de `fix/socket-guard-interno-fase-2` cuando products y orders desplieguen con la cabecera.
