@@ -38,9 +38,12 @@ Commit local (sin push, ADR-0001) sobre `origin/develop` (`136e6ca`), todo en
     (ya existe: devuelve capturado − ya devuelto en la cuenta de la brand, o
     cancela el intent);
   - parcial → `POST {PAYMENT_PROCESSORS}/stripe/refund/:pi` con
-    `{ data: { amountMinor, currency, orderId, reason: 'refunded in shop' } }`
+    `{ data: { refundedTotalMinor, currency, orderId, reason: 'refunded in shop' } }`
     (endpoint **nuevo**, lo hace otro agente en payment-processors; responde
-    `{ refunded, refundId, status }` o 4xx `{ message }`).
+    `{ refunded, refundId, status }` o 4xx `{ message }`). `refundedTotalMinor`
+    es el **total acumulado** de la tienda tal cual lo manda extensions; el
+    servicio de pagos reembolsa `refundedTotalMinor − Σ ya devuelto en Stripe`
+    (≤ 0 → 200 `{ refunded: 0, refundId: null, status: 'already_refunded' }`).
   - referencia = `order.channelId` (id del PaymentIntent). Vacía o sin `pi_` →
     no llama, `logger.warn` y `money: { ignored: true, reason: 'no payment
     reference' }`. Parcial sin importe → `ignored`, razón explícita.
@@ -57,16 +60,19 @@ Commit local (sin push, ADR-0001) sobre `origin/develop` (`136e6ca`), todo en
   Vipps). Mientras queden ítems abiertos, log explícito de que el dinero no se
   mueve. WORDPRESS conserva las llamadas legacy tal cual.
 - **Tests** `src/modules/order/tests/order-stripe-money.unit.spec.ts` (sin
-  base, `npm run test:unit`): 31 casos — `processorOf`; `refundedInShop` Stripe
-  total/parcial/sin importe/sin moneda, `refunded: 0` logueado como "money NOT
-  moved", respuesta sin `refunded` logueada sin inventar veredicto, Vipps igual
+  base, `npm run test:unit`): 32 casos — `processorOf`; `refundedInShop` Stripe
+  total/parcial (body exacto con `refundedTotalMinor`, sin `amountMinor`)/segundo
+  parcial 250 → 350 NOK acumulado (orders manda 25000, 35000 y 35000 tal cual;
+  el reintento vuelve `already_refunded`)/sin importe/sin moneda, `refunded: 0`
+  logueado como "money NOT moved", respuesta sin `refunded` logueada sin
+  inventar veredicto, Vipps igual
   que antes (`'VIPPS'` y `'Vipps'`), sin referencia (`''`, `null`, `'88'`,
   `'cart-1'`), Klarna ignorado, 4xx con mensaje real, red caída;
   `deleteItemOrder` con `'Stripe'` entra en la rama, no llama
   `cancelPaymentItem`, `cancelPayment` solo con todos cancelados, sin referencia
   no rompe, 4xx no deshace, Vipps igual, WORDPRESS legacy intacto;
   `cancelOrderInShop` Partner+Stripe, 4xx, sin referencia, WORDPRESS legacy.
-  **Suite unitaria 48/48.**
+  **Suite unitaria 49/49.**
 - `npx tsc --noEmit`: solo el error preexistente de
   `order.service.spec.ts:3` (`mockRequest` de `@woocommerce/woocommerce-rest-api`,
   ya documentado en el brief §8b).
@@ -96,24 +102,17 @@ Commit local (sin push, ADR-0001) sobre `origin/develop` (`136e6ca`), todo en
 
 ## Blockers / open questions
 
-- **CHOQUE DE CONTRATO en el reembolso parcial — decide el orquestador.**
+- **Choque de contrato en el reembolso parcial — RESUELTO el mismo día.**
   `refundedTotalMinor` es **acumulado** ("Total refunded in the shop so far",
   `RefundedInShopDto`; shopcart, para Vipps, devuelve `min(total tienda,
-  capturado) − ya devuelto`). Orders manda ese acumulado como `amountMinor`
-  porque no guarda cuánto se devolvió antes. Según su journal, el `/stripe/refund`
-  de payment-processors reembolsa **exactamente `amountMinor`** (tope en
-  `Σ captured − Σ refunded` → 400 si excede; idempotencia por clave
-  `vio-refund-<orderId>-<paymentId>-<amountMinor>`). Con eso, el **segundo**
-  reembolso parcial en Woo (p. ej. 250 NOK y luego 100 NOK → orders manda 25000
-  y luego 35000) devolvería 35000 en vez de 10000. El primero es correcto.
-  - Propuesta: que payment-processors trate `amountMinor` como **total objetivo**
-    (reembolsa `amountMinor − Σ amount_refunded`; si ≤ 0, 200 con `refunded: 0,
-    status: already_refunded`). Encaja con su clave de idempotencia (los
-    acumulados son únicos y crecientes por orden) y de paso resuelve el choque
-    que ellos mismos anotan ("dos parciales legítimos del mismo monto
-    colisionan"). Orders no cambia.
-  - Alternativa: que extensions mande el importe de ESTE reembolso y orders lo
-    reenvíe; entonces la clave de ellos colisiona con dos reembolsos iguales.
+  capturado) − ya devuelto`), y el primer `/stripe/refund` de payment-processors
+  reembolsaba **exactamente `amountMinor`**: el segundo parcial en Woo (250 NOK y
+  luego 100 NOK → 25000 y luego 35000) habría devuelto 35000 en vez de 10000.
+  Decisión del orquestador: payment-processors acepta `refundedTotalMinor`
+  (total objetivo: reembolsa `refundedTotalMinor − Σ ya reembolsado`; ≤ 0 → 200
+  `already_refunded`; > capturado → 400); `amountMinor` sigue para importes
+  exactos pero **orders no lo usa**. Orders manda `refundedTotalMinor` tal cual
+  (commit amendado). Pendiente que su endpoint llegue a QA para probarlo e2e.
 - `cancelPayment` **no anula** un intent en `requires_capture` (responde
   `not_captured`, nada se mueve) — follow-up anotado por payment-processors. Para
   el checkout de shopcart (auto-captura) no aplica hoy.
