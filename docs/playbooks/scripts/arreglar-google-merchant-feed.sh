@@ -65,12 +65,29 @@ for par in "GoogleMerchantFeed-Test:vio-qa-product-processing-sc:rg-vio-qa-sc" \
   echo "  aplicando -> $NS"
 
   if [ "$GEN" = "2" ]; then
-    gcloud functions deploy "$FN" --gen2 --region "$REGION" --project "$PROYECTO" \
-      --update-env-vars "$VAR=$NUEVA" 2>&1 | tail -3
+    # Una funcion gen2 ES un servicio de Cloud Run por debajo. `functions deploy`
+    # intentaria resubir el CODIGO (y falla sin package.json local); `run services update`
+    # cambia solo la variable y deja el codigo como esta.
+    SVC=$(gcloud functions describe "$FN" --gen2 --region "$REGION" --project "$PROYECTO" \
+            --format="value(serviceConfig.service)" 2>/dev/null)
+    SVC="${SVC##*/}"
+    [ -z "$SVC" ] && { echo "  NO aplico: no pude resolver el servicio de Cloud Run"; continue; }
+    echo "  servicio Cloud Run: $SVC"
+    gcloud run services update "$SVC" --region "$REGION" --project "$PROYECTO" \
+      --update-env-vars "^@^$VAR=$NUEVA" --quiet 2>&1 | tail -3
   else
     gcloud functions deploy "$FN" --region "$REGION" --project "$PROYECTO" \
-      --update-env-vars "$VAR=$NUEVA" 2>&1 | tail -3
+      --update-env-vars "^@^$VAR=$NUEVA" 2>&1 | tail -3
   fi
-  echo "  hecho. Comprobar que el error desaparece en products:"
-  echo "    kubectl logs -n default deploy/products -c products --since=12m | grep servicebus"
+
+  # comprobar que quedo
+  AHORA=$(gcloud functions describe "$FN" --gen2 --region "$REGION" --project "$PROYECTO" \
+            --format="value(serviceConfig.environmentVariables)" 2>/dev/null \
+          || gcloud functions describe "$FN" --region "$REGION" --project "$PROYECTO" \
+            --format="value(environmentVariables)" 2>/dev/null)
+  if echo "$AHORA" | grep -q "$NS.servicebus"; then
+    echo "  COMPROBADO: ahora apunta a $NS"
+  else
+    echo "  OJO: no veo $NS en la variable. Revisar a mano."
+  fi
 done
