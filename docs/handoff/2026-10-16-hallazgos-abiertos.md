@@ -1,0 +1,105 @@
+---
+title: "Hallazgos abiertos del release 2026-10 (para tomarlos)"
+date: 2026-10-16
+owner: miguel
+decides: angelo
+status: live
+---
+
+# Hallazgos abiertos — release del 16/10
+
+Angelo, 15:09: *"apunta las cosas que encontraste para tomarlas tambien"*. Esto es la lista
+completa de lo que aparecio durante el release y **no** se arreglo, con por que esta abierto y
+que haria falta. Ordenado por gravedad. Nada de esto se toca sin que Angelo lo pida.
+
+## Seguridad
+
+### 1. Tokens de Shopify en claro en los logs de produccion — DIFERIDO por Angelo
+114 lineas en 5 h: **48 en users**, **66 en extensions**. Vienen de `logger.debug` que vuelcan el
+objeto de conexion entero (`data={"accessToken":"shpca_..."}`). Son tokens de tiendas de clientes
+reales; los ve cualquiera con `kubectl logs` y van a donde se agreguen los logs.
+**Decision de Angelo (16/10):** *"dejalos por ahora, lo tomamos cuando ellos confirmen que lo
+instalaron"*. No reabrir hasta entonces.
+**Arreglo:** dejar de volcar el objeto y enmascarar `accessToken`/`refreshToken` en
+`vio-users-microservice` y `vio-extensions-microservice`. Es codigo, no config.
+
+### 2. `shopify_connection.access_token` sin cifrar en la base de prod
+32 filas, **0 con prefijo `enc:v1:`**. El cifrado de `PAYMENT_SECRETS_KEY` cubre
+`payment_method.options`, **no** esta tabla. Quien lea la base lee los tokens de las tiendas.
+**Arreglo:** extender el cifrado por campo a `access_token`/`refresh_token`, con su migracion de
+re-cifrado. Va de la mano del punto 1.
+
+### 3. `INTERNAL_READ_TOKENS` ausente en el colector de prod
+No es un fallo: el dashboard **funciona** porque base-api usa `INTERNAL_EVENTS_TOKEN`, que es FULL.
+El problema es de minimo privilegio: base-api **solo necesita leer** y hoy lleva un token que
+tambien puede **inyectar eventos falsos** en analytics. Si se filtra, se puede falsear el dashboard.
+**Arreglo:** generar un token de solo lectura, ponerlo en `INTERNAL_READ_TOKENS` del colector de
+prod y cambiar `ANALYTICS_INTERNAL_TOKEN` del Secret `env-sc-base-api` por ese. Staging ya lo tiene.
+
+### 4. Firewall de la MySQL de QA abierto a internet
+Regla `all` (0.0.0.0/0), igual que tenia la staging vieja, donde hubo 287 intentos de fuerza bruta.
+**Arreglo:** cerrarla dejando solo la IP de salida del AKS de QA. Es la misma operacion que se hizo
+en prod el 02/10 y en staging el 01/10.
+
+## Pagos
+
+### 5. Vipps de produccion apunta al entorno de TEST
+El `.env` de prod tiene `VIPPS_API_URL="https://apitest.vipps.no"` y MSN de test **225388**.
+**Vipps en produccion nunca ha cobrado de verdad.**
+Las claves que paso Angelo el 16/10 **no sirven**: el `client_secret` tiene formato de Azure AD
+(`5Bi8Q~...`) y el de una sales unit de Vipps es Base64; la API responde `AADSTS7000215`. Y el
+`merchantSerialNumber` venia **vacio** (ese JSON es del onboarding, no de una unidad de venta).
+**Bloqueado esperando:** que Angelo saque del portal (`For developers` -> Production -> Show keys)
+`client_id`, `client_secret`, una `Ocp-Apim-Subscription-Key` y el **MSN**, como texto.
+**Al cargarlas:** cambiar `VIPPS_API_URL` a `api.vipps.no` y **registrar el webhook de produccion
+copiando su secreto en la misma pasada** (`VIPPS_WEBHOOK_SECRET` de prod esta **vacio** y Vipps
+solo lo ensena al registrar).
+
+### 6. Las cuentas 1295 y 1300 cobran con la cuenta de Vio
+El backfill de pagos las dejo con Stripe y Klarna activos y el flag `use_vio_account` puesto,
+porque **no tienen credencial propia**. La migracion las marca para revision y se confirmo leyendo
+la tabla. **Decidir** si deben cargar sus propias credenciales o se quedan asi.
+
+## Datos y cuentas
+
+### 7. La base de campanas de produccion esta VACIA
+`api.vio.live` ya apunta al micro y responde, pero **no hay brands, surfaces ni keys**. El API
+contesta correctamente y no sirve nada. Es el paso 8 del runbook y lo hace Angelo.
+
+### 8. El colector de prod no ha recibido ni un evento real
+ClickHouse `vio_production`: **0 filas** (`vio_staging` tiene 8359). El colector esta sano y
+Mixpanel activo, pero nadie le manda nada todavia. Se resolvera solo cuando las paginas lleven el
+SDK nuevo; **mientras tanto, "0 eventos" no es una averia**.
+
+### 9. Seis cuentas sin suscripcion en prod
+Ids **1293, 1294, 1296, 1297, 1310, 1311**. Una cuenta sin suscripcion ve **401 en todo el API**.
+En el barrido anterior todas parecian de prueba; si alguna es real, el sintoma es ese 401.
+**Arreglo por cuenta:** `POST /api/users/create/subscription` con `codePlan 1`, una sola vez.
+
+## Operacion
+
+### 10. Backup offsite de la base de prod: CronJob roto por diseno — DIFERIDO por Angelo
+El contenedor hace `apk add` en runtime y el sidecar de Istio le bloquea la salida: no ha corrido
+nunca. **Mientras siga asi el backup diario offsite de prod no existe**; solo hay los automaticos
+de Azure y dumps a mano. Angelo lo dejo asi el 12/10.
+**Arreglo:** hornear `mysqldump` en la imagen y anotar `sidecar.istio.io/inject: "false"`.
+
+### 11. Devoluciones: hay que avisar a tres clientes (D3)
+Con el codigo de hoy, una devolucion hecha en la Shopify del cliente **mueve dinero en Vipps y en
+Stripe**, y los apps de **Careless, Gladkokken y Makeupmekka** ya suscriben `refunds/create`.
+Nadie se lo ha dicho todavia. **Es de Angelo**, o Miguel redacta el texto si lo pide.
+Ningun webhook `refunds/create` ha llegado aun a prod: el handler esta desplegado, falta una
+devolucion real.
+
+### 12. Prod encendida cuesta ~23 USD/dia
+Esta arriba desde el 16/10 esperando a Vipps y a los clientes. Si la espera se alarga, decidir si
+se apaga por las noches como staging. **Si se apaga: recrear el flag `PROD_DEBE_ESTAR_APAGADA`
+ANTES**, o el guardian diario no actua y alguien la encuentra encendida.
+
+## Desviaciones del runbook, ya corregidas en los journals
+- Faltaban **4** migraciones, no 12.
+- **D1 ya estaba hecha**: `PAYMENT_SECRETS_KEY` presente y `payment_method` con 0 filas.
+- `EMAIL_DELIVERY` faltaba en **los 13** servicios, no en 3 (puesta en orders, users y api).
+- El Gateway y el VirtualService de campanas **ya existian**; el ClusterIssuer se llama
+  `letsencrypt-dns01-cloudflare`.
+- El colector de prod **si** necesitaba tocar el `.env` (`CAMPAIGNS_URL` es obligatoria).

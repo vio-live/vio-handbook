@@ -64,3 +64,36 @@ Parar el servicio, desempaquetar `/home/ubuntu/vio-analytics-backup-20261016-150
 `/opt/vio-analytics` y arrancar. En prod, además, restaurar `.env.backup-pre-pr18-...` si se
 quiere volver al estado exacto (pero entonces hay que volver también al código viejo, porque el
 nuevo no arranca sin `CAMPAIGNS_URL`).
+
+## Paso 6 completado (misma tarde, Angelo: "si")
+
+1. **`API_KEY_CACHE_FILE=/opt/vio-analytics/.keycache.json`** en **las dos** VMs. Confirmado en el
+   journal tras el restart: `[auth] 0 surfaces loaded from .../.keycache.json (stale-if-error only)`.
+   Son 0 surfaces porque aun no se ha resuelto ninguna key, pero el fichero ya esta en uso.
+   *(Ojo al leer logs: esa linea es `level:30` (info) y contiene la palabra "error" dentro de
+   "stale-if-error". Un `grep -i error` la cuenta como fallo y no lo es.)*
+2. **`DATABASE_URL` eliminada de prod.** Verificado antes de borrarla: **no aparece en `src/` ni en
+   `test/`**, solo en `docs/DESPLIEGUE.md`, que ademas dice literalmente que "sobra" desde el PR #16.
+   En staging ya no estaba.
+3. **Restart de las dos**, `ready:true`, `auth.lastDirectoryError: null`, los tres dominios
+   (`events`, `events-staging`, `events-dev`) en 200.
+4. **Espejo del vio-backend viejo: ya estaba apagado.** `ANALYTICS_EVENTS_URL` y
+   `ANALYTICS_INTERNAL_TOKEN` **ausentes** en `/opt/vio-backend/.env`, y el codigo desplegado exige
+   **las dos** (`process.env.ANALYTICS_EVENTS_URL && process.env.ANALYTICS_INTERNAL_TOKEN`, si no
+   loguea "not configured"). **No hay URL por defecto en duro**, asi que no manda nada. Sin accion.
+5. **ClickHouse:** `vio_production` **0 filas** (`vio_staging` 8359, `vio_development` 7). Nada que
+   cortar, como decia el runbook. Confirma que el colector de prod no ha recibido **ni un evento
+   real** todavia.
+
+Respaldos del `.env` de este paso: `.env.backup-pre-paso6-20261016-151153` en las dos VMs.
+
+### De paso: el dashboard de commerce de prod SI funciona
+`INTERNAL_READ_TOKENS` esta **ausente en prod** y el doc la llama "obligatoria", pero en el esquema
+tiene `.default("")` y **`INTERNAL_EVENTS_TOKEN` es FULL: escribe y tambien lee**. Comprobado con
+una lectura real: `GET /v1/commerce-stats/overview` devuelve **200** con el token de prod, y **401**
+sin cabecera o con un token falso.
+**Mi primera prueba dio un falso 401**: mande `Authorization: Bearer` y el codigo espera la cabecera
+**`x-internal-token`**. El token era el correcto (mismo MD5 que el de `TOOLS.md`). Un 401 no dice
+nada si no se contrasta el caso bueno.
+Queda como **higiene pendiente**, no como fallo: base-api solo necesita leer y hoy lleva un token
+que ademas puede inyectar eventos.
