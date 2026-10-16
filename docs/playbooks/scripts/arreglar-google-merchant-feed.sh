@@ -20,8 +20,11 @@ command -v az     >/dev/null 2>&1 || { echo "FALTA az (Azure CLI)."; falta=1; }
 gcloud auth list --filter=status:ACTIVE --format="value(account)" 2>/dev/null | grep -q . \
   || { echo "gcloud sin sesion. Hacer:  gcloud auth login"; exit 1; }
 az account show >/dev/null 2>&1 || { echo "az sin sesion. Hacer:  az login"; exit 1; }
-gcloud projects describe "$PROYECTO" >/dev/null 2>&1 \
-  || { echo "Tu cuenta de gcloud no ve el proyecto $PROYECTO. Revisar permisos o cuenta activa."; exit 1; }
+# `projects describe` pide un permiso mas fino que `list` y da falsos negativos: usamos list.
+gcloud projects list --filter="projectId=$PROYECTO" --format="value(projectId)" 2>/dev/null | grep -qx "$PROYECTO" \
+  || { echo "Tu cuenta de gcloud no lista el proyecto $PROYECTO."
+       echo "Cuenta activa: $(gcloud auth list --filter=status:ACTIVE --format='value(account)' 2>/dev/null | head -1)"
+       echo "Si el proyecto existe con otro id, cambiar PROYECTO arriba en este script."; exit 1; }
 echo "Requisitos OK — cuenta gcloud: $(gcloud auth list --filter=status:ACTIVE --format='value(account)' 2>/dev/null | head -1)"
 echo
 
