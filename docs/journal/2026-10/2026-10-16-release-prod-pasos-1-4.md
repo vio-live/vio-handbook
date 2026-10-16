@@ -111,3 +111,64 @@ Miguel, que no esta en git.
 - D3: avisar a Careless, Gladkokken y Makeupmekka del cambio en devoluciones.
 - Cerrar a mano el PR #24 de users.
 - Revisar si las cuentas 1295 y 1300 deben cobrar con credenciales propias.
+
+## Revision posterior (16/10 ~13:10 OSL, a pedido de Angelo)
+
+Angelo mergeo el **PR #124** de `vio-shopify-sync` a las 10:41Z (`refunds/create` en los 6 toml de
+clientes). Verificado: los **6/6** lo tienen. Ese PR solo toca config de Shopify, asi que **no
+dispara deploy de Vercel** y no hacia falta: lo aplica `shopify app deploy`, que ya se habia hecho
+por la manana (el PR era para que la rama dejara de mentir).
+
+### Estado de prod: verde
+- Cluster `Running`, base `Ready`, Redis `Running`. **13/13 deployments**, **0 reinicios**.
+- `api-ecom.vio.live`, `sync.vio.live`, `dashboard.ecom.vio.live` y `api.vio.live`: **200**.
+  `graph-ql` 401 sin key (correcto). `me/sales-channel` con key mala: 401.
+- Los deploys de hoy del proyecto `vio-sync` son **preview** (`target=-`, ramas
+  `custom/client-app` y `fix/refunds-create-...`): **no tocaron produccion**, `sync.vio.live` sigue
+  sirviendo lo suyo. Conviene saberlo porque a simple vista parecen un deploy del app publico.
+
+### Los 8 errores 417 fueron MI despliegue, no una averia
+`POST /me/<id>/sales-channel/create` dio **417 (timeout de 30000ms)** 8 veces, en dos rafagas:
+**10:30** y **10:40Z**. Mi despliegue de los 13 servicios fue 10:19-10:30: mientras los pods de
+extensions y users se recreaban, la llamada interna se quedaba colgada los 30 s de timeout.
+- **Ultimo timeout 10:40:59Z**; desde las **10:50 y 11:00 las mismas operaciones dan 200 en ~800 ms**
+  (4 x 200 frente a 8 x 417). A la hora de revisar llevaba 30 minutos limpio.
+- Encaja con lo ya sabido: el deploy recrea todos los pods del label y hay ~1 minuto de corte.
+- **Primera lectura equivocada mia:** los ids 1324/1325 me parecieron cuentas nuevas creadas hoy.
+  Son del **22/09** y hoy **no se creo ninguna conexion Shopify**. Contar por el id no dice la fecha.
+
+### El fix de users desplegado hoy esta sano
+`saveShopifyExportConnection` lleva la prueba de propiedad nueva (users #23, en `develop` desde las
+00:53Z, y a prod con mi merge). Verificado en el pod: helper `shopify-domain.js` presente, el
+mensaje de la prueba y las 4 referencias al retiro de conexiones ajenas.
+**Lo que daba miedo y no pasa:** la prueba compara contra `myshopify_domain`, y las tiendas de
+clientes tienen dominio propio (`shop.gladkokken.no`, `makeupmekka.com`). Comprobado contra
+extensions en vivo: `getShopInfo` **si** devuelve `myshopify_domain`
+(`wxuxre-tf.myshopify.com`, `makeup-mekka.myshopify.com`) y coincide con la fila de
+`shopify_connection`. No rompe a Gladkokken ni a Makeupmekka. Ademas responde en **0,24-0,54 s**,
+asi que tampoco es la fuente del timeout.
+
+### El circuito de las apps custom esta vivo contra prod
+- `VIO_CUSTOM_APPS` del `.env` de extensions lista **5 apps**, todas con secreto: demo,
+  Gladkokken, Makeupmekka, Villoid y Careless.
+- Probado el camino real contra la de demo: `GET /internal/token` con el secreto correcto
+  (cabecera `Bearer` o `?secret=`) devuelve `{ok:true, shop, accessToken, expiresAt}`; **sin
+  secreto, con secreto equivocado, y con el secreto en `Authorization` cruda o en
+  `x-internal-secret`: 401**. Solo valen `Bearer` y la query.
+- Hay un ciclo que **cada 10 minutos** reconecta las tiendas (renovacion de token) y da 200.
+
+### HALLAZGO DE SEGURIDAD: access tokens de Shopify en claro en los logs
+En 5 horas de logs de produccion hay **114 lineas con tokens visibles**: **48 en users**
+(`[userService.saveShopifyExportConnection] ... data={"accessToken":"shpca_..."}`) y **66 en
+extensions**. Son tokens de las tiendas de clientes reales. No hay `LOG_LEVEL` en el `.env`, asi
+que el logger va al nivel por defecto y los `logger.debug` que vuelcan el objeto entero salen.
+Lo ve cualquiera con `kubectl logs`, y va a parar a donde se agreguen los logs.
+**No arreglado** (es cambio de codigo en dos repos, no de config): hay que dejar de volcar el
+objeto de conexion y enmascarar `accessToken`/`refreshToken`. Se suma a que
+`shopify_connection.access_token` esta **en claro en la base** (32 filas, 0 con `enc:v1:`).
+
+### Pendiente tras la revision
+- Webhooks `refunds/create`: el handler esta en el `dist` de extensions de prod, pero **aun no ha
+  llegado ninguno**. Hace falta una devolucion real en una tienda para confirmarlo.
+- PR #24 de users: GitHub lo marco **MERGED** solo, no hizo falta cerrarlo a mano.
+- Sigue abierto: micro de campanas (PR #14), D2, Vipps, D3.
