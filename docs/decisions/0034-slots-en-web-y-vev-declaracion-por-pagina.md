@@ -101,6 +101,32 @@ el SDK web, Vev y Replit.
 - **Fuera de esta vuelta**: la campaña en el pedido de Commerce (shopcart → orden; migración del
   kernel) y las reglas de campaña por contenido para plantillas que comparten slots.
 
+## Enmienda 3 (2026-10-16, tarde-noche) — la página elige su campaña; el dashboard manda
+
+Angelo, probando el flujo de cero: «creo la campaña, el editor va a Vev, crea el artículo, lo
+registra como parte de la campaña y añade componentes; con la misma key crea otro artículo para
+otra campaña». Y un límite explícito: **en los SDK nativos los lugares son predefinidos y el
+dashboard asigna campañas a esos placements; eso no cambia.**
+
+- **Vev / Replit (editorial):** el editor elige **una vez por artículo** la campaña, en el bloque
+  de configuración de Vev (selector con las campañas activas de la surface) o con
+  `data-vio-campaign` en la página. Los componentes del artículo se declaran con esa campaña y el
+  micro los **asigna automáticamente** a ella, marcando `source = 'page'`.
+- **El dashboard manda:** una asignación hecha en el dashboard (`source = 'dashboard'`) no la
+  toca la página; si el gestor reasigna un componente del artículo a otra campaña, vale lo del
+  dashboard. El dashboard enseña quién asignó cada slot y quién lo ocupa («From page», «Taken by
+  X until Y»).
+- **Reglas del micro:** solo campañas de la misma surface y activas; la página puede mover sus
+  propios slots de una campaña a otra (reemplaza asignaciones `page`), nunca las del dashboard;
+  `mode: merge` sigue igual para la deprecación.
+- **Mientras la declaración llega**, el SDK ya resuelve con la campaña de la página (asignación >
+  campaña de la página > por defecto), así el editor lo ve al instante.
+- **Multi-sponsor** (futuro): no se modela en campañas; un channel con varias colecciones, y ese
+  channel en la campaña de la surface.
+- **Esquema:** columna `surface_campaign_slot.source` enum('dashboard','page') default 'dashboard'
+  (package-database, autorizado por Angelo el 16/10; release del kernel + migración en QA).
+- **Vista de artículos por campaña en el dashboard:** se espera al feedback de las pruebas.
+
 ## Consecuencias
 
 - Micro: un cambio pequeño y compatible (`mode`), PR aparte. SDK web 0.23.0: `platform` en
