@@ -106,3 +106,53 @@ verificación real es el `yarn build` del Dockerfile (el workflow no corre jest)
   deploy a QA junto con el de users, y comprobar que los webhooks de
   `alan-test-supplier` vuelven a 200 y que, si queda una fila huérfana, en el
   log aparece una sola línea de "token y refresh revocados" cada 10 min.
+
+## Ronda 2 — revisión de extensions #24 (misma rama, commit `0f278e5` encima, sin push)
+
+> [claude, 2026-10-16]
+
+- **Rol obligatorio en el helper.** En QA hay 11 tiendas con dos filas vivas y
+  en 5 es **legítimo** (una de supplier y otra de reseller de la misma tienda:
+  25mai, demo-mg-02, framme-demo, sqs-2, task-1574-supplier); "la más reciente"
+  a secas cogía la del rol equivocado. Ahora
+  `activeConnectionByShop(url, { role: 'supplier' | 'reseller' | 'any', relations?, select? })`
+  añade `supplier: Not(IsNull())` / `reseller: Not(IsNull())` al `where` (el
+  mismo patrón que ya usa L4255) y ordena `id DESC` dentro del rol. Asignación:
+  `receiveExportWebhook` ×2 (incl. `app/uninstalled`), `refundInShop`,
+  `cancelOrderSupplier` → `supplier`; `receivePaymentSuccess` (import) →
+  `reseller`; `guardarTokenDelApp` → `supplier` (las apps custom son la app de
+  export: la fila de import de esa tienda tiene otro token y no se toca);
+  `getShopPermissionsOk` → `any` (decide scopes por el rol de la fila que
+  encuentre y su ruta `GET /shop/permissions/:shop` no trae rol).
+  `getEcomUserShopifyByShop` añade `.andWhere('shopifyConnection.supplier IS NOT NULL')`
+  (TypeORM 0.2.41 traduce `alias.relación` a la join column en
+  `replacePropertyNames`, `QueryBuilder.js:463`).
+- **Re-chequeo de la marca tras el lock**, dentro del `try` (el `finally`
+  suelta el lock): en una ráfaga, los que esperaban el lock no repiten la
+  llamada a Shopify tras el 401 del primero. Método privado `refreshRevocado()`
+  usado antes y después del lock.
+- El `warn` del 401 lleva `(Shopify: <error|errors[: error_description]>)`
+  (`shopifyErrorText`), para distinguir `invalid_grant` (revocado) de
+  `invalid_client` (client_id/secret mal). Nunca tokens.
+- `hasRedisFlag`: `!= null`.
+- **Tokens en claro enmascarados** con `maskSecret` en logs de funciones que toca
+  la rama: `app/uninstalled` (deleteAccount), `cancelOrderSupplier` (ya no
+  serializa la conexión entera: id, url, supplier.id), `getVariant`,
+  `deleteMetafiends`, `getShopPermissionsOk` (`console.log(connection)` →
+  id+url; `console.log(url, token)` → enmascarado), `graphGetProductById`.
+  Queda una fuera de la rama: `getProducts` L~4458
+  `JSON.stringify(connection)` (no se tocó, "no cambies nada más").
+- `app/uninstalled` ya no pide `relations: ['supplier']` (no se usaba).
+- **Tests nuevos** (no ejecutables en local): `src/modules/shopify/tests/shopify-refresh-revocado.spec.ts`
+  (servicio por prototipo + `jest.mock` de `utils/redis-client`; 4 casos: 401 →
+  marca + un `warn` con `invalid_grant` y sin tokens + lock liberado; segunda
+  llamada no llama a `httpService.post` ni pide el lock; quien esperó el lock
+  ve la marca al conseguirlo y no llama; un 500 no marca y suelta el lock) y un
+  caso DB-backed en `shopify.service.spec.ts` (misma URL como supplier y
+  reseller, la de reseller más nueva → `supplier` devuelve la de supplier,
+  `reseller` la suya, `any` la más nueva; `getEcomUserShopifyByShop` devuelve
+  el EcomUser de la fila supplier). Usa `Repository.ShopifyConnectionRepository`
+  del módulo de test para insertar las filas sin depender de la firma de
+  `insertShopifyReseller`.
+- `tsc` con el `node_modules` de products enlazado: mismos 20 errores
+  preexistentes, ninguno en lo tocado; el spec nuevo compila.
