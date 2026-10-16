@@ -29,14 +29,14 @@ instalaron"*. No reabrir hasta entonces.
 **Arreglo:** extender el cifrado por campo a `access_token`/`refresh_token`, con su migracion de
 re-cifrado. Va de la mano del punto 1.
 
-### 3. `INTERNAL_READ_TOKENS` ausente en el colector de prod
+### 3. ~~`INTERNAL_READ_TOKENS` ausente en el colector de prod~~ — **CERRADO 16/10**
 No es un fallo: el dashboard **funciona** porque base-api usa `INTERNAL_EVENTS_TOKEN`, que es FULL.
 El problema es de minimo privilegio: base-api **solo necesita leer** y hoy lleva un token que
 tambien puede **inyectar eventos falsos** en analytics. Si se filtra, se puede falsear el dashboard.
 **Arreglo:** generar un token de solo lectura, ponerlo en `INTERNAL_READ_TOKENS` del colector de
 prod y cambiar `ANALYTICS_INTERNAL_TOKEN` del Secret `env-sc-base-api` por ese. Staging ya lo tiene.
 
-### 4. Firewall de la MySQL de QA abierto a internet
+### 4. ~~Firewall de la MySQL de QA abierto a internet~~ — **CERRADO 16/10**
 Regla `all` (0.0.0.0/0), igual que tenia la staging vieja, donde hubo 287 intentos de fuerza bruta.
 **Arreglo:** cerrarla dejando solo la IP de salida del AKS de QA. Es la misma operacion que se hizo
 en prod el 02/10 y en staging el 01/10.
@@ -103,3 +103,21 @@ ANTES**, o el guardian diario no actua y alguien la encuentra encendida.
 - El Gateway y el VirtualService de campanas **ya existian**; el ClusterIssuer se llama
   `letsencrypt-dns01-cloudflare`.
 - El colector de prod **si** necesitaba tocar el `.env` (`CAMPAIGNS_URL` es obligatoria).
+
+## Nuevo (16/10, tarde)
+
+### 13. Las Cloud Functions del feed corren Node.js 20 — FECHA LIMITE 30/10/2026
+`GoogleMerchantFeed-Test` y `GoogleMerchantFeed-Prod` (GCP, `reachu-functions`, `europe-north1`)
+corren **nodejs20**. Google lo **decomisiona el 30 de octubre de 2026**: a partir de esa fecha
+**no se podran redesplegar**. Hoy funcionan; el riesgo es quedarse sin poder tocarlas.
+Salio como aviso al arreglar el Service Bus.
+**Angelo (16/10): "apuntalo y lo tomamos la proxima semana".** Hay recordatorio automatico.
+**Arreglo:** subir el runtime (`--runtime nodejs22`) y redesplegar, lo que **si** exige el codigo
+fuente — no vale `run services update`. Hace falta el repo de las funciones.
+
+### 14. El deploy de `vio-campaigns-microservice` se pone rojo por timeout, no por fallo
+`helm upgrade --wait --timeout 5m` expira porque el pod tarda **~7 minutos** en quedar listo; el
+rollout termina bien despues. Paso el 16/10 con el kernel 1.0.275.
+**Consecuencia:** un rojo en ese repo **no significa que no se desplego**. Comprobar el pod antes
+de revertir nada.
+**Arreglo:** subir el `--timeout` del paso de deploy, o mirar por que ese micro arranca tan lento.
