@@ -77,6 +77,20 @@ Alan (daily 16/10): «lo de SLOTS no queda claro». Angelo: «vamos con los slot
 - Lección repetida hoy dos veces (SDK 0.23.0 publicada y webapp #63 mergeada antes del revisor): **el revisor cierra antes
   del merge**; está en ADR-0034 y en la memoria.
 
+## Estado al corte de la sesión (≈15:45 UTC, límite de uso alcanzado)
+- **Listo y desplegado:** Vev 0.331 (selector Campaign), SDK 0.24.0 en `main` (f772974; **publish en npm pendiente de Angelo**),
+  kernel 1.0.275 en los 11 micros, migración `source` en QA, webapp #63 en staging.
+- **Micro [#16](https://github.com/vio-live/vio-campaigns-microservice/pull/16) @ 2162a86:** verificado (274 tests memoria + 148 MySQL
+  real); **falta un último commit** que el agente estaba haciendo: N1 deadlock entre slots distintos (gap locks del índice
+  `slot_id` bajo REPEATABLE READ → usar `manager.transaction('READ COMMITTED', …)` o leer las asignaciones sin `FOR UPDATE` tras
+  bloquear `surface_slot`; test MySQL con ≥20 slots distintos en paralelo = 0 `CONCURRENT_UPDATE`) y N2 (con >200 locations en
+  `replace` no deprecar). **Siguiente paso:** comprobar ese commit, mergear #16 → deploy QA (vigilar `helm --wait`) → mergear
+  webapp [#64](https://github.com/vio-live/webapp-vio-commerce/pull/64) (@ 9e15f43, revisado, listo) → smoke en staging: elegir
+  campaña en Vev, «From page» en el dashboard, reasignar desde el dashboard, soltar.
+- **Después:** prueba de cero de Angelo (artículo nuevo), Replit con `data-vio-scope` (handoff), bump de prod cuando toque
+  (migración `source` en prod antes del micro), colector en VMs (Miguel), limpieza de slots huérfanos y vista de artículos
+  por campaña (feedback de Angelo).
+
 ## Decisions
 - Implementador + revisor independiente en cada PR; **el merge antes de la revisión costó una 0.23.0 inútil en npm**:
   no volver a publicar antes de que el revisor cierre.
