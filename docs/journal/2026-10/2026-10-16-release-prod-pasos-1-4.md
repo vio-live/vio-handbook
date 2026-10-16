@@ -163,7 +163,8 @@ En 5 horas de logs de produccion hay **114 lineas con tokens visibles**: **48 en
 extensions**. Son tokens de las tiendas de clientes reales. No hay `LOG_LEVEL` en el `.env`, asi
 que el logger va al nivel por defecto y los `logger.debug` que vuelcan el objeto entero salen.
 Lo ve cualquiera con `kubectl logs`, y va a parar a donde se agreguen los logs.
-**No arreglado** (es cambio de codigo en dos repos, no de config): hay que dejar de volcar el
+**DIFERIDO POR ANGELO** (16/10, Discord): *"dejalos por ahora, lo tomamos cuando ellos
+confirmen que lo instalaron"*. No se abren PRs todavia. Cuando toque: hay que dejar de volcar el
 objeto de conexion y enmascarar `accessToken`/`refreshToken`. Se suma a que
 `shopify_connection.access_token` esta **en claro en la base** (32 filas, 0 con `enc:v1:`).
 
