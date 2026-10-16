@@ -51,6 +51,29 @@ Alan (daily 16/10): «lo de SLOTS no queda claro». Angelo: «vamos con los slot
 - Pendiente: prueba de Angelo (artículo nuevo con carrusel + card); limpieza de slots huérfanos desde el dashboard; prueba
   200 de `?platform=vev` con una key válida (401 con key inválida: la ruta acepta el parámetro).
 
+## Tarde-noche: la página elige su campaña (ADR-0034, enmienda 3)
+- Angelo, probando de cero: «creo la campaña, el editor va a Vev, crea el artículo y lo registra como parte de la campaña». Límite:
+  los SDK nativos siguen con placements predefinidos asignados desde el dashboard. Multi-sponsor futuro = channel con varias
+  colecciones.
+- **Kernel**: [package-database #20](https://github.com/vio-live/package-database/pull/20) `surface_campaign_slot.source`
+  enum('dashboard','page') (OK explícito de Angelo); release automático 1.0.274 (solo dependientes) → migración en QA aplicada
+  (backup `pre-slot-source-20261016`; el clasificador me bloqueó el ALTER desde el pod; la corrió Miguel/Angelo) → `pkg=all`
+  → **1.0.275** los siete. **Pendiente:** bump de los otros 11 micros a 1.0.275 (aditivo, no urge).
+- **Micro** [#16](https://github.com/vio-live/vio-campaigns-microservice/pull/16): manifest con `campaignId` → asignaciones
+  `source: 'page'`; el dashboard manda (desaloja `page` solapadas solo con ventanas abiertas o futuras; 409 solo contra
+  `dashboard`); `source` en `campaigns[].slots[]` de la config; `assignments[]` en `GET /client-apps/:id/slots`. 255 tests.
+- **SDK web 0.24.0** [#84](https://github.com/vio-live/vio-web-sdk/pull/84): `Vio.init({ campaignId })`, `data-vio-campaign`,
+  `Vio.pageCampaign()`, manifest con campaña, cascada asignación → campaña de la página (solo si el sponsor participa) →
+  sponsor → default; una asignación `page` ajena cede ante la campaña propia de la página; memoria un estado por id
+  (A→B→A re-declara). 534 tests. Review en dos pasadas.
+- **Vev** [#66](https://github.com/vio-live/vev/pull/66): selector «Campaign» en Vio Config (solo activas), el panel sigue el
+  cambio, un bootstrap, nada escrito en el navegador de visitantes; rebundle 0.24.0 pendiente del merge del SDK.
+- **Dashboard** [#63](https://github.com/vio-live/webapp-vio-commerce/pull/63) **mergeado por Angelo antes de cerrar la
+  revisión** («From page», «Taken by X until Y», sin sufijo de plataforma); la revisión pide quitar «Save anyway» (el micro
+  nunca lo acepta) y arreglar ventanas futuras y tests dependientes de zona horaria → PR de seguimiento en curso.
+- Lección repetida hoy dos veces (SDK 0.23.0 publicada y webapp #63 mergeada antes del revisor): **el revisor cierra antes
+  del merge**; está en ADR-0034 y en la memoria.
+
 ## Decisions
 - Implementador + revisor independiente en cada PR; **el merge antes de la revisión costó una 0.23.0 inútil en npm**:
   no volver a publicar antes de que el revisor cierre.
