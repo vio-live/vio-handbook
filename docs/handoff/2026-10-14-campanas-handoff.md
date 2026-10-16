@@ -61,7 +61,7 @@ status: live
 7. **Borrar el flag `ACCOUNT_PAYMENTS`** cuando F2 esté en prod y encendido en los dos entornos.
 8. **Clases de envío en otra moneda:** 19 en QA. Dos son de Alan (1295 y 1299) y las arregla él; el resto son cuentas de prueba viejas.
 9. **Alan:** prueba y estrés de todo, en su [tarjeta de Trello](https://trello.com/c/ftrrjOW0). Su loop de VG necesita una surface nueva en el dashboard.
-10. **Prod:** el mismo corte (ADR-0029/0030), F2, las migraciones del kernel (con el `group_concat_max_len` de la revisión de Miguel) y `PAYMENT_SECRETS_KEY`. Nada de esto está en prod.
+10. **Prod:** el mismo corte (ADR-0029/0030), F2, las migraciones del kernel (con el `group_concat_max_len` de la revisión de Miguel) y `PAYMENT_SECRETS_KEY`. Nada de esto está en prod. **16/10: runbook completo para Miguel en [2026-10-16-release-prod-commerce](2026-10-16-release-prod-commerce.md)** (prod apagado desde el 05/10; 15 PRs de release abiertos).
 11. **Hallazgos de seguridad** — los tres de la lista, **arreglados el 15/10** (en QA):
    - base-api [#34](https://github.com/vio-live/vio-base-api/pull/34): `/api/role/add`, `/role/to-disable`, `GET /role/:id` **y `POST /api/admin/users/token`** (daba un custom token de Firebase de cualquier uid) exigen admin;
    - graphql [#26](https://github.com/vio-live/graphql/pull/26): lo público se decide por el documento, no por el nombre (`GetPurchaseConditions` e `IntrospectionQuery`);
