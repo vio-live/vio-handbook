@@ -79,6 +79,14 @@ te encargas de arreglar lo que él diga". Monitor de la actividad de Alan en Tre
   push**: el clasificador bloqueó push+PR y además es ADR-0001): los seis tomls con `refunds/create`; `vio-client-dev` con
   los siete topics y el Pub/Sub de staging. Falta: push + PR contra `custom/client-app` y `shopify app deploy` de cada app de
   cliente desde la cuenta dueña (Angelo). Avisado a Angelo por push y a Alan en la tarjeta.
+- **10:50 UTC, con Angelo ya despierto («esto debemos arreglarlo sí o sí ya»):** rama subida y PR abierto en
+  [vio-shopify-sync #124](https://github.com/vio-live/vio-shopify-sync/pull/124) contra `custom/client-app`. Comprobado antes de
+  tocar los apps: el flujo de refunds **ya está en producción** desde el 12/10 (extensions `master` 15c7b3f, orders `master`
+  2a6da29, shopcart `main` c1c38d6, deploys en verde), el Shopify CLI 4.7 de la laptop tiene sesión sobre los apps de cliente
+  (versión activa `vio-client-careless-1` del 12/10) y el repo no tiene extensiones de Shopify que se arrastren con la config.
+  Los clústeres de prod (`vio-commerce-prod*`) no se resuelven desde la laptop: los interruptores de devolución de los
+  vendedores no se pudieron leer. El `shopify app deploy` lo bloqueó el clasificador como despliegue a producción: queda para
+  Angelo desde su terminal (comandos en el chat), app por app, con `--no-build`.
 - Cada webhook de esa tienda llega dos veces (dos ids de Pub/Sub distintos → dos suscripciones): inocuo (el segundo
   intento de devolver en Stripe queda en `warn: already refunded`), pero conviene que Alan mire si tiene dos apps
   instaladas o dos suscripciones del mismo topic.
@@ -97,6 +105,6 @@ te encargas de arreglar lo que él diga". Monitor de la actividad de Alan en Tre
   carrito del backend con una línea huérfana (sin riesgo de cobro).
 
 ## Next session
-- **Angelo:** push de `fix/refunds-create-en-apps-de-clientes` en vio-sync, PR a `custom/client-app` y `shopify app deploy` de careless, gladkokken, makeupmekka (y demo/vio-client); comprobar en extensions de prod que entra `webhook refunds/create from <tienda>`.
+- **Angelo:** `shopify app deploy` de careless, gladkokken y makeupmekka (PR #124 ya abierto; demo/vio-client/dev pueden ir después); comprobar en extensions de prod que entra `webhook refunds/create from <tienda>`; mirar los interruptores de Vipps de cada cliente.
 - Alan reprueba el stepper sobre la 0.329 y contesta lo de editar la orden.
 - Lo que salga del monitor entra en el mismo ciclo.
