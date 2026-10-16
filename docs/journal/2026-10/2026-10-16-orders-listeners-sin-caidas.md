@@ -101,6 +101,39 @@ default de Node; el comentario del archivo explica por qué).
   no estaba prettier-clean en develop (L437-511, 1113, 1569, 2571, 2791+, código
   de #22/#23); no se reformateó nada ajeno.
 
+### Ronda 2 — revisión de orders #25 (`4e9c8a6`, commit nuevo encima, sin push)
+> [claude/svc-orders, 2026-10-16] La rama se pushó como **orders #25**; la revisión independiente pidió:
+
+- **Blocker:** `bootstrap().catch(onBootstrapFailure)` en `src/main.ts` — con el guard de
+  `unhandledRejection`, un fallo de arranque (`onModuleInit` del consumer del bus, `EADDRINUSE`)
+  dejaba el pod vivo sin servir. `onBootstrapFailure` (en `process-guards.ts`, testeable sin Nest)
+  loguea `[bootstrap] the service did not start, the process ends: …` con stack y hace `exit(1)`.
+- `onUnhandledRejection` añade `reason.stack` si es un `Error` que no es de axios
+  (`isAxiosError` o `config.url`); los de axios ya traen status y URL.
+- `describeError` envuelve su cuerpo en `try/catch` → `'unprintable error'` (tests con
+  `Object.create(null)` y getters de `message`/`response` que lanzan).
+- `tellExtensions(operation, orderId, path, body, context)` responde `{ taken: true, data } |
+  { taken: false }` (no `undefined`, que confundía "no lo tomó" con un body vacío) y el warn
+  lleva `tracking <id> <número>` y la orden remota (`channelId` en origen,
+  `supplierShopifyOrderId`/`supplierExternalOrderId` en el supplier). `updateTrackingIn{Origin,Supplier}Order`
+  devuelven `boolean`; `saveTrackingNumber` solo loguea `success updateTrackingInOriginOrder` si
+  extensions lo tomó, si no `partial: extensions did not take it in the origin order (Shopify 6001);
+  the tracking is saved in Vio` (ídem para el supplier). En `updateTrackingInSupplierOrder`,
+  `shopify/get/ecom-user` (también extensions) se pide solo si hay ítems Shopify del supplier y su
+  fallo es el mismo warn — antes, con extensions caído, tiraba un 400 **después** de completar los ítems.
+- `cancelOrderOnSalesChannel`: el warn nombra el channel real (`ChannelName` = Shopify, Woocommerce,
+  Facebook, Squarespace, Wordpress, Magento; el mapa solo tiene shopify/squarespace/wordpress); test
+  con `Woocommerce`, no `'Partner'`.
+- **Corrección al cuerpo del PR:** `processInvalidStock` y `cancelOrderOnSalesChannel` **no** pasan
+  por `tellExtensions`; lo único que los cubre es el `.catch` de `scheduleInvalidStock` (y la red de
+  seguridad). `tellExtensions` solo envuelve los cuatro avisos de tracking.
+- Listener de email: el log lleva `template <id> for order <id>`, nunca la dirección.
+- Tests nuevos: cuerpos Woo/Magento en los avisos (service) y en el 200 de los listeners;
+  `saveTrackingNumber` completo con extensions caído → Vio guarda el tracking, completa los ítems
+  del supplier, responde el tracking (controller incluido, 201, no el 400 de una llamada que lanza)
+  y deja 5 `warn` sin credenciales; `bootstrap().catch` no llega al guard de `unhandledRejection`.
+- `jest.unit` → **8 suites / 116 tests OK**; `tsc` solo `mockRequest`; eslint limpio en lo tocado.
+
 ## Decisions
 - Los listeners son **avisos**: nunca lanzan, nunca devuelven una promesa sin
   dueño. El fallo se dice con evento + id + status/URL; el flujo de la orden
@@ -125,7 +158,7 @@ default de Node; el comentario del archivo explica por qué).
 - El brief decía Node 20; el `Dockerfile` es `node:22` desde antes de hoy.
 
 ## Next session
-- OK de Angelo → push + PR a `develop`; desplegar en QA y repetir un
-  `orders/fulfilled` con extensions caído para ver el `warn`/`error` en vez del
-  exit 1.
+- La rama ya es orders #25; `4e9c8a6` (ronda 2) está **solo en local**, falta push con OK.
+  Luego desplegar en QA y repetir un `orders/fulfilled` con extensions caído para ver el
+  `warn`/`error` en vez del exit 1.
 - Si se quiere, el `await` del DLQ en el bus consumer, en su propia rama.
