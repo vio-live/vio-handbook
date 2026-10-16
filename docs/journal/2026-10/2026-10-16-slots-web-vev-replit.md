@@ -97,6 +97,18 @@ Alan (daily 16/10): «lo de SLOTS no queda claro». Angelo: «vamos con los slot
   depreca, `releaseSlotIds` acotado a la surface. 277 tests en memoria + 151 contra MySQL 8.0.21 con el kernel 1.0.275 real.
   Mergeado (`27c1924`), deploy a QA run 38922239531. Después: merge de webapp #64 y smoke en staging.
 
+## Cierre (15:35 UTC): todo en QA
+- El deploy de #16 falló en la imagen por `TS4053` (tipo `ManifestWarning` sin exportar; solo aparece al emitir declaraciones,
+  por eso ni el `tsc --noEmit` local ni el scratch de jest lo vieron) → [#17](https://github.com/vio-live/vio-campaigns-microservice/pull/17),
+  verificado emitiendo declaraciones (1 → 0), mergeado; **micro en QA imagen :21 (15:25 UTC)**, pod limpio, ruta del manifest
+  respondiendo. Lección: el `tsc` de comprobación tiene que emitir declaraciones si el proyecto tiene `declaration: true`.
+- **Dashboard #64 mergeado** (`2916e2b`) tras el micro; Vercel a staging.
+- Estado final del día: Vev 0.331 + SDK 0.24.0 (en `main`; npm pendiente de Angelo) + micro con campaña de página y `source` +
+  dashboard con «From page»/«Taken by» + kernel 1.0.275 en los 11 micros + colector #18 mergeado (deploy VMs: Miguel).
+- Pendiente fuera de esta sesión: publish 0.24.0; prueba de cero de Angelo (artículo nuevo); Replit con `data-vio-scope` +
+  `data-vio-campaign`; prod (migración `source` antes del micro); smoke de los PUT nuevos en staging; limpieza de slots
+  huérfanos y vista de artículos por campaña (feedback); subir el `--timeout` del helm de campaigns.
+
 ## Decisions
 - Implementador + revisor independiente en cada PR; **el merge antes de la revisión costó una 0.23.0 inútil en npm**:
   no volver a publicar antes de que el revisor cierre.
