@@ -71,6 +71,14 @@ te encargas de arreglar lo que él diga". Monitor de la actividad de Alan en Tre
 - 02:46 Alan añade que los refunds Shopify → Stripe también fallan: misma causa (0 `refunds/create` en extensions y 0
   `refunded-in-shop` en orders desde las 02:40, con Vipps y con Stripe). Respondido en la tarjeta con el nombre exacto del
   campo del dashboard («When the money is taken» → «Authorize now, capture when it ships») y el topic que falta en su app.
+- **02:52, hallazgo de Alan que sube de nivel:** en `vio-sync` rama `custom/client-app` (la de los apps custom, último commit
+  de Angelo 12/10, 26 adelante / 118 detrás de `master`) **ningún app de cliente suscribe `refunds/create`**: careless,
+  gladkokken, makeupmekka, demo y vio-client traen los topics de órdenes pero no ese; `vio-client-dev` solo los tres de
+  productos. En producción, una devolución hecha en la Shopify de Careless/Gladkokken/Makeupmekka no llega a Vio.
+  Arreglo preparado en la rama `fix/refunds-create-en-apps-de-clientes` (worktree en el scratchpad, **commit local, sin
+  push**: el clasificador bloqueó push+PR y además es ADR-0001): los seis tomls con `refunds/create`; `vio-client-dev` con
+  los siete topics y el Pub/Sub de staging. Falta: push + PR contra `custom/client-app` y `shopify app deploy` de cada app de
+  cliente desde la cuenta dueña (Angelo). Avisado a Angelo por push y a Alan en la tarjeta.
 - Cada webhook de esa tienda llega dos veces (dos ids de Pub/Sub distintos → dos suscripciones): inocuo (el segundo
   intento de devolver en Stripe queda en `warn: already refunded`), pero conviene que Alan mire si tiene dos apps
   instaladas o dos suscripciones del mismo topic.
@@ -89,5 +97,6 @@ te encargas de arreglar lo que él diga". Monitor de la actividad de Alan en Tre
   carrito del backend con una línea huérfana (sin riesgo de cobro).
 
 ## Next session
+- **Angelo:** push de `fix/refunds-create-en-apps-de-clientes` en vio-sync, PR a `custom/client-app` y `shopify app deploy` de careless, gladkokken, makeupmekka (y demo/vio-client); comprobar en extensions de prod que entra `webhook refunds/create from <tienda>`.
 - Alan reprueba el stepper sobre la 0.329 y contesta lo de editar la orden.
 - Lo que salga del monitor entra en el mismo ciclo.
