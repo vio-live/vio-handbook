@@ -73,3 +73,29 @@ Mismo prompt que arriba, con su propia surface, y además: pasar de `environment
 `'testing'`, sacar `apiBase`/`graphQLBase` del `init` (con `environment` basta) y, si la base del demo
 sigue en 0.5.x, revisar la API usada (`Vio.cart.addManual`, `Vio.checkout.startKlarnaInstant`,
 `resumeKlarnaReturn`, `selectPaymentMethod`) contra 0.21.0 antes de subir.
+
+## Slots, artículo y atribución por campaña (SDK web 0.23.1, 16/10) — instrucciones para el agente de Replit
+
+Lo que la página tiene que hacer es mínimo y es **el mismo estándar que Vev** (ADR-0034):
+
+1. `npm i @vio-live/web-sdk@0.23.1` (**no** la 0.23.0, que se publicó con fallos) y `Vio.init({ apiKey, platform: 'web' })`
+   (o `'custom-web'`). Nada más cambia en el arranque.
+2. **Un slot por sitio de la plantilla, sin nombrar nada:** cada `<vio-product>`, `<vio-product-carousel>` y
+   `<vio-product-detail>` se registra solo con un id automático (`carousel-1`, `card-3`…) y aparece en la surface del
+   dashboard para asignarle campaña. Si la misma plantilla sirve varios artículos y se quiere **campaña por artículo**,
+   la página del artículo lleva una sola línea:
+   `<body data-vio-scope="article-<id>" data-vio-scope-name="<título del artículo>">` → los slots pasan a ser
+   `article-<id>-carousel-1`, con nombre legible «Carousel 1 · <título>». Un `vio-slot="..."` explícito en un elemento
+   sigue valiendo para nombrar o agrupar; `vio-slot-name` pone el nombre.
+3. **El artículo** se resuelve solo: `<link rel="canonical">`/`og:url` y `og:title`/`<title>`; para fijarlo,
+   `<meta name="vio:content-id" content="...">` y `<meta name="vio:content-title" content="...">` (id ≤ 128 chars; si
+   la URL es más larga el SDK pasa al siguiente candidato).
+4. **Atribución**: todos los eventos de cada elemento llevan slot, campaña, sponsor y artículo; el carrito recuerda de
+   qué componente vino cada unidad y la compra se reporta una vez por campaña presente en el carrito. La página no tiene
+   que hacer nada.
+
+Comprobación: en la surface del dashboard aparecen los slots con su nombre; al asignar una campaña a uno, ese componente
+muestra los productos de esa campaña en la siguiente carga; en analytics los eventos de ese componente llevan su
+`campaign_id` y `content_id`. PRs: [vio-web-sdk #82](https://github.com/vio-live/vio-web-sdk/pull/82) y
+[#83](https://github.com/vio-live/vio-web-sdk/pull/83).
+
