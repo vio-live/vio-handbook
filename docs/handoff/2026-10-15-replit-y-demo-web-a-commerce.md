@@ -78,8 +78,10 @@ sigue en 0.5.x, revisar la API usada (`Vio.cart.addManual`, `Vio.checkout.startK
 
 Lo que la página tiene que hacer es mínimo y es **el mismo estándar que Vev** (ADR-0034):
 
-1. `npm i @vio-live/web-sdk@0.23.1` (**no** la 0.23.0, que se publicó con fallos) y `Vio.init({ apiKey, platform: 'web' })`
-   (o `'custom-web'`). Nada más cambia en el arranque.
+1. `npm i @vio-live/web-sdk@0.24.0` (ni la 0.23.0 ni la 0.23.1: la 0.24.0 añade la campaña de la página) y
+   `Vio.init({ apiKey, platform: 'web' })` (o `'custom-web'`). **Campaña por artículo, el estándar de Vev:** la página del
+   artículo lleva `data-vio-campaign="<id de la campaña>"` en el `body` (junto al `data-vio-scope`); sus componentes se
+   registran bajo esa campaña y el dashboard la ve como «From page» y puede reasignar. Sin el atributo, campaña por defecto.
 2. **Un slot por sitio de la plantilla, sin nombrar nada:** cada `<vio-product>`, `<vio-product-carousel>` y
    `<vio-product-detail>` se registra solo con un id automático (`carousel-1`, `card-3`…) y aparece en la surface del
    dashboard para asignarle campaña. Si la misma plantilla sirve varios artículos y se quiere **campaña por artículo**,

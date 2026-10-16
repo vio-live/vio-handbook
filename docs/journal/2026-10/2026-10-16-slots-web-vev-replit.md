@@ -77,7 +77,7 @@ Alan (daily 16/10): «lo de SLOTS no queda claro». Angelo: «vamos con los slot
 - Lección repetida hoy dos veces (SDK 0.23.0 publicada y webapp #63 mergeada antes del revisor): **el revisor cierra antes
   del merge**; está en ADR-0034 y en la memoria.
 
-## Estado al corte de la sesión (≈15:45 UTC, límite de uso alcanzado)
+## Estado al corte de la sesión (≈15:45 UTC) — superado: la sesión siguió
 - **Listo y desplegado:** Vev 0.331 (selector Campaign), SDK 0.24.0 en `main` (f772974; **publish en npm pendiente de Angelo**),
   kernel 1.0.275 en los 11 micros, migración `source` en QA, webapp #63 en staging.
 - **Micro [#16](https://github.com/vio-live/vio-campaigns-microservice/pull/16) @ 2162a86:** verificado (274 tests memoria + 148 MySQL
@@ -90,6 +90,12 @@ Alan (daily 16/10): «lo de SLOTS no queda claro». Angelo: «vamos con los slot
 - **Después:** prueba de cero de Angelo (artículo nuevo), Replit con `data-vio-scope` (handoff), bump de prod cuando toque
   (migración `source` en prod antes del micro), colector en VMs (Miguel), limpieza de slots huérfanos y vista de artículos
   por campaña (feedback de Angelo).
+
+## 16:15 UTC: micro #16 mergeado
+- Último commit `0cbe841`: READ COMMITTED + relectura sin `FOR UPDATE` tras el lock de `surface_slot` (20 manifests concurrentes
+  sobre slots distintos → 0 `CONCURRENT_UPDATE`), 409 de ventana dentro de la transacción, `replace` con >200 locations no
+  depreca, `releaseSlotIds` acotado a la surface. 277 tests en memoria + 151 contra MySQL 8.0.21 con el kernel 1.0.275 real.
+  Mergeado (`27c1924`), deploy a QA run 38922239531. Después: merge de webapp #64 y smoke en staging.
 
 ## Decisions
 - Implementador + revisor independiente en cada PR; **el merge antes de la revisión costó una 0.23.0 inútil en npm**:
