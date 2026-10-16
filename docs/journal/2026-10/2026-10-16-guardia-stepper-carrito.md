@@ -68,6 +68,9 @@ te encargas de arreglar lo que él diga". Monitor de la actividad de Alan en Tre
   (`shopify.app.vio-client-dev.toml`, suscripciones que él mismo pegó en la tarjeta) no incluye ese topic. Es configuración
   del app, no código: añadir `"refunds/create"` y `shopify app deploy`. Los tomls de `vio-sync-staging` y `vio-sync` ya lo
   traen.
+- 02:46 Alan añade que los refunds Shopify → Stripe también fallan: misma causa (0 `refunds/create` en extensions y 0
+  `refunded-in-shop` en orders desde las 02:40, con Vipps y con Stripe). Respondido en la tarjeta con el nombre exacto del
+  campo del dashboard («When the money is taken» → «Authorize now, capture when it ships») y el topic que falta en su app.
 - Cada webhook de esa tienda llega dos veces (dos ids de Pub/Sub distintos → dos suscripciones): inocuo (el segundo
   intento de devolver en Stripe queda en `warn: already refunded`), pero conviene que Alan mire si tiene dos apps
   instaladas o dos suscripciones del mismo topic.
