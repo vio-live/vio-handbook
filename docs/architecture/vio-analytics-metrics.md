@@ -20,6 +20,17 @@ backend materialice Surfaces como entidad con id, se agrega
 `context.surface_id` al contrato (aditivo) y estas métricas ganan esa
 dimensión sin cambiar fórmulas.
 
+> **Desde el SDK web 0.23.1 (2026-10-16): `purchase` y `begin_checkout` llegan una vez por campaña presente en el
+> carrito** (mismo `order_id`, `props.slice`/`props.slices`). Por eso, en el colector (vio-analytics #18):
+> - **Pedidos** = `uniqExact(order_id)` sobre `purchase` (más los `purchase` legados sin `order_id`, uno a uno). Nunca
+>   `countIf(name='purchase')`.
+> - **AOV** = GMV / pedidos (no / eventos de compra).
+> - **Funnel global**: `begin_checkout` cuenta solo la primera porción (`slice <= 1`); `purchase` cuenta pedidos.
+> - **Por campaña**: cada campaña ve su propia porción (su `begin_checkout` y su `purchase` con su importe); los conteos
+>   por campaña **no se suman** entre sí para obtener el total, las sumas de GMV sí.
+> - Los `purchase` de la 0.23.0 (no se usó en producción) venían sin etiqueta: se deduplican por `order_id` igual, pero
+>   sus `begin_checkout` no.
+
 ## Núcleo común (toda surface, la base de todo dashboard)
 
 | Métrica | Fórmula (sobre `events FINAL`, filtrado por surface/período) |
