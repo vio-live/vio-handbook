@@ -36,6 +36,21 @@ Alan (daily 16/10): «lo de SLOTS no queda claro». Angelo: «vamos con los slot
 - **Replit:** instrucciones estándar en el [handoff](../../handoff/2026-10-15-replit-y-demo-web-a-commerce.md)
   (`data-vio-scope` en el `body` del artículo; todo lo demás es automático). Dependen de la 0.23.1.
 
+## Cierre (≈13:30 UTC): desplegado
+- **SDK web 0.23.1** ([#83](https://github.com/vio-live/vio-web-sdk/pull/83), 508 tests): los 3 bloqueantes y todos los
+  avisos de la revisión de la 0.23.0 cerrados; verificación independiente punto por punto antes del merge (una regresión
+  del reconcile de orígenes con recorte de stock cazada y corregida en el mismo PR). Publicada en npm por Angelo (12:48 UTC).
+  Nuevo en la API: `Vio.cartSlices()`, memoria de declaración por id, scope heredable, `content_url` acotado.
+- **Vev 0.330** ([vev #65](https://github.com/vio-live/vev/pull/65), 5 commits): bloqueantes B1–B4 de la revisión (sponsors de
+  todas las campañas, id por `virtualKey || key`, split sin herencia, compra acotada al sponsor pagado) y los avisos;
+  bundle byte-idéntico a `afff382`; `vev deploy -m` a las ~13:25 UTC. **Las páginas publicadas hay que republicarlas.**
+- **Colector** ([vio-analytics #18](https://github.com/vio-live/vio-analytics/pull/18), mergeado `477b56b`): pedidos por
+  `order_id`, `begin_checkout` global por primera porción, tag `slice/slices` acotado en `minimal`; 173 tests incl. 10
+  contra ClickHouse 24.8. **Deploy manual pendiente (Miguel), staging y prod.**
+- Trello: checklist «Slots» S1–S8 en la tarjeta de campañas de Alan; handoff de Replit con el estándar (`data-vio-scope`).
+- Pendiente: prueba de Angelo (artículo nuevo con carrusel + card); limpieza de slots huérfanos desde el dashboard; prueba
+  200 de `?platform=vev` con una key válida (401 con key inválida: la ruta acepta el parámetro).
+
 ## Decisions
 - Implementador + revisor independiente en cada PR; **el merge antes de la revisión costó una 0.23.0 inútil en npm**:
   no volver a publicar antes de que el revisor cierre.
