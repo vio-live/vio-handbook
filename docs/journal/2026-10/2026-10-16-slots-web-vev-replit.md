@@ -1,0 +1,55 @@
+---
+date: 2026-10-16
+session: "Slots en web, Vev y Replit: declaración automática, artículo y atribución por campaña"
+participants: [angelo, claude]
+status: live
+---
+
+# Session — 2026-10-16 — Slots: de «no queda claro» a un modelo de punta a punta
+
+## Goal
+Alan (daily 16/10): «lo de SLOTS no queda claro». Angelo: «vamos con los slots» → «ve con todo de una».
+
+## Done
+- **Diagnóstico:** micro y dashboard tenían slots desde el 13/10 (ADR-0027) pero nadie los declaraba: `surface_slot`
+  vacía en QA; el SDK web solo tenía el tipo y el bloque de Vev no tenía campo.
+- **Diseño, en tres vueltas con Angelo** → [ADR-0034](../../decisions/0034-slots-en-web-y-vev-declaracion-por-pagina.md)
+  con dos enmiendas: (1) cada página declara los suyos con `mode: 'merge'`; (2) el id lo genera el host o el SDK, el
+  nombre es opcional, el editor no escribe nada; (3) un solo helper `Vio.attribution()`, scope heredable
+  (`data-vio-scope`), el artículo en `content_id` y no en el slot, el carrito recuerda el origen de cada unidad y la
+  compra se emite una vez por campaña.
+- **Micro:** [#15](https://github.com/vio-live/vio-campaigns-microservice/pull/15) `mode: 'merge'` en el manifest,
+  revisado (W1/N1 aplicados: README «solo body», tests de `''` y `null`), **mergeado y en QA** (run 38892989136).
+- **SDK web 0.23.0:** [#82](https://github.com/vio-live/vio-web-sdk/pull/82), 470 tests, mergeado por Angelo
+  (`a55da8c`) y publicado en npm a las 12:12 UTC. **La revisión independiente, que llegó después del merge, encontró 3
+  bloqueantes:** eventos rechazados por el colector cuando `content_id`/`location_id` pasan de 128 caracteres (URLs de
+  artículos largas: regresión para Vev y Replit), compra de un carrito de una sola campaña atribuida a la campaña por
+  defecto, y caché del artículo que congela las SPA (Replit). Más avisos: ordinales repetidos en DOM dinámico, carrera
+  en el reconcile con mutaciones en vuelo, sin topes en el registro, slot mezclado entre slices. **Nadie consume 0.23.0**
+  (Vev no se re-empaquetó; Replit no se tocó). → **0.23.1 en preparación** con todo eso y tests.
+- **Vev:** [vev #65](https://github.com/vio-live/vev/pull/65): cada bloque se registra con `${tipo}-${clave del
+  bloque}` (`useModel().key`, estable al republicar) y el título de la página como nombre; campos opcionales «Slot» y
+  «Slot name»; sponsor por slot (solo asignaciones no-default); `Vio.attribution` en eventos y origen en el carrito;
+  compra partida por campaña en el sink de Vio; `platform: 'vev'`. Rebundle **parado** hasta la 0.23.1. En revisión.
+- **Colector:** los conteos de `purchase`/`begin_checkout` se multiplican por campaña con la compra partida → PR en
+  preparación (`uniqExact(order_id)`; `props.slice` para checkout). Deploy manual en las VMs (Miguel).
+- **Replit:** instrucciones estándar en el [handoff](../../handoff/2026-10-15-replit-y-demo-web-a-commerce.md)
+  (`data-vio-scope` en el `body` del artículo; todo lo demás es automático). Dependen de la 0.23.1.
+
+## Decisions
+- Implementador + revisor independiente en cada PR; **el merge antes de la revisión costó una 0.23.0 inútil en npm**:
+  no volver a publicar antes de que el revisor cierre.
+- El id del slot no lleva la URL del artículo: un diseño/plantilla sirve miles de artículos; el artículo va en los eventos.
+- Fuera de esta vuelta: campaña en el pedido de Commerce (migración del kernel), reglas de campaña por contenido, baja de
+  slots desde el dashboard.
+
+## Blockers
+- `npm publish` solo lo hace Angelo (2FA web). La 0.23.1 necesitará otra publicación.
+- Deploy del colector: manual en las VMs de Oracle; sin SSH desde esta máquina.
+
+## Next session
+- Cerrar 0.23.1 (revisión → merge → publish) → rebundle Vev → merge #65 → `vev deploy -m` → republicar páginas →
+  **prueba de Angelo: crear un artículo en Vev con carrusel + card, ver los dos slots en la surface, asignar campaña,
+  comprobar productos y eventos por campaña y artículo**.
+- Colector: merge + deploy staging/prod antes de que las páginas lleven la 0.23.1.
+- Alan: checklist de slots en su tarjeta cuando esté desplegado.
