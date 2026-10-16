@@ -90,3 +90,17 @@ develop, **sin mergear**).
   semántica nueva, re-marcar una fila "From page" NO devuelve el tag (pasa a dashboard al guardar).
 - Orden de despliegue: **después del micro** — con el micro viejo, una fila "From page" sin tocar no se reenviaría y el reemplazo del
   set la borraría.
+
+### Ronda 2 de la revisión de #64 (`9e15f43`, misma rama, pusheado)
+- **W1 — la TZ en `setupFilesAfterEnv` no servía:** el worker ya arranca con la TZ del sistema. Va en `test/global-setup.js`
+  (`globalSetup` en `jest.config.js`, proceso padre). Verificado: 640/642 con `TZ=Pacific/Kiritimati` (+14) y `Pacific/Pago_Pago` (−11);
+  con mediodía UTC del 30/11, Kiritimati ya es 1/12 y "30 Nov 2026" sigue saliendo → el pin funciona.
+- **W2:** `pageTakeovers(picked, slots, campaignId, now)` + `isEndedWindow`: el aviso "Saving will take this slot from X" solo si la
+  ventana pisa la fila `page` de X y sigue vigente (abierta o futura), como el micro.
+- **W4:** re-marcar restaura `initial[slot.id]` (deshacer limpio: tag de vuelta, `dirty=false`, sin PUT); a dashboard solo editando la
+  ventana. Copy del tooltip y la nota actualizados ("…ticking it again undoes that", "…until the page declares it again").
+- **W5:** *Saving releases this slot from the page until the page declares it again.*
+- Nits: `SLOT_ERROR_CODES`/`isSlotError` (solo la tarjeta Slots muestra esos códigos inline; Details/Sponsors siguen con toast);
+  `aria-describedby="slot-conflict-<id>"` en Save bloqueado; ocupante con link a su campaña; `open window` en vez de `no end date`;
+  keys por slot e índice; filas `fromPage` fuera de `slotWindowConflicts`/`pageTakeovers`; tests de nota ausente, `role=alert` antes de
+  borrarlo y asignación actual + futura. Fuera `dateLong` del detalle de la campaña.
