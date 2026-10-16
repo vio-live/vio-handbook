@@ -69,3 +69,55 @@ podia escribir. No era asi: **el schema del envelope se valida ANTES de la auth*
 capa se genero.**
 
 Valores y procedimiento de rotacion: `TOOLS.md` del workspace de Miguel (fuera de git).
+
+## Comprobacion a fondo del cierre (Angelo: "algo asi Alan habia comentado")
+
+Angelo pidio confirmar que el bloqueo no afecta a ningun servicio ni cluster. **No afecta a
+ninguno**, y de paso aparecio el matiz que importa.
+
+### Verificacion positiva, servicio por servicio
+No basta con "no hay errores": un servicio que no intente conectar tampoco da error. Se hizo que
+**cada uno abriera su propia conexion** desde su pod: **12 de 14 CONECTAN**. Los otros dos no son
+fallos:
+- **base-api**: usa `.env`, no `.env.local` (mi primera sonda cargo el fichero equivocado y dio un
+  `ECONNREFUSED` falso). Con su fichero: **CONECTA**, `user` = 593.
+- **graph-ql**: **no tiene `mysql2` ni ninguna dependencia de BD** y cero menciones a la MySQL en
+  su `.env`. No habla con la base, habla con los micros.
+
+### Consumidores de fuera del cluster: ninguno afectado
+- **GitHub Actions:** 0 referencias a `vio-ecom-db-staging-sc` en los repos y 0 workflows con
+  `migration:execute`. Las migraciones se corren a mano.
+- **Vercel** (las 5 apps custom, `vio-sync` y el webapp): **0 variables de BD** en todas. Hablan
+  con el API, no con MySQL.
+- **Container Apps:** ya no existe ninguna en la suscripcion.
+- **VMs de Oracle:** quedan bloqueadas, pero **no usan MySQL** (el colector va contra ClickHouse).
+- **Cruce de entornos:** ningun servicio de prod apunta a la base de staging.
+
+### EL MATIZ QUE IMPORTA: QA y prod no se conectan igual
+Medido en `information_schema.processlist`:
+- **QA**: las 54 conexiones vivas llegan con **IP privada** (`10.224.0.4/5/6`, los tres nodos).
+  **Ninguna** por la IP publica. Funcionan gracias a
+  **`AllowAllAzureServicesAndResourcesWithinAzureIps`**.
+- **PROD**: las 65 conexiones llegan con la **IP publica de salida** `4.223.89.241`, y la unica
+  regla es `aks-prod-outbound`. Alli `AllowAllAzureServices` se quito el 12/10 sin consecuencias.
+
+**Consecuencia, y es lo que hay que recordar:** en QA **la regla que mantiene vivo al cluster es
+`AllowAllAzureServices`**, no la IP que anadi. Si alguien la quita "para igualar a prod", **rompe
+los 14 servicios de QA**. La regla `aks-qa-outbound` (57.174.14.11) **hoy no se usa**: queda como
+red de seguridad por si el enrutado cambia, pero no sostiene nada.
+
+### Y hay un private endpoint a medio camino
+Existe `db-staging-sc` -> **10.224.0.7**, private endpoint a la MySQL de QA. **Solo lo usa
+base-api**, que lleva esa IP a pelo en su `.env`. Los demas usan el FQDN, y dentro del cluster
+**el FQDN resuelve a la IP publica** (`74.241.140.162`): la zona
+`privatelink.mysql.database.azure.com` existe en `rg-vio-databases` pero esta **sin vinculos de
+VNet y sin registros**.
+**Arreglo limpio si se quiere cerrar del todo** (no hecho, no pedido): vincular esa zona a la red
+del cluster y crear el registro A, para que el FQDN resuelva al private endpoint y el acceso
+publico deje de hacer falta. Hasta entonces, `AllowAllAzureServices` **no se toca**.
+
+### Hallazgo colateral, ajeno al firewall
+`products` en QA falla cada ~5 min con
+`ENOTFOUND qa-product-processing2.servicebus.windows.net` (72 veces en 6 h). **Viene de las
+07:32Z, seis horas antes del cierre**, y es Service Bus, no MySQL. El namespace correcto es
+`vio-qa-product-processing-sc`. **El feed de productos de QA esta roto**, y no por este cambio.
