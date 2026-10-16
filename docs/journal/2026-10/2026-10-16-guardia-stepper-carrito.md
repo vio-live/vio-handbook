@@ -94,6 +94,9 @@ te encargas de arreglar lo que él diga". Monitor de la actividad de Alan en Tre
   payments»; con Stripe u otros solo registra el estado (orders `master`, `refundedInShop`). Verificación en prod pendiente de
   que llegue el primer `refunds/create` (los clústeres de prod no se ven desde la laptop; mirar con Miguel o desde el
   dashboard).
+- También publicó `vio-client-dev` (app 426102554625, el mismo `app_id` que firma las órdenes de `alan-test-supplier`) como
+  `vio-client-dev-2` con los siete topics y el Pub/Sub de staging: Alan ya puede probar refunds desde Shopify en QA.
+  Comprobado con `shopify app versions list`: las cuatro versiones activas.
 - Cada webhook de esa tienda llega dos veces (dos ids de Pub/Sub distintos → dos suscripciones): inocuo (el segundo
   intento de devolver en Stripe queda en `warn: already refunded`), pero conviene que Alan mire si tiene dos apps
   instaladas o dos suscripciones del mismo topic.
@@ -112,6 +115,6 @@ te encargas de arreglar lo que él diga". Monitor de la actividad de Alan en Tre
   carrito del backend con una línea huérfana (sin riesgo de cobro).
 
 ## Next session
-- **Angelo/Miguel:** confirmar en extensions de prod el primer `webhook refunds/create from <tienda>` de Careless/Gladkokken/Makeupmekka; mirar los interruptores de Vipps de cada cliente; mergear [vio-shopify-sync #124](https://github.com/vio-live/vio-shopify-sync/pull/124) para que la rama refleje lo publicado; `vio-client-dev` con los siete topics para que Alan pruebe refunds en QA.
+- **Angelo/Miguel:** confirmar en extensions de prod el primer `webhook refunds/create from <tienda>` de Careless/Gladkokken/Makeupmekka; mirar los interruptores de Vipps de cada cliente; mergear [vio-shopify-sync #124](https://github.com/vio-live/vio-shopify-sync/pull/124) para que la rama refleje lo publicado.
 - Alan reprueba el stepper sobre la 0.329 y contesta lo de editar la orden.
 - Lo que salga del monitor entra en el mismo ciclo.
