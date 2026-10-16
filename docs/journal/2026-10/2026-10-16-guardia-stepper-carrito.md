@@ -54,6 +54,26 @@ te encargas de arreglar lo que él diga". Monitor de la actividad de Alan en Tre
 - **Fallo mío:** al inspeccionar el `.env` de extensions en el pod, un enmascarado mal hecho dejó pasar dos
   `SHOPIFY_CLIENT_SECRET_*` de QA a la salida de la sesión. Avisado a Angelo. Regla: en un pod solo `nombre=<longitud>`.
 
+### Segunda ronda de Alan (02:37–02:45 UTC): 4576–4581
+- Tras el redespliegue Alan creó 4576–4581 (Vipps y Stripe) sin un solo 401: Shopify recibe las órdenes y Vio recibe
+  `orders/fulfilled`, `orders/cancelled` y `products/update` de `alan-test-supplier`. 4577 cancelada desde Shopify →
+  Vipps `CANCELLED` (reserva liberada); 4580 (Stripe) cancelada → `re_…` devuelto.
+- **4578 «completada pero Vipps sigue AUTHORIZED»: no es bug.** orders avisa a shopcart (`…/vipps/order/4578/shipped`) y
+  shopcart responde `{"skipped":"account"}`: la fila Vipps del supplier 1335 tiene `mode: own` y `captureMode: account`
+  (el vendedor captura desde su portal al enviar; es el default documentado en `vipps-config.ts`, decisión de Angelo del
+  2026-09-24). Para probar F1–F5 (captura al enviar) hay que poner la captura en «al enviar» (`shipment`) en los ajustes de
+  Vipps de esa cuenta.
+- **Refunds desde Shopify (4576, 4579): a Vio no le llega nada.** extensions enruta `refunds/create` → `refundInShop` →
+  orders `/refunded-in-shop`, pero en los logs no entró ningún `refunds/create`: el app con el que Alan conectó la tienda
+  (`shopify.app.vio-client-dev.toml`, suscripciones que él mismo pegó en la tarjeta) no incluye ese topic. Es configuración
+  del app, no código: añadir `"refunds/create"` y `shopify app deploy`. Los tomls de `vio-sync-staging` y `vio-sync` ya lo
+  traen.
+- Cada webhook de esa tienda llega dos veces (dos ids de Pub/Sub distintos → dos suscripciones): inocuo (el segundo
+  intento de devolver en Stripe queda en `warn: already refunded`), pero conviene que Alan mire si tiene dos apps
+  instaladas o dos suscripciones del mismo topic.
+- Lectura de la BD de QA desde el pod de orders con un script efímero (secretos enmascarados también dentro del JSON de
+  `payment_method.options`), borrado al terminar.
+
 ## Decisions
 - **La sincronización de cantidad es por línea y en serie**; el servidor manda cuando la respuesta final llega, aunque
   el `seq` global la descarte. Es la regla que faltaba para que el total del checkout coincida con el carrito.
