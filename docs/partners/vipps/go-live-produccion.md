@@ -1,8 +1,8 @@
 ---
 title: "Vipps en producción — plan de salida"
-last-updated: 2026-10-13
+last-updated: 2026-10-16
 owner: angelo
-status: plan — pendiente de partner keys y de cuatro decisiones de Angelo
+status: plan — partner keys recibidas el 16/10; pendiente de cargarlas y de las decisiones de Angelo
 ---
 
 # Vipps en producción — plan de salida
@@ -11,6 +11,11 @@ Vipps aprobó el checklist ePayment el 13/10 («ready to proceed into production
 [journal](../../journal/2026-10/2026-10-13-vipps-checklist-aprobado.md)). Este documento es el orden
 para encender Vipps en producción y sacar el primer comercio. Arquitectura y modos de credencial:
 [`architecture/vipps.md`](../../architecture/vipps.md).
+
+> **16/10:** Vipps entregó las partner keys de producción (fase 2 hecha). Correcciones al plan,
+> comprobadas contra el código: las partner keys van también en **api** (fase 3), `VIPPS_API_URL` lo
+> lee también **payment-processors**, y la fase 1 ya no puede ser «develop entero»: graphql y
+> shopcart avanzaron desde el 13/10. El cluster de producción está **apagado** (`Stopped`).
 
 ## Punto de partida (comprobado el 13/10 contra el cluster de producción)
 
@@ -31,8 +36,18 @@ para encender Vipps en producción y sacar el primer comercio. Arquitectura y mo
 | `VIPPS_CLIENT_*` (plataforma) | sí | sí | sí | sí | decisión 2 |
 | `EMAIL_DELIVERY` | no (kernel 1.0.267) | no | no | no | `on` |
 
-`base-api` también lee `VIPPS_API_URL` (el conector legacy de Vipps v2): se cambia a la vez.
-El verificador de claves de api-ms prueba los dos hosts, test y live, por su cuenta.
+Quién lee de verdad las variables de Vipps (comprobado en `develop` el 16/10):
+
+- **shopcart**: todo el flujo ePayment, Express y webhooks; `VIPPS_PARTNER_*` y
+  `VIPPS_PARTNER_WEBHOOK_SECRET`.
+- **api**: `VIPPS_PARTNER_*` para comprobar la fila de un vendedor en modo partner
+  (`paymentMethod.service.ts`, el probe de *verify*). Sin ellas cae a `VIPPS_CLIENT_*`. Su
+  verificador de claves propias prueba test y live por su cuenta (`VIPPS_HOSTS`).
+- **payment-processors** y **base-api**: `VIPPS_API_URL` y `VIPPS_CLIENT_*` para el conector
+  legacy `ecomm/v2`. orders solo lo usa en pedidos de canal WordPress; el resto de Vipps va por
+  shopcart.
+- **orders** y **users** tienen las líneas en su `.env`, pero su código no las lee. Cambiarlas allí
+  no hace daño y deja los cuatro ficheros iguales.
 
 ## Fase 0 — Dos riesgos vivos, independientes de Vipps (hacer ya)
 
@@ -53,15 +68,24 @@ El verificador de claves de api-ms prueba los dos hosts, test y live, por su cue
 
 ## Fase 1 — El código que falta
 
-Mismo método que el 12/10: un PR `develop → master|main` por repo, CI verde, y comprobar que el digest
-del pod es el del `:latest` del registro. Ninguna migración.
+Mismo método que el 12/10: PR a `master|main`, CI verde, y comprobar que el digest del pod es el
+del `:latest` del registro. Ninguna migración.
 
-1. **graphql** (#23) — primero, cierra el riesgo 2.
-2. **shopcart** (#84–#86).
-3. Las purgas de Datadog de los demás repos pueden ir en el mismo tren o esperar.
+**Corregido el 16/10.** Ya no vale llevar `develop` entero:
 
-## Fase 2 — Partner keys (de Vipps a nosotros)
+1. **graphql**: llevar **solo #23**, con un `cherry-pick` de `2a2d643` sobre `master` en una rama
+   de hotfix. `develop` trae además #24–#26, y #25 y #26 cambian cómo decide la auth. Eso va en la
+   próxima release completa, no colado en la de Vipps. #23 es imprescindible: la página del primer
+   comercio irá sobre el paquete de Vev actual (0.329), que pide `duplicate_of`.
+2. **shopcart**: **no hace falta para Vipps**. #84 es la devolución del duplicado de **Stripe** y
+   #85/#86 son el motivo del duplicado. La guarda de un pago por carrito ya está en producción
+   desde el 12/10. Además `develop` trae desde el 13/10 la F2 de brand-publisher (#87–#91, kernel
+   1.0.270–1.0.273, `Cart.seller`). Va en la próxima release completa.
+3. Las purgas de Datadog esperan a esa misma release.
 
+## Fase 2 — Partner keys (de Vipps a nosotros) — HECHA el 16/10
+
+- Recibidas el 16/10. Falta confirmar si llegó también el acceso a la Management API.
 - Pedidas en el hilo de Michael con Vipps: partner keys de producción y acceso a la Management API
   (product orders), para dar de alta comercios con formulario prellenado.
 - **Las claves nunca pasan por repos, handbook, Trello ni memoria**: van directas al blob y al Secret
@@ -69,12 +93,19 @@ del pod es el del `:latest` del registro. Ninguna migración.
 
 ## Fase 3 — Configuración de producción (Miguel)
 
-1. En shopcart, api, orders, users y base-api: `VIPPS_API_URL=https://api.vipps.no`.
-2. En shopcart: `VIPPS_PARTNER_CLIENT_ID`, `VIPPS_PARTNER_CLIENT_SECRET`, `VIPPS_PARTNER_SUBSCRIPTION_KEY`.
+0. **Probar las claves antes de cargarlas.** `POST https://api.vipps.no/accesstoken/get` con las
+   tres cabeceras. Mirar solo el código HTTP; no se imprime ni el token ni las claves. Un 200 confirma
+   que son de producción y están vivas. Encender el cluster (`prod-power.sh commerce start`,
+   ~10–15 min) solo cuando haga falta: lo pide Angelo.
+1. En shopcart, api, payment-processors y base-api (y, por igualar, orders y users):
+   `VIPPS_API_URL=https://api.vipps.no`.
+2. **En shopcart y en api**: `VIPPS_PARTNER_CLIENT_ID`, `VIPPS_PARTNER_CLIENT_SECRET`,
+   `VIPPS_PARTNER_SUBSCRIPTION_KEY`.
 3. `VIPPS_CLIENT_*` según la decisión 2.
 4. Secret + blob, recrear pods, comprobar que el `.env` montado tiene las líneas (contar, no imprimir).
 5. **Registrar el webhook de partner** (cubre todas las unidades bajo el partner):
-   port-forward al shopcart de producción y `POST /checkout/register/webhook/vipps` con
+   port-forward al shopcart de producción (`deploy/shopcart`, la app escucha en el **8000**) y,
+   tras inventariar, `POST /checkout/register/webhook/vipps` con
    `{ "scope": "partner" }`. Devuelve el secreto una sola vez: a `VIPPS_PARTNER_WEBHOOK_SECRET`, recrear
    shopcart. Comprobar con `GET /checkout/webhook/vipps?scope=partner` que hay **una** registración y que
    apunta a `api-ecom.vio.live`.
@@ -130,7 +161,10 @@ el journal del día.
    Recomendación: vaciarlas, para que en producción solo pague quien tenga su fila (partner u own).
 3. Modo de captura del primer comercio: *at shipment* si su tienda manda tracking, *at payment* si
    no envía nada físico; nunca *on account* para el primero.
-4. OK para la fase 0 (correos y graphql #23) ahora, antes de tener las partner keys.
+4. OK para la fase 0 (correos y graphql #23).
+5. **(16/10) Quién carga las partner keys**: Miguel, que guarda los secretos de prod, o Claude
+   desde un fichero local fuera de los repos que Angelo deja y luego se borra. Nunca por chat,
+   Trello ni el handbook.
 
 ## Quién hace qué
 
