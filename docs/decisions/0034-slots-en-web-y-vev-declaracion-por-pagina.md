@@ -49,6 +49,31 @@ daría de baja los slots de la ficha de producto y viceversa.
 5. **Nombre del atributo.** `slot` es un atributo nativo de HTML (shadow DOM). En los elementos
    del SDK el atributo es **`vio-slot`** (propiedad `vioSlot`); en Vev el campo se llama «Slot».
 
+## Enmienda (2026-10-16, tarde) — el nombre no se le pide al editor
+
+Angelo, al leer el flujo: pedirle un nombre a quien edita en Vev o en Replit es un problema; el
+identificador lo generamos nosotros, y así además queda trazable en analytics sin que nadie haga
+nada. Donde hay desarrolladores (SDK web/React, móviles) el componente reutilizable se registra
+con el id que ellos pongan, como estaba planteado.
+
+Queda así:
+
+- **Todo bloque de Vio se registra solo**, siempre. El id es el que ponga el host en `vio-slot`
+  si lo pone; si no, uno **generado y estable**: en Vev, la clave del bloque (no cambia al
+  republicar) con el tipo delante; en web, tipo + posición + ruta de la página. El nombre
+  legible (`vio-slot-name`, campo «Nombre» en Vev) es opcional; si falta, el SDK pone uno
+  («Carousel 1 · /sport»; en Vev, el título del bloque).
+- **El campo «Slot» de Vev deja de ser obligatorio y pasa a ser agrupación opcional**: varios
+  bloques con el mismo valor son un solo sitio en el dashboard.
+- **El dashboard ve el inventario real** de la página: cada bloque con su nombre, y asigna
+  campaña bloque a bloque o por grupo. `location_id` de analytics es ese mismo id: cada
+  componente es trazable desde el primer día.
+- **Coste aceptado**: más filas por surface (una por bloque) y entradas huérfanas cuando el
+  diseñador borra un bloque, hasta que exista la baja desde el dashboard o la baja por página
+  (tipo + página en el manifest: segunda vuelta, con migración del kernel).
+
+Los puntos 1, 3 y 5 de la decisión original no cambian.
+
 ## Consecuencias
 
 - Micro: un cambio pequeño y compatible (`mode`), PR aparte. SDK web 0.23.0: `platform` en
