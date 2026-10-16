@@ -58,7 +58,7 @@ Alan (daily 16/10): «lo de SLOTS no queda claro». Angelo: «vamos con los slot
 - **Kernel**: [package-database #20](https://github.com/vio-live/package-database/pull/20) `surface_campaign_slot.source`
   enum('dashboard','page') (OK explícito de Angelo); release automático 1.0.274 (solo dependientes) → migración en QA aplicada
   (backup `pre-slot-source-20261016`; el clasificador me bloqueó el ALTER desde el pod; la corrió Miguel/Angelo) → `pkg=all`
-  → **1.0.275** los siete. **Pendiente:** bump de los otros 11 micros a 1.0.275 (aditivo, no urge).
+  → **1.0.275** los siete. **El `pkg=all` sí despachó el bump:** el bot pusheó `chore(kernel): bump @vio-/* to 1.0.275` directo a `develop` de los 11 micros a las 14:26 y todos desplegaron; en campaigns el `helm --wait` de 5 min venció («Pending termination: 1») aunque el pod nuevo (:19) arrancó bien a las 14:38 → el run figura en rojo con el servicio sano; conviene subir el timeout o acortar el preStop del chart.
 - **Micro** [#16](https://github.com/vio-live/vio-campaigns-microservice/pull/16): manifest con `campaignId` → asignaciones
   `source: 'page'`; el dashboard manda (desaloja `page` solapadas solo con ventanas abiertas o futuras; 409 solo contra
   `dashboard`); `source` en `campaigns[].slots[]` de la config; `assignments[]` en `GET /client-apps/:id/slots`. 255 tests.
