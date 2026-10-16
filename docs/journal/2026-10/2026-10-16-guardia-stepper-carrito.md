@@ -87,6 +87,13 @@ te encargas de arreglar lo que él diga". Monitor de la actividad de Alan en Tre
   Los clústeres de prod (`vio-commerce-prod*`) no se resuelven desde la laptop: los interruptores de devolución de los
   vendedores no se pudieron leer. El `shopify app deploy` lo bloqueó el clasificador como despliegue a producción: queda para
   Angelo desde su terminal (comandos en el chat), app por app, con `--no-build`.
+- **~11:00 UTC: Angelo publicó los tres apps de cliente desde su terminal** (`shopify app deploy --no-build`, confirmando el
+  resumen: solo `webhooks (updated)`, sin cambios en scopes, auth ni URLs): Careless (app 434547228673), Gladkokken
+  (426105274369) y Makeupmekka (426736517121), los tres como versión `vio-sync-3` «Suscribe refunds/create». Desde ese
+  momento una devolución en la Shopify de esos clientes llega a Vio: con Vipps mueve dinero según «Let Vio refund these
+  payments»; con Stripe u otros solo registra el estado (orders `master`, `refundedInShop`). Verificación en prod pendiente de
+  que llegue el primer `refunds/create` (los clústeres de prod no se ven desde la laptop; mirar con Miguel o desde el
+  dashboard).
 - Cada webhook de esa tienda llega dos veces (dos ids de Pub/Sub distintos → dos suscripciones): inocuo (el segundo
   intento de devolver en Stripe queda en `warn: already refunded`), pero conviene que Alan mire si tiene dos apps
   instaladas o dos suscripciones del mismo topic.
@@ -105,6 +112,6 @@ te encargas de arreglar lo que él diga". Monitor de la actividad de Alan en Tre
   carrito del backend con una línea huérfana (sin riesgo de cobro).
 
 ## Next session
-- **Angelo:** `shopify app deploy` de careless, gladkokken y makeupmekka (PR #124 ya abierto; demo/vio-client/dev pueden ir después); comprobar en extensions de prod que entra `webhook refunds/create from <tienda>`; mirar los interruptores de Vipps de cada cliente.
+- **Angelo/Miguel:** confirmar en extensions de prod el primer `webhook refunds/create from <tienda>` de Careless/Gladkokken/Makeupmekka; mirar los interruptores de Vipps de cada cliente; mergear [vio-shopify-sync #124](https://github.com/vio-live/vio-shopify-sync/pull/124) para que la rama refleje lo publicado; `vio-client-dev` con los siete topics para que Alan pruebe refunds en QA.
 - Alan reprueba el stepper sobre la 0.329 y contesta lo de editar la orden.
 - Lo que salga del monitor entra en el mismo ciclo.
