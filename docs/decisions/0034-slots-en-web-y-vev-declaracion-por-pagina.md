@@ -74,6 +74,33 @@ Queda así:
 
 Los puntos 1, 3 y 5 de la decisión original no cambian.
 
+## Enmienda 2 (2026-10-16, tarde) — una campaña por componente, de punta a punta
+
+Angelo: en una misma página o carrito pueden convivir varias campañas, incluso de la misma marca,
+y en Vev y Replit puede haber varias campañas con artículos distintos; cada evento, venta,
+transacción y pedido tiene que quedar con su campaña. Y la solución tiene que ser la misma para
+el SDK web, Vev y Replit.
+
+- **Un solo helper de atribución, `Vio.attribution(slot)`**: devuelve campaña (la del slot
+  asignado y vigente, si no la por defecto), su sponsor, el slot efectivo y el artículo
+  (`contentId`/`contentTitle`). Los elementos del SDK, los bloques de Vev y las páginas de Replit
+  lo usan igual, para los eventos y para marcar el carrito.
+- **Scope heredable en vez de nombre por bloque.** El id automático es
+  `${scope}-${tipo}-${n}`; el scope lo pone el host una sola vez (`data-vio-scope` en el `body`
+  o en un contenedor; en Vev, la página). Una página de Vev (= un artículo) y una página de
+  artículo en Replit (`<body data-vio-scope="article-123" data-vio-scope-name="Título">`) tienen
+  así slots propios sin nombrar nada; una plantilla que quiera slots compartidos entre artículos
+  no pone scope.
+- **El artículo va en los eventos, no en el slot**: `content_id`/`content_title`, resueltos
+  solos (init → `?vio_content` → meta → canónica → ruta).
+- **El carrito recuerda el origen de cada línea** (campaña, slot, artículo, cantidad por
+  origen) y **la compra y el inicio de checkout se emiten una vez por campaña presente en el
+  carrito**, con sus líneas y su importe y el mismo id de transacción. Las estadísticas por
+  campaña salen exactas sin tocar colector ni ClickHouse. Un carrito con una sola campaña se
+  comporta como hoy.
+- **Fuera de esta vuelta**: la campaña en el pedido de Commerce (shopcart → orden; migración del
+  kernel) y las reglas de campaña por contenido para plantillas que comparten slots.
+
 ## Consecuencias
 
 - Micro: un cambio pequeño y compatible (`mode`), PR aparte. SDK web 0.23.0: `platform` en
