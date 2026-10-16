@@ -29,6 +29,20 @@ slots" → "tú deja todo listo y Miguel se encarga de todo".
   (`values-prod.yaml` monta el Secret `env-sc-campaigns` sobre `.env`; `deploy.yml` lo suma solo en `main`;
   render comprobado con helm 3.16 en docker). `main` se crea en el paso 5 con el Secret ya creado.
 
+## Verificación de prod tras el encendido (13:00 UTC, antes de que Careless instale)
+- **Miguel lo ejecutó en ~20 min:** AKS y MySQL encendidos, 13 deployments listos sin reinicios, los 14 PRs de release
+  mergeados a las 10:19–10:29 UTC con deploys en verde, las 4 migraciones de octubre aplicadas (`migrations` termina en
+  `surfacePrivacyMode…`), `EMAIL_DELIVERY=on` en orders/users/api, `PAYMENT_SECRETS_KEY` en api/shopcart/payment-processors.
+- **Shopify en prod:** extensions recibe el Pub/Sub `vio-sync` (backlog drenado a las 10:36); `VIO_CUSTOM_APPS` trae las 5
+  tiendas; desde el pod, `/internal/token` de cada app responde **200** para demo, Gladkokken, Makeup Mekka **y Careless**
+  (la app ya tiene sesión en `dignitycollect.myshopify.com`: está instalada) y 409 `no_session` para Villoid. Las
+  conexiones de Gladkokken (539) y Makeup Mekka (540) se actualizaron hoy solas. Careless tiene cuenta en prod
+  (user 1327, 12/10) y **todavía ninguna `shopify_connection`**: le falta pegar la API key en la app y exportar.
+- Pendiente del runbook, no bloquea a Careless: corte de `api.vio.live` (D2) y `main` del micro de campañas (#14 sin
+  mergear); confirmar el deploy de `master` del webapp en Vercel.
+- **Para Miguel:** el CronJob `mysql-prod-offsite-backup` falla desde el encendido (`apk` no puede bajar `mariadb-client`:
+  «Permission denied» contra dl-cdn.alpinelinux.org); hoy prod está sin backup externo.
+
 ## Decisions
 - Prod se enciende y se despliega **en el orden del runbook**: base → migraciones → `.env` → código → micro →
   DNS → analytics → fronts → datos. Nada se mergea con el clúster apagado (el helm falla).
