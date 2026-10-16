@@ -36,3 +36,13 @@ Arreglar en `vio-users-microservice` el bug visto en QA el 16/10: `alan-test-sup
 ## Next session
 
 - Push + PR de `fix/conexion-shopify-por-tienda` contra `develop`, deploy a QA, limpiar la fila 555 y comprobar que los webhooks de `alan-test-supplier` vuelven a 200.
+
+## Segunda ronda (misma rama, ya como users #23)
+
+> [claude, 2026-10-16] La revisión independiente encontró un **blocker real**: con el retiro, cualquier cuenta autenticada podía mandar la `shopifyUrl` de otra tienda con un token basura; `getShopInfo` de extensions devuelve `{ shop: null }` con 200 si Shopify rechaza el token (`repos/extensions/src/modules/shopify/providers/shopify.service.ts:761`), `currency` quedaba `undefined`, el flujo seguía y dejaba a la tienda sin su conexión buena.
+
+- Commit **`36b0ce9`** (encima de `c116a5d`, sin amend, **sin push**):
+  - **Prueba de propiedad antes de persistir nada**: `saveShopifyExportConnection` exige que `getShopInfo` devuelva una tienda cuyo `myshopify_domain` (o `domain`) coincida con `shopifyUrl` normalizada (sin protocolo, ruta ni barra final; minúsculas). Si no, `logger.warn` + `BadRequestException('Shopify no reconoce ese token para esa tienda')` (el controller lo devuelve como 417 con ese `message`, como todo error del service) antes del `findOne`/`save` y sin retirar nada. Helper puro nuevo: `src/modules/user/helpers/shopify-domain.ts` (`normalizeShopDomain`, `shopInfoMatchesStore`).
+  - **Retiro best-effort pero visible**: `try/catch` con `logger.error` alrededor de `retireForeignShopifyConnections` (la conexión nueva queda y los 6 webhooks se registran igual); dentro: `if (!url) return []`, `softDelete` **antes** de anular `User.shopifyReseller` (y solo si la fila era de reseller sin supplier), `invalidateCache` del dueño anterior y publish `users/<dueñoAnterior>/update` (`params: { shopifyReseller: null }`) a `API_MICROSERVICE_URL/socket/publish` con `internalHeaders`, con `.catch` propio.
+  - Tests: 14 casos en `shopify-export-connection.unit.spec.ts` (los 5 de la ronda 1 + sin tienda, dominio distinto, url con protocolo/barra/mayúsculas, fallo del retiro, varias filas ajenas, fila sin dueño, url vacía, y 2 del helper). `npx jest --config jest.unit.json --globals '{"ts-jest":{"diagnostics":false}}'` sobre ese spec + `disconnect-sales-channel` + `socket-internal-header` → **20/20**. `tsc`: solo los 10 preexistentes.
+- Nota: el publish al dueño anterior manda `shopifyReseller: null` también cuando la fila retirada era de export, igual que ya hace `deleteShopifyAccount` en el caso EXPORT; es el patrón existente, no se inventó otro evento.
