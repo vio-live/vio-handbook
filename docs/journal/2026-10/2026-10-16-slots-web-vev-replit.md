@@ -71,6 +71,9 @@ Alan (daily 16/10): «lo de SLOTS no queda claro». Angelo: «vamos con los slot
 - **Dashboard** [#63](https://github.com/vio-live/webapp-vio-commerce/pull/63) **mergeado por Angelo antes de cerrar la
   revisión** («From page», «Taken by X until Y», sin sufijo de plataforma); la revisión pide quitar «Save anyway» (el micro
   nunca lo acepta) y arreglar ventanas futuras y tests dependientes de zona horaria → PR de seguimiento en curso.
+- **≈14:55 UTC:** SDK **0.24.0** mergeado (`f772974`, 536 tests; publicación en npm pendiente de Angelo) y **Vev 0.331**
+  desplegada (vev #66 `e0ce3a0`; bundle byte-idéntico a f772974). El selector «Campaign» ya está en el editor; sin el
+  micro #16 en QA la declaración con campaña se repite cada hora y el dashboard aún no muestra «From page».
 - Lección repetida hoy dos veces (SDK 0.23.0 publicada y webapp #63 mergeada antes del revisor): **el revisor cierra antes
   del merge**; está en ADR-0034 y en la memoria.
 
