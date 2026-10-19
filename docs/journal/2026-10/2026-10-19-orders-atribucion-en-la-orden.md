@@ -75,3 +75,62 @@ hace falta.
   `order_item.campaign_id/location_id/component_kind`.
 - Fase B lectura: `GET /orders` con `surface_id`/`campaign_id`/`campaign_status` (contrato §3), que
   hoy no existe en orders.
+
+---
+
+## Segundo encargo (misma rama) — lectura de órdenes por campaña para el dashboard
+
+Push y PR del primer commit los hizo el coordinador: **[orders #27](https://github.com/vio-live/vio-orders-microservice/pull/27)** (borrador).
+
+### Done
+
+- **Endpoint identificado**: el webapp (`webapp-vio-commerce/src/lib/orders.js`, `buildOrdersKey`) llama
+  `GET /api/users/me/orders?page&size&variants&text&dateFrom&dateTo&channels&status` → base-api lo
+  proxya a orders `POST /users/me/orders` `{ data: { id, page, size, filters, loggedUser } }` →
+  `findByUserId`. Sirve al publisher (reseller) y a la brand (supplier) con el mismo
+  `WHERE reseller.id = :id OR supplier.id = :id`. `findSearch` (`/admin/find`) es solo admin: no tocado.
+- **Commit `ad0a453`** (local, sin atribución IA; push lo hace el coordinador):
+  - `src/modules/order/providers/order-list-filters.ts` (puro): `orderListFilters(filters)` lee
+    `surface_id`/`campaign_id`/`campaign_status` (snake del contrato §3 **o** camel; camel gana, blanco
+    cae a snake); en blanco → sin filtro; basura → `BadRequestException` **400** (un filtro ignorado en
+    silencio mostraría las órdenes equivocadas); ids con `positiveInt`. `CAMPAIGN_STATUS_SQL`:
+    `active` = `EXISTS` en `surface_campaign` con `paused = 0`, `starts_at IS NULL OR <= UTC_TIMESTAMP()`,
+    `ends_at IS NULL OR > UTC_TIMESTAMP()`; `past` = `ends_at IS NOT NULL AND ends_at < UTC_TIMESTAMP()`.
+  - `findByUserId`: parsea los filtros **antes** de construir ninguna consulta y añade hasta tres
+    `andWhere` al `idsQuery`, después de los filtros de siempre: nunca ensanchan el tenant.
+  - `orderFields` (`staticData/index.ts`) proyecta `order.surfaceId, campaignId, contentTitle,
+    contentUrl, entrySource` → salen (camelCase, como el resto de la entidad) en `/users/me/orders`,
+    `/orders/:id` (`findById`) y `/admin/find`; **`order.buyerRef` nunca**, con test que lo vigila.
+  - `FindMyOrdersDto.filters: Api.Order.OrdersFindQuery & OrderListAttributionQuery`.
+  - Tests `order-list-filters.unit.spec.ts` (45): parseo, SQL, `findByUserId` con un query builder falso
+    que captura los `andWhere` (sin filtros = consulta de siempre; con ids = parámetros ligados; con
+    estado = el `EXISTS`; basura = 400 sin tocar el repositorio; otro usuario = `User not authorized`),
+    `orderFields`/`orderCustomerFields`, `mapOrderToShow` deja pasar la atribución.
+  - **`jest.unit` 11 suites / 235 OK** (tras el primer commit 10 / 190). `tsc -p tsconfig.build.json` 0.
+
+### Decisions
+
+- **`surface_campaign` no tiene `status`** (entidad del kernel `4c7ef36`: `startsAt`, `endsAt`,
+  `paused`, `isDefault`): el estado se resuelve por ventana/pausa. Pausada o futura no es `active` ni
+  `past`; una orden sin `campaign_id` no sale con ningún `campaign_status`.
+- Subconsulta **SQL cruda** sobre `surface_campaign` (nombres de la migración `1791900705000`): el
+  1.0.267 local no trae `Entity.SurfaceCampaign` y orders no necesita la entidad para esto.
+- Respuesta en **camelCase** (`surfaceId`, `campaignId`, `contentTitle`, `contentUrl`, `entrySource`):
+  es lo que produce `{ ...order }` y lo que el webapp ya lee (`channelCreatedDate`, `shippingPrice`).
+- 400 y no «ignorar»: el controller no valida nada, pero `update()` ya lanza excepciones de Nest desde
+  el service y llegan con su status; un `Error` a pelo sería 500.
+
+### Gotchas vistos (no tocados)
+
+- El filtro `status` de `findByUserId` escribe `item.orderId = order.id` en SQL crudo; con
+  `SnakeNamingStrategy` la columna es `order_id`. El webapp no usa ese filtro (filtra en cliente), así
+  que nadie lo ha visto fallar. Deuda.
+- `orderFields` con el overlay 1.0.267 **rompería en runtime** (`order.surfaceId` no está en la
+  metadata): solo afecta a correr el micro en local contra ese overlay; CI/QA instalan 1.0.277.
+
+### Lo que falta fuera de orders
+
+- **base-api** debe reenviar `surface_id`, `campaign_id` y `campaign_status` de la query de
+  `GET /users/me/orders` dentro de `filters` (hoy mapea `text→search`, `dateFrom→createdAtFrom`…);
+  orders acepta snake o camel, así que basta pasarlos tal cual.
+- **webapp**: `buildOrdersKey` no manda esos params todavía; y lee los campos nuevos en camelCase.

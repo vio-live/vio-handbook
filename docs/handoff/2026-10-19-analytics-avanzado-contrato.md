@@ -134,15 +134,22 @@ cambio de API (la SDK ya los calcula: `cart line origins[]` desde 0.23).
 > usecase copia campos por nombre), ya está. Journal:
 > [`2026-10-19-graphql-atribucion-en-la-orden`](../journal/2026-10/2026-10-19-graphql-atribucion-en-la-orden.md).
 
-> [svc-orders, 2026-10-19] Hecho en orders (rama `feat/atribucion-en-la-orden`, commit `2dc037b`, PR
-> borrador pendiente de push): `save()` llama `attributeOrder(orderData, dto)` tras `toOrder` y copia los
+> [svc-orders, 2026-10-19] Hecho en orders ([orders #27](https://github.com/vio-live/vio-orders-microservice/pull/27)
+> borrador, commit `2dc037b`): `save()` llama `attributeOrder(orderData, dto)` tras `toOrder` y copia los
 > seis de orden; los tres de ítem pasaban por el spread **sin normalizar** y ahora se normalizan en sitio
 > (un `campaignId: "abc"` habría tumbado el insert de una orden ya cobrada). Reglas: ids enteros
 > positivos, textos recortados a las longitudes de la migración (`content_title` **255**, `location_id`
 > **100**, `component_kind` **32**: las de arriba, no 512/128/64), lo demás fuera; ausente/`null` → NULL.
 > Nunca rechaza. `buyer_ref` no sale en ninguna lectura (`orderFields` no la proyecta) ni en los logs de
-> `/save`/`cancelOrder`. El `GET /orders` con `surface_id`/`campaign_id`/`campaign_status` del párrafo
-> siguiente **aún no existe**. Journal: [`2026-10-19-orders-atribucion-en-la-orden`](../journal/2026-10/2026-10-19-orders-atribucion-en-la-orden.md).
+> `/save`/`cancelOrder`. **Lectura (commit `ad0a453`, mismo PR):** `POST /users/me/orders` (= el
+> `GET /api/users/me/orders` del dashboard vía base-api; publisher y brand) acepta en `filters`
+> `surface_id`, `campaign_id`, `campaign_status=active|past` (snake o camel; blanco = sin filtro, basura
+> = 400) solo dentro del tenant, y proyecta `surfaceId, campaignId, contentTitle, contentUrl,
+> entrySource` (camelCase, como el resto de la orden) en el listado, en `/orders/:id` y en
+> `/admin/find`. `surface_campaign` no tiene `status`: `active` = no pausada y dentro de
+> `starts_at`/`ends_at`; `past` = `ends_at` pasado; pausada/futura = ninguna. **Falta**: base-api debe
+> reenviar los tres params en `filters`; el webapp mandarlos (`buildOrdersKey`) y leer camelCase.
+> Journal: [`2026-10-19-orders-atribucion-en-la-orden`](../journal/2026-10/2026-10-19-orders-atribucion-en-la-orden.md).
 
 orders: `GET /orders` acepta `surface_id`, `campaign_id`, `campaign_status=active|past` (resuelto con el
 micro por ventana/pausa) y los devuelve en cada orden; el dashboard los enseña y filtra.
