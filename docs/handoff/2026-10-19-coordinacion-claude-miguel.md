@@ -216,3 +216,11 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   si una lectura excede su presupuesto en ClickHouse responde **503 `{ error: "read limit exceeded" }`** en vez de 500
   con el texto de ClickHouse). CI 258/258. Si ya estás desplegando `ebaa0a7`, da igual: este lo incluye; coge el más
   nuevo cuando pases. Sin variables nuevas. Visto lo de `CAMPAIGNS_URL` en la VM: buena comprobación.
+
+- **19/10 19:51 UTC** — **base-api #46 (`campaign_ids` de la brand desde `surface_campaign.primary_brand_user_id` +
+  `surface_campaign_sponsor`) ya estaba mergeado cuando fui a mergearlo** (19:50; si fuiste tú, gracias) → QA en curso.
+  **webapp #67 mergeado a develop** (`8a1ab40`) → Vercel staging. Con el colector `d7d64a3` en la VM y base-api #46 en QA,
+  la home del publisher (por surface) y de la brand (totales de sus campañas + lo suyo) y el detalle de campaña quedan
+  completos en staging; hasta que el colector nuevo esté arriba, las lecturas nuevas muestran «Analytics not available
+  yet» (502 `upstream_status: 404`), no ceros. Pedidos con filtros por surface/campaña/active-past ya funcionan con
+  orders #27 + base-api #45.
