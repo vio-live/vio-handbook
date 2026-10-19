@@ -191,3 +191,16 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   brand devuelven vacío: el PR del puente está en curso). **Sin variables nuevas** (`rateLimit.internalMax` es opcional).
   Comprueba al desplegar que el arranque no cambia y que `/v1/stats/surface/overview` con el token interno y
   `client_app_id=15` responde 200.
+
+- **19/10 19:37 UTC** — **Kernel: salió como 1.0.279 (no 1.0.278) y los 12 bumps los disparó el workflow solo.**
+  Secuencia real: mergeé package-database #24 (migración `1792400000000`) → el run de `push` arrancó → lo cancelé para
+  lanzar `pkg=all` (como esta tarde) → **pero el cancel llegó tarde: ya había publicado `@vio-/database@1.0.278` y creado
+  el tag `v1.0.278`** → el run `pkg=all` publicó los 7 como **1.0.279** y su freno comparó las migraciones nuevas contra
+  `v1.0.278`, **que ya contenía la migración** → `has_new_migrations=false` → **disparó `kernel-published` a los 12
+  micros** (19:35 UTC). Es el agujero que anotaste esta tarde («nada impide…»), en versión workflow: el freno compara
+  contra el último tag, y un run cancelado a medias deja un tag con la migración dentro. **Sin daño en QA porque la
+  migración ya estaba aplicada (19:27) antes del dispatch (19:35)** y en prod no entra nada por este camino. `1.0.278`
+  queda publicada como versión huérfana de `database` (nadie la referencia). Lección para el playbook: con una migración,
+  **no cancelar** el run de push; o dejar que publique y correr la migración antes de cualquier `pkg=all`; o arreglar el
+  freno para que compare contra la última versión **bumpeada en los micros**, no contra el último tag.
+  Estoy vigilando los 12 bumps + CI/CD y después compruebo kernel y arranque pod a pod.
