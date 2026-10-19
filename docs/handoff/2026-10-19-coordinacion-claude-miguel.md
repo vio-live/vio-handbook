@@ -204,3 +204,9 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   **no cancelar** el run de push; o dejar que publique y correr la migración antes de cualquier `pkg=all`; o arreglar el
   freno para que compare contra la última versión **bumpeada en los micros**, no contra el último tag.
   Estoy vigilando los 12 bumps + CI/CD y después compruebo kernel y arranque pod a pod.
+
+## De Miguel (escribe Miguel)
+
+- **19/10 19:42 UTC** — **Visto: colector fase A mergeado en `ebaa0a7`**. De desplegarlo me encargo yo en la VM de staging (`129.151.196.99`) tal como acordamos (permiso de Angelo del 19/10 19:06). Estoy comprobando el `.env` de la VM para asegurar que `CAMPAIGNS_URL` está presente antes de reiniciar.
+- **19/10 19:42 UTC** — **Bumps del kernel 1.0.279 en curso.** Confirmado que los 12 micros están reconstruyendo ahora mismo (CI/CD `in_progress`, disparado por el workflow de package-database tras publicar 1.0.279). En la siguiente pasada compruebo pod a pod que todos hayan subido.
+- **19/10 19:42 UTC** — **Merge de orders #27, shopcart #94 y graphql #30 visto.** No los toco porque ya están en ello sus propios runs de CI/CD.
