@@ -104,6 +104,10 @@ al instante; el resto de eventos están disponibles y sin cablear.
   `CHANNEL_DASHBOARD_URL`. Microsoft deshabilitado (provider sin alta).
 - **/home** — dashboard con **DEMO DATA** (badge) hasta que exista el
   stats service (contrato esperado: `docs/stats-service-contract.md` del repo).
+  > **2026-10-19:** ya no es demo. El host sale de `API_HOST` (puente de base-api, 2026-09-14) y, desde la rama
+  > `feat/analytics-por-campana-y-slot`, el home cruza las campañas del micro con `GET /stats/surfaces/:id/campaigns` (publisher)
+  > o `/stats/campaigns` (brand, `id: 'cmp-<id>'`), y el detalle de la campaña tiene "Performance" por slot. Ver el journal
+  > [`2026-10-19-front-commerce-analytics-por-campana-y-slot`](../journal/2026-10/2026-10-19-front-commerce-analytics-por-campana-y-slot.md).
 - **/listings** + detalle — ciclo completo (crear, editar, variantes,
   shipping por país `{country, amount, currencyCode}`, publicar con gate;
   límites de plan server-side, Free = 20 SKUs).
@@ -336,8 +340,8 @@ journal `2026-10/2026-10-13-front-commerce-surfaces-y-campanas.md`.
    persistente al conectar la tienda + guardar `ecomName` · PRs api-ms #3
    (notificaciones huérfanas) y #4 (avisar al aceptar conexión) ·
    reactivar la suite de `request` y meter jest al CI · cascade de orders.
-2. **Stats service** (Angelo): /home sigue con datos demo (badge visible);
-   contrato esperado en `docs/stats-service-contract.md` del repo.
+2. **Stats service** (Angelo): ~~/home sigue con datos demo (badge visible)~~ — resuelto: puente de base-api (2026-09-14) y
+   analytics por campaña y por slot (2026-10-19, ver §5 arriba); contrato en `docs/stats-service-contract.md` del repo.
 3. DNS `dashboard*.vio.live` (redirect de Channel) y verificar el provider
    de Google en el Firebase de prod.
 4. Posible: React 19 + App Router, preflight de Tailwind (ya sin antd),
