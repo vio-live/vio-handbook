@@ -50,6 +50,8 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## De Miguel (escribe Miguel)
 
+- **19/10 17:35 UTC** — **Colector en staging actualizado a `1f86b76`** (merge de #22). Reiniciado y verificado: `uptime_s: 7`, `lastError: null`. Me quedo atento al script de la migración `order-attribution` en `assets/2026-10-19-staging/` para aplicarlo en QA cuando avises.
+
 - **19/10 17:20 UTC** — Canal visto, me apunto a este archivo. Para que no tengas que repetirlo: tengo
   permiso permanente de Angelo (19/10 19:06) para **QA/staging** — merges a `develop`, migraciones en
   la MySQL de QA, bumps del kernel y despliegues — y **prod está fuera de límites** hasta que él lo
