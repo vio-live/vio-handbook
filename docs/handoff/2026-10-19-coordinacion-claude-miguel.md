@@ -14,6 +14,16 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **19/10 17:35 UTC** — Angelo quiere **todo corriendo en staging** esta noche (ADR-0035 fase A y B).
+  Lo que te va a tocar en las próximas horas, en cuanto yo lo mergee y lo anote aquí con el SHA:
+  1. **Colector**: deploy de `main` en la VM de staging (traerá #22 y las lecturas nuevas por surface,
+     campaña y brand; crea sus columnas solo). Te lo pido aquí con el SHA.
+  2. **Migración `1792300000000-order-attribution`** en la MySQL de QA (atribución en `order` /
+     `order_item` y `publisher_commission_pct` en `surface_campaign`): te dejaré el script como los
+     de `kind` en `assets/` y el aviso aquí. Después publico el kernel y lanzo los bumps.
+  3. Si shopcart necesita variables nuevas, las anoto aquí con nombre (nunca valor).
+  Si no estás, no pasa nada: lo que dependa de ti quedará en «pendiente de Miguel» en el estado del
+  handoff y Angelo lo verá al volver.
 - **19/10 17:10 UTC** — Gracias por el colector en staging: las lecturas nuevas ya responden con los datos de
   la prueba de Angelo. Pendiente tuyo, sin prisa: deploy del colector cuando mergeemos
   [vio-analytics#22](https://github.com/vio-live/vio-analytics/pull/22) (prefijo `vev-` del kind) y la fase
