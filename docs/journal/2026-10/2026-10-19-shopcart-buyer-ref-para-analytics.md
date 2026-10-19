@@ -5,7 +5,7 @@ participants: [angelo, claude, svc-shopcart]
 status: live
 ---
 
-# Session — 2026-10-19 — shopcart: `buyerRef`, el comprador para analytics sin su email
+# Session — 2026-10-19 — shopcart: `buyer_ref`, el comprador para analytics sin su email
 
 ## Goal
 
@@ -17,9 +17,9 @@ identificador estable y no personal en las respuestas que recibe cuando un check
 ## Done
 
 - Rama `feat/buyer-ref-para-analytics` desde `origin/develop` (`a271e97`, kernel 1.0.275),
-  worktree `~/vio-commerce/worktrees/shopcart-buyer-ref`. **Commit local `fe5572a`, sin push ni PR**
+  worktree `~/vio-commerce/worktrees/shopcart-buyer-ref`. **Commit local `0b0e11a` (amend tras el rename), sin push ni PR**
   (ADR-0001): 12 archivos, +337/−12.
-- **`buyerRef`** = HMAC-SHA256 hex del email normalizado (`trim().toLowerCase()`) con el secreto
+- **`buyer_ref`** = HMAC-SHA256 hex del email normalizado (`trim().toLowerCase()`) con el secreto
   `BUYER_REF_SECRET`. Misma persona → misma referencia en todas sus órdenes, dispositivos y
   plataformas; nadie la invierte sin el secreto. Sin email o sin secreto → `''`; nunca lanza, nunca
   bloquea un pago. Nada nuevo se persiste; package-database intacto.
@@ -37,7 +37,7 @@ identificador estable y no personal en las respuestas que recibe cuando un check
      Adyen (`GetCheckout` para el estado y `GetCheckoutOrderNumber` para el `#orden`).
   2. **Apple Pay / Google Pay confirm** — `apple-pay.service.ts`, `google-pay.service.ts`: las tres
      salidas (`SUCCESS`, `PENDING`/`FAILURE` con orden, `catch` → `''`); DTOs de respuesta con
-     `buyerRef` (Swagger). Email = el del checkout tras el `UpdateCheckout` del confirm.
+     `buyer_ref` (Swagger). Email = el del checkout tras el `UpdateCheckout` del confirm.
   3. **Klarna native confirm** — `settleKlarnaNativeConfirm`: ya procesado, fraude `PENDING` y orden
      creada. Email = el que lleva la orden (`billing_address.email ?? shipping_address.email` de la
      orden Klarna, el mismo de `customer.email` en `finalizeKlarnaOrder`), fallback `checkout.email`.
@@ -55,9 +55,9 @@ identificador estable y no personal en las respuestas que recibe cuando un check
 
 ## Decisions
 
-- Nombre del campo **`buyerRef`** (camelCase, como pidió la tarea) aunque sus vecinos en el read
-  model son snake_case (`order_id`, `duplicate_of`). Si gateway/SDK prefieren `buyer_ref`, es un
-  rename de 5 líneas antes de mergear; mejor decidirlo ahora que tener dos nombres.
+- Nombre del campo **`buyer_ref`** (snake_case, como sus vecinos `order_id` y `duplicate_of`):
+  decidido por el coordinador la misma tarde tras una primera versión `buyer_ref`; gateway y SDK lo
+  leen como `buyer_ref`. Los helpers internos siguen en camelCase (`buyerRefFor`, `buyerRefOf`).
 - El ref se calcula en el **service** (`GetCheckoutById` formateado), no en el controller: una sola
   serialización cubre los tres endpoints y los self-calls, y no rompe los specs que mockean el
   service. El controller sigue sin tocar.
@@ -66,7 +66,7 @@ identificador estable y no personal en las respuestas que recibe cuando un check
 
 ## Blockers / open questions
 
-- **Falta en otros repos** (no es mi lane): el gateway `graphql` tiene que exponer `buyerRef` en el
+- **Falta en otros repos** (no es mi lane): el gateway `graphql` tiene que exponer `buyer_ref` en el
   tipo de `GetCheckout` (y en los resultados de `ConfirmPaymentApplePay` / `ConfirmPaymentGooglePay`
   / `ConfirmPaymentKlarnaNative`); el SDK tiene que seleccionarlo. El sitio más barato en el SDK:
   `GET_CHECKOUT_ORDER_NUMBER_QUERY` (hoy `{ id order_id }`), que `fillOrderNumber` ya llama en TODOS
@@ -84,4 +84,4 @@ identificador estable y no personal en las respuestas que recibe cuando un check
 ## Next session
 
 - OK de Angelo → push + PR de `feat/buyer-ref-para-analytics` contra `develop`.
-- gateway + SDK: exponer y seleccionar `buyerRef`; colector de analytics: aceptarlo en `purchase`.
+- gateway + SDK: exponer y seleccionar `buyer_ref`; colector de analytics: aceptarlo en `purchase`.
