@@ -132,3 +132,26 @@ Merge de prueba (`git merge --no-commit` en un worktree temporal, abortado): **2
 (1 bloque: `IDENTITY_PARAMS` + la cabecera de `forward`); `statsController.ts` se fusiona solo. Orden sugerido: mergear primero `fix/stats-proxy-sin-traversal` (es el fix de seguridad y es
 pequeño), después rebase de `feat/stats-por-surface-para-el-publisher` sobre `develop` llevando la allowlist
 a `forward` (ya usa `getFromCollector`) y `client_app_id`/`days` a `IDENTITY_PARAMS`.
+
+## Rebase sobre #40 y push a la rama del PR #41
+
+> [claude/svc-base-api, 2026-10-19 noche] `fix/stats-proxy-sin-traversal` entró en develop como **#40**
+> (`da6b056`). La rama del publisher ya estaba publicada por Angelo (`angelosv`) como **PR #41 (draft)**.
+
+- `git rebase origin/develop` en el worktree: los 2 conflictos previstos, resueltos como se acordó —
+  `statsService.ts`: `isCommerceStatsPath` es la primera sentencia de `forward()` (el 400 sigue antes que el
+  503 de `getFromCollector`), `IDENTITY_PARAMS` con los 5 (`channel_id`, `sponsor_id`, `commerce_key_hash`,
+  `client_app_id`, `days`), `COMMERCE_STATS_PATHS` intacta; `statsRouter.js`: las dos rutas del publisher
+  antes del comodín y el comentario de la allowlist conservado. El segundo commit aplicó limpio.
+- Commits finales sobre `develop` `da6b056`: `2de839f` (feature), `d2fa70e` (revisión), `2807d8e` (test:
+  identidad repetida/anidada y bytes raros en el comodín — `sponsor_id=7&sponsor_id=8`, `sponsor_id[]=7`,
+  `sponsor_id[x]=7`, `client_app_id[]=3`, `days[]=365` → la identidad del servidor sustituye; `range=a&range=b`
+  viaja como `range=a%2Cb` con una sola `sponsor_id`; `%2e%2e%2f`, `%3F`, `%23`, `%00`, CRLF → 400 sin
+  colector).
+- Números en la rama rebasada: `yarn test:unit` **19 suites / 330 tests** (= 252 base + 35 `statsProxy` + 43
+  `surfaceStats`); suite por defecto `statsService.test.js` + `surfaceOwnership.test.js` **2 / 8**; eslint y
+  prettier limpios en lo tocado; `tsc --noEmit` 0 errores en `src/` (2 de `@azure/*` en `node_modules`,
+  baseline).
+- `git push --force-with-lease` a la misma rama (`67fb7a7` → `2807d8e`), autorizado por el coordinador para
+  esa rama ya publicada por Angelo; PR #41 sigue **draft** con 3 commits. Falta: Angelo lo pasa a ready y
+  mergea → QA → prueba con la surface 3 / campaña 9 con sesión de publisher.
