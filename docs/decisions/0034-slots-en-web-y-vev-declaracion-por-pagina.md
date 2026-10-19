@@ -154,6 +154,16 @@ lo quiero así, quiero que salgan las campañas».
   que `/v2/mobile/config` responde 404 si la surface no tiene **ninguna** campaña activa (con todo
   pausado el editor no conecta; la por defecto está para eso). Esto supera la regla «solo campañas
   activas» de la enmienda 3.
+- **El tipo de componente de cada slot** (pedido de Angelo, 19/10 tarde: «cada componente que se
+  agrega a un artículo debe registrarse con su tipo, cuántos clics recibió, cuántas vistas… y qué
+  producto funcionó mejor»): el manifest lleva `locations[].kind` (`card`, `carousel`, `grid`,
+  `detail`; minúsculas, `^[a-z][a-z0-9-]{0,31}$`) y Commerce lo guarda en `surface_slot.kind`
+  (kernel 1.0.276, migración `1792200000000`, OK de Angelo) como parte de la **definición** del slot;
+  analytics lleva aparte el tipo por **evento** (`component_template_id`) y el ranking de productos
+  por campaña. Registro en Commerce, hechos en analytics, cruzados por `location_id` =
+  `surface_slot.name`. Inválido → aviso `invalid_location_kind` y el slot se registra igual;
+  omitido → se conserva el anterior; es orientativo (cualquiera con la key pública puede cambiarlo,
+  como `displayName`).
 - **Consecuencias asumidas** (revisión del 19/10): (1) hay una sola fila `page` por slot, así que
   si dos páginas comparten un id de slot y una lo declara para una campaña programada, la fila de
   la activa se reemplaza y el slot queda sin campaña visible hasta que la programada arranque; en
