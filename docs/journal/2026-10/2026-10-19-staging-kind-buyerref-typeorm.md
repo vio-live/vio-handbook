@@ -206,16 +206,68 @@ que haya salido rojo, avisa a Angelo y se borra solo. Ojo: la herramienta `cron`
 del `toolsAllow` al crearlo y hubo que añadirlo con `openclaw cron edit --tools` — el problema
 conocido.
 
-### Un hallazgo que conviene mirar cuando GitHub vuelva
+### CORRECCIÓN — el freno SÍ funcionó; el agujero es otro
 
-**El freno por migraciones del `kernel-release.yml` parece no haber frenado.** El workflow sólo
-dispara los bumps `if: has_new_migrations == 'false'`, y 1.0.276 **trae** una migración nueva
-(`1792200000000-surface-slot-kind.ts`, en `develop` desde hoy). Pero shopcart tiene **dos** runs de
-`Kernel bump`: uno a las **15:51:33** (que no es mío: el mío salió a las 15:52:02) y el mío. O sea
-que el workflow disparó igual.
+Escribí aquí que «el freno por migraciones parece no haber frenado». **Era falso y lo corrijo.**
+Cuando la API de Actions volvió, los pasos del run `39278180287` lo dicen sin ambigüedad:
 
-Si se confirma, el freno que debería impedir que los micros arranquen con un kernel que espera una
-columna inexistente **no está funcionando**, y la próxima vez puede dejar los micros a 500. No pude
-leer los `outputs` del paso porque la API de Actions daba 502; hay que mirar el run `39278180287`
-cuando GitHub se recupere. Los bumps duplicados en sí son inofensivos (el segundo no encuentra nada
-que cambiar).
+```
+13. Dispatch kernel-published to microservices (only if no new mig → skipped
+14. Migration gate — stop here, no dispatch                        → success
+```
+
+El freno detectó la migración y **no disparó nada**. El bump de shopcart de las 15:51:33 que me hizo
+sospechar lo lanzó alguien a mano, no el workflow. Y no se puede saber quién: el `actor` de los dos
+runs dice `angelosv` porque el token es la cuenta de Angelo — **el mismo problema que el caller del
+activity log de Azure**, que ya tengo anotado y volví a tropezar con él.
+
+Lo que hice mal: inferí un fallo de mecanismo a partir de un run duplicado, se lo conté a Angelo como
+riesgo real, y él me pidió arreglarlo. La API daba 502 y en vez de decir «no puedo comprobarlo
+todavía» convertí la sospecha en hallazgo.
+
+### El agujero real, ese sí existe
+
+Al leer el workflow para arreglar lo que no estaba roto, apareció un fallo latente de verdad. La
+detección compara **solo el último commit**:
+
+```bash
+git diff --name-only --diff-filter=A HEAD~1 HEAD -- src/migrations/
+```
+
+Esa ventana pierde la migración en cuanto entra **cualquier** otro commit en `develop` detrás de su
+merge: otro PR, o el propio `implement version X [skip ci]` que deja este mismo workflow. Entonces
+`has_new_migrations=false` y **sí dispara** el bump a los 12 micros, que arrancan con un kernel que
+mapea una columna que la base no tiene → 500.
+
+**Hoy frenó por suerte:** `HEAD` era exactamente el merge de la migración (`1b80762`).
+
+Reproducido contra el historial real de `package-database`, con el script extraído del YAML final:
+
+| Caso | Lógica actual | Con el arreglo |
+|---|---|---|
+| A — `HEAD` = merge de la migración (hoy) | `true` | `true` |
+| B — un commit cualquiera detrás | **`false`** ← no frena | `true` |
+| C — release sin migraciones nuevas | `false` | `false` |
+
+**El arreglo:** comparar contra el **último tag publicado**, que es el criterio que ya usa el paso
+`Detect changed kernel packages` del mismo workflow. El paso corre antes de `Bump versions`, así que
+`package.json` aún tiene la versión publicada y su tag es la base correcta; comprobado que un
+`clone --depth 20` trae los tags. Si falta el tag o no se puede leer la versión, ahora devuelve
+`true` (frena): el coste de frenar es disparar el bump a mano, el de equivocarse al otro lado son los
+micros a 500.
+
+El workflow es una plantilla en los **7 repos del kernel** y cualquiera de los 7 dispara el release,
+así que va en los 7. PRs abiertos, sin mergear (ADR-0001):
+[utils#9](https://github.com/vio-live/package-utils/pull/9),
+[config#9](https://github.com/vio-live/package-config/pull/9),
+[logger#9](https://github.com/vio-live/package-logger/pull/9),
+[database#22](https://github.com/vio-live/package-database/pull/22),
+[testing#9](https://github.com/vio-live/package-testing/pull/9),
+[definitions#9](https://github.com/vio-live/package-definitions/pull/9),
+[service#11](https://github.com/vio-live/package-service/pull/11).
+
+**Lo que no arregla:** el freno solo cubre el camino automático. Nada impide que una persona o un
+agente haga `POST /dispatches` con `kernel-published` y se lo salte — es literalmente lo que pasó a
+las 15:51:33. Taparlo necesita un guard en el receptor (`kernel-bump.yml` de los 12 micros) que sepa
+si la migración está aplicada en el entorno destino; es un cambio aparte y más grande. Queda como
+limitación conocida.
