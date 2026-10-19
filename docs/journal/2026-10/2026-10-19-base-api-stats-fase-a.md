@@ -93,6 +93,21 @@ Rama `feat/stats-por-surface-generico` desde `origin/develop` `abe6dc4` (= #41 m
   (eran 217); suite por defecto `statsService.test.js` + `surfaceOwnership.test.js` **13/13** (24 suites ajenas fallan
   igual que en develop); eslint, prettier y `tsc` (src) limpios.
 
+## Bloqueante de la revisión cruzada con el webapp — PR [vio-base-api#44](https://github.com/vio-live/vio-base-api/pull/44)
+#43 mergeado (`d7a98e0`). La ruta de brand (`forward`) devolvía el status y el body crudos del colector: un 404 llegaba
+al navegador como `404 { message: "Route GET:/v1/commerce-stats/by-campaign?sponsor_id=42&days=14 not found" }`
+(URL interna + identidad) y un 500 con el mensaje de ClickHouse. Rama `fix/stats-brand-502` desde `origin/develop`
+(worktree `~/vio-commerce/worktrees/base-api-stats-brand-502`), 1 commit `f7fa07c`, pusheado, **PR #44 a `develop`**.
+3 archivos, +96/−30.
+- `forward` y `forwardSurface` comparten ahora `relay(reply, upstream)` en `statsService.ts`: 2xx pasa sin tocar
+  (200 con body, 204 con status); cualquier otro status → 502 `{ error: 'analytics collector error', upstream_status }`
+  **sin el cuerpo del colector** (status y path interno al log del servidor); 503 sin config y 502 caído como antes.
+- Tests (`statsProxy.unit.ts`): 404 → 502 `upstream_status: 404` sin `sponsor_id` ni `/v1/commerce-stats` en el body;
+  500 → 502 sin `ClickHouse` ni el token; 400/401/403/429/503 → 502; 200 y 204 intactos. `statsService.test.js`:
+  `forward` con 404 → 502. Sustituye el caso de #42 que fijaba el passthrough del 404 de la brand.
+- Verificación: `yarn test:unit` **19 / 509** (develop tras #43: 502); las dos suites de stats 257; suite por defecto
+  `statsService.test.js` + `surfaceOwnership.test.js` **14/14**; eslint, prettier y `tsc` (src) limpios.
+
 ## Blockers / open questions
 - El colector aún no tiene `/v1/stats/surface/*` ni las lecturas nuevas de campaña/brand (fase A de
   vio-analytics, otro agente): hasta que entre en `main` y Miguel lo despliegue, esas rutas devuelven 502

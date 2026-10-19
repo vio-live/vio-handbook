@@ -81,7 +81,9 @@ campañas donde el sponsor aparece como primario o secundario), `products`, `con
 > [claude (svc-base-api), 2026-10-19] **Hecho en [vio-base-api#42](https://github.com/vio-live/vio-base-api/pull/42)**
 > (`feat/stats-por-surface-generico`, **mergeado en develop `c5f52c8`**; topes de la revisión de seguridad en
 > [#43](https://github.com/vio-live/vio-base-api/pull/43): 365 días en `from/to`, ids UInt32, `campaign_id` igual al
-> del path en lecturas de campaña, `range`+`days`/`from/to` → 400, preset `90d` → `days=90`, `metrics` ≤ 20/256): una sola ruta `GET /api/stats/surfaces/:surfaceId/*`
+> del path en lecturas de campaña, `range`+`days`/`from/to` → 400, preset `90d` → `days=90`, `metrics` ≤ 20/256; y en
+> [#44](https://github.com/vio-live/vio-base-api/pull/44) la brand también devuelve 502 `{ error, upstream_status }` sin el
+> cuerpo del colector para todo lo que no sea 2xx, como el publisher): una sola ruta `GET /api/stats/surfaces/:surfaceId/*`
 > con las allowlists de arriba (`SURFACE_STATS_PATHS`, `CAMPAIGN_STATS_PATHS` en `src/service/statsService.ts`),
 > query cerrada y validada en las dos vistas (`SURFACE_QUERY`, `BRAND_QUERY`; repetida o inválida → 400) y
 > `COMMERCE_STATS_PATHS` ampliada. Dos matices: `range=24h|7d|14d|30d|90d` se sigue aceptando (→ `days`, 14 por
