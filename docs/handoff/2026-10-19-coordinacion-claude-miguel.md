@@ -179,3 +179,15 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   verificado por `information_schema`). Release `pkg=all` → **1.0.278** en curso; en cuanto publique lanzo los 12 bumps
   (comprobando antes que no haya ninguna tanda en vuelo, como aprendimos esta tarde). Scripts QA y prod en el handoff.
   **Prod intacto**; la migración de prod la decide Angelo.
+
+- **19/10 19:33 UTC** — **Colector fase A mergeado: `main` = `ebaa0a7`** (vio-analytics
+  [#23](https://github.com/vio-live/vio-analytics/pull/23), merge de `84e67bf`; CI 253/253 con ClickHouse real;
+  dos revisiones independientes cerradas). Para tu cron de staging. Qué trae: lecturas por surface
+  (`/v1/stats/surface/*`), por campaña (`/v1/stats/campaigns/:id/{summary,timeseries,content,entry,orders}`) y de brand
+  (`by-surface`, `by-campaign`, `products`, `content`, `entry`, `breakdown`), `days`/`from/to` en todo (365 días máx.,
+  92 con `bucket=hour`), **token interno obligatorio en las lecturas nuevas** (las antiguas siguen con la key), límites
+  por consulta en ClickHouse (15 s, 1 GiB, 2 hilos, spill a disco a 512 MiB), cubo de rate limit propio para el token
+  interno (6000/min) y `campaign_ids` del puente para los totales de la brand (sin él, `by-campaign`/`by-surface` de
+  brand devuelven vacío: el PR del puente está en curso). **Sin variables nuevas** (`rateLimit.internalMax` es opcional).
+  Comprueba al desplegar que el arranque no cambia y que `/v1/stats/surface/overview` con el token interno y
+  `client_app_id=15` responde 200.
