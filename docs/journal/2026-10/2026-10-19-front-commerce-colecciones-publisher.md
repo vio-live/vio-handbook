@@ -51,12 +51,28 @@ Tres pedidos de Angelo sobre el webapp:
 - Angelo: el logo sale del backend (collection devuelve la brand), no del avatar de la cuenta.
 - Angelo: las colecciones propias antiguas de un publisher se ocultan.
 
+## Mergeado y desplegado (OK de Angelo, misma tarde)
+
+- **collection [#14](https://github.com/vio-live/vio-collection-microservice/pull/14)** (`f5bd332`).
+  El run de deploy salió verde y el pod nuevo lleva `brand-of-collection`. Dentro del pod,
+  `GET /collectionShared/joined/1312` devuelve la colección de Aller con
+  `brand {id: 1289, name: "Fedrik Louisa"}`.
+  - El `logoUrl` que llegó era el `default-placeholder.png` que base-api pone de avatar a toda
+    cuenta nueva.
+- **webapp [#66](https://github.com/vio-live/webapp-vio-commerce/pull/66)** (`61cb6f7`).
+  - Hubo conflicto con #65 (Active campaigns), de otra sesión. Se resolvió con merge de
+    `develop`, sin force-push, y el botón pasó a `/campaigns?new=1` sobre la versión nueva.
+  - Se añadió `cecd155`: el avatar por defecto no cuenta como logo, así que sale la inicial.
+  - El preview de Vercel salió verde. `dashboard-staging` sirve el mismo `buildId` que el
+    deployment del merge.
+
 ## Blockers
 
-- OK de Angelo para push y PR de las dos ramas. Orden: primero collection; el webapp aguanta
-  sin el campo `brand` y entonces cae al nombre de la cuenta.
-- No hubo verificación visual: el webapp local pide login y no hay credenciales de un publisher
-  de QA.
+- **Falta la verificación visual:** entrar como Aller en `dashboard-staging` → Collections, y en
+  Dashboard → New campaign. El webapp local pide login y no hay credenciales de un publisher de
+  QA.
+- **Pendiente aparte, sin hacer:** collection devuelve el avatar por defecto como `logoUrl` cuando
+  la brand no tiene perfil. El webapp lo filtra; lo limpio sería que el backend no lo mandara.
 
 ## Next session
 
