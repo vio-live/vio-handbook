@@ -17,7 +17,7 @@ identificador estable y no personal en las respuestas que recibe cuando un check
 ## Done
 
 - Rama `feat/buyer-ref-para-analytics` desde `origin/develop` (`a271e97`, kernel 1.0.275),
-  worktree `~/vio-commerce/worktrees/shopcart-buyer-ref`. **Commit local `0b0e11a` (amend tras el rename), sin push ni PR**
+  worktree `~/vio-commerce/worktrees/shopcart-buyer-ref`. **Commits locales `0b0e11a` + `12732aa` (revisión), sin push ni PR**
   (ADR-0001): 12 archivos, +337/−12.
 - **`buyer_ref`** = HMAC-SHA256 hex del email normalizado (`trim().toLowerCase()`) con el secreto
   `BUYER_REF_SECRET`. Misma persona → misma referencia en todas sus órdenes, dispositivos y
@@ -80,6 +80,47 @@ identificador estable y no personal en las respuestas que recibe cuando un check
   pero sin él analytics no cuenta compradores.
 - Gotcha de worktree: un `node_modules` **symlink** no lo ignora el `.gitignore` (patrón `node_modules/`
   con barra no matchea symlinks) → aparece como `??`; nunca `git add -A` en estos worktrees.
+
+## Revisión independiente (misma tarde) — commit `12732aa`, sin push
+
+Sin blockers; seis puntos aplicados en la rama (`feat/buyer-ref-para-analytics` queda `ahead 2`
+de `origin/develop`: `0b0e11a` + `12732aa`):
+
+- **W1 — solo pagados.** El read model formateado emite `buyer_ref` solo con `status === SUCCESS`
+  (tras `stripeReconcileOnRead`); si no, `''`. Antes, `POST /checkout/update/:id` con cualquier email
+  devolvía su HMAC desde un checkout ACTIVE: un oráculo del secreto. Test: ACTIVE/INACTIVE con email → `''`.
+- **W2 — una identidad por orden.** `CheckoutService.rememberBuyerEmail(row, checkout, providerEmail)`:
+  al completar la orden guarda en `checkout.email` el email que verificó el proveedor **si el checkout no
+  tenía ninguno** (nunca pisa; nunca el del publisher). Llamado en el punto único de cada método, justo antes
+  del `save` con `SUCCESS`: Klarna native (`finalizeKlarnaOrder`, `checkoutToUpdate`), Klarna KCO
+  (`settleKlarnaOrder`), Kustom (sustituye el `if (!chk.email…)` que ya había), Qliro, Walley, Nexi y Adyen.
+  **Vipps no necesitó cambio**: `createVippsOrder` ya hace `UpdateCheckout(…, email)` con lo que Vipps
+  devuelve (userDetails o Userinfo) y `completeBaseOrder` lee `checkout.email` — ojo, ese camino sí pisa
+  un email previo (comportamiento anterior, no tocado). Tests por método: Klarna native (3 casos), KCO,
+  Kustom, Adyen, Vipps. Qliro/Walley/Nexi no tienen spec que ejecute el ok-handler: sin test.
+- **W3 — Klarna native.** La confirmación fresca, la repetida (`alreadyProcessed`) y el GET devuelven la
+  misma referencia: el email con el que queda el checkout (el suyo, si no el de Klarna, que W2 persiste).
+  Tests: emails distintos entre checkout y Klarna (gana el del checkout en las tres respuestas), Klarna con
+  `''`, sin email en ninguno (`''`), billing = publisher (ignorado).
+- **W4 — nunca el publisher.** `buyerEmailOf(candidates, publisherEmail)` (puro, `||`-semántica, exige `@`,
+  compara normalizado) alimenta el ref en el read model, wallets y Klarna, y `customer.email` de las órdenes
+  Klarna (native y KCO). Los dos fallbacks `?? cart.user?.email` del email que se manda a Klarna
+  (`checkout.service.ts` ~2273 KCO y ~2418 native → `buildCheckoutKlarnaDto`) desaparecen.
+- **W5 — secreto.** `logger.warn` una vez por proceso si `BUYER_REF_SECRET` falta o tiene < 32 caracteres
+  (`buyerRefSecretWarner`, nunca el valor). Docblock: el secreto se `trim`ea; rotarlo rompe el histórico.
+- **W6 — tests.** `toEqual({ order_id, status, buyer_ref })` otra vez en los 3 harnesses de wallets; PENDING
+  y FAILURE-sin-catch de Apple/Google con `buyer_ref`; fallback al email del wallet cuando el checkout no
+  tiene; publisher → `''`; vector fijo `HMAC-SHA256('test-secret','kari@example.no') =
+  683000d648e76f83cc9348e5f2961c9b8778d7604da7ac285cd87b81e12cab65` (verificado con node antes de fijarlo).
+- Nits: `.normalize('NFC')` antes de minúsculas, guard `typeof === 'string'` en email y secreto, ejemplo de
+  Swagger obviamente falso, `docs/klarna-native-flow.md` con `buyer_ref`, comentarios en inglés en los
+  archivos en inglés (incluido `buyer-ref.ts`).
+- **Números:** `npx tsc --noEmit -p tsconfig.json` exit 0; `jest --config jest.unit.json` **44 suites /
+  668 tests en verde** (antes de la revisión 652; línea base de develop 637). Rama vs develop: 17 archivos,
+  +650/−17.
+- Edge asumido y documentado: si el comprador escribió un email en nuestro formulario y pagó con otro en
+  Klarna/Kustom/…, `Order.customer.email` lleva el del proveedor y `checkout.email` (y el ref) el escrito.
+  Es la consecuencia de "no pisar"; cambiarlo es decisión de producto.
 
 ## Next session
 
