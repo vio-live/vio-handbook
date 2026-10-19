@@ -152,7 +152,17 @@ lo quiero así, quiero que salgan las campañas».
   enseñan la campaña que sirve la key, y Vio Config lo dice en su nota.
 - **Lo que no cambia:** `campaigns[]`, el dashboard manda, los placements de los SDK nativos, y
   que `/v2/mobile/config` responde 404 si la surface no tiene **ninguna** campaña activa (con todo
-  pausado el editor no conecta; la por defecto está para eso).
+  pausado el editor no conecta; la por defecto está para eso). Esto supera la regla «solo campañas
+  activas» de la enmienda 3.
+- **Consecuencias asumidas** (revisión del 19/10): (1) hay una sola fila `page` por slot, así que
+  si dos páginas comparten un id de slot y una lo declara para una campaña programada, la fila de
+  la activa se reemplaza y el slot queda sin campaña visible hasta que la programada arranque; en
+  web y Vev los ids llevan la página (`card-<key>`, `<scope>-<kind>-<n>`), así que solo pasa con
+  ids compartidos a propósito. (2) La key pública de la surface ahora revela nombre y fechas de
+  campañas aún no lanzadas; ya revelaba sus ids y los catálogos de sus sponsors. Si molesta, la
+  salida es un endpoint aparte para el editor con credencial propia, que además resolvería el 404
+  con todo pausado. (3) `availableCampaigns` viaja en cada carga de página (~130 bytes por
+  campaña); sin tope porque las campañas las crean publishers autenticados.
 
 ## Consecuencias
 
