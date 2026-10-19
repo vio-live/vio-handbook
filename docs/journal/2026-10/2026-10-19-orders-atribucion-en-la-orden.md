@@ -134,3 +134,46 @@ Push y PR del primer commit los hizo el coordinador: **[orders #27](https://gith
   `GET /users/me/orders` dentro de `filters` (hoy mapea `text→search`, `dateFrom→createdAtFrom`…);
   orders acepta snake o camel, así que basta pasarlos tal cual.
 - **webapp**: `buildOrdersKey` no manda esos params todavía; y lee los campos nuevos en camelCase.
+
+---
+
+## Tercer paso (misma rama) — revisión independiente de `2dc037b`: MERGE CON CAMBIOS
+
+Commit **`f79343b`** (local, sin atribución IA; push lo hace el coordinador). `jest.unit` **11 suites /
+277 tests (275 OK + 2 skipped)**; `tsc -p tsconfig.build.json` 0 errores.
+
+### Done
+
+- **B1 — latin1.** `order`/`order_item` (y las columnas nuevas) están en `latin1_swedish_ci` en QA: un
+  título con emoji/ł/cirílico habría tumbado el INSERT de una orden cobrada. `persistOrder()`
+  (`order.service.ts`): si `_orderRepository.save` falla con **errno 1366 / `ER_TRUNCATED_WRONG_VALUE_FOR_FIELD`**
+  (`charsetErrorOf`: mira el error y `driverError`; saca la columna de `for column '…'`, sin prefijo de
+  tabla), y la columna es una de las nuestras (`content_url|content_title|entry_source|location_id|component_kind`)
+  o no se puede nombrar, **reintenta UNA vez** sin los textos (`dropAttributionTexts`: `contentUrl`,
+  `contentTitle`, `entrySource`, `items[].locationId`, `items[].componentKind`; ids y `buyerRef` se quedan)
+  y deja un `warn` con errno, código, columna y qué se quitó — **nunca el texto ni los bytes**. Cualquier
+  otro error, el 1366 en una columna ajena (p. ej. `customer_full_name`), o sin textos que quitar, se lanza
+  como antes. Antes del reintento borra los `id` que TypeORM pudiera haber dejado en el objeto del intento
+  revertido (orden, ítems, shippingItems). `boundedText` corta **por code points** (`Array.from`): `'😀'.repeat(300)`
+  a 255 acaba en emoji entero, no en surrogate suelto.
+- **B2 — quién atribuye.** `save()` gana `{ attribution = true }`; `create()` (bus / `POST /orders` de
+  base-api, cualquier usuario autenticado, body crudo con spread) pasa `{ channelOfReseller: false,
+  attribution: false }` → `stripAttribution(orderData)` quita las 9 claves. Su log `dto:` y el body de
+  `/create` en `setInitLogger` van sin `buyerRef`.
+- **W1** `/save` responde `withoutBuyerRef(responseService)` (test invertido). **W2** `describeError` en
+  el `catch` del controller `/save` y en `discountQuantity`/`callSocketSuppliers`/`callSocketSeller`
+  (el `JSON.stringify(error)` de un `QueryFailedError` volcaba `parameters` del INSERT). **W3** tests que
+  llegan al `savedOrder:` (recorrido completo hasta el `update` del sscc, patrón de internal-headers) y a
+  `cancelOrder` (`findOne` completo, `cancelOrderByReseller` espiado) y comprueban que ninguna línea lleva
+  `buyerRef`. **W4** guarda de `orderFields` intacta.
+- **Nits:** `newOrder ?? withoutBuyerRef(savedOrder)` en los dos push `new-order`; spec con
+  `getMetadataArgsStorage()` que exige las 9 propiedades en `Entity.Order`/`Entity.OrderItem` — **`test.skip`
+  si el `@vio-/database` instalado es < 1.0.277** (aquí 1.0.267 → 2 skipped; en CI corren); longitudes
+  exactas 2048/255/255/64/100/32 y «una de más pierde una» (2049→2048, 256→255, 101→100, 33→32, 65→64).
+
+### Decisions
+
+- El reintento es la red de seguridad, no la solución: la migración a utf8mb4 la pide el coordinador al
+  kernel (decisión de Angelo). Con utf8mb4 el camino del reintento no se ejecuta nunca.
+- Una orden sin ningún texto de atribución que falle por 1366 (p. ej. el nombre del cliente) sigue
+  fallando como siempre: no es un problema nuevo de este PR y «reintentar» no lo arreglaría.
