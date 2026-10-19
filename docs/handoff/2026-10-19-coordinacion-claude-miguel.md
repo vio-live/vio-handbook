@@ -54,6 +54,37 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   usuario** (artículo, referrer, UTM), no el país. No hace falta GeoIP en nginx ahora.
 
 ## De Miguel (escribe Miguel)
+
+- **19/10 18:40 UTC** — **base-api fase A desplegado en QA.** Mergeado
+  [#42](https://github.com/vio-live/vio-base-api/pull/42) (`feat/stats-por-surface-generico`,
+  +1066/-290) a `develop`, merge `c5f52c8`, CI/CD verde, pod **1/1 ready**, y **ningún**
+  `Unknown column` / `QueryFailedError` / `Cannot find module` en el arranque. Ya está sirviendo
+  tráfico real (veo sesiones de los usuarios 1289 y 1312). Antes de mergearlo reconfirmé lo que te
+  importaba: `TYPEORM_SYNCHRONIZE=false` y `TYPEORM_MIGRATIONS_RUN` ausente (= `false`, verificado
+  ejecutando `OrmUtils.toBoolean(undefined)` dentro del contenedor), así que tus entidades de
+  proyección no tocan el esquema del kernel.
+- **19/10 18:40 UTC** — **Repasé a mano todo lo que hizo mi cron, porque dos pasadas se quedaron
+  ciegas (el `exec` devolvía vacío) y no me fío de un informe sin evidencia.** Está todo bien:
+  - **Colector de staging en `1f86b76` de verdad.** No me quedé en el SHA del informe: el bundle que
+    corre (`dist/index.js`) tiene `replace(/^(product|vev)-/, "")` y **cero** ocurrencias de la regex
+    vieja `^product-`. Arrancado 18:05:44 UTC, `schema ready`, sin errores de `ALTER`,
+    `/opt/vio-analytics` ya en `ubuntu:ubuntu`.
+  - **Migración de atribución: 10/10 columnas**, comprobadas **por nombre exacto** contra el fichero
+    `1792300000000-order-attribution.ts` (mi primer filtro por patrón solo vio 4 y me dio un falso
+    incompleto). `order`: `surface_id`, `campaign_id`, `content_url`, `content_title`, `entry_source`,
+    `buyer_ref`. `order_item`: `campaign_id`, `location_id`, `component_kind`.
+    `surface_campaign.publisher_commission_pct decimal(5,2)`. Índice
+    `IDX_order_surface_campaign (surface_id, campaign_id)`. Fila `migrations` **id 236**.
+  - **Kernel 1.0.277 en los 12 micros de QA**, verificado dentro de cada pod. `campaigns` iba
+    retrasado cuando empecé a mirar y era simplemente que su CI/CD estaba a mitad; ya cerró.
+- **19/10 18:40 UTC** — **Prod intacto, confirmado y no supuesto:** `campaigns:22` con kernel 1.0.275,
+  `main` sin mover desde `b8631a2` (10:55 UTC), colector de la VM de prod arrancado el **16/10** y la
+  base de prod con `migrations` en **id 176** — 0 columnas de atribución y 0 de `surface_slot.kind`.
+- **19/10 18:40 UTC** — Lo que queda abierto y **no** mergeo: shopcart
+  [#73](https://github.com/vio-live/vio-shopcart-microservice/pull/73) y vio-analytics
+  [#15](https://github.com/vio-live/vio-analytics/pull/15), los dos **CONFLICTING**. Si los rebasas te
+  los cojo en la siguiente pasada. Y espero tu SHA de `main` para el colector de la fase A, y tus PRs
+  de webapp y shopcart.
 - **19/10 18:08 UTC** — **Colector en staging actualizado a ** (merge de #22). Reiniciado y verificado: , . Corregidos permisos de la carpeta  que habían quedado en  tras el deploy.
 - **19/10 18:08 UTC** — **Migración de atribución aplicada en QA** (script ). Resultado: las columnas e índice ya existían o fueron aplicados. Desbloqueado para tus merges de atribución.
 - **19/10 17:34 UTC** — **Migración de atribución aplicada en QA** (script `m-order-attribution-qa.js`). Resultado: 10 columnas añadidas + índice `IDX_order_surface_campaign` + fila `OrderAttribution1792300000000`. Disparados los bumps del kernel **1.0.277** a los micros (excepto webapp/graph-ql que no existen o son privados). Desbloqueado para tus merges de atribución.
