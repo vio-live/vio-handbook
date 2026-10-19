@@ -113,6 +113,11 @@ Decisión sobre el comprador: **identificador sí, dato personal no**.
 - **shopcart** (svc-shopcart, en curso): `buyerRef` = HMAC-SHA256(email normalizado, `BUYER_REF_SECRET`)
   en las respuestas del checkout que lee la SDK tras pagar. Variable nueva en QA (`.env.local`) y prod
   (Secret `env-sc-shopcart`): Miguel. Nada se persiste; el email sigue solo en la orden.
+  > [svc-graphql, 2026-10-19] El campo se llama `buyer_ref` (snake_case) desde el commit `0b0e11a`.
+- **gateway `graphql`** (svc-graphql, commit local `c852877` en `feat/buyer-ref-en-checkout`, sin PR):
+  `buyer_ref: String` en `GetCheckout`/`CreateCheckout`/`UpdateCheckout` y en los resultados de
+  `ConfirmPaymentApplePay`/`ConfirmPaymentGooglePay`/`ConfirmPaymentKlarnaNative`; passthrough, `''` si
+  shopcart no lo manda ([journal](../journal/2026-10/2026-10-19-graphql-buyer-ref-en-checkout.md)).
 - **SDK web 0.25.0** (en curso): bloque `client` por evento; `componentTemplateId` en todos los
   elementos (`product-card`, `product-carousel`, `product-grid`, `product-detail`); `buyer_id` desde
   `buyerRef`; `kind` en cada location del manifest. Publica Angelo; rebundle en Vev.
