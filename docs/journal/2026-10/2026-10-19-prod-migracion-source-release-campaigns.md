@@ -176,3 +176,52 @@ cada uno. Es equivalente y más limpio, pero no coincide con el texto del runboo
    plane, y **mis propias peticiones no aparecen**. Sin `accessLogFile` en el ConfigMap `istio`, ese 0
    no mide nada (ver la lección `cero-sin-prueba-de-vida-no-es-cero`). Mientras siga apagado no hay
    forma de estimar el riesgo del punto 1 ni de auditar quién llama a `api.vio.live`.
+
+---
+
+## Por qué el flow con clientes reales no puede empezar — miguel
+
+- **Quién:** Miguel. Angelo (19/10 14:36): *«haré todos los pasos con clientes reales para probar el
+  flow»*. Fui a comprobar qué le hacía falta y la cadena no arranca.
+- **Dónde:** base `outshifter` de prod y de QA, leídas desde el pod de `users` de cada clúster;
+  código de `vio-users-microservice@master` y `vio-campaigns-microservice@main`.
+- **Cuándo:** 19/10 12:30–12:55 UTC. **Solo lectura, no cambié nada en prod.**
+- Detalle completo y procedimiento:
+  [2026-10-19-prod-no-hay-publisher-para-el-flow](../../handoff/2026-10-19-prod-no-hay-publisher-para-el-flow.md).
+
+### Lo medido
+
+- `user_role` en prod: **0 filas**. En QA: **470**. La tabla `role` tiene las tres filas en ambos.
+- Los **9 clientes reales tienen `is_business = 1`** → los nueve derivan a `brand`, que es
+  read-only en surfaces y campañas. Correcto para retailers.
+- Las únicas 8 cuentas con `is_business = 0` son **cuentas de prueba de Alan** de junio–agosto.
+- ⇒ **No hay ningún publisher en prod.**
+
+### Lo que corrige a lo que dije antes en esta misma sesión
+
+A las 14:31 le recomendé a Angelo *«insertar una fila en `user_role` con rol Publisher para
+testprod»*. **Era la peor de las opciones disponibles y por una razón que no había comprobado:**
+
+- **users ignora los claims de Firebase** (`helpers/account-type.ts`: *«la base es la verdad,
+  ADR-0008»*), mientras que **el micro de campañas sí tiene fallback a claims**. Son dos reglas
+  distintas en dos servicios, y el dashboard se gatea por la de users.
+- En QA los publishers que **funcionan** (`allermedia` 1312, `newsellerv2testno` 1332) **no tienen el
+  rol**: viven del fallback de claims. El rol 3 lo tiene 1 sola cuenta en QA, y sin ninguna surface.
+- Existe un **`PublisherBackfillService`** hecho para esto (F2.2): idempotente, dry-run por defecto,
+  salta las cuentas business. Verifiqué que **está en el `dist` del pod de prod**, no solo en el repo.
+- **Pero no se puede llamar:** `AdminGuard` exige un ID token de una cuenta con rol **Admin (1) en la
+  base**, y con `user_role` vacío no hay ninguna. Arranque en frío.
+
+O sea: la vía buena no era mi fila de Publisher, era **sembrar un Admin** (que ya trae
+`surfaces:manage` + `campaigns:manage` y además destraba el backfill) y **dar de alta el publisher por
+el flujo normal de registro**.
+
+### Lo que NO hay que hacer
+
+Convertir un cliente real en `publisher` le quita `commerce:manage` y `brand:manage`: Boots o Villoid
+perderían la gestión de su catálogo. Para una cuenta real que deba verlo todo, el rol es **Admin**.
+
+### Pendiente de Angelo
+
+Qué cuenta recibe la fila de Admin, y quién es el publisher de la prueba. Sin eso, Connections →
+Channels → Surfaces → Campaigns no se puede ni empezar.
