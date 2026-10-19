@@ -177,3 +177,37 @@ Commit **`f79343b`** (local, sin atribución IA; push lo hace el coordinador). `
   kernel (decisión de Angelo). Con utf8mb4 el camino del reintento no se ejecuta nunca.
 - Una orden sin ningún texto de atribución que falle por 1366 (p. ej. el nombre del cliente) sigue
   fallando como siempre: no es un problema nuevo de este PR y «reintentar» no lo arreglaría.
+
+---
+
+## Cuarto paso (misma rama) — `buyerRef` al cobrar
+
+Commit **`7df8ef1`** (local, sin atribución IA; push lo hace el coordinador). `jest.unit` **12 suites /
+315 tests (313 OK + 2 skipped)**; `tsc -p tsconfig.build.json` 0 errores.
+
+### Done
+
+- shopcart (#94 `482dfbf`) manda ahora `{ data: { buyerRef } }` en `POST /:orderId/processOrderPaidByCustomer`
+  para las órdenes que nacen PENDING sin `buyerRef` (Stripe link/intent, Apple Pay, Google Pay); antes
+  llegaba `{}` siempre y el handler ni leía body.
+- `buyerRefOf(value)` (`order-attribution.ts`): string, `trim`, `/^[0-9a-f]{1,64}$/i`; si no → `null`.
+- `processOrderPaidByCustomer(orderId, paid: PaidByCustomerDto = {})`: tras `findById`, si hay `buyerRef`
+  válido → `_orderRepository.update(orderId, { buyerRef })` (**una** escritura, directa a la columna);
+  si no viene o es basura, la columna no se toca. El `update` va en `try/catch` con `warn` sin el valor:
+  la atribución no bloquea la transición de pago. El orden es `findById` → `update` → sockets/emails/…
+- **Nada lo expone, verificado:** el resto del método trabaja sobre la proyección `orderFields`
+  (sin `buyerRef`) → `socket-service:publish`, `order:paid`, `sendOrderWebhooks` y el volcado
+  `order:` del log no lo llevan; el controller loguea solo `Query: { orderId }` (el body no se loguea) y
+  sigue respondiendo vacío. DTO `PaidByCustomerDto` (`buyerRef?: unknown`) exportado del barrel.
+- Tests `order-paid-buyer-ref.unit.spec.ts` (38): `buyerRefOf` (válidos con mayúsculas/trim/1..64;
+  65, email, no-hex, `0x`, números, null…), service con `buyerRef` → `update(4600, { buyerRef })` una vez
+  y la transición sigue; `{}`/`undefined`/`null` → sin `update`; basura → sin `update`; ninguna línea de
+  log lleva el valor ni la palabra; `order:paid`/socket/webhooks sin él; `update` que falla → `warn` sin
+  valor y `order:paid` igual; orden de llamadas; controller pasa `data.buyerRef` y loguea solo el id;
+  los callers de siempre (`{}`, `{ data: {} }`, sin body) → `{}`.
+
+### Decisions
+
+- No se comprueba si la orden ya tenía `buyerRef` (la proyección no lo trae y sería otra consulta):
+  shopcart es el único caller interno y solo lo manda cuando nació sin él. Si algún día otro caller
+  lo manda, pisa el anterior.
