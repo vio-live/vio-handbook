@@ -123,8 +123,9 @@ cambio de API (la SDK ya los calcula: `cart line origins[]` desde 0.23).
 >   `/checkout/update/:id`. Recomendado: el gateway pone `attribution.surface_key` desde `X-API-Key`.
 > - **SDK**: `origin` desde `Vio.attribution(slot)` en add/update; `attribution` en `updateCheckout` antes de pagar.
 > - **Tras la revisión (commit `fed444b`)**: la surface declarada solo si es **del publisher del carrito** y lista
->   el channel; campañas solo de la surface resuelta; BD caída → ni surface ni campañas; `buyer_ref` solo en
->   órdenes que nacen pagadas; del referrer solo el host, sin `landing_url`; los DTOs nunca rechazan (normalizan).
+>   el channel; campañas solo de la surface resuelta; BD caída → ni surface ni campañas; `buyer_ref` al nacer pagada o,
+>   para Stripe link/intent y wallets (nacen PENDING), en la transición: body `{ data: { buyerRef } }` de
+>   `processOrderPaidByCustomer` (commit `482dfbf`; **orders debe copiarlo a `order.buyer_ref`**); del referrer solo el host, sin `landing_url`; los DTOs nunca rechazan (normalizan).
 > - **Charset**: `order`/`order_item`/`cart_item`/`checkout` son `latin1_swedish_ci` en QA → migración del kernel
 >   a utf8mb4 junto con las columnas JSON. **Orden de despliegue**: kernel → orders → shopcart → gateway → SDK.
 > - shopcart valida `surface_key`/`surface_id`/campañas contra el **channel del carrito** (`surface_channel`,

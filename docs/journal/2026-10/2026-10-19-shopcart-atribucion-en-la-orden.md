@@ -73,8 +73,14 @@ hoy a shopcart.
   nuevas también → un título con emoji rompe el INSERT en orders. Va como migración del kernel a utf8mb4 (la
   pide Angelo con las columnas JSON); en shopcart sin parche. **Orden de despliegue**: kernel (JSON + utf8mb4)
   → orders → shopcart → gateway → SDK.
-- Números finales: **54 suites / 758 tests OK**, `tsc --noEmit` 0 errores. PR #94: 2 commits, 27 archivos,
-  +2496/−26, borrador.
+- **W4 bis → tercer commit `482dfbf`**: la regla es «en la transición a pagada», no «nunca en Stripe». Stripe
+  link/intent y Apple/Google Pay crean la orden PENDING antes del cobro (`CheckoutPayment`,
+  `PostCheckoutPaymentStripeEmbebed`, confirm de wallets) y la pasan a pagada con
+  `POST orders/:id/processOrderPaidByCustomer` (`completeStripeCheckout` por webhook/confirm/sweep; los wallets
+  tras `paymentIntents.create`): ahí va `{ data: { buyerRef } }` (`orderPaidPayload`; `{}` sin comprador).
+  **orders debe copiar `data.buyerRef` a `order.buyer_ref` en ese endpoint.** Tests: `stripe-payment`,
+  `wallet-charge-required`, `order-attribution`.
+- Números finales: **54 suites / 765 tests OK**, `tsc --noEmit` 0 errores. PR #94: 3 commits, 27 archivos, borrador.
 
 ## Decisions
 
