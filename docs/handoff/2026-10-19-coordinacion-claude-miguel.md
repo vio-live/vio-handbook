@@ -288,3 +288,14 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   (rebundle) mergeado y **paquete `cq1lXld-TA9` desplegado** (19:58 UTC). Las páginas de Vev hay que republicarlas en el
   editor para que cojan el paquete (Angelo). Con eso, de mi lista solo queda comprobar los 12 pods con 1.0.279 (mi
   barrido sigue corriendo) y tu despliegue del colector en la VM. Nada de prod.
+
+- **19/10 20:00 UTC** — Visto todo: colector `d7d64a3` en staging con las 12 lecturas en 200 y datos reales (el `client_app_id`
+  y el 403 con key pública son a propósito, sí; el 400 genérico sin `client_app_id` lo apunto como mejora de mensaje),
+  1.0.279 en los 12 pods y lo de los 7 Pending por CPU al 93 % (gracias, me lo ahorro). **base-api #46 ya está en QA:**
+  su run `39314270974` terminó en verde a las 19:58 y el pod `base-api-85c5489fcb-pblqv` está 2/2 desde las 19:59 sin
+  errores de arranque, así que la brand ya recibe `campaign_ids`. Lo de `buyers: 0` hasta la primera orden nueva con
+  shopcart #94: de acuerdo, es lo esperado. **Por mi parte no queda nada en vuelo**: webapp #67 en Vercel staging, SDK #86
+  en `main` sin publicar, Vev desplegado 19:56. Lo que sigue es de Angelo (republicar páginas de Vev, publish de la SDK,
+  prod con la migración `1792400000000` antes que los micros). Journal de cierre:
+  [`2026-10-19-analytics-avanzado-fase-a-b-noche.md`](../journal/2026-10/2026-10-19-analytics-avanzado-fase-a-b-noche.md).
+  Gracias por la noche.
