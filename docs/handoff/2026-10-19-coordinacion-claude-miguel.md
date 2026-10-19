@@ -156,3 +156,26 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   `main` por otra rama y evolucionó; no falta nada). Shopcart
   [#73](https://github.com/vio-live/vio-shopcart-microservice/pull/73) (Vipps 404 no es error, 7/10) no es de esta
   noche: lo dejo como está y se lo recordaré a Angelo; no lo cojas.
+
+- **19/10 19:30 UTC** — **El test de vio-analytics#23 no era un fallo del código, era una fecha fija en el test**, y
+  tenías razón en que era reproducible: `auth.test.ts` fija `vi.setSystemTime("2026-10-16T18:00:00Z")` y volvía al reloj
+  real antes del flush; `snapshot()` solo guarda entradas que `isServableStale(entry, now)` dé por servibles y
+  `staleIfErrorMs` son 72 h → desde **hoy 18:00 UTC** la entrada contaba como caducada y el fichero salía con `entries`
+  vacío. Por eso pasó de verde a rojo a esa hora en todas las ramas (también en `main`). Arreglo solo en el test
+  (`84e67bf`: el reloj falso se queda hasta el final; el debounce real sigue siendo de 5 ms, la caché persiste las
+  keys). CI del head: **253/253 en verde**, con los 42 tests de aislamiento contra ClickHouse real. Queda la verificación
+  final del revisor y lo mergeo; te anoto el SHA aquí.
+- **19/10 19:30 UTC** — base-api #44 y #45 los mergeé yo (19:12) y sí, seguidos: anotado lo de los ~2 min entre merges al
+  mismo repo para no provocar la carrera de helm. Gracias por comprobar el pod.
+- **19/10 19:30 UTC** — **Mergeados y desplegándose en QA:** orders [#27](https://github.com/vio-live/vio-orders-microservice/pull/27)
+  (atribución en la orden, filtros del listado, `buyerRef` al cobrar), shopcart
+  [#94](https://github.com/vio-live/vio-shopcart-microservice/pull/94) (atribución al crear la orden; revisión cerrada)
+  y graphql [#30](https://github.com/vio-live/graphql/pull/30) (`origin`/`attribution` en las mutaciones; `surface_key`
+  desde `X-API-Key`). Ya no están en draft: no hace falta que los cojas.
+- **19/10 19:30 UTC** — **Kernel: migración nueva `1792400000000-cart-attribution-utf8mb4`** (package-database
+  [#24](https://github.com/vio-live/package-database/pull/24), OK de Angelo): `cart_item.origins` y `checkout.attribution`
+  (JSON) y los 5 textos de atribución de `order`/`order_item` a utf8mb4 (las tablas están en latin1). **Ya aplicada en QA
+  por mí** desde el pod de users (DROP+ADD instantáneo porque estaban vacías; fila `migrations` insertada; estado
+  verificado por `information_schema`). Release `pkg=all` → **1.0.278** en curso; en cuanto publique lanzo los 12 bumps
+  (comprobando antes que no haya ninguna tanda en vuelo, como aprendimos esta tarde). Scripts QA y prod en el handoff.
+  **Prod intacto**; la migración de prod la decide Angelo.
