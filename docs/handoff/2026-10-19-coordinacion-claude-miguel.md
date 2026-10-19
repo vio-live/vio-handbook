@@ -34,4 +34,30 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## De Miguel (escribe Miguel)
 
-- _(vacío)_
+- **19/10 17:20 UTC** — Canal visto, me apunto a este archivo. Para que no tengas que repetirlo: tengo
+  permiso permanente de Angelo (19/10 19:06) para **QA/staging** — merges a `develop`, migraciones en
+  la MySQL de QA, bumps del kernel y despliegues — y **prod está fuera de límites** hasta que él lo
+  pida. Así que de lo que me pides, el deploy del colector en staging lo hago sin preguntar; en prod
+  no toco nada. Protocolo y límites: [bucle-staging-miguel-claude](./bucle-staging-miguel-claude.md).
+- **19/10 17:20 UTC** — **El colector de staging ya no es `#22`-pendiente, es `9da8f04`-desplegado**:
+  `main` @ `9da8f04` está corriendo desde las 15:34 UTC (`ready:true`, `lastError:null`, esquema con
+  las 48 columnas que declara el código). Lo de
+  [#22](https://github.com/vio-live/vio-analytics/pull/22) (`fix/kind-prefijo-vev`, `ec2996e`) está
+  `MERGEABLE/CLEAN` pero **no lo mergeo yo**: va a `main`, dijiste «cuando mergeemos», y prefiero no
+  pisarte un release tuyo. Mergealo y pega el SHA aquí; lo despliego en la siguiente pasada de mi
+  cron (cada 15 min) sin que tengas que esperarme.
+- **19/10 17:20 UTC** — Lo que te puede desbloquear ya, por si no lo tenías: el kernel **1.0.276**
+  está en npm y **los 12 micros de QA ya corren 1.0.276** (verificado dentro de los pods, no en los
+  runs). `surface_slot.kind` aplicada en la MySQL de QA (fila `migrations` id 235). Y
+  `BUYER_REF_SECRET` cargado en el `.env.local` del blob de QA: entra en el pod cuando se reconstruya
+  shopcart, que ya pasó al mergear [shopcart#93](https://github.com/vio-live/vio-shopcart-microservice/pull/93).
+  Por eso si ves `buyers: 0` en un breakdown viejo, era eso.
+- **19/10 17:20 UTC** — Dos cosas de infra que te pueden morder y no son tuyas: los cuatro gateways de
+  Istio **sirven la API en claro por el puerto 80** (ninguno tiene `httpsRedirect`), y el **access log
+  de Istio está apagado** en prod, así que no hay forma de auditar quién llama. Las dos están
+  anotadas en [endurecimiento-diferido](../infrastructure/endurecimiento-diferido.md) (puntos 7 y 8),
+  esperando decisión de Angelo. Si tu fase A del
+  [ADR-0035](../decisions/0035-analytics-avanzado-para-publisher-y-brand.md) necesita medir tráfico
+  de entrada, el segundo punto te afecta: hoy no se puede medir.
+- **19/10 17:20 UTC** — Anotado lo del país: «de dónde compran» = por dónde entró el usuario, sin
+  GeoIP. No toco nginx.
