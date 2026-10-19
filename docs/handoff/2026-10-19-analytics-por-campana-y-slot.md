@@ -129,11 +129,12 @@ Decisión sobre el comprador: **identificador sí, dato personal no**.
 
 | Frente | Estado |
 |---|---|
-| Colector | `main` = `1f86b76` **desplegado en staging** por Miguel (lecturas por campaña/slot/producto/desgloses, `kind` normalizado). Fase A de ADR-0035 (lecturas por surface/brand con `from/to`) en curso |
+| Colector | `main` = `1f86b76` **desplegado en staging** por Miguel. Fase A de ADR-0035: [#23](https://github.com/vio-live/vio-analytics/pull/23) (lecturas por surface/campaña/brand, `days`/`from/to`, +3195/−238, 240 tests con ClickHouse real) **en revisión independiente**; al mergear, SHA en el canal para el cron de Miguel |
 | graphql | #28 (`buyer_ref`) y #29 (sin credenciales en logs) en develop → QA |
-| base-api | #40 y #41 en develop → QA (puente del publisher). Fase A (proxy genérico por surface) en curso |
-| webapp | #65 en develop → staging. Fase A (filtros, Recharts, home por surface, detalle avanzado) en curso |
-| shopcart | #93 en develop → QA (`buyer_ref`, email del proveedor al checkout). Fase B (atribución al crear la orden) en curso |
+| base-api | #40, #41, [#42](https://github.com/vio-live/vio-base-api/pull/42) (proxy genérico por surface) y [#43](https://github.com/vio-live/vio-base-api/pull/43) (topes: 365 días, UInt32, `campaign_id` solo del path, preset `90d`, `metrics` ≤ 20) en develop → **QA desplegado 18:49 UTC** |
+| webapp | #65 en develop → staging. Fase A: [#67](https://github.com/vio-live/webapp-vio-commerce/pull/67) (filtros en URL, Recharts, home por surface/brand, detalle de campaña, +4267/−884, 734 tests) **en revisión cruzada** con las formas del colector #23 y las listas del puente |
+| shopcart | #93 en develop → QA (`buyer_ref`). Fase B: [#94](https://github.com/vio-live/vio-shopcart-microservice/pull/94) (atribución al crear la orden en los 8 finalizadores; `origin` por línea, `attribution` en checkout; ids validados contra el channel del carrito) **borrador en revisión**. **Necesita decisión de Angelo:** dos columnas JSON en el kernel (`cart_item.origins`, `checkout.attribution`) para que la atribución sobreviva hasta el webhook; sin ellas solo llegan surface (por channel) y `buyer_ref` |
+| orders / graphql / SDK | En curso (agentes, 18:49 UTC): orders copia `surfaceId, campaignId, contentUrl, contentTitle, entrySource, buyerRef` a la entidad tras `toOrder`; gateway añade `origin`/`attribution` a `AddItem`/`UpdateItem`/`CreateCheckout`/`UpdateCheckout` y pone `surface_key` desde `X-API-Key`; SDK manda `origin` por línea y `attribution` antes de pagar (sin publish). PRs borrador a develop/main |
 | package-database | #21 (`kind`) y #23 (atribución + `publisher_commission_pct`) en develop; kernel **1.0.277** publicado; **migración de atribución aplicada en QA por Miguel** (17:34 UTC); bumps 1.0.277 en los 12 micros (campaigns relanzado 18:30 UTC) |
 | campaigns micro | #21 (`kind`) en develop → QA (imagen 26, 16:27 UTC); `kind` verificado en Commerce con la página de Angelo (3 cards) |
 | SDK web | #85 (0.25.0) en `main`, **sin publicar en npm por decisión de Angelo (al final)** |

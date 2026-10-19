@@ -20,7 +20,7 @@ agentes implementan **estas formas**; si algo no encaja con el código real, se 
 - **Tenencia**: por surface = key de surface o token interno + `client_app_id`; por brand = token interno +
   `sponsor_id` (el puente de base-api pone ambos; el cliente nunca).
 - **Definiciones** (ADR-0035 §2.2): `page_views` = sesiones con algún evento en el `content_url` (sin
-  query/hash); `impressions` = `component_impression`/`ad_impression`; `clicks` = `select_item`/`ad_click`;
+  query/hash); `impressions` = `component_impression`/`ad_impression`; `clicks` = `select_item`/`ad_click`/`component_click` (como ya contaban `summary`/`slots`/`funnel`);
   `interactions` = clics + `view_item` + `add_to_cart` + `begin_checkout`; `purchases` = pedidos únicos
   (`PURCHASES_SQL`); `gmv` = suma de `value` de purchase; `aov` = gmv / purchases; `conversion` =
   purchases / sesiones con impresión; `buyers` = `buyer_id` únicos; `repeat_buyers` = buyers con ≥ 2 pedidos.
