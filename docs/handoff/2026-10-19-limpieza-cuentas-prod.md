@@ -3,14 +3,21 @@ title: "Prod: inventario de las 36 cuentas y propuesta de limpieza"
 date: 2026-10-19
 owner: miguel
 decides: angelo
-status: pendiente-de-aprobacion
+status: descartado
 ---
 
 # Prod: qué cuentas son reales y cuáles se pueden borrar
 
-Angelo (19/10): *«ya crearemos aller en prod, y borramos cualquiera que no sea real»*.
-**Nada ejecutado:** esto es el inventario para que él apruebe la lista. Todo medido en la base de
-prod (`outshifter`), solo lectura.
+> **DECISIÓN DE ANGELO (19/10 14:47): no se borra nada.** *«pero tampoco estropea mantener esas
+> cuentas»*. Tiene razón: no cuestan dinero, no son visibles para nadie, todas tienen suscripción
+> (así que no dan 401) y **no generan trabajo de sync** — comprobado: 0 menciones a las tiendas de
+> prueba en los logs de `extensions` (111.695 líneas en 30 min como prueba de vida) y de `products`
+> (15.444 líneas). El inventario queda abajo como referencia, **no como tarea**. No volver a
+> proponerlo.
+
+Angelo (19/10): *«ya crearemos aller en prod, y borramos cualquiera que no sea real»*, y acto seguido
+lo descartó al ver el coste. Todo lo de abajo está medido en la base de prod (`outshifter`),
+solo lectura. **Nada ejecutado.**
 
 ## Antes de nada: cómo hay que borrar
 
