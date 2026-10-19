@@ -1,8 +1,8 @@
 ---
 title: "Vipps en producción — plan de salida"
-last-updated: 2026-10-16
+last-updated: 2026-10-19
 owner: angelo
-status: plan — partner keys recibidas el 16/10; pendiente de cargarlas y de las decisiones de Angelo
+status: plan — primer comercio firmado (Careless, MSN 1179558); partner keys por localizar; pendiente de las decisiones de Angelo
 ---
 
 # Vipps en producción — plan de salida
@@ -83,9 +83,17 @@ del `:latest` del registro. Ninguna migración.
    1.0.270–1.0.273, `Cart.seller`). Va en la próxima release completa.
 3. Las purgas de Datadog esperan a esa misma release.
 
-## Fase 2 — Partner keys (de Vipps a nosotros) — HECHA el 16/10
+## Fase 2 — Partner keys (de Vipps a nosotros) — POR LOCALIZAR
 
-- Recibidas el 16/10. Falta confirmar si llegó también el acceso a la Management API.
+- **19/10 (corrige al 16/10):** el partner portal **no muestra las partner keys**. Solo tiene
+  *Product Orders*, *Product Order Templates*, *Sales Units*, *Prices* y *Developers* (webhooks),
+  según la [documentación del portal](https://developer.vippsmobilepay.com/docs/partner/partner-portal/).
+  Las claves (`client_id`, `client_secret`, `Ocp-Apim-Subscription-Key`) llegan en el **correo de
+  bienvenida** del partnership o las manda el equipo de partners
+  ([partner keys](https://developer.vippsmobilepay.com/docs/partner/partner-keys/)). Con partner keys
+  la cabecera `Merchant-Serial-Number` es obligatoria en cada llamada (shopcart ya la manda).
+- Lo que sí había el 16/10 era la **alta del primer comercio** (fase 4).
+- Falta confirmar si llegó también el acceso a la Management API.
 - Pedidas en el hilo de Michael con Vipps: partner keys de producción y acceso a la Management API
   (product orders), para dar de alta comercios con formulario prellenado.
 - **Las claves nunca pasan por repos, handbook, Trello ni memoria**: van directas al blob y al Secret
@@ -112,10 +120,12 @@ del `:latest` del registro. Ninguna migración.
 
 ## Fase 4 — El primer comercio
 
-1. **Angelo elige el comercio** (Vipps quiere revisar el primero en vivo).
-2. **Alta de su unidad de venta bajo el partner**: product order por Management API o plantilla del
-   portal de Vipps; el comercio firma con BankID; Vipps confirma y nos da el MSN. El alta desde el
-   dashboard no está construida: el primero es a mano.
+1. **El primero es Careless AS** (org. 928540650), según el portal del 19/10. Vipps quiere revisar
+   el primero en vivo.
+2. **Alta de su unidad de venta bajo el partner: HECHA.** Product order `d596c4a0-a191-4967-b650-2da1eb99be8c`
+   desde la plantilla `e082e35f-6593-43e1-ae3e-a9f860e74abf`, sin prellenar. Unidad «Careless AS»,
+   **MSN 1179558**. Falta confirmar en la lista de *Product Orders* que el estado es `COMPLETED`. El
+   alta desde el dashboard no está construida: los siguientes comercios usan la misma plantilla.
 3. En el dashboard de producción, el comercio crea su Vipps en modo *Vipps through Vio*. Vio asigna el
    MSN: `PATCH api-ms /paymentmethod/:id/vipps-sales-unit` (interno, por port-forward).
 4. Ajustes del comercio: Express encendido; envío fijo o dinámico; modo de captura (decisión 3);
