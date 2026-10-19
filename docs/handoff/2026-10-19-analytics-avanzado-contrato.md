@@ -27,6 +27,15 @@ agentes implementan **estas formas**; si algo no encaja con el código real, se 
 - **Nunca** nombres de campaña/surface/producto como fuente de verdad en el colector: ids + snapshot
   (`content_title`, `items.name`). La webapp pone nombres e imágenes cruzando con el micro y el catálogo.
 
+> [claude, 2026-10-19 19:02 UTC] **Decisiones tras las revisiones independientes** (colector #23, base-api #42/#43, webapp #67, shopcart #94, orders #27, graphql #30):
+> 1. **Las lecturas nuevas exigen token interno** (`/v1/stats/surface/*`, `/v1/stats/campaigns/:id/{timeseries,content,entry,orders,summary}` y las nuevas de `/v1/commerce-stats/*`): la key pública de la surface va en el HTML y con ella una brand leería `by-channel` y `surface/products` de las demás. Las lecturas antiguas no cambian. El webapp siempre va por el puente, que usa el token.
+> 2. **La pertenencia de una brand a una campaña no sale de los eventos** (el `sponsor_id` lo declara el cliente; un evento falsificado metía una campaña ajena en los totales): sale de la fuente de tenencia del colector o de `campaign_ids` que pone el puente.
+> 3. **La atribución nunca bloquea una venta**: gateway y shopcart truncan/descartan (`trim`, cortes a la longitud de columna, ids inválidos fuera, URLs solo `http(s)`), no responden 400/500. Longitudes reales: `content_url` 2048, `content_title` 255, `entry_source` 255, `buyer_ref` 64, `location_id` 100, `component_kind` 32.
+> 4. **Aislamiento en shopcart**: una `surface_key` solo acredita si la surface es del publisher del carrito; con BD caída se descartan las campañas declaradas; la campaña debe ser de la surface resuelta. `buyer_ref` solo en órdenes que nacen pagadas; `checkout.attribution` guarda host del referrer + utm (no referrer completo ni `landing_url`).
+> 5. **Pendiente de Angelo (migración nueva `1792400000000`)**: `cart_item.origins JSON`, `checkout.attribution JSON` y paso a `utf8mb4` de `content_url`, `content_title`, `entry_source`, `location_id`, `component_kind` (las tablas `order`, `order_item`, `cart_item`, `checkout` están en latin1 en QA: un título con guion largo o emoji rompería el INSERT de una orden cobrada).
+> 6. **Semántica de rangos**: `days=N` y los presets son días naturales UTC (`24h` = hoy en UTC, rotulado así); el periodo anterior son N días completos, así que los deltas del día en curso van sesgados a la baja. Las sesiones por bucket no suman el total del rango.
+> 7. **Orden de despliegue**: colector #23 antes que webapp #67 (con el colector viejo `from/to` se ignora y `by=referrer|landing|component_kind` da 400); kernel (migración) → orders → shopcart → gateway → SDK (publish al final, Angelo).
+
 ## 1. Colector (vio-analytics)
 
 ### 1.1 Por surface (publisher)
