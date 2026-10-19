@@ -124,8 +124,21 @@ del `:latest` del registro. Ninguna migración.
    el primero en vivo.
 2. **Alta de su unidad de venta bajo el partner: HECHA.** Product order `d596c4a0-a191-4967-b650-2da1eb99be8c`
    desde la plantilla `e082e35f-6593-43e1-ae3e-a9f860e74abf`, sin prellenar. Unidad «Careless AS»,
-   **MSN 1179558**. Falta confirmar en la lista de *Product Orders* que el estado es `COMPLETED`. El
-   alta desde el dashboard no está construida: los siguientes comercios usan la misma plantilla.
+   **MSN 1179558**. El alta desde el dashboard no está construida: los siguientes comercios usan su
+   plantilla.
+
+   Lo que muestra el partner portal (revisado el 19/10):
+   - El product order está `Completed` y la unidad `Active` desde el 16/10.
+   - La unidad tiene *Payment allowed*, captura `ReserveCapture` (reserva y luego captura: sirve
+     para *at shipment* y *at payment*), *Partial capture*, *Late capture* y tarjeta.
+   - Tiene *Login* apagado, y no hace falta: el Express de ePayment no lo exige
+     ([Express](https://developer.vippsmobilepay.com/docs/APIs/epayment-api/api-guide/features/express/)).
+   - Hay plantillas preparadas para cuatro comercios más, que aún no han firmado: Beauty Rebels,
+     Gladkokken, Makeup Mekka y QKC.
+   - Hay dos paquetes de precio, P1 (2,99 % + 1 NOK) y P3 (1,99 % + 1 NOK).
+   - *Developers → Webhooks* está vacío: todavía no hay webhook de partner (fase 3).
+   - Partner Manager: Fredrik Rogne. Contacto principal y técnico: Michael. Las partner keys, que
+     llegan por correo, las tendrá Michael.
 3. En el dashboard de producción, el comercio crea su Vipps en modo *Vipps through Vio*. Vio asigna el
    MSN: `PATCH api-ms /paymentmethod/:id/vipps-sales-unit` (interno, por port-forward).
 4. Ajustes del comercio: Express encendido; envío fijo o dinámico; modo de captura (decisión 3);
