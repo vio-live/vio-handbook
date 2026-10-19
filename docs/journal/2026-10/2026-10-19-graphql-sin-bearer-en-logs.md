@@ -17,8 +17,9 @@ del cliente a Datadog en cada confirm. Y revisar `src/` entero por cualquier otr
 ## Done
 
 - Rama `fix/sin-bearer-en-logs` desde `origin/develop` (`0c6fd70`), worktree
-  `~/vio-commerce/worktrees/graphql-sin-bearer-en-logs`. **Commit local `9f25bb8`, sin push ni PR**
-  (ADR-0001): 10 archivos, +425/−20.
+  `~/vio-commerce/worktrees/graphql-sin-bearer-en-logs`. Commit `9f25bb8` (primera vuelta) →
+  **PR [graphql#29](https://github.com/vio-live/graphql/pull/29)** → revisión → commit `5c3dd89`
+  (segunda vuelta), **pusheado a la rama del PR con OK explícito de Angelo para esa rama**.
 - **Inventario (grep de `logger.*`/`console.*` y de toda interpolación `${…auth|token|apiKey…}`)** —
   no era una línea, eran cinco archivos:
   1. `Services/Sdk/Checkout/Payment/ApiRestSdkCheckoutPaymentService.ts:1069` — `auth=${…auth}`: el
@@ -29,8 +30,9 @@ del cliente a Datadog en cada confirm. Y revisar `src/` entero por cualquier otr
   3. `Fetcher/LogAxiosResponseInterceptor.ts:49-50, 72, 95, 111-117` — `body: config.data` (el cuerpo
      enviado al micro: tokens de Apple/Google/Klarna) y `errorResponse.data`; cabeceras de respuesta
      del micro (`set-cookie` posible).
-  4. `Redis/RedisService.ts:10, 53-57` — `console.log('config', config)` con `CACHE_PASSWORD` y
-     `DATADOG_API_KEY` al arrancar, y `configRedis` con `password`.
+  4. `Redis/RedisService.ts:10, 53-57` — `console.log('config', config)` con `CACHE_PASSWORD` al
+     arrancar (el config de Redis **no** lleva `DATADOG_API_KEY`; eso lo lee `DataDogProvider` de
+     `process.env` — corregido en la revisión), y `configRedis` con `password`.
   5. `Utils/Auth.ts:8, 23` — `JSON.stringify(info)` del usuario de middleware en cada resolver
      (`loginInfo.specificApiKey`, forma no confirmada).
   Revisados y **no tocados** (no llevan credencial): los `console.log('*data'|'*body')` de
@@ -50,10 +52,30 @@ del cliente a Datadog en cada confirm. Y revisar `src/` entero por cualquier otr
   `tests/Infra/Services/Sdk/Checkout/Payment/ConfirmPaymentApplePayLog.spec.ts` (harness del service:
   la línea dice `auth=<redacted len=N>` o `auth=<empty>`, nunca el bearer, y el bearer sigue yendo a
   shopcart).
-- **Resultados**: `npx tsc --noEmit -p tsconfig.json` exit 0. `NODE_ENV=test npx jest`: develop
-  **8 suites / 52 tests** → **12 suites / 97 tests**, todo en verde. Prettier limpio en lo nuevo; en los
-  5 archivos preexistentes (4 ya sucios en develop) ninguna de mis líneas es de las que prettier
-  cambiaría.
+- **Segunda vuelta (revisión del PR, commit `5c3dd89`)** — un blocker y cuatro warnings:
+  - **B1**: los `catch` del interceptor hacían `logger.error(msg, { error })` con el `AxiosError`
+    entero; con winston `format.json()` su `toJSON()` lleva `config.headers` (`authorization`) y
+    `config.data` (el token de pago). Y `error()` lanzaba dentro de su propio `try`, así que ese `catch`
+    corría en **toda** llamada fallida y en cada reintento. Ahora: `describeError` →
+    `{ name, message, code, status, method, url }` (nunca `config`/`request`/`response`) y el error
+    original se relanza fuera del `try`. `messsage` (triple s) corregido.
+  - **W1** regex ampliada (`(session|redirect)_result`, `session_data`, `ephemeral`,
+    `client/checkout/private_key`, `jwt`, `signature`, `hmac`, `cvv`, `cvc`). **W2** `redactUrl`/
+    `redactQuery` en toda URL logueada (shopcart recibe `session_result`/`redirect_result` por query).
+    **W3** falla cerrado: `<max depth>`, `<circular>` (WeakSet por camino; una referencia compartida sí
+    se expande), `Buffer`/typed arrays/`Map`/`Set` por tamaño, instancias de clase por sus claves,
+    `Error` → `describeError`. **W4** `scrubText` para cuerpos no JSON (`key=value` y `Bearer`/`Basic`).
+  - Nits: `params` por `redactSecrets` en todos los caminos; `Responser` (no montado, pero en el
+    contenedor DI) redacta cabeceras/query/cuerpos en vez de devolverlo todo; comentario-changelog
+    fuera del plugin; texto de `Redact.ts` corregido.
+  - Tests: el spec del interceptor mete `Bearer …` en `config.headers.authorization`, un token en
+    `config.data` y `session_result` en la query, y afirma que `JSON.stringify([response.calls,
+    error.calls, info.calls])` no contiene ninguno en éxito, en los tres caminos de error y cuando el
+    propio logger falla. Spec nuevo de `Responser`.
+- **Resultados finales**: `npx tsc --noEmit -p tsconfig.json` exit 0. `NODE_ENV=test npx jest`: develop
+  **8 suites / 52 tests** → primera vuelta 12 / 97 → **13 suites / 134 tests**, todo en verde. Prettier
+  limpio en lo nuevo; en los archivos preexistentes ya sucios en develop ninguna de mis líneas es de las
+  que prettier cambiaría.
 
 ## Decisions
 
@@ -64,6 +86,9 @@ del cliente a Datadog en cada confirm. Y revisar `src/` entero por cualquier otr
   vez de por "campos conocidos": las variables GraphQL y los cuerpos a los micros cambian con cada
   pasarela nueva.
 - `getHeadersWithouthApiKey` → `redactedHeaders`: el nombre viejo prometía algo que no hacía.
+- Un `Error` dentro de `redactSecrets` se convierte en `describeError` en vez de dejarse pasar: la
+  revisión decía "Date/Error se dejan", pero un `AxiosError` que pasa intacto serializa la request con
+  winston, así que la regla "falla cerrado" pesa más. Anotado en el PR.
 
 ## Blockers / open questions
 
@@ -71,7 +96,12 @@ del cliente a Datadog en cada confirm. Y revisar `src/` entero por cualquier otr
   credenciales, pero es PII y ruido. Fuera de este fix.
 - Los `console.log` de depuración de Cart/Discount siguen ahí (sin credenciales). Fuera de este fix.
 
+- **Seguimiento anotado en el PR, no tocado**: **W5** `LogResponsePlugin` sigue mandando el texto del
+  documento GraphQL (`query`): un cliente que inline el token como literal lo manda en claro. **W6**
+  facets/retención en Datadog de lo ya enviado (`authorization`, `apple_pay_token`).
+
 ## Next session
 
-- OK de Angelo → push + PR de `fix/sin-bearer-en-logs` contra `develop`. Es independiente de
-  `feat/buyer-ref-en-checkout`; se pueden mergear en cualquier orden.
+- Merge de [graphql#29](https://github.com/vio-live/graphql/pull/29) (decide Angelo) → develop → QA.
+  Independiente de `feat/buyer-ref-en-checkout` (#28); cualquier orden.
+- W5 y W6 como fix propio.
