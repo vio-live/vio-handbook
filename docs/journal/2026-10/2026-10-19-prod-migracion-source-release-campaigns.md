@@ -32,6 +32,16 @@ campañas. Angelo decidió que la ejecución en prod la hace Miguel.
 - **Handoff para Miguel**: [2026-10-19-prod-migracion-source-y-release-campaigns](../../handoff/2026-10-19-prod-migracion-source-y-release-campaigns.md)
   (estado de partida, script, verificación, merge, smoke in-cluster, rollback).
 
+## Prod hecho (Miguel, 10:55–11:00 UTC; verificado por claude 11:05 UTC)
+
+- Columna `surface_campaign_slot.source` presente en prod (`enum('dashboard','page')`, default `dashboard`) y fila
+  `SurfaceCampaignSlotSource1792100000000` como última de `migrations`.
+- [campaigns#18](https://github.com/vio-live/vio-campaigns-microservice/pull/18) mergeado a `main` (`b8631a2`) a las
+  10:55 UTC; run de `deploy.yml` 39240914787 en verde (build + deploy). Pod nuevo con imagen
+  `vioprodsc.azurecr.io/campaigns:22`, `Nest application successfully started` a las 11:00:29 UTC, sin
+  `Unknown column` ni `QueryFailedError`. Smoke in-cluster: `/health` 200, manifest con key inválida 401.
+- `main` y `develop` del micro quedan iguales (kernel 1.0.275 en prod). `api.vio.live` sigue en Oracle (D2 pendiente).
+
 ## Decisions
 
 - La migración va **antes** del merge a `main`: el kernel 1.0.275 mapea `source`; el micro nuevo sin la
@@ -47,7 +57,6 @@ campañas. Angelo decidió que la ejecución en prod la hace Miguel.
 
 ## Next session
 
-- Miguel: migración → verificación → merge #18 → smoke. Después, confirmar la columna y el pod en prod.
 - Angelo: prueba de Vev desde cero (artículo, selector de campaña, "From page", reasignación, split de
   compra por campaña); rearmar el monitor del micro en QA cuando pruebe.
 - ~~D2 cuando Angelo lo decida~~ (ya estaba hecho desde el 16/10); `helm --timeout` del workflow; CronJob de backup de prod.
