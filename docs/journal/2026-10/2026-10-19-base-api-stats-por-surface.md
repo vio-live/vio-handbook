@@ -79,3 +79,56 @@ Rama `feat/stats-por-surface-para-el-publisher` (worktree
 - OK de Angelo → push + PR a `develop` de `vio-base-api` → QA.
 - Probar en QA con la surface 3 («Vev») y la campaña 9 del handoff, con la sesión del publisher.
 - Webapp (front-commerce, 2.3 del handoff) consume estas dos rutas.
+
+## Revisión independiente (misma tarde) — aprobada sin blockers; observaciones aplicadas
+
+> [claude/svc-base-api, 2026-10-19 tarde] Segundo commit en la misma rama y una rama nueva para el comodín. Sin push.
+
+### Misma rama, commit `67fb7a7`
+- **W1** — `rangeToDays` aceptaba claves del prototipo (`range=__proto__` devolvía `Object.prototype`, no
+  `null`). Ahora `Object.prototype.hasOwnProperty.call(RANGE_DAYS, range)`; `RANGE_DAYS`, `NOT_CONFIGURED` y
+  `UNREACHABLE` congelados. Tests: `constructor`, `__proto__`, `toString`, `hasOwnProperty`, `valueOf`,
+  rango repetido (`?range=7d&range=30d` llega como array → 400) y `?range=` vacío → 14.
+- **W4** — huecos cubiertos: 400 por rango, 502 por no-2xx y por timeout y error de DB (500) también en
+  `/slots`; sesión sin `user.id` → 401 antes de cualquier lookup; `req.user.id` como string `'12'` → 200; el
+  token interno no aparece en ningún cuerpo 502/503 (`expectNoToken`). Y en la **suite por defecto**
+  (sqlite en memoria con `src/entity/*`), `test/service/surfaceOwnership.test.js` inserta en `surface` /
+  `surface_campaign` con las columnas del kernel (`publisher_user_id`, `surface_id`) y llama a
+  `findSurfacePublisher` / `campaignBelongsToSurface` **reales** (más un `PRAGMA table_info` que fija los
+  nombres). Necesita los mismos tres `jest.mock` (firebase, sharp, storage-blob) que `statsService.test.js`:
+  el glob de entities arrastra `Product.entity → service/index → @azure/storage-blob` y jest 26 no resuelve
+  `node:os`.
+- **Nits** — `SurfaceCampaign` sin `publisherUserId`; docblock de las dos proyecciones avisa de
+  `migration:generate` / `synchronize: true`.
+- Números: `yarn test:unit` **18 suites / 295 tests** (antes 282); suite por defecto
+  `statsService.test.js` + `surfaceOwnership.test.js` **2 / 7**; eslint 0 errores (8 warnings de
+  decoradores en las entities, patrón del repo); prettier limpio; `tsc --noEmit` 0 errores en `src/`
+  (los 2 de `@azure/*` en `node_modules` son el baseline).
+
+### Rama nueva `fix/stats-proxy-sin-traversal`, commit `653d458` (W2)
+Worktree `~/vio-commerce/worktrees/base-api-stats-proxy-hardening`, base `origin/develop` 90fe768.
+- El comodín `/api/stats/*` concatenaba `req.params[0]` (que Express entrega **decodificado**) en
+  `/v1/commerce-stats/${path}`: `..%2Fstats%2Fcampaigns%2Fsummary?client_app_id=3` salía hacia el colector
+  como `/v1/commerce-stats/../stats/campaigns/summary?client_app_id=3&sponsor_id=…` con el token interno.
+- Arreglo: **allowlist** `COMMERCE_STATS_PATHS = overview | timeseries | campaigns | top-products |
+  counterparties` (exactamente lo que pide `webapp-vio-commerce/src/lib/stats.js` y lo que existe en el
+  colector `src/commerce-stats.ts`); todo lo demás es 400 `{ error: 'unknown stats path' }` antes de mirar la
+  config y sin llamar al colector. `client_app_id` y `days` se suman a `IDENTITY_PARAMS`. Los cinco paths y
+  su query (`range`, `metrics`, `limit`, `lens`) no cambian. Elegí allowlist sobre regex de forma porque el
+  contrato del webapp está congelado y el colector tiene exactamente esos cinco; el coste es que un endpoint
+  nuevo de `commerce-stats` requiere añadirlo a la lista (los docblocks que prometían "sin tocar base-api"
+  están actualizados).
+- Tests: `test/unit/statsProxy.unit.ts` (23 casos; router real por HTTP con `http.request`, que manda el
+  path tal cual: traversal codificado y literal, `%5C`, doble codificación, `//`, sub-path, barra final,
+  otra caja, vacío, `%E0%A4%A` que Express no decodifica, 400 antes que 503; los 5 paths legítimos y la
+  query del dashboard; los cinco params de identidad descartados) y 2 casos más en
+  `test/service/statsService.test.js`.
+- Números: `yarn test:unit` **18 / 275** (baseline 17 / 252); `statsService.test.js` **5 / 5**; eslint y
+  prettier limpios; `tsc` igual que el baseline.
+
+### Las dos ramas chocan en `src/service/statsService.ts`
+Merge de prueba (`git merge --no-commit` en un worktree temporal, abortado): **2 archivos en conflicto**,
+`src/router/statsRouter.js` (solo el bloque de comentario sobre el comodín) y `src/service/statsService.ts`
+(1 bloque: `IDENTITY_PARAMS` + la cabecera de `forward`); `statsController.ts` se fusiona solo. Orden sugerido: mergear primero `fix/stats-proxy-sin-traversal` (es el fix de seguridad y es
+pequeño), después rebase de `feat/stats-por-surface-para-el-publisher` sobre `develop` llevando la allowlist
+a `forward` (ya usa `getFromCollector`) y `client_app_id`/`days` a `IDENTITY_PARAMS`.

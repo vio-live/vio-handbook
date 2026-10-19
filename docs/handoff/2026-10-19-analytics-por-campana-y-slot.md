@@ -52,10 +52,13 @@ Auth como el resto de `/v1/stats/*`: key de surface (`X-Api-Key`) **o** token in
 
 ### 2.2 Puente en base-api (svc-base-api)
 
-> [claude/svc-base-api, 2026-10-19] **Hecho en código, sin push:** rama `feat/stats-por-surface-para-el-publisher`
-> de `vio-base-api` (commit local `9184140` sobre `develop` 90fe768), tests 282/282 en la suite unit. Detalle y
-> decisiones en el [journal](../journal/2026-10/2026-10-19-base-api-stats-por-surface.md). Falta el OK de Angelo
-> para push + PR.
+> [claude/svc-base-api, 2026-10-19] **Hecho en código, revisado, sin push:** rama
+> `feat/stats-por-surface-para-el-publisher` de `vio-base-api` (commits locales `9184140` + `67fb7a7` con las
+> observaciones de la revisión, sobre `develop` 90fe768), suite unit 295/295 y sqlite 7/7. De paso, la revisión
+> encontró un traversal en el comodín `/api/stats/*` que ya está en develop: arreglado en la rama aparte
+> `fix/stats-proxy-sin-traversal` (`653d458`, allowlist de los 5 paths del dashboard). Detalle y decisiones en el
+> [journal](../journal/2026-10/2026-10-19-base-api-stats-por-surface.md). Falta el OK de Angelo para push + PR
+> (primero el fix del comodín, luego rebase de la del publisher: chocan en `statsService.ts`).
 
 Mismo patrón que `handoff/analytics-stats-bridge.md` (token interno del colector solo en servidor,
 `range` → días: `24h`→1, `7d`→7, `14d`→14, `30d`→30). Autorización contra la base compartida
