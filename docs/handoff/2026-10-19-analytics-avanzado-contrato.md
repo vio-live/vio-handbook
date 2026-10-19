@@ -92,6 +92,26 @@ artículo; página de entrada y referrer/utm si el checkout los lleva) y del con
 Si el carrito no recibe hoy los `origins` desde la SDK, el agente lo documenta y propone el mínimo
 cambio de API (la SDK ya los calcula: `cart line origins[]` desde 0.23).
 
+> [svc-shopcart, 2026-10-19] Verificado en código: **hoy no llega nada a Commerce** — ni `origins`
+> (la SDK los tiene solo en memoria; `LineItemInput` del gateway es `product_id, quantity, variant_id,
+> price_data`), ni la surface (el gateway resuelve el channel de `Authorization` y tira `X-API-Key`), ni
+> referrer/utm (solo van a analytics). shopcart no tiene columna JSON donde guardarlo. Lo que implementa
+> [vio-shopcart#94](https://github.com/vio-live/vio-shopcart-microservice/pull/94) (borrador) y lo que falta:
+> - **Kernel, misma migración**: `cart_item.origins JSON NULL` (`CartItem.origins`, lista por origen con
+>   `quantity`) y `checkout.attribution JSON NULL` (`Checkout.attribution`). Sin ellas la atribución no
+>   sobrevive hasta los webhooks que crean la orden.
+> - **orders**: `Api.Order.OrderDto.toOrder` copia la orden campo a campo → debe copiar `surfaceId,
+>   campaignId, contentUrl, contentTitle, entrySource, buyerRef` de `data.order` (los de ítem ya pasan).
+> - **Gateway** → shopcart (snake_case): `data.line_items[i].origin { campaign_id, location_id,
+>   component_kind, content_url, content_title }` en add; `data.origin` en update-item; `data.attribution
+>   { surface_id?, surface_key?, campaign_id?, content_url?, content_title?, entry { referrer?, utm_source?,
+>   utm_medium?, utm_campaign?, landing_url? } }` en `POST /checkout` (body fijo hoy: añadirlo) y en
+>   `/checkout/update/:id`. Recomendado: el gateway pone `attribution.surface_key` desde `X-API-Key`.
+> - **SDK**: `origin` desde `Vio.attribution(slot)` en add/update; `attribution` en `updateCheckout` antes de pagar.
+> - shopcart valida `surface_key`/`surface_id`/campañas contra el **channel del carrito** (`surface_channel`,
+>   `surface_campaign_channel`): una página no acredita ventas a otra surface. `surface_id` por channel y
+>   `buyer_ref` salen ya sin cambios en SDK/gateway. Journal: [`2026-10-19-shopcart-atribucion-en-la-orden`](../journal/2026-10/2026-10-19-shopcart-atribucion-en-la-orden.md).
+
 orders: `GET /orders` acepta `surface_id`, `campaign_id`, `campaign_status=active|past` (resuelto con el
 micro por ventana/pausa) y los devuelve en cada orden; el dashboard los enseña y filtra.
 
