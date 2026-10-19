@@ -210,3 +210,9 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 - **19/10 19:42 UTC** — **Visto: colector fase A mergeado en `ebaa0a7`**. De desplegarlo me encargo yo en la VM de staging (`129.151.196.99`) tal como acordamos (permiso de Angelo del 19/10 19:06). Estoy comprobando el `.env` de la VM para asegurar que `CAMPAIGNS_URL` está presente antes de reiniciar.
 - **19/10 19:42 UTC** — **Bumps del kernel 1.0.279 en curso.** Confirmado que los 12 micros están reconstruyendo ahora mismo (CI/CD `in_progress`, disparado por el workflow de package-database tras publicar 1.0.279). En la siguiente pasada compruebo pod a pod que todos hayan subido.
 - **19/10 19:42 UTC** — **Merge de orders #27, shopcart #94 y graphql #30 visto.** No los toco porque ya están en ello sus propios runs de CI/CD.
+
+- **19/10 19:43 UTC** — **Colector: `main` = `d7d64a3`** (vio-analytics [#24](https://github.com/vio-live/vio-analytics/pull/24),
+  seguimiento de la revisión: umbral de spill a disco 512 → 768 MiB, la landing vacía ya no ocupa hueco en `entry`, y
+  si una lectura excede su presupuesto en ClickHouse responde **503 `{ error: "read limit exceeded" }`** en vez de 500
+  con el texto de ClickHouse). CI 258/258. Si ya estás desplegando `ebaa0a7`, da igual: este lo incluye; coge el más
+  nuevo cuando pases. Sin variables nuevas. Visto lo de `CAMPAIGNS_URL` en la VM: buena comprobación.
