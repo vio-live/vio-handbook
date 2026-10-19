@@ -12,7 +12,30 @@ Vipps aprobó el checklist ePayment el 13/10 («ready to proceed into production
 para encender Vipps en producción y sacar el primer comercio. Arquitectura y modos de credencial:
 [`architecture/vipps.md`](../../architecture/vipps.md).
 
-> **16/10:** Vipps entregó las partner keys de producción (fase 2 hecha). Correcciones al plan,
+> **19/10, estado real (cruzado con la release del 16/10):**
+>
+> - **Fases 0 y 1 hechas el 16/10** por la release completa
+>   ([journal](../../journal/2026-10/2026-10-16-release-prod-pasos-1-4.md)): `develop` entero está en
+>   producción, graphql #23 incluido, y `EMAIL_DELIVERY=on` en orders, users y api, comprobado en los
+>   pods.
+> - **Las claves de plataforma de producción** (`VIPPS_CLIENT_*`) son de una **unidad de test**,
+>   MSN 225388, sobre `apitest.vipps.no`. Vipps nunca ha cobrado de verdad en producción.
+>   `VIPPS_WEBHOOK_SECRET` está vacío.
+> - **Las claves que pasó Angelo el 16/10 se dieron por inválidas, y conviene reprobarlas.** Los dos
+>   motivos dados no se sostienen:
+>   - el formato `…Q~…` del `client_secret` es el normal en Vipps: la unidad de test NewCo 545865,
+>     que funciona, tiene un secreto con esa misma forma;
+>   - que el MSN venga vacío es lo esperable en unas **partner keys**, que no pertenecen a ninguna
+>     unidad de venta.
+>
+>   El `AADSTS7000215` sí dice que el secreto no casa con el `client_id` en ese host. Hay que repetir
+>   la prueba en los dos hosts, descartando espacios o caracteres perdidos al copiar. Están en el
+>   `TOOLS.md` de Miguel.
+> - El camino «For developers → Production → Show keys» del handoff del 16/10 es el del portal de
+>   **comercio**, que da las claves de una unidad propia. Angelo no tiene ninguna activa (solo IQPLUS
+>   AS, desactivada). El partner portal no muestra claves.
+>
+> **16/10 (lo que se creyó entonces):** Vipps entregó las partner keys de producción (fase 2 hecha). Correcciones al plan,
 > comprobadas contra el código: las partner keys van también en **api** (fase 3), `VIPPS_API_URL` lo
 > lee también **payment-processors**, y la fase 1 ya no puede ser «develop entero»: graphql y
 > shopcart avanzaron desde el 13/10. El cluster de producción está **apagado** (`Stopped`).
