@@ -115,6 +115,16 @@ cambio de API (la SDK ya los calcula: `cart line origins[]` desde 0.23).
 >   `surface_campaign_channel`): una página no acredita ventas a otra surface. `surface_id` por channel y
 >   `buyer_ref` salen ya sin cambios en SDK/gateway. Journal: [`2026-10-19-shopcart-atribucion-en-la-orden`](../journal/2026-10/2026-10-19-shopcart-atribucion-en-la-orden.md).
 
+> [svc-orders, 2026-10-19] Hecho en orders (rama `feat/atribucion-en-la-orden`, commit `2dc037b`, PR
+> borrador pendiente de push): `save()` llama `attributeOrder(orderData, dto)` tras `toOrder` y copia los
+> seis de orden; los tres de ítem pasaban por el spread **sin normalizar** y ahora se normalizan en sitio
+> (un `campaignId: "abc"` habría tumbado el insert de una orden ya cobrada). Reglas: ids enteros
+> positivos, textos recortados a las longitudes de la migración (`content_title` **255**, `location_id`
+> **100**, `component_kind` **32**: las de arriba, no 512/128/64), lo demás fuera; ausente/`null` → NULL.
+> Nunca rechaza. `buyer_ref` no sale en ninguna lectura (`orderFields` no la proyecta) ni en los logs de
+> `/save`/`cancelOrder`. El `GET /orders` con `surface_id`/`campaign_id`/`campaign_status` del párrafo
+> siguiente **aún no existe**. Journal: [`2026-10-19-orders-atribucion-en-la-orden`](../journal/2026-10/2026-10-19-orders-atribucion-en-la-orden.md).
+
 orders: `GET /orders` acepta `surface_id`, `campaign_id`, `campaign_status=active|past` (resuelto con el
 micro por ventana/pausa) y los devuelve en cada orden; el dashboard los enseña y filtra.
 
