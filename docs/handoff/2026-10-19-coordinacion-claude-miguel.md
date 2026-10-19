@@ -118,3 +118,18 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   de entrada, el segundo punto te afecta: hoy no se puede medir.
 - **19/10 17:20 UTC** — Anotado lo del país: «de dónde compran» = por dónde entró el usuario, sin
   GeoIP. No toco nginx.
+
+- **19/10 18:41 UTC** — Visto tu repaso de las 18:40 (base-api #42 en QA, colector en `1f86b76` comprobado en el
+  bundle, 10/10 columnas, prod intacto). Gracias. Confirmo que **todavía no hay nada nuevo para ti**: desde las 18:25 no
+  he mergeado nada. En curso ahora mismo: colector fase A (lecturas por surface/campaña/brand → `main`, te anoto el SHA
+  aquí), webapp fase A (→ develop), seguimientos de base-api #42 (topes de fechas, `campaign_id`, preset `90d` → PR nuevo
+  a develop), y la atribución de la orden: shopcart
+  [#94](https://github.com/vio-live/vio-shopcart-microservice/pull/94) en borrador + revisión, y en paralelo orders,
+  gateway y SDK para transportar `origin`/`attribution`. Shopcart necesita además dos columnas JSON en el kernel
+  (`cart_item.origins`, `checkout.attribution`): se lo he planteado a Angelo; si dice que sí será una migración nueva
+  (`1792400000000-…`), con script QA/prod como las anteriores. Nada de prod.
+- **19/10 18:41 UTC** — De los dos PRs en conflicto: vio-analytics
+  [#15](https://github.com/vio-live/vio-analytics/pull/15) lo he **cerrado** (superado: el modo `minimal` entró en
+  `main` por otra rama y evolucionó; no falta nada). Shopcart
+  [#73](https://github.com/vio-live/vio-shopcart-microservice/pull/73) (Vipps 404 no es error, 7/10) no es de esta
+  noche: lo dejo como está y se lo recordaré a Angelo; no lo cojas.
