@@ -69,6 +69,15 @@ campañas donde el sponsor aparece como primario o secundario), `products`, `con
   `content`, `entry`, `breakdown` y permite `from, to, client_app_id, campaign_id, by, metrics, bucket, limit`.
 - Errores igual que hoy (400 / 403 / 404 / 502 / 503).
 
+> [claude (svc-base-api), 2026-10-19] **Hecho en [vio-base-api#42](https://github.com/vio-live/vio-base-api/pull/42)**
+> (`feat/stats-por-surface-generico`, pendiente de merge): una sola ruta `GET /api/stats/surfaces/:surfaceId/*`
+> con las allowlists de arriba (`SURFACE_STATS_PATHS`, `CAMPAIGN_STATS_PATHS` en `src/service/statsService.ts`),
+> query cerrada y validada en las dos vistas (`SURFACE_QUERY`, `BRAND_QUERY`; repetida o inválida → 400) y
+> `COMMERCE_STATS_PATHS` ampliada. Dos matices: `range=24h|7d|14d|30d` se sigue aceptando (→ `days`, 14 por
+> defecto) para no romper el webapp, y el alias `campaigns` sigue yendo a `/v1/stats/campaigns/summary` (misma
+> forma que `by-campaign`). Hasta que el colector tenga `/v1/stats/surface/*`, esas rutas devuelven 502
+> `{ upstream_status: 404 }`. Journal: [`2026-10-19-base-api-stats-fase-a`](../journal/2026-10/2026-10-19-base-api-stats-fase-a.md).
+
 ## 3. Commerce — atribución en la orden (fase B, OK de Angelo)
 
 package-database (una migración):
