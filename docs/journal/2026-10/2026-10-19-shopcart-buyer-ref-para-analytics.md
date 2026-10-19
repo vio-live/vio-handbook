@@ -17,7 +17,7 @@ identificador estable y no personal en las respuestas que recibe cuando un check
 ## Done
 
 - Rama `feat/buyer-ref-para-analytics` desde `origin/develop` (`a271e97`, kernel 1.0.275),
-  worktree `~/vio-commerce/worktrees/shopcart-buyer-ref`. **Commits locales `0b0e11a` + `12732aa` (revisión), sin push ni PR**
+  worktree `~/vio-commerce/worktrees/shopcart-buyer-ref`. **Commits `0b0e11a` + `12732aa` + `a628cf5` en PR #93 (`vio-live/vio-shopcart-microservice`), merge pendiente de Angelo**
   (ADR-0001): 12 archivos, +337/−12.
 - **`buyer_ref`** = HMAC-SHA256 hex del email normalizado (`trim().toLowerCase()`) con el secreto
   `BUYER_REF_SECRET`. Misma persona → misma referencia en todas sus órdenes, dispositivos y
@@ -121,6 +121,44 @@ de `origin/develop`: `0b0e11a` + `12732aa`):
 - Edge asumido y documentado: si el comprador escribió un email en nuestro formulario y pagó con otro en
   Klarna/Kustom/…, `Order.customer.email` lleva el del proveedor y `checkout.email` (y el ref) el escrito.
   Es la consecuencia de "no pisar"; cambiarlo es decisión de producto.
+
+## Segunda revisión (PR #93) — commit `a628cf5`, pusheado a la rama del PR
+
+Un blocker de privacidad y warnings sobre Klarna; aplicados en la misma rama (`ahead 3` de `origin/develop`:
+`0b0e11a` + `12732aa` + `a628cf5`, **push autorizado y hecho a `origin/feat/buyer-ref-para-analytics`**).
+
+- **B1 — el gate "solo SUCCESS" no cerraba el oráculo.** `POST /checkout/update/:id` (mutation `UpdateCheckout`
+  del gateway) aceptaba `status` y `email` tal cual: `{status:'SUCCESS', email:'victima@…'}` sobre un checkout
+  ACTIVE y el GET siguiente devolvía `HMAC(victima)`. Dos cierres, neutros para pagos:
+  1. el read model emite `buyer_ref` solo con `status === SUCCESS` **y orden enlazada** (`orderNumberOf`, algo
+     que el cliente no puede escribir); Apple/Google Pay en PENDING/FAILURE y Klarna native con fraude pendiente
+     responden `''` (no hubo cobro ni orden);
+  2. `assertPublicCheckoutUpdate` (`checkout-guards.ts`) en `CheckoutController.PostUpdateCheckout`: 400
+     `CHECKOUT_STATUS_NOT_WRITABLE` a `status: SUCCESS` (la SDK web 0.24.0 no manda `status` en
+     `UPDATE_CHECKOUT_MUTATION`; el gateway lo expone opcional) y 400 `CHECKOUT_EMAIL_LOCKED` a un **cambio** de
+     email en un checkout que no está ACTIVE (el mismo email, normalizado, pasa; otros campos pasan). El método del
+     service no se toca: lo usan Vipps (`createVippsOrder`), los wallets y `cart.service`. `headOf(id)` nuevo
+     (status + email, con el mismo guard de id que `orderNumberOf`). El `catch` del update re-lanza `HttpException`.
+- **W1** — `Order.customer.email` en Klarna native y KCO vuelve a `billing || shipping || checkout.email` sin excluir
+  al publisher (comprar en el propio canal es el caso normal de QA); la exclusión queda solo en el ref y en
+  `rememberBuyerEmail`. Test del publisher ajustado: `customer.email` = publisher, `buyer_ref` = `''`.
+- **W2** — `klarna.service.ts`: sin `shipping_address.email: ''` hacia Klarna; la clave se omite cuando no hay
+  email (sesión y orden desde la autorización; un `shipping_address` que mande la SDK se respeta). Spec nuevo
+  `klarna-payload-email` sobre el `buildNativeOrderPayload` real.
+- **W3** — `provider-email-on-checkout.unit.spec.ts`: un `it` por proveedor ejecutando el ok-handler real de
+  **Qliro** (`paymentQliroOk`), **Walley** (`paymentWalleyOk`) y **Nexi** (`paymentNexiOk`) con una respuesta
+  falsa del PSP: checkout sin email → queda el del proveedor y la orden lo lleva; con email → se respeta.
+- **W4 — confirmado**: `SendOrderConfirmationEmail(cartId, orderId)` relee el checkout con
+  `GetCheckoutById(id, true)` DESPUÉS del `save` y usa `recipient = checkout.email`. Para Klarna (native y KCO),
+  Kustom, Qliro, Walley, Nexi y Adyen, cuando el comprador no escribió email en nuestro formulario, el
+  destinatario era `undefined` y ahora es el email que verificó el proveedor. Sigue gateado por
+  `channelUserSettings.orderConfirmationEmail` y por `EMAIL_DELIVERY` del kernel. Vipps ya lo tenía.
+- **W5** — el constructor de `CheckoutService` valida `BUYER_REF_SECRET` (warn en el log de arranque, además de la
+  primera lectura); leído por `buyerRefSecret()` defensivo porque `sweep-skips-closed` construye el service con
+  un `_configService` posicional sin `get` (y el arranque no puede romperse por esto).
+- Nit: `buyerEmailOf` exige forma de email (`/^[^\s@]+@[^\s@]+\.[^\s@]+$/`), no solo una `@`.
+- **Números:** `npx tsc --noEmit -p tsconfig.json` exit 0; `jest --config jest.unit.json` **47 suites / 682 tests
+  en verde** (ronda anterior 44/668; línea base de develop 43/637). Rama vs develop: 23 archivos, +1127/−23.
 
 ## Next session
 
