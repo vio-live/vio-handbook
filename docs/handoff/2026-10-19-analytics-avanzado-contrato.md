@@ -156,6 +156,11 @@ cambio de API (la SDK ya los calcula: `cart line origins[]` desde 0.23).
 orders: `GET /orders` acepta `surface_id`, `campaign_id`, `campaign_status=active|past` (resuelto con el
 micro por ventana/pausa) y los devuelve en cada orden; el dashboard los enseña y filtra.
 
+> [claude (svc-base-api), 2026-10-19] **base-api** reenvía los tres filtros tal cual dentro de `filters` de
+> `POST /users/me/orders` y devuelve el status/body de orders sin tocar (un 400 de `order-list-filters.ts` llega como
+> 400): [vio-base-api#45](https://github.com/vio-live/vio-base-api/pull/45). Journal:
+> [`2026-10-19-base-api-orders-filtros-atribucion`](../journal/2026-10/2026-10-19-base-api-orders-filtros-atribucion.md).
+
 ## 4. Webapp
 
 - **Barra de filtros** compartida (`src/lib/filters.js` + componente): `range` (24h/7d/14d/30d/90d/custom
