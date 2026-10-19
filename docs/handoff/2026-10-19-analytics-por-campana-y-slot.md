@@ -125,20 +125,21 @@ Decisión sobre el comprador: **identificador sí, dato personal no**.
 - **Dashboard** (después): tarjeta de audiencia y pagos en el detalle de campaña con esos desgloses y el
   ranking de productos.
 
-## 2.6 Estado al cierre del 19/10 (actualizado 16:30 UTC)
+## 2.6 Estado (actualizado 19/10 18:40 UTC)
 
 | Frente | Estado |
 |---|---|
-| Colector | #19 y #21 **en `main`** (9da8f04); **falta deploy de Miguel** en staging y prod. Verificado contra ClickHouse 24.8 real |
-| graphql | #28 (`buyer_ref`) y #29 (sin credenciales en logs) **en develop** → QA |
-| base-api | #40 (allowlist del comodín) y #41 (puente del publisher) **en develop**, desplegado en QA (puente 401 sin sesión, traversal 400) |
-| webapp | #65 **en develop** → staging (Vercel). Sin cifras hasta el deploy del colector; el aviso lo dice |
-| shopcart | #93 **en develop** (merge de Angelo) → QA con `BUYER_REF_SECRET` horneado. Oráculo cerrado por dos lados; email del proveedor al checkout si no había |
-| package-database | #21 **en develop**; kernel **1.0.276** publicado (`pkg=all`) y bump lanzado a mano a los 12 micros (la gate de migraciones no lo dispara) |
-| campaigns micro | #21 (`kind`) **en develop**; deploy a QA relanzado tras un fallo del paso de deploy |
-| SDK web | #85 (0.25.0) **en `main`, sin publicar en npm por decisión de Angelo: se publica al final**, cuando todo esté probado. Replit espera |
-| Vev | #69 **en main**; paquete `cq1lXld-TA9` desplegado (0.334) con el bundle de la SDK 0.25.0 y `kind` en el registro de slots |
-| Miguel | migración `kind` QA ✓, `BUYER_REF_SECRET` QA ✓, `TYPEORM_SYNCHRONIZE=false` QA/prod ✓; **pendiente**: deploy del colector |
+| Colector | `main` = `1f86b76` **desplegado en staging** por Miguel (lecturas por campaña/slot/producto/desgloses, `kind` normalizado). Fase A de ADR-0035 (lecturas por surface/brand con `from/to`) en curso |
+| graphql | #28 (`buyer_ref`) y #29 (sin credenciales en logs) en develop → QA |
+| base-api | #40 y #41 en develop → QA (puente del publisher). Fase A (proxy genérico por surface) en curso |
+| webapp | #65 en develop → staging. Fase A (filtros, Recharts, home por surface, detalle avanzado) en curso |
+| shopcart | #93 en develop → QA (`buyer_ref`, email del proveedor al checkout). Fase B (atribución al crear la orden) en curso |
+| package-database | #21 (`kind`) y #23 (atribución + `publisher_commission_pct`) en develop; kernel **1.0.277** publicado; **migración de atribución aplicada en QA por Miguel** (17:34 UTC); bumps 1.0.277 en los 12 micros (campaigns relanzado 18:30 UTC) |
+| campaigns micro | #21 (`kind`) en develop → QA (imagen 26, 16:27 UTC); `kind` verificado en Commerce con la página de Angelo (3 cards) |
+| SDK web | #85 (0.25.0) en `main`, **sin publicar en npm por decisión de Angelo (al final)** |
+| Vev | #69 (bundle 0.25.0 + kind) y #70 (página, tipo en todos los eventos, productos mostrados, `buyer_id`) en main; paquete desplegado (0.335, 18:35 UTC). Nota: el detalle automático pasa de `detail-1` a `<página>-detail-1` |
+| Verificado en QA | página `bohus-demo` con 0.25.0: eventos con tipo, dispositivo (escritorio/macOS/Chrome), idioma; funnel campaña 9; `kind=card` en Commerce |
+| Coordinación | canal [`2026-10-19-coordinacion-claude-miguel.md`](./2026-10-19-coordinacion-claude-miguel.md) activo; Miguel con permiso de Angelo para QA/staging |
 
 ## 3. Orden y deploys
 
