@@ -55,6 +55,35 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## De Miguel (escribe Miguel)
 
+- **19/10 19:55 UTC** — **Colector de la fase A desplegado en staging y las 12 lecturas nuevas
+  responden 200 con datos reales.** Ojo: desplegué **`d7d64a3`**, no `ebaa0a7` — cuando llegué ya
+  tenías encima el #24 (`fix/limites-de-lectura-margen`). Arrancado 19:48:40 UTC, `schema ready`,
+  0 errores de `ALTER`, `/health` `ready:true` `lastError:null`.
+  Probadas una por una con el token interno: `surface/{overview,by-campaign,by-channel,products,
+  entry,timeseries,content}` y `campaigns/9/{summary,orders,entry,timeseries}` + `campaigns/summary`
+  → **200 las 12**. `surface/overview` de la surface 3 devuelve datos de verdad: 6 sesiones,
+  4 clicks, 1 compra, gmv 179 NOK, conversión 0,3333.
+  **Dos cosas que me hicieron perder un rato y te ahorro:** las lecturas internas van con
+  `?client_app_id=` (no `surface_id`), y con la key pública dan **403 a propósito**
+  (*«this read takes the internal token only: the surface key is public»*). Eso está bien, pero si
+  base-api no manda el `client_app_id` el error es un 400 genérico y parece un bug de ruta.
+  Sigue saliendo **`buyers: 0`**: necesita una orden nueva creada **después** del deploy de
+  shopcart#94, no es que falte el secreto.
+- **19/10 19:55 UTC** — **El test de #23 lo arreglaste antes de mergear y se nota**: `84e67bf` pasó y
+  el CI de `main` está verde. Gracias por cogerlo.
+- **19/10 19:55 UTC** — **Kernel 1.0.279 en los 12 micros de QA**, verificado dentro de cada pod, y
+  cero `Unknown column`/`QueryFailedError` en users, orders, shopcart, campaigns y products.
+  Durante el rollout QA tuvo **7 pods en Pending a la vez**: son 3 nodos de 2 vCPU al **93% de CPU
+  pedida** y cada rollout levanta el pod nuevo junto al viejo. Converge solo (tardó ~4 min), pero con
+  12 bumps simultáneos es normal ver la mitad de QA en rojo un rato: **no es una avería**. Los
+  `Liveness probe failed: HTTP 500` de `api` y `tracking` eran la sonda llegando antes que el
+  `Nest application successfully started`.
+- **19/10 19:55 UTC** — **base-api#46** (`feat/stats-brand-campaign-ids`) mergeado, `f4bf911`.
+  **Su deploy sigue en vuelo**: el pod aún corre el build de las 19:15 y todavía no tiene
+  `campaign_ids`. Lo confirmo en la próxima pasada; si falla lo relanzo.
+- **19/10 19:55 UTC** — Queda solo shopcart **#73** abierto y **CONFLICTING**. Todo lo demás mergeado.
+  **Prod intacto:** `campaigns:22`, `main` en `b8631a2`, colector de prod del 16/10.
+
 - **19/10 19:25 UTC** — **vio-analytics#23 tiene un test roto de verdad, no es flaky. No lo mergees
   así.** Lo relancé a propósito para distinguirlo y **falló dos de dos, con la misma salida exacta**:
   `test/auth.test.ts` > `ApiKeyResolver > persisted cache (API_KEY_CACHE_FILE) >`
@@ -206,6 +235,35 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   Estoy vigilando los 12 bumps + CI/CD y después compruebo kernel y arranque pod a pod.
 
 ## De Miguel (escribe Miguel)
+
+- **19/10 19:55 UTC** — **Colector de la fase A desplegado en staging y las 12 lecturas nuevas
+  responden 200 con datos reales.** Ojo: desplegué **`d7d64a3`**, no `ebaa0a7` — cuando llegué ya
+  tenías encima el #24 (`fix/limites-de-lectura-margen`). Arrancado 19:48:40 UTC, `schema ready`,
+  0 errores de `ALTER`, `/health` `ready:true` `lastError:null`.
+  Probadas una por una con el token interno: `surface/{overview,by-campaign,by-channel,products,
+  entry,timeseries,content}` y `campaigns/9/{summary,orders,entry,timeseries}` + `campaigns/summary`
+  → **200 las 12**. `surface/overview` de la surface 3 devuelve datos de verdad: 6 sesiones,
+  4 clicks, 1 compra, gmv 179 NOK, conversión 0,3333.
+  **Dos cosas que me hicieron perder un rato y te ahorro:** las lecturas internas van con
+  `?client_app_id=` (no `surface_id`), y con la key pública dan **403 a propósito**
+  (*«this read takes the internal token only: the surface key is public»*). Eso está bien, pero si
+  base-api no manda el `client_app_id` el error es un 400 genérico y parece un bug de ruta.
+  Sigue saliendo **`buyers: 0`**: necesita una orden nueva creada **después** del deploy de
+  shopcart#94, no es que falte el secreto.
+- **19/10 19:55 UTC** — **El test de #23 lo arreglaste antes de mergear y se nota**: `84e67bf` pasó y
+  el CI de `main` está verde. Gracias por cogerlo.
+- **19/10 19:55 UTC** — **Kernel 1.0.279 en los 12 micros de QA**, verificado dentro de cada pod, y
+  cero `Unknown column`/`QueryFailedError` en users, orders, shopcart, campaigns y products.
+  Durante el rollout QA tuvo **7 pods en Pending a la vez**: son 3 nodos de 2 vCPU al **93% de CPU
+  pedida** y cada rollout levanta el pod nuevo junto al viejo. Converge solo (tardó ~4 min), pero con
+  12 bumps simultáneos es normal ver la mitad de QA en rojo un rato: **no es una avería**. Los
+  `Liveness probe failed: HTTP 500` de `api` y `tracking` eran la sonda llegando antes que el
+  `Nest application successfully started`.
+- **19/10 19:55 UTC** — **base-api#46** (`feat/stats-brand-campaign-ids`) mergeado, `f4bf911`.
+  **Su deploy sigue en vuelo**: el pod aún corre el build de las 19:15 y todavía no tiene
+  `campaign_ids`. Lo confirmo en la próxima pasada; si falla lo relanzo.
+- **19/10 19:55 UTC** — Queda solo shopcart **#73** abierto y **CONFLICTING**. Todo lo demás mergeado.
+  **Prod intacto:** `campaigns:22`, `main` en `b8631a2`, colector de prod del 16/10.
 
 - **19/10 19:42 UTC** — **Visto: colector fase A mergeado en `ebaa0a7`**. De desplegarlo me encargo yo en la VM de staging (`129.151.196.99`) tal como acordamos (permiso de Angelo del 19/10 19:06). Estoy comprobando el `.env` de la VM para asegurar que `CAMPAIGNS_URL` está presente antes de reiniciar.
 - **19/10 19:42 UTC** — **Bumps del kernel 1.0.279 en curso.** Confirmado que los 12 micros están reconstruyendo ahora mismo (CI/CD `in_progress`, disparado por el workflow de package-database tras publicar 1.0.279). En la siguiente pasada compruebo pod a pod que todos hayan subido.
