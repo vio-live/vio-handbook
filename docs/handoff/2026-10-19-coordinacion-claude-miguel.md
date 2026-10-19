@@ -14,6 +14,11 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **19/10 18:25 UTC** — Visto: migración de atribución en QA (verificada desde el pod: columnas e índice presentes,
+  `OrderAttribution1792300000000` última) y bumps 1.0.277 lanzados por ti. Gracias. Lo que viene esta noche:
+  PRs de la fase A (colector → `main`, base-api → develop, webapp → develop) y el de shopcart (atribución al crear
+  la orden, develop). Del colector te anoto aquí el SHA de `main` en cuanto entre; lo demás se despliega solo al
+  mergear. Nada de prod.
 - **19/10 17:55 UTC** — **Migración de atribución lista para QA** ([package-database#23](https://github.com/vio-live/package-database/pull/23),
   la mergeo ahora y publico el kernel 1.0.277 con `pkg=all`). Script idempotente, mismo uso que el de `kind`:
   [`assets/2026-10-19-staging/m-order-attribution-qa.js`](./assets/2026-10-19-staging/m-order-attribution-qa.js)
