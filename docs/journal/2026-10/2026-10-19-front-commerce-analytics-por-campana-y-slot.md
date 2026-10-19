@@ -2,7 +2,7 @@
 date: 2026-10-19
 session: "front-commerce — analytics por campaña y por slot: Active campaigns en el home y Performance en el detalle"
 participants: [angelo, claude]
-status: local (3 commits, sin push ni PR)
+status: local (5 commits, sin push ni PR; revisión independiente aplicada)
 ---
 
 # Session — 2026-10-19 — front-commerce: analytics por campaña y por slot
@@ -50,7 +50,38 @@ env ficticia (`FIREBASE_API_KEY=dummy-build-key FIREBASE_PROJECT_ID=dummy API_HO
 clonado con `cp -cR` (con symlink falla en `next/font`, como dice el brief).
 **Nada probado contra staging**: el puente de base-api y el colector #19 aún no están desplegados.
 
+### Revisión independiente (misma tarde) — 1 blocker + 9 warnings, aplicados en `9e17b2c` + `67c6b4b`
+- **B1 (blocker, y además regresión en prod):** sin backend de Vio (`VIO_ENABLED=false`; en prod `VIO_API_HOST` no está y
+  solo se deriva para `reachu-qa`) `useCampaigns` tiene clave null y `campaigns` queda `undefined` para siempre → el home
+  giraba sin fin. Ahora, sin Vio o con 401/403/404 del micro, la tarjeta cae a `/stats/campaigns` por sponsor tal cual
+  (`statsOnlyRows`: nombres del colector, sin estado ni ventana) con nota explícita; en local con mocks se ven los datos
+  demo. Test con el `useCampaigns` real (`test/dashboard/active-campaigns-sin-vio.test.jsx`).
+- W1: `useSurfaceCampaignStats`/`useCampaignSlotStats` sin `keepPreviousData`; el texto de Performance pasa a "couldn’t
+  refresh — last figures loaded for this range" (misma clave, revalidación fallida).
+- W2: 401/403/404 de `/campaigns` = "sin micro para esta cuenta", sin aviso; `useCampaigns(enabled)`,
+  `useSponsors(enabled)`, `useSurfaces(enabled)` condicionados por la matriz (`can('campaigns')`, `can('surfaces')`).
+- W3: `shouldRetryOnError: retryable` (no 401/403/404) en todos los hooks de stats; `internal` solo pide sus surfaces
+  (`ownSurfaceIds` por `surface.ownerId` = `account.id`).
+- W4: `fetchSurfaceCampaignStats` → `{ rows, failed }` parcial; la alerta dice "for N of M surfaces".
+- W5: columnas por fuente (`columnsFor`): la brand sin Surface/Sponsor/Purchases/Slots/Articles, con "Units sold"; nota en
+  código de que sus clics son round(views × ctr).
+- W6: **no se usó `cur.moneyK`**: con las cifras reales (179 NOK) daría "kr 0.2K" (el mismo problema que `compactParts`
+  resolvió en los KPIs). Se agregó `fmtMoneyCompact` por magnitud ("kr 179" / "kr 21.5K" / "kr 1.2M") en `format.js` y
+  `useCurrency().moneyCompact`; comentario de que el colector no manda moneda. Conteos con `fmtNumber`.
+- W7: totales de Performance rotulados "attributed to slots" (y documentado en la cabecera de `stats.js`).
+- W8: `test/lib/stats-real-fetch.test.js` (API_HOST antes del `require`, restaurado en `afterAll`; 403 ignorado vs 503 en
+  `failed`, todas 403 → `[]`, red), `test/dashboard/chart.test.jsx` (sin "K", ticks compactos, todo en cero sin NaN),
+  error de stats en la rama brand, 403 del micro para la brand, internal, parcial, sin feature.
+- W9: productos bajo el artículo (8 columnas, `TableScroll` 820) y la tarjeta Performance en `max-w-[1000px]` fuera del
+  wrapper de 780 → sin scroll en desktop.
+- Nits: `role="alert"` en los avisos de error, `role="region"` en la tarjeta, `pluralize`, `slotNameOf` sin " · <página>".
+- **Números tras la revisión:** `npx jest` **66 suites / 688 tests verdes**, 2 suites / 2 tests fallando = las mismas
+  preexistentes (`payments-lib`, `qliro-shipping-config`). `npm run lint`: 3 problemas, los 3 preexistentes
+  (`src/views/shell/index.jsx:280` ×2 errores, `src/ui/combobox.jsx:31` warning), 0 en lo tocado. `next build` verde de
+  nuevo (36/36 páginas, export 20/20) con la env ficticia.
+
 ## Decisions
+- **Sin micro no se espera**: la tarjeta siempre muestra algo (lo del puente por sponsor) y dice por qué le falta el estado.
 - **Una sola forma de fila para las dos fuentes**, con `null` donde la fuente no trae el dato y "—" en la UI (nunca 0). La
   brand solo tiene `revenue`, `units` y `places[].views/ctr` del colector (`id: 'cmp-<id>'`, nombre y presupuesto
   placeholder): clics = Σ round(views × ctr) por lugar; compras/slots/artículos "—".
