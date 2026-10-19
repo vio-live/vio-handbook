@@ -271,3 +271,56 @@ agente haga `POST /dispatches` con `kernel-published` y se lo salte — es liter
 las 15:51:33. Taparlo necesita un guard en el receptor (`kernel-bump.yml` de los 12 micros) que sepa
 si la migración está aplicada en el entorno destino; es un cambio aparte y más grande. Queda como
 limitación conocida.
+
+---
+
+## Cierre: los 12 bumps en QA y el arreglo del freno mergeado — miguel
+
+**Cuándo:** 19/10 16:20–16:55 UTC.
+
+### Los 12 bumps llegaron, y los 12 runs rojos no eran trabajo perdido
+
+Los 12 runs de `Kernel bump` que lancé a las 15:51:59–15:52:07 salieron **todos en `failure`**, y
+asusta hasta que se lee el log:
+
+```
+[develop 3a8588b] chore(kernel): bump @vio-/* to 1.0.276
+ ! [rejected]        develop -> develop (fetch first)
+```
+
+Fue una **carrera de pushes**. Hubo **dos tandas** de dispatch: una a las 15:51:33 (que no era mía) y
+la mía a las 15:52. Las dos hicieron el mismo trabajo — checkout de `develop`, bump, build, commit — y
+la segunda se encontró `develop` ya movido. El fallo es del `git push`, **después** de que el trabajo
+estuviera hecho por la que ganó.
+
+Resultado real, verificado en los pods y no en los runs: **los 12 micros de QA corren
+`@vio-/database 1.0.276`, todos `1/1` ready**, con el commit de `vio-kernel-bot` en los 12 `develop`
+y los 12 CI/CD en verde (`collections` y `campaigns` cerraron los últimos).
+
+Lo que hice mal: lancé los 12 dispatches **sin comprobar si ya había una tanda en vuelo**. El daño fue
+ruido, no avería, pero 12 runs rojos en la org son una pista falsa para el siguiente que mire.
+
+### El arreglo del freno, mergeado y verificado en CI
+
+Los 7 PRs mergeados, **package-database#22 primero como canario** — y eso dio la verificación que
+faltaba, porque un cambio de CI no está verificado hasta que corre. El release que disparó el merge
+(run `39288321977`) ejecutó el paso nuevo:
+
+```
+Sin migraciones nuevas desde v1.0.276.
+...
+15. Nothing to publish → success
+```
+
+Encontró el tag, comparó contra él, devolvió `false` correctamente, y el release terminó sin publicar
+ni bumpear nada — que es exactamente lo que debe pasar cuando el único cambio está en `.github`
+(el paso `Detect changed kernel packages` lo excluye con `:!.github`).
+
+Después los otros 6: `utils#9` `01efb58`, `config#9` `494b485`, `logger#9` `f5b48a2`,
+`testing#9` `b9e7859`, `definitions#9` `8873c8b`, `service#11` `0c71a26`. Sus 6 releases en verde y
+**`@vio-/database` sigue en 1.0.276 en npm**: ninguno publicó de más.
+
+El cron de vigilancia (`6fe644b4`) borrado: no quedaba nada que vigilar. De paso dejó claro otro
+problema suyo — en su pasada no recibía STDOUT de los comandos y no pudo verificar nada, así que
+avisó de que no podía y no inventó un estado. Eso estuvo bien.
+
