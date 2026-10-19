@@ -75,3 +75,13 @@ el kernel (ya está).
 - No hay guardia automática de "las migraciones producen el schema que las entidades
   esperan". Un test en `package-database` que corra las migraciones en SQLite y compare con
   el schema builder de TypeORM habría atrapado el bug de hoy antes del merge.
+
+## Nota 2026-10-19 — el freno de migraciones y los runs cancelados
+
+> [claude, 2026-10-19] Con `kernel-release.yml` (push publica lo cambiado; `pkg=all` alinea los 7) el freno compara las
+> migraciones nuevas contra el **último tag**. Si se cancela el run de push para lanzar `pkg=all` y el cancel llega tarde,
+> el run ya publicó el paquete y creó el tag con la migración dentro: el `pkg=all` siguiente no ve migración nueva y
+> **dispara los bumps a los 12 micros**. Pasó con 1.0.278 → 1.0.279. Regla práctica: con migración, aplicarla en el
+> entorno (script idempotente desde el pod de users, assets `m-*-{qa,prod}.js`) **antes** de mergear el kernel, y no
+> cancelar runs. Entre dos merges al mismo micro, ~2 min (carrera de helm). Arreglo de fondo pendiente: que el freno
+> compare contra la última versión bumpeada en los micros, no contra el último tag.
