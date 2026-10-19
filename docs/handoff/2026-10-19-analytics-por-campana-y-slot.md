@@ -94,6 +94,40 @@ Mismo patrón que `handoff/analytics-stats-bridge.md` (token interno del colecto
   `<página>-detail-1` / «Detail 1 · <título>» y `content_id` sea estable por artículo.
 - Si `document.title` está vacío, mandar el nombre de la página de Vev como `content_title`.
 
+## 2.5 Datos estándar del evento y comprador (pedido de Angelo, 19/10 tarde)
+
+«Deberíamos trackear el método de pago, el usuario que completó la orden, el dispositivo y toda esa
+data estándar» y «cada componente del artículo: tipo, clics, vistas; qué producto funcionó mejor».
+Decisión sobre el comprador: **identificador sí, dato personal no**.
+
+- **Colector** — [vio-analytics#20](https://github.com/vio-live/vio-analytics/pull/20) (hecho, sobre #19):
+  dispositivo, SO y navegador derivados del User-Agent en la ingesta; país de la cabecera del proxy;
+  bloque opcional `client` (idioma, referrer, utm_*, pantalla, tz); `commerce.buyer_id`; en `minimal`
+  se descartan comprador, referrer, utm, pantalla y tz. Lecturas: `kind` del componente en `slots`,
+  `GET /v1/stats/campaigns/:id/products` (ranking de productos) y `…/breakdown?by=payment_method|
+  device_type|os|browser|country|language|utm_*`; `buyers` en el resumen. 17 columnas nuevas con
+  `ALTER … IF NOT EXISTS` al arrancar.
+- **shopcart** (svc-shopcart, en curso): `buyerRef` = HMAC-SHA256(email normalizado, `BUYER_REF_SECRET`)
+  en las respuestas del checkout que lee la SDK tras pagar. Variable nueva en QA (`.env.local`) y prod
+  (Secret `env-sc-shopcart`): Miguel. Nada se persiste; el email sigue solo en la orden.
+- **SDK web 0.25.0** (en curso): bloque `client` por evento; `componentTemplateId` en todos los
+  elementos (`product-card`, `product-carousel`, `product-grid`, `product-detail`); `buyer_id` desde
+  `buyerRef`; `kind` en cada location del manifest. Publica Angelo; rebundle en Vev.
+- **Micro + kernel** (pendiente de OK de Angelo): columna `surface_slot.kind` (nullable) y `kind` en el
+  manifest, para que el dashboard enseñe el tipo sin deducirlo del id. Mientras, el colector lo deduce
+  (`card-…`, `carousel-…`, `detail-1`).
+- **Dashboard** (después): tarjeta de audiencia y pagos en el detalle de campaña con esos desgloses y el
+  ranking de productos.
+
+## 2.6 Estado al cierre del 19/10
+
+| Frente | Estado |
+|---|---|
+| Colector #19 y #20 | abiertos, suite en verde; **falta deploy de Miguel** en staging y prod (`DESPLIEGUE.md`) |
+| base-api publisher bridge | implementado con 30 tests; revisión sin blockers; aplicando W1/W4 y un PR aparte de endurecimiento del comodín `/stats/*` (traversal + `client_app_id`); confirmar `TYPEORM_SYNCHRONIZE=false` en QA/prod antes de mergear |
+| webapp | implementado (home «Active campaigns», «Performance» por slot, chart sin «K»), 27 tests nuevos, `next build` verde; en revisión |
+| Prueba real | surface 3 «Vev», `a-vio-dev.vev.site/bohus-demo`, campaña 9: 4 impresiones, 2 clics, 4 vistas, 1 compra (179 NOK Vipps) atribuidas a la campaña |
+
 ## 3. Orden y deploys
 
 1. Colector #19 → **Miguel** despliega staging (y prod cuando toque). Sin esto, los puntos 2 y 3
