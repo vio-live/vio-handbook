@@ -127,6 +127,33 @@ dashboard asigna campañas a esos placements; eso no cambia.**
   (package-database, autorizado por Angelo el 16/10; release del kernel + migración en QA).
 - **Vista de artículos por campaña en el dashboard:** se espera al feedback de las pruebas.
 
+## Enmienda 4 (2026-10-19) — el editor ve todas las campañas de la surface, no solo las activas
+
+Angelo, probando de cero en QA: pausó la campaña por defecto de la surface y la otra que había,
+creó una nueva, y en Vev el selector solo mostraba una entrada, etiquetada «Default campaign — Test
+campaign Vev 3»: era la nueva, pero Vev la tomaba por la por defecto porque `config.campaign` (la
+campaña que la key sirve ahora: la por defecto si está activa, si no la activa más reciente,
+ADR-0027 punto 2) se leía como «la por defecto». Y las pausadas no salían. Decisión de Angelo: «no
+lo quiero así, quiero que salgan las campañas».
+
+- **`/v2/mobile/config` añade `availableCampaigns[]`:** todas las campañas de la surface que no
+  han terminado (`active`, `scheduled`, `paused`), ligeras: `{ id, name, status, isDefault,
+  startDate, endDate }`, sin sponsors ni slots. **`campaigns[]` sigue siendo solo las activas**,
+  que es lo que consumen las SDK web y móviles en tiempo de ejecución (resolución de slots,
+  sponsors, analytics); no cambia nada para ellas.
+- **El selector de Vev lista `availableCampaigns`**, las activas primero y las demás con su estado
+  (`Navidad · scheduled`, `Test vev · paused`). Todas las que no han terminado se pueden elegir. «La
+  por defecto» es solo la que el backend marca con `isDefault`; la cabecera `campaign` nunca vale
+  como tal (ni en el selector ni en `pageCampaign`/`slotAssignedCampaign` de Vev).
+- **La página puede pertenecer a una campaña pausada o programada:** el manifest la acepta y
+  asigna sus slots (`source = 'page'`) aunque no esté activa; el editor prepara el artículo antes
+  de que abra la ventana. Solo una campaña **terminada** es `campaign_not_assignable`. En tiempo de
+  ejecución la SDK muestra esa campaña solo mientras esté activa; hasta entonces los bloques
+  enseñan la campaña que sirve la key, y Vio Config lo dice en su nota.
+- **Lo que no cambia:** `campaigns[]`, el dashboard manda, los placements de los SDK nativos, y
+  que `/v2/mobile/config` responde 404 si la surface no tiene **ninguna** campaña activa (con todo
+  pausado el editor no conecta; la por defecto está para eso).
+
 ## Consecuencias
 
 - Micro: un cambio pequeño y compatible (`mode`), PR aparte. SDK web 0.23.0: `platform` en
