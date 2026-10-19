@@ -71,6 +71,28 @@ Rama `feat/stats-por-surface-generico` desde `origin/develop` `abe6dc4` (= #41 m
 - La validación de la query va en el service (400 después de los checks de ownership, como el `range` de #41)
   y el path en un middleware del controller (400 antes de la base).
 
+## Seguimientos de la revisión de seguridad — PR [vio-base-api#43](https://github.com/vio-live/vio-base-api/pull/43)
+#42 lo mergeó Angelo (`c5f52c8`). La revisión de seguridad lo aprobó con seguimientos; van en la rama
+`fix/stats-proxy-topes` desde `origin/develop` (worktree `~/vio-commerce/worktrees/base-api-stats-topes`), 1 commit
+`cd6a21f`, pusheado, **PR #43 a `develop`**. 5 archivos, +310/−88.
+- **W1** `from`/`to`: máximo 365 días inclusivos (`to − from ≤ 364`) → si no, 400 `from/to must span at most 365 days`
+  (antes `0001-01-01..9999-12-31` viajaba y el colector respondía 502).
+- **W4** en `campaigns/:id/*`, un `campaign_id` en la query distinto del id del path → 400
+  `campaign_id must match the campaign in the path`; el igual sobra y no viaja (la propiedad solo se verifica para el
+  id del path). En lecturas de toda la surface `campaign_id` sigue siendo filtro.
+- **N1** ids ≤ 4294967295 (UInt32 del colector): `client_app_id`/`campaign_id`/`sponsor_id` en la query y
+  `surfaceId`/`campaignId` en la ruta (`surfaceOwnership.positiveInt`).
+- **N2** `range`+`days` → 400 también en la brand; y `range`+`from/to` → 400 en las dos (`range` es alias de `days`).
+  `days`+`from/to` sí viajan juntos (el colector da precedencia a `from/to`, handoff §0).
+- **Preset `90d`**: `range=24h|7d|14d|30d|90d` en las dos rutas, siempre traducido a `days`. Publisher: `range` no
+  viaja. Brand: viajan `range` **y** `days`, porque el colector legacy de `/v1/commerce-stats/*` (lo que hay en `main`)
+  solo lee `range` y desconoce `90d` (cae a 14 días en silencio) hasta que se despliegue el de la fase A, que lee `days`.
+- **N4** `metrics`: máximo 20 nombres y 256 caracteres. **N3/N5** `requireCampaignOfSurface` (sin callers desde #42)
+  borrado; su cuerpo vive en `requireCampaignOfSurfaceRead`. Tests nuevos para todo lo anterior.
+- Verificación: `yarn test:unit` **19 suites / 502 tests** (develop tras #42: 469); las dos suites de stats 250 casos
+  (eran 217); suite por defecto `statsService.test.js` + `surfaceOwnership.test.js` **13/13** (24 suites ajenas fallan
+  igual que en develop); eslint, prettier y `tsc` (src) limpios.
+
 ## Blockers / open questions
 - El colector aún no tiene `/v1/stats/surface/*` ni las lecturas nuevas de campaña/brand (fase A de
   vio-analytics, otro agente): hasta que entre en `main` y Miguel lo despliegue, esas rutas devuelven 502

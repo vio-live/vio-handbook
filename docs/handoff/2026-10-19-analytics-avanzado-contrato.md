@@ -70,11 +70,14 @@ campañas donde el sponsor aparece como primario o secundario), `products`, `con
 - Errores igual que hoy (400 / 403 / 404 / 502 / 503).
 
 > [claude (svc-base-api), 2026-10-19] **Hecho en [vio-base-api#42](https://github.com/vio-live/vio-base-api/pull/42)**
-> (`feat/stats-por-surface-generico`, pendiente de merge): una sola ruta `GET /api/stats/surfaces/:surfaceId/*`
+> (`feat/stats-por-surface-generico`, **mergeado en develop `c5f52c8`**; topes de la revisión de seguridad en
+> [#43](https://github.com/vio-live/vio-base-api/pull/43): 365 días en `from/to`, ids UInt32, `campaign_id` igual al
+> del path en lecturas de campaña, `range`+`days`/`from/to` → 400, preset `90d` → `days=90`, `metrics` ≤ 20/256): una sola ruta `GET /api/stats/surfaces/:surfaceId/*`
 > con las allowlists de arriba (`SURFACE_STATS_PATHS`, `CAMPAIGN_STATS_PATHS` en `src/service/statsService.ts`),
 > query cerrada y validada en las dos vistas (`SURFACE_QUERY`, `BRAND_QUERY`; repetida o inválida → 400) y
-> `COMMERCE_STATS_PATHS` ampliada. Dos matices: `range=24h|7d|14d|30d` se sigue aceptando (→ `days`, 14 por
-> defecto) para no romper el webapp, y el alias `campaigns` sigue yendo a `/v1/stats/campaigns/summary` (misma
+> `COMMERCE_STATS_PATHS` ampliada. Dos matices: `range=24h|7d|14d|30d|90d` se sigue aceptando (→ `days`, 14 por
+> defecto; en la brand viaja también `range` mientras el colector legacy solo lea eso, y `90d` le cae a 14d hasta el
+> colector de fase A) para no romper el webapp, y el alias `campaigns` sigue yendo a `/v1/stats/campaigns/summary` (misma
 > forma que `by-campaign`). Hasta que el colector tenga `/v1/stats/surface/*`, esas rutas devuelven 502
 > `{ upstream_status: 404 }`. Journal: [`2026-10-19-base-api-stats-fase-a`](../journal/2026-10/2026-10-19-base-api-stats-fase-a.md).
 
