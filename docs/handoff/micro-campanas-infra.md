@@ -20,7 +20,8 @@ status: draft
 | Config | Secret **`env-sc-campaigns`** montado en `/usr/src/app/.env` (tapa el `.env` horneado — es ahí donde hay que meter variables nuevas, no en el blob) |
 | Esquema `surface*` | 8 tablas, 62 columnas, **idéntico a QA**; `surface_campaign_slot.source` presente desde el 19/10 |
 | Datos | las 8 tablas `surface*` a **0 filas**: no hay superficies ni keys en prod todavía |
-| Alcance | **solo dentro del clúster**: `api.vio.live` sigue en la VM de Oracle `82.70.54.151` (D2 sin hacer) |
+| Alcance | **público**: `api.vio.live` y `campaigns.vio.live` → `135.116.206.152` (Istio), certs válidos hasta 14/01/2027 y 11/01/2027. **D2 hecho el 16/10** |
+| Pendiente de hardening | el server 80 del Gateway **no** redirige a HTTPS (igual que los otros 3 gateways de prod): `http://api.vio.live/v2/mobile/surface` da 401 en claro. Y el **log de acceso de Istio está apagado**, así que no se puede medir quién entra por el 80 |
 
 Selector correcto para los pods: `app.kubernetes.io/name=campaigns` (**no** `app=campaigns`).
 

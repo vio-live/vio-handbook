@@ -50,7 +50,7 @@ campañas. Angelo decidió que la ejecución en prod la hace Miguel.
 - Miguel: migración → verificación → merge #18 → smoke. Después, confirmar la columna y el pod en prod.
 - Angelo: prueba de Vev desde cero (artículo, selector de campaña, "From page", reasignación, split de
   compra por campaña); rearmar el monitor del micro en QA cuando pruebe.
-- D2 cuando Angelo lo decida; `helm --timeout` del workflow; CronJob de backup de prod.
+- ~~D2 cuando Angelo lo decida~~ (ya estaba hecho desde el 16/10); `helm --timeout` del workflow; CronJob de backup de prod.
 
 ---
 
@@ -116,8 +116,54 @@ ese mismo esquema, así que prod no tiene ninguna otra columna ausente, no solo 
 
 - La verificación funcional de `source` en la respuesta del SDK solo se puede hacer cuando prod
   tenga una superficie y una key creadas. Hoy no las hay.
-- **D2** sigue sin hacer: `api.vio.live` continúa en la VM de Oracle `82.70.54.151`, así que el micro
-  de prod solo se alcanza dentro del clúster. Sin eso el SDK web y Vev en prod no llegan al micro.
-  Lo decide Angelo.
+- ~~**D2** sigue sin hacer~~ — **me equivoqué al repetir el handoff sin comprobarlo. Ver el bloque
+  "D2 ya estaba hecho" más abajo.**
 - `helm --timeout` del workflow de campañas: sigue pendiente (hoy no hizo falta, pero el riesgo está).
 - CronJob de backup de prod roto (`apk` en runtime): sin cambios, diferido por Angelo.
+
+---
+
+## Corrección: D2 ya estaba hecho — miguel
+
+- **Quién:** Miguel. Angelo pidió "haz D2" el 19/10 14:13 local; al ir a ejecutarlo resultó que **ya
+  estaba hecho desde el 16/10**, por mí, documentado en
+  [2026-10-16-micro-campanas-en-prod-y-corte-dns](./2026-10-16-micro-campanas-en-prod-y-corte-dns.md).
+- **Cuándo:** comprobado 2026-10-19 12:15–12:25 UTC. **No cambié nada**: no había nada que cambiar.
+- **Mi error:** el handoff del 19/10 afirmaba "`api.vio.live` sigue en la VM de Oracle (D2 no hecho)"
+  y yo lo repetí en el informe a Angelo **sin verificarlo contra el DNS real**. El dato llevaba tres
+  días desactualizado. Un "pendiente" heredado de un documento es una hipótesis, no un hecho: una
+  consulta DNS de un segundo lo habría desmentido.
+
+### Estado real verificado (19/10 12:25 UTC)
+
+| Pieza | Estado |
+|---|---|
+| `api.vio.live` A | `135.116.206.152` (= `graph-ql.vio.live`), `proxied=false` |
+| Quién responde | `server: istio-envoy` — **ya no** `nginx/1.24.0 (Ubuntu)` |
+| `Certificate cert-api-vio` | `Ready=True`, secret `cert-api-vio-dns01`, Let's Encrypt, válido `16/10` → `14/01/2027` |
+| `Certificate cert-campaigns` | `Ready=True`, válido hasta `11/01/2027` |
+| `Gateway gateway-campaigns-prod` | server 80 (ambos hosts) + un 443 por host con su propio `credentialName` |
+| `VirtualService virtual-service-campaigns-prod` | hosts `campaigns.vio.live`, `api.vio.live` → `campaigns.default.svc.cluster.local:80` |
+| Smoke por los dos hosts | `/health` 200, `/v2/mobile/surface` 401 |
+| `events.vio.live` | sigue en Oracle `82.70.54.151`, 200, `nginx` — intacto, como pide el runbook |
+
+Ojo con el detalle de implementación: el runbook pedía **un** `Certificate domain-cert-campaigns` con
+los dos `dnsNames`; lo que hay son **dos** certs (`cert-api-vio` y `cert-campaigns`) con un server 443
+cada uno. Es equivalente y más limpio, pero no coincide con el texto del runbook.
+
+### Dos hallazgos nuevos, ninguno causado por D2
+
+1. **El puerto 80 sirve la API en claro, sin redirección a HTTPS.**
+   `http://api.vio.live/v2/mobile/surface` con `X-Api-Key` devuelve **401 del micro** (no un 301):
+   el server 80 del Gateway no tiene `tls.httpsRedirect: true`, así que una key de cliente viajaría
+   sin cifrar y el micro la procesaría. **No es un defecto de D2: es el comportamiento de los tres
+   gateways de prod y del de QA** — `http://api-ecom.vio.live/` también da 200 en claro. Ninguno
+   tiene `httpsRedirect`. Arreglarlo es un cambio de una línea por gateway, pero **puede romper a
+   cualquier cliente que hoy llame por HTTP**, así que lo decide Angelo y debería hacerse en los
+   cuatro a la vez, no solo en campañas.
+2. **El log de acceso de Istio está apagado en prod**, así que no se puede medir cuánto tráfico entra
+   por el puerto 80 ni de quién. Intenté medirlo y el ingressgateway devolvió **0 líneas** con esos
+   hosts en 24 h; la prueba de vida lo desmiente: el pod tiene 217 líneas en total, todas de control
+   plane, y **mis propias peticiones no aparecen**. Sin `accessLogFile` en el ConfigMap `istio`, ese 0
+   no mide nada (ver la lección `cero-sin-prueba-de-vida-no-es-cero`). Mientras siga apagado no hay
+   forma de estimar el riesgo del punto 1 ni de auditar quién llama a `api.vio.live`.

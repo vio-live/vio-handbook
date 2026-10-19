@@ -34,7 +34,7 @@ runbook anterior [2026-10-16-release-prod-commerce](./2026-10-16-release-prod-co
 | Filas en `surface_campaign_slot` | **0** (la tabla está vacía; el `ALTER` es instantáneo) |
 | Última migración en `migrations` | `surfacePrivacyMode1792000000000` (la cadena está al día; solo falta esta) |
 | Backup a demanda | `pre-slot-source-prod-20261019` en `vio-ecom-db-prod-sc` (RG **`rg-vio-databases`**, no `rg-vio-commerce-prod-sc`), 2026-10-19 10:33 UTC |
-| `api.vio.live` | sigue en la VM de Oracle `82.70.54.151` (D2 no hecho; el micro de prod solo se alcanza dentro del clúster) |
+| `api.vio.live` | ~~sigue en la VM de Oracle `82.70.54.151` (D2 no hecho)~~ **DATO FALSO: D2 se hizo el 16/10.** Resuelve a `135.116.206.152` y responde `server: istio-envoy`; el micro **sí** se alcanza desde fuera. Corregido 19/10 por Miguel |
 
 Por qué el orden importa: el kernel **1.0.275** (el que trae `develop` del micro) mapea la columna
 `source` en la entidad `SurfaceCampaignSlot`. Si el micro nuevo arranca sin la columna, todo lo que lea
@@ -177,10 +177,12 @@ QA desde el 16/10 15:25 UTC sin errores.
 
 ## 5. Fuera de este handoff
 
-- **D2** (Istio `Gateway`/`VirtualService`/`Certificate` para `api.vio.live` en prod y el A de Cloudflare
-  a `135.116.206.152`): sigue como en el paso 5.4/5.5 del
-  [runbook del 16/10](./2026-10-16-release-prod-commerce.md). Lo decide Angelo; sin eso, el SDK web y
-  Vev en prod no llegan al micro.
+- **D2: YA HECHO el 16/10**, no pendiente (verificado el 19/10 contra el DNS real y el clúster).
+  Istio `Certificate`+`Gateway`+`VirtualService` y el A de Cloudflare a `135.116.206.152` están en su
+  sitio; `api.vio.live` responde por `istio-envoy` con cert válido hasta el 14/01/2027. Ver
+  [el journal del corte](../journal/2026-10/2026-10-16-micro-campanas-en-prod-y-corte-dns.md).
+  Lo que sí falta para que el SDK web y Vev sirvan algo es **que existan campañas/superficies/keys
+  en prod** (las 8 tablas `surface*` están a 0 filas), que es el paso 8 y es de Angelo.
 - Colector de analytics (`main` @ `477b56b`, conteo por `order_id`): si no está desplegado aún en las VMs
   de staging y prod, va antes de que las páginas de prod lleven la SDK 0.24.0.
 - `helm --timeout` del workflow de campañas y el CronJob de backup roto (`apk`) siguen pendientes.

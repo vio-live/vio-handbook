@@ -1,6 +1,6 @@
 ---
 title: Registro de pendientes diferidos (retomar cuando haya recursos)
-last-updated: 2026-10-07
+last-updated: 2026-10-19
 owner: miguel
 ---
 
@@ -108,6 +108,25 @@ Estos no tienen excusa económica. Cuando haya un rato, se hacen.
    procede es llamarlo "en rojo" sin más.
 5. **`DISCORD_WEBHOOK`** sigue con fecha 2026-03-18, escalado desde julio.
 6. **`vio_production` en ClickHouse sigue vacía.**
+7. **Los cuatro gateways de Istio sirven la API en claro por el puerto 80** (hallado el 19/10 al
+   verificar D2). Ninguno de `gateway-campaigns-prod`, `gateway-reachu-prod-graph-ql`,
+   `gateway-reachu-prod-base-api` ni `gateway-campaigns-qa` tiene `tls.httpsRedirect: true` en su
+   server 80. Comprobado: `http://api.vio.live/v2/mobile/surface` con `X-Api-Key` devuelve **401 del
+   micro**, no un 301 — una key de cliente viajaría sin cifrar y el micro la procesaría. Lo mismo
+   `http://api-ecom.vio.live/` → 200.
+   **No es una regresión de D2: es el comportamiento de siempre en todo Commerce.** El arreglo es una
+   línea por gateway (`tls: {httpsRedirect: true}` en el server 80), pero **puede romper a cualquier
+   cliente que hoy llame por HTTP**, así que es **decisión de Angelo** y debería aplicarse a los
+   cuatro a la vez, no sólo a campañas. Antes conviene resolver el punto 8, que es lo que permitiría
+   medir el riesgo.
+8. **El log de acceso de Istio está apagado en prod.** El ConfigMap `istio` de `istio-system` no tiene
+   `accessLogFile`, así que el ingressgateway **no registra ni una petición**: sólo control plane
+   (217 líneas en total en el pod, y las peticiones propias de prueba no aparecen). Consecuencias:
+   no se puede medir el tráfico del punto 7, ni auditar quién llama a `api.vio.live`, ni diagnosticar
+   un 403/503 del borde. Y es una trampa activa para cualquier conteo: un `grep | wc -l` sobre esos
+   logs devuelve 0 y **parece una medición** (ver la lección `cero-sin-prueba-de-vida-no-es-cero`).
+   Encenderlo es `accessLogFile: /dev/stdout` en el mesh config; sube el volumen de logs, así que
+   conviene mirar si hay que acotarlo por ruta.
 
 ---
 
