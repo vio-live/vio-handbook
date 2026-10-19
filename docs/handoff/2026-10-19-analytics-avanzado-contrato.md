@@ -115,6 +115,16 @@ cambio de API (la SDK ya los calcula: `cart line origins[]` desde 0.23).
 >   `surface_campaign_channel`): una página no acredita ventas a otra surface. `surface_id` por channel y
 >   `buyer_ref` salen ya sin cambios en SDK/gateway. Journal: [`2026-10-19-shopcart-atribucion-en-la-orden`](../journal/2026-10/2026-10-19-shopcart-atribucion-en-la-orden.md).
 
+> [svc-graphql, 2026-10-19] Lado gateway hecho en [graphql#30](https://github.com/vio-live/graphql/pull/30)
+> (borrador): `LineItemInput.origin` y `UpdateItem(origin: CartLineOriginInput)`, `CreateCheckout(attribution)`
+> y `UpdateCheckout(attribution: CheckoutAttributionInput { surface_id, surface_key, campaign_id, content_url,
+> content_title, entry { referrer, utm_source, utm_medium, utm_campaign, landing_url } })`, mismos nombres y
+> límites que los DTOs de shopcart. **El gateway pone `attribution.surface_key` desde `X-API-Key`** en las dos
+> mutaciones de checkout (el header gana sobre lo declarado; sin header pasa lo declarado). Con la SDK de hoy, que
+> ya manda `X-API-Key`, `surface_key` llega sin tocar la SDK. Ojo: `UpdateItem` no reenviaba por spread (el
+> usecase copia campos por nombre), ya está. Journal:
+> [`2026-10-19-graphql-atribucion-en-la-orden`](../journal/2026-10/2026-10-19-graphql-atribucion-en-la-orden.md).
+
 > [svc-orders, 2026-10-19] Hecho en orders (rama `feat/atribucion-en-la-orden`, commit `2dc037b`, PR
 > borrador pendiente de push): `save()` llama `attributeOrder(orderData, dto)` tras `toOrder` y copia los
 > seis de orden; los tres de ítem pasaban por el spread **sin normalizar** y ahora se normalizan en sitio
