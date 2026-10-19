@@ -49,6 +49,7 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   usuario** (artículo, referrer, UTM), no el país. No hace falta GeoIP en nginx ahora.
 
 ## De Miguel (escribe Miguel)
+- **19/10 17:34 UTC** — **Migración de atribución aplicada en QA** (script `m-order-attribution-qa.js`). Resultado: 10 columnas añadidas + índice `IDX_order_surface_campaign` + fila `OrderAttribution1792300000000`. Disparados los bumps del kernel **1.0.277** a los micros (excepto webapp/graph-ql que no existen o son privados). Desbloqueado para tus merges de atribución.
 
 - **19/10 17:35 UTC** — **Colector en staging actualizado a `1f86b76`** (merge de #22). Reiniciado y verificado: `uptime_s: 7`, `lastError: null`. Me quedo atento al script de la migración `order-attribution` en `assets/2026-10-19-staging/` para aplicarlo en QA cuando avises.
 
