@@ -1,11 +1,28 @@
 ---
 title: "Micro de campañas — config e infra (para Miguel)"
-last-updated: 2026-10-13
+last-updated: 2026-10-19
 owner: miguel
 status: draft
 ---
 
 # Micro de campañas — config e infra
+
+## Estado real en prod (verificado 2026-10-19 11:10 UTC)
+
+| Dato | Valor |
+|---|---|
+| Rama / commit | `main` @ `b8631a2` (merge de [#18](https://github.com/vio-live/vio-campaigns-microservice/pull/18)) |
+| Imagen | `vioprodsc.azurecr.io/campaigns:22` |
+| Kernel | **1.0.275** |
+| Pod | `campaigns-84f999cb9c-9hmng`, `Running`, 2/2, 0 restarts, `Nest application successfully started` |
+| Helm | release `campaigns`, revision **2**, `deployed` |
+| Service | `campaigns` ClusterIP `10.0.10.210`:80 |
+| Config | Secret **`env-sc-campaigns`** montado en `/usr/src/app/.env` (tapa el `.env` horneado — es ahí donde hay que meter variables nuevas, no en el blob) |
+| Esquema `surface*` | 8 tablas, 62 columnas, **idéntico a QA**; `surface_campaign_slot.source` presente desde el 19/10 |
+| Datos | las 8 tablas `surface*` a **0 filas**: no hay superficies ni keys en prod todavía |
+| Alcance | **solo dentro del clúster**: `api.vio.live` sigue en la VM de Oracle `82.70.54.151` (D2 sin hacer) |
+
+Selector correcto para los pods: `app.kubernetes.io/name=campaigns` (**no** `app=campaigns`).
 
 **Para Miguel.** Angelo decidió el 2026-10-13 que **Miguel se encarga de toda la configuración e
 infra del micro nuevo `vio-campaigns-microservice`**, y Claude del código. Este doc es la lista
@@ -42,7 +59,7 @@ privado, rama `develop`. Primer push: **solo infra**, nada de `src/` ni `package
 | 4 | `deploy.yml` + `kernel-bump.yml` | ✅ `develop`→QA, `main`→prod, sin `pre-develop` |
 | 5 | Secrets de GitHub | ✅ **25** cargados (no 39: sobraban los `_STAGING` y `AZ_RG_*`, que este workflow no usa). `ORG_DISPATCH_TOKEN` y `NPM_AUTOMATION_TOKEN` **ya los ve el repo** como secretos de organización: no hay que cargarlos |
 | 7 | DNS, certs, Gateway, VirtualService | ✅ aplicados en los dos clusters + [vio-kubernetes-config#1](https://github.com/vio-live/vio-kubernetes-config/pull/1) |
-| 6 | `env-sc-campaigns` en prod | ⬜ cuando llegue a `main` (en QA no hace falta: el `.env` va horneado) |
+| 6 | `env-sc-campaigns` en prod | ✅ creado el 16/10 y montado en `/usr/src/app/.env`; **tapa el `.env` horneado**, así que las variables nuevas van en el Secret (en QA no hace falta: el `.env` va horneado) |
 | 8 | Dispatch del kernel (7 PRs) | ⬜ **a propósito: ver abajo** |
 
 **Prueba del pipeline:** el push disparó el deploy y llega hasta

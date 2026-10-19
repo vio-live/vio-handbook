@@ -1,6 +1,6 @@
 ---
 title: "Migraciones de DB — Vio Commerce (package-database)"
-last-updated: 2026-09-03
+last-updated: 2026-10-19
 owner: miguel
 status: live
 ---
@@ -66,6 +66,48 @@ No usar `yarn migration:execute` sin `DB_MIGRATION_FILE` — `src/migrations/ind
 node -e "..." # ver script de verificación en el journal del 2026-09-03
 ```
 O simplemente: comparar `SELECT name FROM migrations` contra los archivos de `src/migrations/*.ts` (excluyendo `index.ts`).
+
+### Diffear el esquema contra el entorno donde la versión nueva ya corre (19/10)
+
+Un smoke que devuelve **401/403 no prueba que la consulta funcione**: la auth corre antes del
+repositorio, así que una columna ausente no se manifiesta. Y a veces no se puede forzar un 200 —
+en la migración de `surface_campaign_slot.source` (19/10) prod no tenía ninguna fila en `surface`,
+luego no existía key posible y `/v2/mobile/config` daba 401 por diseño.
+
+La comprobación que sí concluye: **volcar el esquema de las tablas afectadas en el entorno que
+acabas de migrar y en el entorno donde la versión nueva del servicio ya lleva días corriendo sin
+errores, y diffear**. Si salen idénticos, no falta `source` ni ninguna otra columna.
+
+```js
+// dentro del pod de users de cada entorno; ojo con la ruta del .env (ver lección)
+const [rows] = await c.query(
+  "SELECT table_name tn, column_name cn, column_type ct, is_nullable nn, COALESCE(column_default,'~') cd \
+   FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name LIKE 'surface%' \
+   ORDER BY table_name, column_name");
+for (const r of rows) console.log(`${r.tn}|${r.cn}|${r.ct}|${r.nn}|${r.cd}`);
+```
+
+```bash
+# una salida por entorno, ordenada, y diff
+diff schema-prod.txt schema-qa.txt && echo IDENTICOS
+```
+
+Verificar siempre contra `information_schema`, **nunca contra el exit code** del script.
+
+### Insertar la fila de `migrations` a mano
+
+Si aplicas el `ALTER` por fuera del flujo del kernel, la fila de `migrations` debe llevar
+**exactamente la propiedad `name` de la clase de la migración**, no el nombre del fichero ni el de
+la clase si difieren. TypeORM registra y busca esa propiedad. Leerla del origen antes de insertar:
+
+```bash
+gh api "repos/vio-live/package-database/contents/src/migrations/<fichero>.ts?ref=develop" \
+  --jq .content | base64 -d | grep -E "^export class|name ="
+```
+
+El convenio no es uniforme en el repo: `surfacePrivacyMode1792000000000` empieza en minúscula y
+`SurfaceCampaignSlotSource1792100000000` en mayúscula. Si te equivocas, la migración se considera
+pendiente y en la siguiente corrida real falla con `Duplicate column name`.
 
 ## Fixes de logging (PR #5, en `develop`, pendiente de merge)
 

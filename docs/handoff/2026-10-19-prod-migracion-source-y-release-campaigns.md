@@ -3,10 +3,16 @@ title: "Handoff — Prod: migración `source` de los slots y release del micro d
 date: 2026-10-19
 owner: miguel
 decides: angelo
-status: live
+status: done
 ---
 
 # Prod: migración `surface_campaign_slot.source` y release del micro de campañas
+
+> **EJECUTADO el 2026-10-19 por Miguel, 10:45–11:10 UTC.** Migración aplicada y verificada
+> (`migrations` id 176), #18 mergeado (`b8631a2`), deploy verde a la primera (run `39240914787`),
+> pod `campaigns:22` sano con 0 `Unknown column`, smoke 401. Detalle y correcciones a este documento
+> en el [journal](../journal/2026-10/2026-10-19-prod-migracion-source-release-campaigns.md).
+> No hace falta volver a correr nada.
 
 **Para Miguel.** Angelo pidió el 19/10 hacer en prod la migración de `source` antes del siguiente
 release del micro de campañas, y que lo ejecutes tú. Son dos pasos en orden estricto: primero la
@@ -24,10 +30,10 @@ runbook anterior [2026-10-16-release-prod-commerce](./2026-10-16-release-prod-co
 |---|---|
 | Micro de campañas en prod | desplegado desde `main` @ `bda3f49`, kernel **1.0.273**, imagen `vioprodsc.azurecr.io/campaigns:18`, pod `Running` sin errores de base |
 | Columna `source` en `surface_campaign_slot` | **no existe** |
-| Tablas `surface*` | 3, presentes |
+| Tablas `surface*` | 8, presentes, todas a 0 filas (el handoff decía 3; corregido 19/10) |
 | Filas en `surface_campaign_slot` | **0** (la tabla está vacía; el `ALTER` es instantáneo) |
 | Última migración en `migrations` | `surfacePrivacyMode1792000000000` (la cadena está al día; solo falta esta) |
-| Backup a demanda | `pre-slot-source-prod-20261019` en `vio-ecom-db-prod-sc`, 2026-10-19 10:33 UTC |
+| Backup a demanda | `pre-slot-source-prod-20261019` en `vio-ecom-db-prod-sc` (RG **`rg-vio-databases`**, no `rg-vio-commerce-prod-sc`), 2026-10-19 10:33 UTC |
 | `api.vio.live` | sigue en la VM de Oracle `82.70.54.151` (D2 no hecho; el micro de prod solo se alcanza dentro del clúster) |
 
 Por qué el orden importa: el kernel **1.0.275** (el que trae `develop` del micro) mapea la columna
@@ -138,16 +144,27 @@ QA desde el 16/10 15:25 UTC sin errores.
    `--timeout` del helm en el workflow sigue pendiente de otro día.
 3. Comprobar el pod nuevo (imagen `campaigns:19` o superior):
    ```bash
-   kubectl --context vio-commerce-prod-sc get pods -l app=campaigns -o custom-columns=NAME:.metadata.name,READY:.status.containerStatuses[*].ready,IMAGE:.spec.containers[0].image,START:.status.startTime
+   kubectl --context vio-commerce-prod-sc get pods -l app.kubernetes.io/name=campaigns -o custom-columns=NAME:.metadata.name,READY:.status.containerStatuses[*].ready,IMAGE:.spec.containers[0].image,START:.status.startTime
    kubectl --context vio-commerce-prod-sc logs deploy/campaigns -c campaigns --since=10m | grep -E 'successfully started|Unknown column|ER_|QueryFailedError' 
    ```
    Tiene que aparecer `Nest application successfully started` y **ningún** `Unknown column 'source'`.
+
+   Ojo con dos cosas que fallaron tal como estaban escritas: el selector es
+   `app.kubernetes.io/name=campaigns` (**no** `app=campaigns`, que no devuelve nada), y en zsh hay que
+   entrecomillar el `-o 'custom-columns=...[*]...'` o el glob lo come. El tag de la imagen fue **22**,
+   no 19: el contador avanza con los builds de `develop`.
 4. Smoke dentro del clúster (el micro de prod no tiene todavía host público):
    ```bash
    kubectl --context vio-commerce-prod-sc exec deploy/collections -- curl -s -o /dev/null -w '%{http_code}\n' -X POST http://campaigns/v2/mobile/components/manifest -H 'X-Api-Key: x' -H 'Content-Type: application/json' -d '{"platform":"web","locations":[]}'
    ```
-   → `401`. Y si hay alguna key de prod creada, `GET http://campaigns/v2/mobile/config` con ella → `200`
-   y cada `campaigns[].slots[]` trae `source`.
+   → `401`.
+
+   **El 200 de `config` no es verificable en prod hoy** (comprobado 19/10): la auth es
+   `SurfaceKeyGuard` contra `surface.api_key` y en prod las 8 tablas `surface*` están a 0 filas, así
+   que no existe ninguna key y cualquier valor da 401. Un 401 confirma la capa de auth, **no** la
+   consulta a `surface_campaign_slot`. El sustituto que sí concluye es diffear el esquema `surface*`
+   de prod contra QA (donde 1.0.275 corre limpio desde el 16/10): 62 columnas, idénticas. Receta en
+   el [playbook de migraciones](../playbooks/commerce-db-migrations.md).
 
 ## 4. Rollback
 

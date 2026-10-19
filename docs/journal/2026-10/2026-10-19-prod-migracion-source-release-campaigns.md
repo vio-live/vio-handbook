@@ -51,3 +51,73 @@ campañas. Angelo decidió que la ejecución en prod la hace Miguel.
 - Angelo: prueba de Vev desde cero (artículo, selector de campaña, "From page", reasignación, split de
   compra por campaña); rearmar el monitor del micro en QA cuando pruebe.
 - D2 cuando Angelo lo decida; `helm --timeout` del workflow; CronJob de backup de prod.
+
+---
+
+## Ejecución en prod: migración `source` + release del micro — miguel
+
+- **Quién:** Miguel (pedido de Angelo, 19/10 ~10:52 UTC). Ejecuté el handoff
+  [2026-10-19-prod-migracion-source-y-release-campaigns](../../handoff/2026-10-19-prod-migracion-source-y-release-campaigns.md)
+  en el orden estricto que pidió.
+- **Dónde:** prod. Base `outshifter` en `vio-ecom-db-prod-sc.mysql.database.azure.com`
+  (RG **`rg-vio-databases`**, no `rg-vio-commerce-prod-sc`); clúster `vio-commerce-prod-sc`;
+  registry `vioprodsc`. Repo `vio-live/vio-campaigns-microservice`.
+- **Cuándo:** 2026-10-19, 10:45–11:10 UTC.
+- **Contexto:** el kernel 1.0.275 mapea `surface_campaign_slot.source`; sin la columna el micro
+  nuevo responde 500 en la config del SDK. De ahí el orden migración → merge.
+
+### Hecho
+
+1. **Estado de partida reverificado** (solo lectura, pod de users de prod): base `outshifter`,
+   columna `source` ausente, `surface_campaign_slot` 0 filas, última migración
+   `surfacePrivacyMode1792000000000` (id 175), micro en `campaigns:18`. Backup
+   `pre-slot-source-prod-20261019` confirmado por `az mysql flexible-server backup list`
+   (2026-10-19T10:33:58Z).
+2. **Migración verificada contra el origen antes de tocar nada**: leí
+   `1792100000000-surface-campaign-slot-source.ts` de `package-database` `develop` y confirmé
+   que el `ALTER` y el `name` de la clase (`SurfaceCampaignSlotSource1792100000000`) son
+   exactamente los que inserta el script del handoff. TypeORM registra la propiedad `name`, así
+   que la fila que insertamos a mano es la que buscará la cadena de migraciones.
+3. **`ALTER` aplicado** desde el pod de users (opción B del handoff):
+   `antes: columna source = 0 | fila migrations = 0` → `ALTER aplicado` → `fila migrations insertada`.
+4. **Verificación desde un segundo pod** (`users-64c49f7bf6-b6qn9`, conexión distinta):
+   `source` = `enum('dashboard','page')`, `IS_NULLABLE=NO`, `DEFAULT='dashboard'`; `migrations`
+   id **176** `SurfaceCampaignSlotSource1792100000000` como última. El micro viejo (1.0.273) siguió
+   con 0 errores de base tras el `ALTER`, como se esperaba.
+5. **Merge de [#18](https://github.com/vio-live/vio-campaigns-microservice/pull/18)**
+   (`develop` → `main`, 13 commits, `MERGEABLE`/`CLEAN`, head `e1a4023`, kernel 1.0.275 confirmado
+   en el `package.json` de ese sha). Merge commit `b8631a2`, 10:55:23Z. Merge explícitamente pedido
+   por Angelo: ADR-0001 levantado para este caso, igual que el 12/10.
+6. **Deploy verde a la primera**: run
+   [39240914787](https://github.com/vio-live/vio-campaigns-microservice/actions/runs/39240914787),
+   `build` + `deploy` + `Verify the rollout` en success. **El `helm --wait` no expiró esta vez**
+   (a diferencia de QA el 16/10), así que no hubo que mirar el rollout a mano.
+7. **Pod nuevo comprobado**: `campaigns-84f999cb9c-9hmng`, imagen **`vioprodsc.azurecr.io/campaigns:22`**
+   (el contador de tags iba por 22 por los builds de `develop`; el handoff decía ":19 o superior"),
+   `Running`, 2/2 ready, 0 restarts, `Nest application successfully started`, **0** `Unknown column` /
+   `QueryFailedError` / `ER_BAD_FIELD`. Helm revision 2. El pod viejo quedó un momento en `Failed`
+   (residuo normal del corte con sidecar de Istio) y lo recogió el GC: RS vieja a 0, deployment 1/1.
+8. **Smoke in-cluster**: `POST /v2/mobile/components/manifest` → **401**, y
+   `GET /v2/mobile/config?platform=web` → **401**.
+
+### Lo que el 401 NO prueba, y qué hice en su lugar
+
+El handoff pedía además un `GET /v2/mobile/config` con una key de prod → 200 con `source` en
+`campaigns[].slots[]`. **No es posible hoy en prod**: la auth es `SurfaceKeyGuard` contra
+`surface.api_key` y en prod las 8 tablas `surface*` están a 0 filas, así que no existe ninguna key
+y cualquier valor da 401. El 401 confirma la capa de auth, no la consulta a `surface_campaign_slot`.
+
+Como sustituto hice la comprobación empírica que sí concluye: **volqué el esquema completo de las 8
+tablas `surface*` (62 columnas con tipo, nullabilidad y default) en prod y en QA y los diffeé.
+Salen idénticos.** QA lleva el kernel 1.0.275 corriendo sin errores desde el 16/10 15:25 UTC contra
+ese mismo esquema, así que prod no tiene ninguna otra columna ausente, no solo `source`.
+
+### Pendiente
+
+- La verificación funcional de `source` en la respuesta del SDK solo se puede hacer cuando prod
+  tenga una superficie y una key creadas. Hoy no las hay.
+- **D2** sigue sin hacer: `api.vio.live` continúa en la VM de Oracle `82.70.54.151`, así que el micro
+  de prod solo se alcanza dentro del clúster. Sin eso el SDK web y Vev en prod no llegan al micro.
+  Lo decide Angelo.
+- `helm --timeout` del workflow de campañas: sigue pendiente (hoy no hizo falta, pero el riesgo está).
+- CronJob de backup de prod roto (`apk` en runtime): sin cambios, diferido por Angelo.
