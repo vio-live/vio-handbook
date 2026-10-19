@@ -1,7 +1,7 @@
 ---
 title: "ADR-0035 — Analytics avanzado en el dashboard de Commerce: publisher (Aller) y brand"
 date: 2026-10-19
-status: propuesta
+status: aceptada (Angelo, 2026-10-19 noche)
 decides: angelo
 ---
 
@@ -145,7 +145,14 @@ en el micro (ya separa publisher y brand).
 
 Prod al final de cada fase, con sus migraciones delante.
 
-## 4. Decisiones que necesita Angelo
+## 4. Decisiones de Angelo (19/10 noche)
+
+1. **Atribución en la orden: OK.** 2. **Comisión por campaña.** 3. **«De dónde compran» = el lugar por
+donde entró el usuario** (artículo de entrada, referrer, UTM), no el país. 4. **La brand ve totales,
+pero solo de las campañas donde han ido sus productos**, en cualquier surface o publisher (Aller, VG…):
+nada de otras brands. 5. Fases A → B → C, «ve con todo».
+
+### Preguntas originales (para el registro)
 
 1. **Atribución en la orden** (2.1): OK para añadir las columnas en package-database. Sin esto no hay
    filtros de órdenes ni comisiones por campaña dentro de Commerce.
