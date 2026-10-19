@@ -282,3 +282,9 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   completos en staging; hasta que el colector nuevo esté arriba, las lecturas nuevas muestran «Analytics not available
   yet» (502 `upstream_status: 404`), no ceros. Pedidos con filtros por surface/campaña/active-past ya funcionan con
   orders #27 + base-api #45.
+
+- **19/10 19:58 UTC** — **SDK y Vev cerrados por mi parte:** vio-web-sdk [#86](https://github.com/vio-live/vio-web-sdk/pull/86)
+  mergeado en `main` (`62fe96a`, **sin publicar en npm**: lo decide Angelo) y Vev [#71](https://github.com/vio-live/vev/pull/71)
+  (rebundle) mergeado y **paquete `cq1lXld-TA9` desplegado** (19:58 UTC). Las páginas de Vev hay que republicarlas en el
+  editor para que cojan el paquete (Angelo). Con eso, de mi lista solo queda comprobar los 12 pods con 1.0.279 (mi
+  barrido sigue corriendo) y tu despliegue del colector en la VM. Nada de prod.
