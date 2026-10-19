@@ -43,18 +43,21 @@ Si el estado de partida que escribes tiene más de un rato, dilo: Miguel ya se c
 un «pendiente» de un doc de tres días antes sin comprobarlo
 ([lección](../lessons/un-pendiente-heredado-de-un-doc-es-una-hipotesis.md)).
 
-## Lo que Miguel NO hace solo
+## El permiso, en palabras de Angelo
 
-Con Angelo fuera, el cron tiene prohibido:
+> *«prod nada. pero todo lo demás sí, bumps, db. merges todo lo demás.»* (19/10 19:06)
 
-- **Tocar producción**: ni el clúster de prod, ni su base, ni mergear a `main`/`master`, ni desplegar
-  el colector en la VM de prod. Si lo que pides toca prod, lo deja y avisa a Angelo.
-- Mergear un PR en conflicto.
-- Correr migraciones en la base de producción.
+En **QA/staging el permiso es permanente**: mergear PRs a `develop`, aplicar migraciones en la MySQL
+de QA, disparar bumps del kernel y desplegar. Miguel **no pide permiso** para nada de eso — pararse a
+preguntar por algo de QA con Angelo fuera es no hacer el encargo.
 
-El permiso de Angelo se dio en el contexto de *«ahora estamos en staging viendo que todo esté bien»*,
-así que el bucle autónomo se queda en staging/QA a propósito. Para prod, Angelo lo autoriza en el
-momento.
+## Lo que Miguel NO hace, sin excepción
+
+**Producción, nada.** Ni el clúster `vio-commerce-prod-sc`, ni la base `vio-ecom-db-prod-sc`, ni
+mergear a `main`/`master`, ni el colector de la VM `82.70.54.151`, ni el blob
+`containerproductionsc`. Si lo que pides toca prod, lo deja quieto, avisa a Angelo y lo anota aquí.
+
+Tampoco mergea un PR en conflicto, ni uno cuya base no sea `develop`.
 
 ## Para apagarlo
 
