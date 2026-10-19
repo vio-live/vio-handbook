@@ -62,3 +62,21 @@ Cerrados también: vio-analytics #15 (superado) y base-api #43/#44/#45.
   en el dashboard (pedidos por campaña, `buyer_id` en analytics).
 - Seguimientos: `privacyMode` en `/v2/mobile/config` (ahorrar un GET por página); `BAD_USER_INPUT` del gateway sale
   como 500; cronjob `shopcart-reconcile` con pods en `Error` en QA (preexistente); shopcart #73 en conflicto.
+
+## Cierre de sesión (20/10, 00:30 Oslo) — Trello para Alan
+
+Angelo: *«Cierra sesión por hoy… actualízale a Alan el Trello: donde preguntaba por los slots dile que ya está y qué
+hicimos y que pruebe, y déjale nuevas tarjetas con lo que hicimos, revisando todos los flows, estresando, analytics,
+con foco en Vipps con Shopify y Woo, cancelaciones (dinero y estadísticas), dos artículos a la vez»*.
+
+- Respuesta a Alan (como Angelo) en la tarjeta de campañas [ftrrjOW0](https://trello.com/c/ftrrjOW0): slots v2
+  (tipos, pausadas/programadas, título de página), analytics por campaña/slot/producto, dashboard nuevo, orden
+  atribuida; qué probar, en qué entorno, y qué no (Replit sin SDK publicada, prod, comisión). Puntero en la tarjeta de
+  Vipps [W2NNShth](https://trello.com/c/W2NNShth).
+- **Ocho tarjetas nuevas en «To do», asignadas a Alan, con checklist cada una:**
+  [Slots desde cero](https://trello.com/c/bB9s9KiJ) · [Compra atribuida](https://trello.com/c/n7R9WhVh) ·
+  [Vipps cancelar/devolver: dinero y estadísticas](https://trello.com/c/oVs8bl5W) · [Shopify + Vipps](https://trello.com/c/tyByDaBK) ·
+  [Woo + Vipps](https://trello.com/c/n1o9Nx8U) · [Analytics rastrea lo nuevo](https://trello.com/c/GcTFEblE) ·
+  [Dashboard nuevo y permisos](https://trello.com/c/bqtznsKF) · [Estrés y casos raros](https://trello.com/c/OvjCmPs2).
+- Decisión pendiente que las tarjetas van a alimentar con evidencia: **qué hace Analytics con una orden cancelada o
+  devuelta** (hoy no resta el `purchase`; Commerce sí marca la orden). Candidata a ADR cuando Alan traiga los casos.
