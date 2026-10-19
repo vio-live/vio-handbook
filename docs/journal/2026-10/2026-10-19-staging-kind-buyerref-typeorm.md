@@ -83,3 +83,77 @@ distinta de la de prod). La diferencia está en
 [la lección de esta mañana](../../lessons/el-env-del-pod-no-se-llama-igual-en-prod-y-qa.md).
 Ojo igualmente: **base-api en QA usa `.env`, no `.env.local`** — la regla no es "QA siempre
 `.env.local`", es "mirar el contenedor".
+
+---
+
+## Punto 2 cerrado: colector de staging desplegado — miguel
+
+- **Quién:** Miguel. Angelo dio el OK a las 17:33 local; comprobé que los PRs ya estaban en `main`.
+- **Dónde:** VM de Oracle `129.151.196.99`, `/opt/vio-analytics`, unit `vio-analytics.service`.
+  **Producción no se tocó**: sigue en la versión del 16/10.
+- **Cuándo:** 19/10 15:34 UTC.
+
+### Qué se desplegó
+
+`main` @ **`9da8f04`**. Ojo con la numeración del handoff: el **#20 se cerró sin mergear** (apuntaba a
+`fix/stats-recent-received-at`, no a `main`) y su contenido entró como **[#21](https://github.com/vio-live/vio-analytics/pull/21)**,
+mergeado a `main` a las 15:22 UTC. El **#19** entró a las 15:20. O sea que los dos cambios están, pero
+el que hay que citar es el #21, no el #20.
+
+Estado previo: código del 16/10 13:12 UTC (el del #18), 74 h de uptime.
+
+### Comprobación previa al despliegue
+
+Apliqué la [lección de la variable obligatoria](../../lessons/) antes de reiniciar: del esquema Zod de
+`src/config.ts`, **la única variable sin defecto es `CAMPAIGNS_URL`**, y en la VM ya estaba
+(`https://api-staging.vio.live`). `DATABASE_URL` ya no está (bien, sobra desde el #16),
+`INTERNAL_READ_TOKENS` y `API_KEY_CACHE_FILE` presentes. El tarball no lleva `.env` (solo
+`.env.example`), así que no se pisó la config.
+
+### Resultado
+
+Arranque limpio, sin un solo error de `ALTER TABLE`:
+
+```
+[auth] 1 surfaces loaded from /opt/vio-analytics/.keycache.json (stale-if-error only)
+Server listening at http://127.0.0.1:5100
+[sink:mixpanel] enabled
+[clickhouse] schema ready (vio_staging.events @ https://analytics.vio.live)
+```
+
+`/health`: `ready:true`, `uptime_s:13` (prueba del reinicio, no un `ready` heredado),
+`clickhouse.lastError:null`, `auth.lastDirectoryError:null`.
+
+**Esquema de ClickHouse al día.** Comparé las **48 columnas que declara `src/sinks/clickhouse.ts`**
+contra `system.columns` de `vio_staging.events` (53 en total): **no falta ninguna**. Dos aparecían
+como ausentes en mi primer diff (`product_id`, `variant_id`) y era un error de mi extracción: viven
+dentro de `items Nested(...)` y ClickHouse las expone como `items.product_id` / `items.variant_id`.
+Residuo inofensivo: `event_id`, que el `CREATE` ya no declara. 8.385 filas en la tabla.
+
+### Los cuatro curls del handoff, con la key de la surface 3 «Vev» de QA
+
+| Endpoint | | |
+|---|---|---|
+| `/v1/stats/recent?minutes=600&limit=5` | **200** | daba 500; devuelve eventos reales (`purchase`, sdk 0.24.0) |
+| `/v1/stats/campaigns/9/slots?days=1` | **200** | **2** slots `card-…`, no 3 como decía el handoff |
+| `/v1/stats/campaigns/9/products?days=1` | **200** | 2 productos; `408910` con 1 pedido y 179 de revenue |
+| `/v1/stats/campaigns/9/breakdown?by=payment_method&days=1` | **200** | `vipps: 1 compra`, gmv 179 — exacto |
+
+Detalle que confirma que el `404` era de versión y no de permisos: **a las 15:33, un minuto antes de
+mi reinicio, alguien pidió `/v1/stats/campaigns/9/slots` y el log registró
+`Route GET:/v1/stats/campaigns/9/slots not found`**. Después del despliegue, 200.
+
+### Dos cosas coherentes con lo ya sabido, no fallos
+
+- `breakdown` trae **`buyers: 0`**. Es lo esperado: `BUYER_REF_SECRET` está en el blob pero **no en el
+  pod de shopcart**, que sigue con la imagen vieja. Habrá compradores únicos cuando se mergee el PR
+  de shopcart y se reconstruya.
+- Los slots salen con `kind: "vev-card"` aunque `surface_slot.kind` acaba de nacer y está a NULL:
+  es el colector **deduciendo el tipo del prefijo del id**, el comportamiento declarado en la
+  migración de `kind` para lo ya registrado sin tipo.
+
+### Lo que queda
+
+Los cuatro puntos del handoff de staging están cerrados. Producción del colector sigue en la versión
+del 16/10: cuando toque, mismo procedimiento contra `82.70.54.151`, y allí conviene bajar
+`API_KEY_STALE_IF_ERROR_MS` a 6 h (el default de 72 h está pensado para el apagado de QA).
