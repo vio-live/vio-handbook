@@ -455,9 +455,26 @@ envío, envío, ítems (`sku`, `title`, `variantTitle`, `quantity`, `price`), `c
 referencia del pago en la PSP) y `paymentProcessor`. Le faltan el IVA por línea, el total, la
 facturación y reintentos durables: reintenta una vez y se rinde.
 
-**Estado (2026-10-07):** mensaje corto en noruego para el desarrollador de Boots, con el ejemplo:
-"¿se puede importar sin una integración? ¿qué formato les sirve? ¿funciona este, falta algo?".
-Esperando respuesta.
+**Reunión 2026-10-19 (Pearlconvert, la agencia de Magento de Boots).** El desarrollador
+(Artsiom) propuso la vía correcta y más simple que la del PDF de Kustom: Vio manda el `order_id`
+tras autorizar, y un endpoint autenticado en el Magento de Boots lo busca en Kustom, lo valida
+(status, SKUs, totales), crea la orden con los datos de warehouse/Consignor y la **enlaza** al
+pedido de Kustom para que la captura sea nativa; además adapta su observer (hoy aborta las órdenes
+que no vienen de su checkout) y maneja email/Voyado/GA. Acordado:
+
+- **Cuenta: la de Boots, mismo MID** → captura/refund/factura nativas con su integración de
+  Klarna. Nos tienen que dar una API key de ese MID.
+- **Envío:** Boots dijo que lo pueden resolver de su lado (dirección aún no fijada: si nos pasan
+  sus opciones o mapean las nuestras).
+- **SKU:** no se discutió todavía (sigue abierto si su SKU es `g:id` o `g:mpn`), pero dejaron en
+  claro que **el feed de Google Merchant tiene que estar actualizado**, porque validan totales y
+  SKUs y un precio/stock viejo haría fallar la orden *después* de pagar.
+
+**Pendiente:** Pearlconvert manda un **estimado** de su desarrollo. De nuestro lado: reintentos
+durables en `order.paid` (hoy reintenta una sola vez), confirmar el identificador de SKU, y
+mantener el feed de Boots publicado y fresco (atado a la decisión abierta de categorías de sus
+3.821 productos, ver `product-categories.md`). Cancel/refund/email por Magento fue la posición que
+llevó Vio; confirmar que la toman.
 
 ## Pendiente
 - E2E en el playground: tarjeta `4242…`, 3DS `4000002760003184`, cambio de tarifa dentro del
