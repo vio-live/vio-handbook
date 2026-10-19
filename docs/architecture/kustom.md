@@ -476,6 +476,40 @@ mantener el feed de Boots publicado y fresco (atado a la decisión abierta de ca
 3.821 productos, ver `product-categories.md`). Cancel/refund/email por Magento fue la posición que
 llevó Vio; confirmar que la toman.
 
+**Vía elegida tras la reunión (2026-10-19): Kustom le entrega la orden a Boots.** Lo propuso
+Pearlconvert: así entra en el alcance que Boots ya tiene aprobado en Kustom y no hace falta pedir
+permiso a Boots USA. En vez de que Vio empuje el `order_id`:
+
+- Boots registra su endpoint para `order.created` en los **webhooks de cuenta** de su portal de
+  Kustom. Salta para todas las órdenes de la cuenta, incluidas las que crea Vio por la API
+  (verificado el 2026-09-24). Filtran las nuestras por `merchant_data.vio_checkout`.
+- Con el ID del evento leen el pedido de Kustom e importan en Magento **como mejor les funcione**:
+  el email a Pearlconvert deja abierto el cómo (no se les prescribe el enlace `klarna_core_order`
+  ni la verificación de la firma). El objetivo acordado es que captura, devolución y facturación
+  funcionen con su integración de Klarna como hoy.
+- Los **reintentos los da Kustom** (hasta tres días), así que los reintentos durables de nuestro
+  `order.paid` dejan de estar en el camino crítico de Boots.
+- **Vio recibe la orden por su cuenta**, con el push por pedido que fija al crearla; no depende de
+  Boots. **No** pedimos ser segundo destino del webhook: Vio no hace devoluciones (las hace Boots
+  en Magento), así que aceptamos no enterarnos de capturas, devoluciones ni cancelaciones hechas en
+  Magento; nuestra orden queda como pagada.
+- **Nueva API key de Kustom para Vio, bajo el mismo merchant (MID)** que usa su Magento.
+- **Términos:** los suyos ya publicados, `https://www.boots.no/generelle-vilkar` (*Kjøps- og
+  salgsbetingelser*); devoluciones/angrerett en `https://www.boots.no/retur-og-angrerett`. Se carga
+  en `termsUrl` del vendedor Boots. Sin eso, el código pondría los términos del sitio del artículo.
+- **Acknowledge:** Vio ya confirma el pedido en Kustom (un 409 cuenta como hecho); se les avisó
+  para que su importación lo tenga en cuenta.
+- **`merchant_reference1`:** no tiene que llevar `VIO-`. Es `referenceFormat` por vendedor
+  (`{order}`, `{checkout}`), y su sentido es que en el portal y en la liquidación de Boots no
+  parezca uno de sus propios números. Si su importación llama a `updateOrderState()`, Magento la
+  reemplaza por su número de orden. Hoy no se puede dejar de escribirla (formato vacío = referencia
+  vacía); no hace falta.
+
+**Abierto:** envío (un endpoint de tarifas, o Kustom Shipping Assistant si ya lo usan, que lo
+resuelve sin intercambiar listas; `providerShipping` ya existe) y el SKU (`g:id` o `g:mpn`), que
+Angelo pide por separado. Email de seguimiento a Pearlconvert redactado el 2026-10-19 para que
+lo incluyan en el estimado.
+
 ## Pendiente
 - E2E en el playground: tarjeta `4242…`, 3DS `4000002760003184`, cambio de tarifa dentro del
   widget, cambio de carrito con el widget abierto (sync), cierre y reapertura (¿re-inicializar el

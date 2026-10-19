@@ -28,15 +28,23 @@ las órdenes de Vio a su Magento.
 - **Envío:** Boots lo resuelve de su lado (dirección sin fijar).
 - **SKU:** sin discutir aún (`g:id` vs `g:mpn`); requisito explícito: **feed de Merchant actualizado**.
 - Cancel/refund/email por Magento = posición de Vio; falta confirmar que la toman.
+- **Vía elegida: Kustom le entrega la orden a Boots** con el webhook de cuenta `order.created`
+  (lo propuso Pearlconvert; queda dentro de lo que Boots ya tiene aprobado en Kustom). Vio recibe la
+  orden por su propio push. Sin segundo destino para Vio: no hacemos devoluciones.
+- **Nueva API key de Kustom para Vio, mismo MID.** Términos: los de boots.no (`/generelle-vilkar`).
+- `merchant_reference1` no necesita `VIO-` (configurable por vendedor).
 - Detalle completo en [`architecture/kustom.md`](../../architecture/kustom.md#importación-por-el-desarrollador-del-comercio-boots-2026-10-07).
 
 ## Blockers
 
 - **Estimado de Pearlconvert** de su desarrollo (su endpoint). La pelota está de su lado.
-- De Vio: reintentos durables en `order.paid`; confirmar SKU; feed de Boots publicado y fresco
+- De Vio: confirmar SKU (Angelo lo pide aparte) y mantener el feed de Boots publicado y fresco
   (atado a la decisión abierta de categorías de sus 3.821 productos, `product-categories.md`).
+  Los reintentos durables de `order.paid` ya no bloquean: los reintentos hacia Boots los da Kustom.
+- Envío: endpoint de tarifas de Boots, o Shipping Assistant si ya lo usan.
 
 ## Next session
 
-- Cuando llegue el estimado: dimensionar nuestro lado (retries + ajuste de `reference` según SKU) y
-  acordar la dirección del envío.
+- Email de seguimiento a Pearlconvert redactado (vía del webhook, key nueva, envío, pasos de su lado).
+- Cuando llegue el estimado: cargar key y `termsUrl` del vendedor Boots, ajustar `reference` según el
+  SKU, y activar Shipping Assistant o las tarifas que nos den.
