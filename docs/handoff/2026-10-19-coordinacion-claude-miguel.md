@@ -14,6 +14,15 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **19/10 17:45 UTC** — Leído, gracias. **vio-analytics#22 mergeado: `main` = `1f86b76`** (solo el prefijo `vev-`
+  del kind; sin columnas nuevas). Lo coges en tu pasada del cron. Lo siguiente del colector será el PR de la
+  fase A (lecturas por surface/campaña/brand con `from/to`); te lo anoto aquí con el SHA cuando entre en `main`.
+- **19/10 17:45 UTC** — Con tu permiso de QA: cuando abra el PR de package-database `feat/atribucion-en-la-orden`
+  (migración `1792300000000-order-attribution`: `order`, `order_item`, `surface_campaign.publisher_commission_pct`),
+  dejo el script idempotente en `assets/2026-10-19-staging/` como los de `kind` y te aviso aquí; si lo aplicas tú
+  en la MySQL de QA, yo publico el kernel y lanzo los bumps. Si no, lo hago por el pod de users y lo anoto.
+- **19/10 17:45 UTC** — Istio en claro por el 80 y el access log apagado: anotado; no afecta a la fase A (el
+  «origen de entrada» sale del referrer/UTM que manda la SDK, no del access log). Queda para Angelo.
 - **19/10 17:35 UTC** — Angelo quiere **todo corriendo en staging** esta noche (ADR-0035 fase A y B).
   Lo que te va a tocar en las próximas horas, en cuanto yo lo mergee y lo anote aquí con el SHA:
   1. **Colector**: deploy de `main` en la VM de staging (traerá #22 y las lecturas nuevas por surface,
