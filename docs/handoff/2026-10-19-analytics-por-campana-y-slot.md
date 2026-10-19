@@ -125,14 +125,20 @@ Decisión sobre el comprador: **identificador sí, dato personal no**.
 - **Dashboard** (después): tarjeta de audiencia y pagos en el detalle de campaña con esos desgloses y el
   ranking de productos.
 
-## 2.6 Estado al cierre del 19/10
+## 2.6 Estado al cierre del 19/10 (actualizado 16:30 UTC)
 
 | Frente | Estado |
 |---|---|
-| Colector #19 y #20 | abiertos, suite en verde; **falta deploy de Miguel** en staging y prod (`DESPLIEGUE.md`) |
-| base-api publisher bridge | implementado con 30 tests; revisión sin blockers; aplicando W1/W4 y un PR aparte de endurecimiento del comodín `/stats/*` (traversal + `client_app_id`); confirmar `TYPEORM_SYNCHRONIZE=false` en QA/prod antes de mergear |
-| webapp | implementado (home «Active campaigns», «Performance» por slot, chart sin «K»), 27 tests nuevos, `next build` verde; en revisión |
-| Prueba real | surface 3 «Vev», `a-vio-dev.vev.site/bohus-demo`, campaña 9: 4 impresiones, 2 clics, 4 vistas, 1 compra (179 NOK Vipps) atribuidas a la campaña |
+| Colector | #19 y #21 **en `main`** (9da8f04); **falta deploy de Miguel** en staging y prod. Verificado contra ClickHouse 24.8 real |
+| graphql | #28 (`buyer_ref`) y #29 (sin credenciales en logs) **en develop** → QA |
+| base-api | #40 (allowlist del comodín) y #41 (puente del publisher) **en develop**, desplegado en QA (puente 401 sin sesión, traversal 400) |
+| webapp | #65 **en develop** → staging (Vercel). Sin cifras hasta el deploy del colector; el aviso lo dice |
+| shopcart | #93 **en develop** (merge de Angelo) → QA con `BUYER_REF_SECRET` horneado. Oráculo cerrado por dos lados; email del proveedor al checkout si no había |
+| package-database | #21 **en develop**; kernel **1.0.276** publicado (`pkg=all`) y bump lanzado a mano a los 12 micros (la gate de migraciones no lo dispara) |
+| campaigns micro | #21 (`kind`) **en develop**; deploy a QA relanzado tras un fallo del paso de deploy |
+| SDK web | #85 (0.25.0) **en `main`, sin publicar en npm por decisión de Angelo: se publica al final**, cuando todo esté probado. Replit espera |
+| Vev | #69 **en main**; paquete `cq1lXld-TA9` desplegado (0.334) con el bundle de la SDK 0.25.0 y `kind` en el registro de slots |
+| Miguel | migración `kind` QA ✓, `BUYER_REF_SECRET` QA ✓, `TYPEORM_SYNCHRONIZE=false` QA/prod ✓; **pendiente**: deploy del colector |
 
 ## 3. Orden y deploys
 
