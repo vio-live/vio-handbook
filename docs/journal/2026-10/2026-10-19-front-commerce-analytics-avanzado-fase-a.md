@@ -1,6 +1,6 @@
 ---
 date: 2026-10-19
-session: "Front de Commerce: analytics avanzado fase A (ADR-0035) — filtros en la URL, Recharts, home por surface/brand y detalle de campaña"
+session: "Front de Commerce: analytics avanzado fase A (ADR-0035) — filtros en la URL, Recharts, home por surface/brand, detalle de campaña; revisión cruzada y pedidos de fase B"
 participants: [angelo, claude]
 status: live
 ---
@@ -58,6 +58,41 @@ artículos, componentes, productos, pago y pedidos. Mocks para que todo renderic
   verde (20 rutas; `/home` 240 kB first load).
 - `docs/stats-service-contract.md` del repo apunta al contrato nuevo y resume rango, rutas y el 502.
 
+### Revisión cruzada de #67 (misma rama, commit `32ebc43`) — merge con cambios, aplicados
+
+- **B1 conversión**: `aov = gmv / purchases`, `conversion = purchases / impression_sessions` (sesiones
+  CON impresión), como `withRatios` del colector. `shapeKpis` de #23 hoy DESCARTA `impression_sessions`
+  (lo publicará): con una sola fuente vale la `conversion` del colector; al sumar surfaces sin la base
+  queda `null` → "—". Fixtures con las formas reales en `test/fixtures/collector.js`.
+- **B3 CSV**: `toCsv` y `ordersToCsv` anteponen `'` a las celdas que empiezan por `= + - @ TAB CR`.
+- W2 "24h" = día natural de hoy en UTC → "Today" / "today (UTC)" (`rangeIn`/`rangeFor` para frases);
+  W3 tiles "—" con todas las lecturas caídas; W4 un punto se pinta; W5 ids 1..4294967295; **W6 la query
+  se escribe con `Router.replace(..., { shallow: true, scroll: false })`** (Back conserva los filtros;
+  sin router montado cae a `replaceState`); W7 enlace solo con id numérico; W8 rótulos de alcance de la
+  brand y nota de sobreconteo; W9 `limit` en products (8 / 20) y la miniatura solo cachea `null` con
+  403/404. Nits: breakdown sin `units` y `"(unknown)"`, `product_id` string, aviso del 502 sin duplicar,
+  picker de surfaces con todas las propias, fuera `useStatsCampaigns`/`useStatsTopProducts`/
+  `fromBrandCampaignStats`, "vs 4 Oct 2026 – 10 Oct 2026" para el delta de un rango a medida, horas UTC.
+
+### Fase B — la lista de pedidos real (misma rama, segundo encargo del coordinador)
+
+- `src/lib/orders.js`: `buildOrdersKey` manda `surface_id`, `campaign_id`, `campaign_status=active|past`
+  cuando están (ids 1..2^31−1, estados conocidos; lo demás no viaja: el micro responde 400);
+  `attributionFilters`, `entryLabel` (`direct` → Direct), `campaignNameOf`, `orderArticleHref` (solo
+  http(s)); `ordersToCsv` suma surface/campaña/artículo/origen y **nunca `buyerRef`**.
+- `src/lib/filters.js`: `?campaign_status=active|past` y `rangeBounds` (el rango de la barra como
+  dateFrom/dateTo UTC).
+- `/orders`: `OrdersScopeFilters` (surface para el publisher, campaña filtrada por surface, Any|Active|Past
+  con la ayuda "A paused or scheduled campaign is neither active nor past"), chips verdes de atribución,
+  columnas Campaign / Article (enlazado solo con http(s)) / Came from. Reutiliza `useAnalyticsScope`.
+- Detalle de campaña › **Orders** = `views/campaign-detail/orders.jsx` con `GET /users/me/orders?
+  campaign_id=<id>&dateFrom&dateTo` y filtro adicional en cliente por `campaignId` (mientras el puente no
+  reenvíe los params llega la ventana entera). Enlace a `/orders/:id` si la cuenta ve Orders. **Se retiró
+  la lectura `orders` de analytics** (hook, normalizador, mock) que dependía del token interno.
+- Tests nuevos: `test/orders/orders-attribution.test.js`, `test/orders/orders-scope-filters.test.jsx`,
+  `test/campaigns/campaign-orders-card.test.jsx`; las suites que montan `CampaignDetail` mockean además
+  `useOrdersWindow`.
+
 ## Decisions
 
 - **Rango en la query**: `range=` para presets y `from/to` para a medida, en todas las rutas; nunca
@@ -70,8 +105,15 @@ artículos, componentes, productos, pago y pedidos. Mocks para que todo renderic
 - **Formas sin escribir** (`funnel`, `breakdown`, `products` por campaña): normalizadores tolerantes en
   vez de inventar una forma; marcado en el PR para verificar contra staging.
 - `Performance` se **funde** en `Components` (sin duplicar); el archivo y el test cambian de nombre.
+- **Pedidos del detalle de campaña desde Commerce, no desde analytics** (fase B): la atribución vive en
+  la orden; la pestaña filtra además en cliente por `campaignId` hasta que el puente reenvíe los params.
+- `impression_sessions` ausente ⇒ conversión "—" al sumar surfaces: no se inventa `purchases / sessions`.
 
 ## Blockers
+
+- **Condición de despliegue** (la anota el coordinador): colector #23 antes que webapp #67; orders #27 y el
+  reenvío del puente antes de que los filtros de atribución de `/orders` tengan efecto (hasta entonces
+  la lista llega sin filtrar; la pestaña del detalle sí filtra en cliente).
 
 - Nada verificado contra staging: el puente nuevo y el colector no están; en local todo va con mocks.
 - Miniaturas para el publisher: si base-api responde 403 a `/products/:id` de un producto de la brand,
