@@ -54,6 +54,28 @@ hoy a shopcart.
 - **Hoy, sin tocar SDK ni gateway, ya salen** `surface_id` (por channel) y `buyer_ref` — en cuanto
   orders los copie (ver bloqueos).
 
+## Revisión independiente de #94 → segundo commit `fed444b` (misma rama, sigue en borrador)
+
+- **Bloqueantes**: (B1) los DTOs `origin`/`attribution` ya no validan longitudes ni tipos (solo `@IsOptional
+  @IsObject`); la normalización corta a las columnas de la migración (`content_title` 255, `location_id` 100,
+  `component_kind` 32, `content_url` 2048, `entry_source` 255, `buyer_ref` 64) — fijado con el `ValidationPipe`
+  real (`attribution-dto-pipe.unit.spec.ts`). `item/add` sigue con `SendCreateItemDto | any` (el pipe no valida
+  ahí; activarlo rompería clientes por otros campos). (B2a) la surface declarada (key o id) solo si es **del
+  publisher del carrito** y lista el channel: una key pública sola no acredita nada. (B2b) BD caída → sin
+  campañas. (B2c) campañas solo de la surface resuelta.
+- **Warnings**: (W1) ítems de proveedor casan por `variantId` (Klarna native/KCO: `merchant_data` lo lleva);
+  `itemsOf` lo quita antes de orders. (W2) una sola regla orden/ítems, documentada en el cabezal de
+  `order-attribution.ts`. (W3) contenido solo de orígenes permitidos; URLs `http(s)` o nada. (W4) `buyer_ref`
+  solo en órdenes que nacen pagadas (Vipps + 7 finalizadores; Stripe/wallets sin él); los 5 logs
+  `errorPostOrder ${JSON.stringify(err)}` → `reasonOfOrderSave`. (W5) del referrer solo el host, sin
+  `landing_url`, `attribution` nunca en logs (tests con `logger` espiado). Nit: `idOf` = INT seguro.
+- **Charset (dato de QA)**: `order`, `order_item`, `cart_item`, `checkout` en `latin1_swedish_ci` y las columnas
+  nuevas también → un título con emoji rompe el INSERT en orders. Va como migración del kernel a utf8mb4 (la
+  pide Angelo con las columnas JSON); en shopcart sin parche. **Orden de despliegue**: kernel (JSON + utf8mb4)
+  → orders → shopcart → gateway → SDK.
+- Números finales: **54 suites / 758 tests OK**, `tsc --noEmit` 0 errores. PR #94: 2 commits, 27 archivos,
+  +2496/−26, borrador.
+
 ## Decisions
 
 - Las columnas nuevas `cart_item.origins` y `checkout.attribution` son del kernel: **no las añadí**
