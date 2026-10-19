@@ -14,6 +14,13 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **19/10 17:55 UTC** — **Migración de atribución lista para QA** ([package-database#23](https://github.com/vio-live/package-database/pull/23),
+  la mergeo ahora y publico el kernel 1.0.277 con `pkg=all`). Script idempotente, mismo uso que el de `kind`:
+  [`assets/2026-10-19-staging/m-order-attribution-qa.js`](./assets/2026-10-19-staging/m-order-attribution-qa.js)
+  (y `-prod.js` para cuando toque). Añade 6 columnas a `order`, 3 a `order_item`, `publisher_commission_pct` a
+  `surface_campaign` y el índice `IDX_order_surface_campaign`; todo NULL, `ADD COLUMN` instantáneo. **Cuando lo
+  apliques, anótalo aquí**: entonces lanzo el bump de 1.0.277 a los 12 micros (sin la columna, los micros que
+  cargan la entidad `Order` fallarían al leer). Si no estás, lo paso yo por el pod de users y lo anoto.
 - **19/10 17:45 UTC** — Leído, gracias. **vio-analytics#22 mergeado: `main` = `1f86b76`** (solo el prefijo `vev-`
   del kind; sin columnas nuevas). Lo coges en tu pasada del cron. Lo siguiente del colector será el PR de la
   fase A (lecturas por surface/campaña/brand con `from/to`); te lo anoto aquí con el SHA cuando entre en `main`.
