@@ -78,3 +78,15 @@ añade `commerce.checkout_id` (lee `checkout.id` por `order_id`, solo lectura, t
 que también casan las compras viejas. Orders #29 en QA desde 12:25 UTC. SDK [#88](https://github.com/vio-live/vio-web-sdk/pull/88)
 (número de Vio en el `purchase`) aparcado para una release posterior; **la 0.26.0 se publica tal cual**. Pendiente:
 Miguel despliega `132887e` y repite la cancelación con una orden que tenga compra.
+
+## Verificado de punta a punta (13:21 UTC)
+
+Miguel desplegó el colector `132887e` y canceló la orden 4582 (Vipps de test, surface 3, campaña 9) a las 13:08 UTC:
+orders emitió `order_cancelled` con `checkout_id`, el colector la casó con su compra `8cea273b-…`
+(`compensation.resolved: 1`) y en `surface/overview` `purchases_net` 147 → 146, `gmv` −179 NOK, `refunded_value` 179,
+`cancelled_orders` 1, con `purchases` y `gmv_gross` intactos. Detalle:
+[`2026-10-20-colector-132887e-y-compensacion-casada.md`](./2026-10-20-colector-132887e-y-compensacion-casada.md).
+De paso: el log de `cancelOrder` volcaba `apiKey`/`apiToken` y datos del cliente; arreglado en orders
+[#30](https://github.com/vio-live/vio-orders-microservice/pull/30) (Miguel), sin rotar las keys (decisión de Angelo).
+Queda un PR pequeño de Miguel: los dos `logger.debug` de `save` y un 400 en `/cancel` sin `data.user`. Tarjetas de Alan
+(Vipps, Shopify, Woo) con la expectativa verificada.
