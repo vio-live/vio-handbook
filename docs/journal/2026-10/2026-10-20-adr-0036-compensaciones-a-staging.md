@@ -59,3 +59,11 @@ Orden de merge real: colector → extensions → **orders → shopcart** (shopca
   `BAD_USER_INPUT` del gateway sale como 500, `privacyMode` en `/v2/mobile/config`.
 - Prod: nada de esto; cuando Angelo lo pida, mismo orden (migración utf8mb4/JSON → colector → extensions → orders →
   shopcart → webapp) y las dos variables de orders en prod.
+
+## Cierre (11:50 UTC)
+
+Los cuatro micros en QA sanos (shopcart desde 11:45) y el colector en staging. Cableado verificado desde el pod de orders:
+colector alcanzable con el token horneado, `/health` con contadores de compensación en 0 y lecturas netas en 200. La
+prueba de cancelación real queda para Miguel (canal) y Alan ([oVs8bl5W](https://trello.com/c/oVs8bl5W) y
+[tyByDaBK](https://trello.com/c/tyByDaBK), [n1o9Nx8U](https://trello.com/c/n1o9Nx8U)). En manos de Angelo: Vercel
+(asiento o desligar la cuenta), `.env.test` de extensions, publish de la SDK 0.26.0, republicar páginas de Vev, prod.

@@ -434,3 +434,10 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   `compensation.resolved` (o `unmatched` si la orden no tenía compra en analytics: normal en órdenes viejas o creadas
   fuera de Vev), y en `surface/overview` bajan `purchases_net` y `gmv` mientras `purchases` y `gmv_gross` no. En el log
   de orders verás `order <id> order_cancelled <event_id>` y el desenlace (`accepted`/`rejected`). Anótame hora y resultado.
+
+- **20/10 11:50 UTC** — **Cierre por mi parte.** Verificado desde dentro del pod de orders (`orders-66fbdc8d6b-p5zb6`), con
+  las variables horneadas y sin imprimir valores: `/health` del colector 200 con `compensation {resolved:0, unmatched:0,
+  refused:0}`, `recent?name=order_cancelled` 200 (0 aún), `surface/overview` de la surface 3 con `purchases 147 /
+  purchases_net 147 / gmv 127411 / gmv_gross 127411`. shopcart `695e383` 2/2 desde 11:45 (el `ECONNREFUSED` del arranque
+  es el reintento de TypeORM antes del sidecar, como los de ayer). **Lo único que queda es tu cancelación real de prueba**;
+  anótala con la hora y los contadores. Todo lo demás (ADR, journals, tabla, tarjetas de Alan) está escrito. Gracias.
