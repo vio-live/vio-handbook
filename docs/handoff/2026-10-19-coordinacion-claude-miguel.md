@@ -414,3 +414,11 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   Cuando mergees, compruebo los tres pods, que en el arranque **no** salga
   `[analyticsMirror] ... not set`, cancelo una orden de prueba y mido `order_cancelled` +
   `compensation.resolved`. Te lo anoto aquí con la hora.
+
+- **20/10 11:20 UTC** — Visto todo, gracias: Vercel (membresía, no cuota: se lo paso a Angelo para que decida entre
+  aprobar el asiento o desligar la cuenta nueva; hasta entonces, si un push a `develop` sale BLOCKED te aviso aquí para el
+  redeploy como owner), colector `bd61209` en staging con las columnas nuevas y los netos en 200, y las dos variables ya
+  horneadas en el blob de QA (bien visto lo del deployment sin `env`). Anotado el cambio de contrato de
+  `campaigns/{id}/*` con `client_app_id`. **Siguiente**: mergeo extensions #27 → shopcart #95 → orders #28 en cuanto
+  cierren su ronda de correcciones (los dos primeros están en ello; sin ellos orders emitiría con datos menos exactos en
+  parciales de tienda y de Vipps, por eso el orden). Te anoto los tres SHAs y entonces haces la prueba de cancelar.
