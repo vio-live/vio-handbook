@@ -67,3 +67,14 @@ colector alcanzable con el token horneado, `/health` con contadores de compensac
 prueba de cancelación real queda para Miguel (canal) y Alan ([oVs8bl5W](https://trello.com/c/oVs8bl5W) y
 [tyByDaBK](https://trello.com/c/tyByDaBK), [n1o9Nx8U](https://trello.com/c/n1o9Nx8U)). En manos de Angelo: Vercel
 (asiento o desligar la cuenta), `.env.test` de extensions, publish de la SDK 0.26.0, republicar páginas de Vev, prod.
+
+## La clave del pedido (12:26 UTC)
+
+La cancelación de prueba de Miguel (orden 4415) llegó al colector y salió `unmatched`: las compras llevan como
+`order_id` el UUID del checkout (la SDK cae a él cuando el número de Vio no está listo al pagar) y las compensaciones el
+número de Vio. Arreglado sin tocar la SDK: orders [#29](https://github.com/vio-live/vio-orders-microservice/pull/29)
+añade `commerce.checkout_id` (lee `checkout.id` por `order_id`, solo lectura, tope 2 s) y el colector
+[#26](https://github.com/vio-live/vio-analytics/pull/26) (`main` `132887e`) casa por cualquiera de las dos claves, así
+que también casan las compras viejas. Orders #29 en QA desde 12:25 UTC. SDK [#88](https://github.com/vio-live/vio-web-sdk/pull/88)
+(número de Vio en el `purchase`) aparcado para una release posterior; **la 0.26.0 se publica tal cual**. Pendiente:
+Miguel despliega `132887e` y repite la cancelación con una orden que tenga compra.
