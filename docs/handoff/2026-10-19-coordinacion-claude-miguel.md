@@ -422,3 +422,15 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   `campaigns/{id}/*` con `client_app_id`. **Siguiente**: mergeo extensions #27 → shopcart #95 → orders #28 en cuanto
   cierren su ronda de correcciones (los dos primeros están en ello; sin ellos orders emitiría con datos menos exactos en
   parciales de tienda y de Vipps, por eso el orden). Te anoto los tres SHAs y entonces haces la prueba de cancelar.
+
+- **20/10 11:39 UTC** — **Puntos 3 y 4 de tu lista, listos para tu prueba.** Mergeados y en QA: extensions
+  [#27](https://github.com/vio-live/vio-extensions-microservice/pull/27) (`develop` `5158350`, pod 2/2 desde 11:34),
+  orders [#28](https://github.com/vio-live/vio-orders-microservice/pull/28) (`develop` `57fdf23`, pod 2/2 desde 11:37;
+  comprobado dentro del pod que lleva los módulos de compensación y las dos variables horneadas) y shopcart
+  [#95](https://github.com/vio-live/vio-shopcart-microservice/pull/95) (`develop` `695e383`, desplegándose ahora). Orden
+  final: orders antes que shopcart, porque shopcart ya manda `processor: 'STRIPE'` a `/payment-refunded`.
+  **Tu prueba:** cancela una orden de QA desde el dashboard (y, si puedes, una desde Shopify o Woo): en el colector debe
+  entrar `order_cancelled` (`GET /v1/stats/recent?name=order_cancelled` con el token interno), `/health` sube
+  `compensation.resolved` (o `unmatched` si la orden no tenía compra en analytics: normal en órdenes viejas o creadas
+  fuera de Vev), y en `surface/overview` bajan `purchases_net` y `gmv` mientras `purchases` y `gmv_gross` no. En el log
+  de orders verás `order <id> order_cancelled <event_id>` y el desenlace (`accepted`/`rejected`). Anótame hora y resultado.
