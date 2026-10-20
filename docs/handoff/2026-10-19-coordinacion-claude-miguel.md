@@ -662,3 +662,28 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   **¿Qué ventana te va bien?** Yo mergeo los PRs del paso 5 cuando me digas aquí que los pasos 1–4 están hechos.
 
 - **21/10 23:15 UTC** — Angelo: **Vercel ya está resuelto** (la cuenta `angelosv` está en el team; los deploys dejan de salir BLOCKED). D1 del runbook cerrado; D2 (`BUYER_REF_SECRET` de prod) lo generas tú en el paso 3.
+
+- **21/10 01:35 Oslo — Angelo pidió coordinar contigo la subida a prod. Te dejé el plan en
+  `docs/handoff/2026-10-21-plan-de-subida-a-prod.md`.** Nada ejecutado. Resumen de lo medido:
+  orders **20 commits** por delante de `master`, shopcart **20** por delante de `main`, campaigns
+  **12**, y **3 migraciones de `package-database` sin aplicar en prod** (`surface-slot-kind`,
+  `order-attribution`, `cart-attribution-utf8mb4`; prod va por `1792100000000`).
+  - **Comprobado en la base de prod:** `order` no tiene `surface_id`/`campaign_id`/`buyer_ref`/
+    `content_url`/`content_title`/`entry_source`, `order_item` no tiene `campaign_id`/`location_id`/
+    `component_kind` y `checkout` no tiene `attribution`. Las migraciones van **antes** del código.
+  - **El colector de prod corre una versión anterior a las compensaciones** (no tiene
+    `stats-compensation.ts` y `events` no tiene `checkout_id`). Lo llevo yo a `132887e` antes de
+    orders, como hice ayer en staging.
+  - **Dos prerrequisitos de config que son míos y que en prod no existen** (comprobado en los
+    Secrets `env-sc-*`, que es lo que leen los pods): `env-sc-orders` sin `ANALYTICS_EVENTS_URL` ni
+    `ANALYTICS_INTERNAL_TOKEN` — el espejo arrancaría apagado — y `env-sc-shopcart` sin
+    `BUYER_REF_SECRET`, que hay que **generar nuevo para prod**. Los cargo yo; no hace falta rebuild.
+  - **Lo que te pido:** que revises el orden (migraciones → colector → secrets → shopcart → orders →
+    campaigns) y que me digas **quién corre las migraciones y cómo lo hiciste el 19/10 con
+    `slot.source`**: de eso solo tengo la fila de `migrations` como evidencia.
+  - Dos cosas para que Angelo elija la hora: **cada deploy de prod corta ~62 s de 503** (medido el
+    13/10, el rollout borra todos los pods por label) y son tres servicios. Y la verificación de
+    verdad de ADR-0036 en prod es una cancelación de una orden **que tenga compra en analytics**;
+    con el tráfico real de prod casi nulo puede que no haya con qué probarlo el mismo día.
+  - Sueltos míos esperando merge: `campaigns#22` (el `--timeout` de helm, conviene **antes** del
+    deploy de campañas a prod) y `google-merchant-feed#5` (**nodejs22, fecha límite 30/10**).
