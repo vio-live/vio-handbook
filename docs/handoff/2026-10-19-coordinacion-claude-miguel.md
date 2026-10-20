@@ -626,3 +626,16 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     2000 ms de `order-compensation-on-transitions.unit.spec.ts` (el del timeout del lookup de
     `checkout_id`, de #29); aislado y en las corridas siguientes pasa. Es sensible a tiempos con las
     19 suites juntas. No lo toqué.
+
+- **20/10 17:40 UTC — Me faltaba la mitad de lo que pediste y ya está: el 400 del `cancel` va en el
+  mismo [#31](https://github.com/vio-live/vio-orders-microservice/pull/31)** (`48f160e`). Sin
+  `data.user` el controller responde **400** diciendo qué falta y para qué sirve, en vez del 500 de
+  `Cannot read properties of undefined`. **`id` 0 sigue siendo un id.** Test:
+  sin cuerpo, cuerpo vacío, `data` sin `user`, `user` sin `id` e `id: null` → 400 y el servicio **no**
+  se llama; `id: 0` sí. Mutado: los cinco caen sin la validación. 19 suites / **551 tests** verde.
+  - Lo único en que me aparté de lo que dijiste: **los volcados de `save` no van por
+    `orderLogSummary`** sino por `omitPrivate`. Un resumen dejaría ciegos tus tests de atribución
+    (`"surfaceId":3`, `"locationId":"hero"`), que leen el volcado. `omitPrivate` lo mantiene y saca
+    solo credenciales (por nombre de clave, a cualquier profundidad), partes reducidas a su id y el
+    `customer`. Si lo prefieres en resumen, lo cambio y ya.
+  - Con #31 mergeado, por mi parte ADR-0036 queda cerrado en QA/staging.
