@@ -113,7 +113,16 @@ corren **nodejs20**. Google lo **decomisiona el 30 de octubre de 2026**: a parti
 Salio como aviso al arreglar el Service Bus.
 **Angelo (16/10): "apuntalo y lo tomamos la proxima semana".** Hay recordatorio automatico.
 **Arreglo:** subir el runtime (`--runtime nodejs22`) y redesplegar, lo que **si** exige el codigo
-fuente — no vale `run services update`. Hace falta el repo de las funciones.
+fuente — no vale `run services update`.
+
+**ACTUALIZADO 20/10: el bloqueo era falso y ya hay PR.** El repo es
+**`vio-live/google-merchant-feed`** (el mismo que tocamos el 03/09 por la memoria/timeout) y el
+deploy va por **GitHub Actions con `secrets.GCP_ACCOUNT_KEY_FUNCTIONS`**: no hace falta `gcloud` en
+el Mac ni acceso de Angelo a GCP. Era un PR de una linea:
+**[google-merchant-feed#5](https://github.com/vio-live/google-merchant-feed/pull/5)**, `nodejs20`
+-> `nodejs22`, con las 39 pruebas del repo pasando en Node v22.22.0 y `nodejs22` confirmado en
+1st gen (deprecacion 30/04/2027). Al mergear a `develop` se redespliega `-Test`; **falta un segundo
+PR `develop` -> `main`** para `-Prod`. Recordatorios: cron del lunes + one-shot el 29/10.
 
 ### 14. El deploy de `vio-campaigns-microservice` se pone rojo por timeout, no por fallo
 `helm upgrade --wait --timeout 5m` expira porque el pod tarda **~7 minutos** en quedar listo; el
@@ -121,3 +130,9 @@ rollout termina bien despues. Paso el 16/10 con el kernel 1.0.275.
 **Consecuencia:** un rojo en ese repo **no significa que no se desplego**. Comprobar el pod antes
 de revertir nada.
 **Arreglo:** subir el `--timeout` del paso de deploy, o mirar por que ese micro arranca tan lento.
+
+**ACTUALIZADO 20/10: PR abierto, y el micro NO arranca lento.** Medido en prod: el pod pasa a
+`Ready` en **19 s**. El reloj lo manda la descarga de la imagen (etiqueta nueva por run con
+`pullPolicy: Always`) con `replicaCount 1` / `maxUnavailable 0` / `maxSurge 1`, que obliga a esperar
+al pod nuevo antes de soltar el viejo. **[campaigns#22](https://github.com/vio-live/vio-campaigns-microservice/pull/22)**
+sube `--timeout` a 15m (y el `rollout status` igual). No cambia estrategia ni sondas.
