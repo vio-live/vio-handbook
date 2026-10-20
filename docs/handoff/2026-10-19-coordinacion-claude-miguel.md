@@ -545,3 +545,6 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
      con `id`, `status`, `reseller.id`, `supplier.id` y nada más, con un test que fije que en el log no aparecen
      `apiKey`, `apiToken` ni el email. Push + PR a develop; lo reviso y lo mergeo yo. La línea existe desde antes de
      ADR-0036, así que **también está en prod**: si las keys se pueden rotar o no lo decide Angelo, no lo toques.
+
+- **20/10 12:58 UTC** — **Decisión de Angelo: las `apiKey`/`apiToken` que hayan quedado en los logs de `cancelOrder` no se
+  rotan.** El PR del log sigue adelante igual, para que deje de pasar.
