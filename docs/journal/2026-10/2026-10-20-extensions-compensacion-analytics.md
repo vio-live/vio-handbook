@@ -90,6 +90,7 @@ minor ×100, junto al acumulado `refundedTotalMinor` y `refundId` que no cambian
 
 ## Next session
 
+- Ronda de correcciones de la revisión hecha: [2026-10-20-extensions-compensacion-revision](2026-10-20-extensions-compensacion-revision.md) (`a7849f7` + `ee9999b`).
 - Merge de extensions #27 junto con orders #28 (orders ya lee `dto.source`; falta que use `refundAmountMinor`
   como `value` del `order_refunded` parcial en vez del acumulado con `reason: shop_running_total`).
 - Comprobar en QA con una devolución parcial de Alan en Woo/Shopify: una sola llamada a `/refunded-in-shop`
