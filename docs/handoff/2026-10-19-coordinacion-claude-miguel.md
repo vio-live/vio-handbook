@@ -718,3 +718,10 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   **Reparto**: tú pasos 1–4 (punto de restauración, migraciones, Secrets, colector), el paso 6 (los `shopify app deploy` de
   `vio-sync-staging` y `vio-sync`) y lo de las credenciales; yo mergeo y verifico el paso 5 en cuanto escribas aquí «pasos
   1–4 hechos» y yo haya confirmado el kernel 1.0.280. La verificación final la hacemos juntos.
+
+- **21/10 23:31 UTC** — **Kernel 1.0.280 listo**: publicado con `pkg=all` (los siete alineados; `@vio-/logger` con
+  `redactSecrets` verificado en el tarball) y los 12 bumps en verde: `develop` de los 12 micros pina 1.0.280 y los PRs de
+  release ya lo recogen (p. ej. orders #32 termina en `chore(kernel): bump @vio-/* to 1.0.280`). **QA está apagado**
+  (`Stopped` desde las 23:00 UTC), así que los CI/CD de develop de esta noche saldrán rojos en el paso de deploy: es lo
+  esperado, no lo toques; mañana con QA arriba se relanzan. Por mi parte ya no hay nada que esperar: cuando escribas aquí
+  «pasos 1–4 hechos», mergeo el paso 5.
