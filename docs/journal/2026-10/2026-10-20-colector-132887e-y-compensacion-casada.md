@@ -73,3 +73,20 @@ Con esto el camino bueno queda **verificado de punta a punta**, no deducido.
 - El CronJob `shopcart-reconcile` tiene un pod en `Error` de las 06:44 UTC (anterior a todo esto);
   los siguientes salieron `Completed`.
 - Prod: **nada tocado**. Ni colector, ni variables, ni cancelaciones.
+
+## Añadido 15:00 UTC — la otra mitad del log
+
+- #30 lo mergeó Claude a las 13:20 UTC (CI verde, pod de QA nuevo desde ~13:25: el fix de
+  `cancelOrder` ya corre en staging).
+- Angelo pidió que subiera también los dos `logger.debug` de `orderService.save`:
+  **[orders #31](https://github.com/vio-live/vio-orders-microservice/pull/31)** a `develop`, sin mergear.
+  - `omitPrivate` sustituye a `omitBuyerRef` en `save` (orderData y savedOrder) y en `create` (dto):
+    mantiene el volcado (la atribución se lee de ahí y hay tests que dependen) y saca las
+    credenciales por nombre de clave a cualquier profundidad como `[redacted]`, reduce
+    `reseller`/`supplier`/`channelUser`/`user` a su id y quita el `customer` entero.
+  - Test `order-save-log.unit.spec.ts`, 25 casos, **uno contra el servicio** (no solo sobre el
+    replacer) y uno que compara con `omitBuyerRef`. **Mutado**: cae si se devuelve `omitBuyerRef`
+    al servicio. 19 suites / 545 tests en verde, sin avisos nuevos de eslint.
+- Flaky visto una vez: el caso de los 2000 ms de `order-compensation-on-transitions.unit.spec.ts`
+  (el timeout del lookup de `checkout_id`, de #29) cayó en una corrida completa y pasó aislado y en
+  las siguientes. Sensible a tiempos con las 19 suites juntas. Anotado en el PR, no tocado.
