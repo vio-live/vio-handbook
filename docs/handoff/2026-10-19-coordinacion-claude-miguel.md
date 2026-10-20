@@ -355,3 +355,62 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   probado con filas de la forma vieja); `/health` trae `compensation: { resolved, unmatched, refused }`; el overview trae
   `gmv_gross`, `refunded_value`, `cancelled_orders`, `purchases_net`. Sin variables nuevas. Los puntos 3 y 4 (merges de
   extensions/shopcart/orders y las variables de orders) todavía no: te aviso aquí.
+
+- **20/10 11:08 UTC — Punto 1 (Vercel) RESUELTO, y no es cuota: es membresía del team.**
+  Staging ya sirve `62583c4` (#68, dinero neto) en `dashboard-staging.ecom.vio.live` → 200.
+  Redesplegado como owner (`dpl_C5zruuCSS37A1CutGzPa9DVsm6Rq`, READY 11:08 UTC, alias asignado).
+  **Causa real:** hoy a las 10:15 UTC se creó una cuenta de Vercel `angelosv`
+  (`angelo.sv@iqplus.no`, ligada al login de GitHub `angelosv`) y pidió acceso al team
+  `tipio-2` (`joinedFrom.origin: nsnb-request-access`). Sigue **sin confirmar**. En plan Pro,
+  Vercel exige que **el autor del commit sea miembro del team**; desde que existe esa cuenta,
+  todo push cuyo autor de GitHub sea `angelosv` se resuelve a ese usuario no confirmado y el
+  deploy sale **BLOCKED** (`errorLink` → troubleshoot-project-collaboration#team-configuration).
+  Antes de las 10:15 el mismo login desplegaba bien porque no había cuenta que resolver.
+  Los 5 deploys bloqueados de hoy (10:15, 10:24, 10:49, 10:51, 10:53) son todos eso.
+  Descartado con datos: team `pro` `status: active`, `blocked: null`, `softBlock: null`, sin
+  spend limit tocado; no es build (el mío compiló en 1,5 min).
+  **Para Angelo, decisión suya (lo anoto, no lo toco):** o *aprobar* al miembro `angelosv` en
+  Vercel → Tipio 2 → Members (**ojo: en Pro cada miembro confirmado es un asiento de ~20 USD/mes**),
+  o borrar/desligar esa cuenta nueva y seguir comiteando con la identidad de siempre
+  (`31110038+angelosv@users.noreply.github.com`, que es la que funcionaba). **Mientras no se
+  decida, cada push a `develop` seguirá saliendo BLOCKED** y hay que desbloquearlo a mano con un
+  redeploy como owner — yo puedo hacerlo cuando avises, no es automático.
+
+- **20/10 11:11 UTC — Punto 2 (colector #25) DESPLEGADO en la VM de staging y verificado.**
+  No había cron que lo hiciera (el bucle de 15 min ya no existe), así que lo desplegué yo en
+  cuanto vi `#25` mergeado: `main` = **`bd61209`**, arrancado 11:10:07 UTC.
+  - `[clickhouse] schema ready (vio_staging.events)` **sin un solo error de `ALTER`**, y las dos
+    columnas nuevas están en la tabla: `items.campaign_id Array(UInt32)` e
+    `items.location_id Array(String)`, las dos con `DEFAULT arrayResize(...)` (las filas viejas
+    no se rompen).
+  - `/health` trae el bloque **`compensation: { resolved: 0, unmatched: 0, refused: 0 }`**.
+  - `surface/overview?client_app_id=3` → **200** con los campos netos:
+    `gmv 127411`, `gmv_gross 127411`, `refunded_value 0`, `cancelled_orders 0`,
+    `purchases 147`, `purchases_net 147`. Coherente: todavía no hay compensaciones.
+  - Pasé **las 12 lecturas** otra vez (surface × 7, campaña × 4, `campaigns/summary`) → **200 las 12**.
+  - **Un cambio de contrato que te aviso:** ahora `campaigns/{id}/*` **también exige
+    `?client_app_id=`** (ayer no); sin él responde `400 {"error":"internal reads must set
+    ?client_app_id= (UInt32)"}`. Comprobado que **base-api no se rompe**: `statsService.ts:459`
+    añade `client_app_id` en los dos caminos (surface y campaña).
+  - Sigue `buyers: 0`, como dijiste: falta la primera orden nueva con shopcart #94.
+  - Fallo mío, por si lo ves raro en el journal: el tarball que armé en macOS llevaba uid 501 y
+    modos 700/600, y al extraerlo dejó `/opt/vio-analytics` ilegible para `ubuntu` un minuto.
+    Corregido (dueño `ubuntu`, dirs 755, ficheros 644, `.env*` 600) antes de construir. El
+    servicio nunca estuvo caído por eso.
+
+- **20/10 11:13 UTC — Punto 4 adelantado donde no hace daño: las dos variables ya están en el
+  blob de QA.** En QA el deployment `orders` **no tiene `env` ni `envFrom`**: todo sale del
+  `.env.local` que el Dockerfile hornea desde `containerqasc/env-file-microservices`. O sea que
+  ponerlas a mano en el deployment sería un `kubectl patch` que luego rompe el `helm upgrade`.
+  Así que las cargué en el blob (respaldo `.env.local.backup-pre-analytics-mirror-20261020-111247`,
+  15762 → 16267 bytes, verificado releyendo el blob con `cmp`):
+  - `ANALYTICS_EVENTS_URL=https://events-staging.vio.live` (sin path; el micro le añade
+    `/v1/events`, confirmado en el diff de #28)
+  - `ANALYTICS_INTERNAL_TOKEN` = el `INTERNAL_EVENTS_TOKEN` **full** del colector de staging
+    (64 hex, el de escritura; **no** el de lectura de base-api)
+  **Con esto, al mergear orders #28 su propio build las hornea y no hace falta reiniciar nada a
+  mano.** Ya comprobé la salida de red: desde el pod de orders de QA,
+  `https://events-staging.vio.live/health` → **200** (el sidecar de Istio no estorba).
+  Cuando mergees, compruebo los tres pods, que en el arranque **no** salga
+  `[analyticsMirror] ... not set`, cancelo una orden de prueba y mido `order_cancelled` +
+  `compensation.resolved`. Te lo anoto aquí con la hora.
