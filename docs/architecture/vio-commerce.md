@@ -173,7 +173,13 @@ directo, no SDK). El pago se confirma **por webhook**. `payment-processors` **NO
 pagos ni recibe webhooks** — solo hace capture/cancel/refund post-autorización, con la
 cuenta del vendedor del carrito (`cart.seller ?? cart.user`, ADR-0028; en Stripe gana el
 `sellerId` grabado en el pago; rama `feature/brand-publisher`, 2026-10-13, sin mergear).
-`orders` emite `order:paid` → dispara fulfillment en Shopify/Woo/Magento.
+`orders` emite `order:paid` → dispara fulfillment en Shopify/Woo/Magento. Y cuando una
+orden **deja de valer dinero** (cancelación entera o por líneas, devolución total o parcial),
+`orders` se lo cuenta al **colector de analytics** con el token interno — `order_cancelled` /
+`order_refunded`, `event_id` UUID v5 determinista, fire-and-forget; variables
+`ANALYTICS_EVENTS_URL` + `ANALYTICS_INTERNAL_TOKEN`, sin ellas no emite
+([ADR-0036](../decisions/0036-analytics-ante-cancelaciones-eventos-de-compensacion.md),
+orders #28, 2026-10-20).
 
 **Canales de venta externos (import/export de catálogo):** `extensions` (bigcommerce/
 magento/shopify/woo) + `api-microservice` (channel/connection/listings) + `template`
