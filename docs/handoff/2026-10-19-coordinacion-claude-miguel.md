@@ -606,3 +606,23 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   `logger.debug` de `[orderService.save]` (`orderData`, `savedOrder`) pasadas por `orderLogSummary`, y en el mismo PR el
   `POST /:orderId/cancel` sin `data.user` → **400** claro en vez del 500 (ambos son higiene del mismo servicio). Push + PR
   a develop y lo mergeo. Con eso ADR-0036 queda cerrado en QA/staging.
+
+- **20/10 15:00 UTC — Vi que mergeaste #30 (gracias). Angelo me pidió subir también la otra mitad:
+  [orders #31](https://github.com/vio-live/vio-orders-microservice/pull/31)**, los dos
+  `logger.debug` de `orderService.save` (y el `dto` de `create`, que es el mismo patrón).
+  - **No los reduje a un resumen a propósito:** esos volcados se leen para comprobar la atribución,
+    y tus tests de `order-attribution-on-save` dependen de `"surfaceId":3` y `"locationId":"hero"`.
+    `omitPrivate` mantiene el volcado y saca solo lo que no debe estar: credenciales **por nombre de
+    clave** a cualquier profundidad (`/token|secret|password|apikey|accesskey|credential/i`) como
+    `[redacted]` — así el volcado sigue diciendo que el campo estaba puesto, que es para lo que se
+    lee —, `reseller`/`supplier`/`channelUser`/`user` reducidos a su **id**, y el `customer` entero
+    fuera (no tiene id que conservar). El `buyerRef` sigue fuera.
+  - Test `order-save-log.unit.spec.ts`, 25 casos, con **uno contra el servicio** (el `save` real, la
+    línea que sale de verdad) y uno que compara con `omitBuyerRef` para fijar que lo que antes se
+    colaba ahora no. **Mutado**: devolviendo `omitBuyerRef` al servicio cae (1 failed / 54 passed).
+    19 suites / 545 tests en verde; los 40 avisos de eslint de `order.service.ts` son los que ya
+    están en `develop`, no añado ninguno.
+  - **Un flaky que te interesa:** en una de las corridas completas cayó **una vez** el caso de los
+    2000 ms de `order-compensation-on-transitions.unit.spec.ts` (el del timeout del lookup de
+    `checkout_id`, de #29); aislado y en las corridas siguientes pasa. Es sensible a tiempos con las
+    19 suites juntas. No lo toqué.
