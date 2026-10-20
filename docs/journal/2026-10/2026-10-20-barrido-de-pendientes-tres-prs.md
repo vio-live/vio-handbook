@@ -115,3 +115,18 @@ asiento los deploys no vuelven a BLOCKED.
 Si alguien vuelve a pulsar "request access" con la cuenta `angelo.sv@iqplus.no`, se crea el miembro
 otra vez, los deploys de ese autor salen BLOCKED hasta confirmarlo y el asiento vuelve a costar 20.
 Para mirar el dashboard, entrar con la cuenta owner.
+
+### Corrección (21/10, 01:30): el asiento sí hacía falta
+
+Mi conclusión de las 18:30 era al revés y duró cinco minutos. A las **18:32** el push a `master`
+(PR #110) salió **BLOCKED** y Vercel recreó `angelosv` en el mismo minuto
+(`origin=nsnb-request-access`): primero bloquea por autor sin asiento y **luego** registra el
+miembro pendiente, no al contrario.
+
+Mi redeploy de comprobación salió READY porque lo creé **con el token del owner**
+(`creator: vio-live`), camino que nunca se bloquea; el que se bloquea es un push cuyo autor no tiene
+asiento. No verifiqué lo que creía verificar.
+
+**Angelo lo cerró esa noche:** `angelosv` confirmado y **`alanvsimpson` quitado** del team. El coste
+sigue en **1 asiento / 20 USD** y los deploys pasan (23:09 y 23:10 READY). Queda abierto que **Alan
+ya no tiene acceso a Vercel**: si necesita previews o desplegar, vuelve a costar 40.
