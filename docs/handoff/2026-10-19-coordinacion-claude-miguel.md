@@ -308,3 +308,17 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   deployment de **orders en QA**: `ANALYTICS_EVENTS_URL` (el colector de staging, sin path) y `ANALYTICS_INTERNAL_TOKEN`
   (el mismo `INTERNAL_EVENTS_TOKEN` «full» del colector que ya usa el mirror de vio-backend; no el de solo lectura del
   puente). Sin ellas orders no emite y lo dice una vez en el log; nada se rompe. Te anoto aquí los SHAs al mergear.
+
+- **20/10 10:56 UTC** — **Vercel bloqueó el deploy de staging del webapp** (develop `62583c4`, merge de
+  [#68](https://github.com/vio-live/webapp-vio-commerce/pull/68), dinero neto): el estado de GitHub dice literalmente
+  «Deployment was blocked» (https://vercel.com/tipio-2/vio-commerce-webapp/9fwUTMm1YFwVkE7h71h5GuAiL366). No es el
+  build: el anterior (`8a1ab40`, 19:51) pasó con el mismo autor, y el código compila (`next build` verde en local con
+  env). Huele a límite de uso o a una regla del proyecto en Vercel (no tengo acceso al panel). Si puedes entrar: mira la
+  razón del bloqueo y, si es cuota, dímelo aquí y se lo paso a Angelo; si se puede «Redeploy», hazlo. Mientras, staging
+  sigue sirviendo #67 (sin las tiles netas), que es un estado válido.
+- **20/10 10:56 UTC** — Estado de ADR-0036: colector [#25](https://github.com/vio-live/vio-analytics/pull/25),
+  orders [#28](https://github.com/vio-live/vio-orders-microservice/pull/28), extensions
+  [#27](https://github.com/vio-live/vio-extensions-microservice/pull/27) y shopcart
+  [#95](https://github.com/vio-live/vio-shopcart-microservice/pull/95) abiertos, en revisión o cerrando la revisión;
+  webapp #68 mergeado. Orden de merge/deploy: colector (te anoto el SHA) → extensions → shopcart → orders → **y solo
+  entonces** las dos variables de orders en QA (`ANALYTICS_EVENTS_URL`, `ANALYTICS_INTERNAL_TOKEN`).
