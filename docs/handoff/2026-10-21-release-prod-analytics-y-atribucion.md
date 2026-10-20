@@ -17,8 +17,8 @@ Anterior: [release del 16/10](./2026-10-16-release-prod-commerce.md) (mismo form
 
 | # | Decisión | Recomendación |
 |---|---|---|
-| D1 | **Vercel**: la cuenta nueva `angelosv` (pidió entrar al team `tipio-2` el 20/10 y sigue sin confirmar) hace que todo commit de ese autor salga **BLOCKED** en Vercel. Afecta al webapp de prod (`master`) y al código del app `vio-sync` (`sync.vio.live`). | Aprobar el asiento o desligar la cuenta **antes del paso 7**. Si no, Miguel redespliega como owner tras cada merge. |
-| D2 | **`BUYER_REF_SECRET` de prod**: secreto nuevo (no el de QA) para el identificador del comprador. Una vez en uso no se cambia: cambiarlo rompe el «mismo comprador» entre compras. | Generarlo en el paso 3 (`openssl rand -hex 32`), solo en el `.env` de shopcart de prod. |
+| D1 | **Vercel** | **Resuelto (21/10, Angelo):** la cuenta `angelosv` ya está en el team `tipio-2`; los commits de ese autor dejan de salir BLOCKED. |
+| D2 | **`BUYER_REF_SECRET` de prod**: clave con la que shopcart convierte el email del comprador en un identificador (HMAC-SHA256) para contar compradores únicos y repetidores y cruzar analytics con Commerce sin que el email salga. Nueva para prod (no la de QA, para que los datos no se puedan relacionar) y **no se cambia nunca** una vez en uso: cambiarla hace que el mismo comprador cuente como nuevo. Sin ella no se rompe nada: las órdenes nacen sin `buyer_ref`. | Miguel la genera en el paso 3 (`openssl rand -hex 32`) y la pone solo en el Secret de shopcart de prod. |
 | D3 | **Comportamiento nuevo en prod**: el app `Vio Sync` empieza a mandar `refunds/create` (los apps propios de Careless, Gladkokken y Makeupmekka ya lo hacen desde el 16/10): una devolución hecha en la tienda mueve dinero en Vipps/Stripe y resta en analytics. | Sin aviso extra (ya avisado el 16/10 para los apps propios); recordarlo al primer cliente de `Vio Sync`. |
 
 ## 1. Estado de partida (verificado 21/10)
@@ -138,7 +138,7 @@ de prod, `/internal/token` de cada app sigue en 200 (como el 16/10).
 
 ## 8. Paso 7 — Fronts
 
-- **Webapp** `master` en Vercel tras mergear #69 (necesita D1, o redeploy como owner). Comprobar `dashboard.ecom.vio.live`
+- **Webapp** `master` en Vercel tras mergear #69 (D1 resuelto: debería desplegar solo; si sale BLOCKED, redeploy como owner). Comprobar `dashboard.ecom.vio.live`
   (o el dominio de prod) → home nueva con «Net revenue».
 - **Vev**: el paquete compartido `cq1lXld-TA9` ya lleva la SDK 0.26.0; las páginas de prod hay que **republicarlas** en el
   editor de Vev para que la cojan.

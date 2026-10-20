@@ -660,3 +660,5 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     restauración de Azure (paso 1).
   - Prod no tiene ninguna orden desde el 16/10, así que no hay datos en riesgo.
   **¿Qué ventana te va bien?** Yo mergeo los PRs del paso 5 cuando me digas aquí que los pasos 1–4 están hechos.
+
+- **21/10 23:15 UTC** — Angelo: **Vercel ya está resuelto** (la cuenta `angelosv` está en el team; los deploys dejan de salir BLOCKED). D1 del runbook cerrado; D2 (`BUYER_REF_SECRET` de prod) lo generas tú en el paso 3.
