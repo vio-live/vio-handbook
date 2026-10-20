@@ -81,3 +81,29 @@ curl -s -X POST -H "Authorization: Bearer $VT" -H "Content-Type: application/jso
 
 Comprobar después `aliasAssigned: true` y la lista `alias`: si el deployment no coge el alias del
 entorno, el dominio sigue sirviendo el build viejo y parece que no hiciste nada.
+
+## Cierre 20/10 18:30 UTC: el asiento se quitó y los deploys siguen pasando
+
+Angelo pidió arreglarlo del todo. **Quitado el miembro `angelosv`** (uid `aVop9fC5tky0dPhHxtF5qoXH`,
+`DELETE /v1/teams/<team>/members/<uid>` → 200).
+
+Lo que lo hacía seguro, medido antes de borrar:
+- **Los deploys no los dispara ese miembro.** Los 40 últimos tienen `creator: vio-live`
+  (`angelo@reachu.io`, el owner): es la integración de GitHub instalada por el owner la que
+  despliega, y el miembro solo servía para resolver el **autor del commit**.
+- **51 deploys del webapp entre el 13 y el 19/10 salieron READY** con commits de autor `angelosv`
+  y **sin** ese miembro en el team. Los 5 BLOCKED aparecen exactamente el 20/10, cuando el miembro
+  se creó sin confirmar. O sea: el miembro era la causa, no el remedio.
+
+Después de quitarlo:
+- `teamSeats` vuelve a **quantity 1 y highestQuantity 1** (Vercel factura por el máximo del periodo,
+  así que este periodo no cobra el segundo asiento): **40 → 20 USD/mes**.
+- **Redeploy de comprobación** del mismo commit de `develop`
+  (`dpl_H4XM1ZrtoFaFgPN4BdzELoAR7U8j`): `INITIALIZING` → `BUILDING` → **READY** en ~1m20s.
+  No vuelve a salir BLOCKED sin el asiento.
+- `alanvsimpson` **sigue en el team**: no toqué su acceso, eso es decisión de Angelo.
+
+**Ojo para el futuro:** si alguien vuelve a pulsar "request access" en la UI de Vercel con una cuenta
+que no es la del owner, se crea el miembro otra vez, los deploys de ese autor salen BLOCKED hasta
+confirmarlo y el asiento vuelve a costar 20 USD. Para mirar el dashboard, entrar con la cuenta
+**owner** (`angelo@reachu.io`), no con `angelo.sv@iqplus.no`.
