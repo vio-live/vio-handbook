@@ -548,3 +548,54 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 - **20/10 12:58 UTC** — **Decisión de Angelo: las `apiKey`/`apiToken` que hayan quedado en los logs de `cancelOrder` no se
   rotan.** El PR del log sigue adelante igual, para que deje de pasar.
+
+- **20/10 13:20 UTC — Los tres puntos hechos. El camino bueno está verificado: la compensación casa
+  y el dinero neto se mueve.** Detalle completo en
+  `docs/journal/2026-10/2026-10-20-colector-132887e-y-compensacion-casada.md`.
+
+  **1. Colector `132887e` desplegado en la VM de staging** (13:04 UTC). Tarball del commit, respaldo
+  en `vio-analytics-backup-20261020-130426.tgz`, `pnpm install` + `pnpm build` + restart;
+  `uptime_s` 8 s después y `md5` de `app.ts`, `stats-compensation.ts` y `sinks/clickhouse.ts`
+  idénticos al commit. **El ALTER corrió**: `DESCRIBE vio_staging.events` da
+  `checkout_id String DEFAULT ''` justo detrás de `order_id`. Cero errores en el journal.
+
+  **2. La cancelación con una orden que sí tiene compra: `resolved`.** Elegí la **4582** porque es
+  la única de los últimos 3 días con compra en ClickHouse (consulté: solo `8cea273b-…`, 179 NOK,
+  surface 3, campaña 9). Estado previo: 1 item `PROCESSING`, VIPPS de test, channel Partner,
+  reseller 1312. `POST /4582/cancel` a las **13:08:01 UTC** → 200.
+  - orders: `order_cancelled f902c03e-…: 179 NOK from 1 line(s), full=true, source=dashboard,
+    **checkout_id=yes**` → `accepted by the collector (attempt 1)`.
+  - Colector: `compensation {resolved:1, unmatched:0, refused:0}`.
+  - `recent?name=order_cancelled`: 1 evento con `order_id "4582"` **y**
+    `checkout_id "8cea273b-…"`, campaña 9, sponsor 1289.
+  - `surface/overview` surface 3, antes → después: `purchases` 147 → **147** (intacto),
+    `purchases_net` 147 → **146**, `gmv` 127411 → **127232** (-179), `gmv_gross` **127411**
+    (intacto), `refunded_value` 0 → **179**, `cancelled_orders` 0 → **1**.
+  - Vipps de test devolvió el dinero (`vipps cancelled for order 4582: {"cancelled":true}`).
+  Tu test del par 4582 ↔ `8cea273b` queda confirmado contra el entorno real, no solo en unit.
+
+  **3. El log de `cancelOrder`: PR propio,
+  [orders #30](https://github.com/vio-live/vio-orders-microservice/pull/30) a `develop`.** Sin
+  mergear, es tuyo. `orderLogSummary` en `order-attribution.ts` (junto a `omitBuyerRef`) arma
+  `id=4582 channel=Partner processor=VIPPS currency=NOK reseller=1312` y nada más; si la orden
+  llegara con items, añade su número y los ids de suppliers y estados. Test nuevo
+  `order-cancel-log.unit.spec.ts`, 14 casos: la línea exacta y que ni `apiKey`/`apiToken`, ni el
+  `orderWebhookSecret`, ni el email/teléfono/dirección, ni el `buyerRef` aparecen en ningún nivel
+  de log al cancelar. **Mutado a propósito**: revertí el cambio del servicio y el caso de
+  `cancelOrder` cae (1 failed / 13 passed); con el cambio, 18 suites / 520 tests en verde y eslint
+  limpio. Toqué un test tuyo de atribución que afirmaba `"surfaceId":3` dentro del JSON de esa
+  misma línea: ahora comprueba `id=1` / `reseller=7`, su intención (que no se filtre el `buyerRef`)
+  sigue fijada.
+
+  **Dos cosas que te dejo apuntadas, ninguna bloqueante:**
+  - **No metí `supplier.id`** como pediste porque el objeto de `findOne(id)` **no trae `items`**:
+    en esa línea el supplier no existe todavía (aparece en `cancelOrderByReseller`). El helper lo
+    imprime si algún día la orden llega con items.
+  - **Quedan dos `logger.debug` de `[orderService.save]`** (`orderData` y `savedOrder`) con la misma
+    forma. **En QA el nivel debug sí se emite** (lo comprobé en el log del pod), así que es la misma
+    fuga por otra puerta. No los metí en #30 para no mezclar; dime si quieres otro PR.
+  - Aparte: `POST /:orderId/cancel` **sin `data.user` responde 500**, no 400
+    (`Cannot read properties of undefined (reading 'id')` en `cancelOrder`). Me pasó en el primer
+    intento. El dashboard siempre manda el user, así que no bloquea; es robustez del endpoint.
+
+  **Prod: nada.** Ni colector, ni variables, ni cancelaciones.
