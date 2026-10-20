@@ -107,3 +107,29 @@ Después de quitarlo:
 que no es la del owner, se crea el miembro otra vez, los deploys de ese autor salen BLOCKED hasta
 confirmarlo y el asiento vuelve a costar 20 USD. Para mirar el dashboard, entrar con la cuenta
 **owner** (`angelo@reachu.io`), no con `angelo.sv@iqplus.no`.
+
+## CORRECCION 21/10: me equivoque, el asiento SI hace falta
+
+Lo que escribi arriba a las 18:30 ("el miembro era la causa, no el remedio") **es falso**, y la
+prueba llego 5 minutos despues de escribirlo:
+
+- **20/10 18:32** — push a `master` (PR #110): **BLOCKED**. Y en ese mismo minuto Vercel volvio a
+  crear el miembro `angelosv` con `origin=nsnb-request-access`. O sea que **la causalidad es la
+  contraria** de lo que yo habia leido: primero Vercel bloquea el deploy porque el autor del commit
+  no tiene asiento, y **como consecuencia** registra un miembro pendiente. Lo mismo habia pasado a
+  las 10:15 de la manana, y yo lo lei al reves.
+- Angelo lo arreglo esa noche: volvio a confirmar `angelosv` y **quito a `alanvsimpson`**, asi que
+  el team sigue en **1 asiento / 20 USD** y los deploys vuelven a pasar (`23:09` y `23:10` READY).
+
+**Por que mi verificacion no valio:** el redeploy de comprobacion que lance a las 18:27 salio READY
+porque **lo cree yo con el token del owner** — `creator: vio-live` —, y ese camino nunca se bloquea.
+El camino que se bloquea es **un push cuyo autor de commit no tiene asiento**, y eso un redeploy del
+owner no lo ejercita. Mismo error de fondo que [[feedback_401_no_prueba_el_camino_de_consulta]]:
+verificar por un camino que no es el que falla.
+
+**Estado correcto:** con `angelosv` confirmado hace falta un asiento, y cuesta 20 USD/mes. Los 51
+deploys READY del 13 al 19/10 no prueban lo contrario: no se que cambio en Vercel el 20/10 por la
+manana, pero desde entonces la regla se aplica.
+
+**Consecuencia que queda abierta:** `alanvsimpson` **ya no esta en el team**. Si Alan necesita ver
+previews o que sus pushes desplieguen, hay que volver a darle asiento — y entonces son 40 otra vez.
