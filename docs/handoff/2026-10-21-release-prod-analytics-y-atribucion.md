@@ -23,7 +23,7 @@ Anterior: [release del 16/10](./2026-10-16-release-prod-commerce.md) (mismo form
 
 ## 1. Estado de partida (verificado 21/10)
 
-- **Kernel en prod**: 1.0.273 (campaigns 1.0.275). Destino: **1.0.279** (lo traen los PRs de release).
+- **Kernel en prod**: 1.0.273 (campaigns 1.0.275). Destino: **1.0.280** (lo traen los PRs de release: 1.0.279 + el logger sin credenciales, `package-logger` #10).
 - **Base de prod** (`vio-ecom-db-prod-sc`): última migración `SurfaceCampaignSlotSource1792100000000` (id 176). Faltan
   `1792200000000-surface-slot-kind`, `1792300000000-order-attribution` y `1792400000000-cart-attribution-utf8mb4`.
 - **Backup externo** `mysql-prod-offsite-backup`: su job lleva **7 días en Running 0/1** (roto, diferido por Angelo). Para
@@ -160,6 +160,21 @@ de prod, `/internal/token` de cada app sigue en 200 (como el 16/10).
   en `package-database`; el punto de restauración del paso 1 es la red de seguridad.
 - **Colector**: restaurar el respaldo del directorio del paso 4 y reiniciar.
 - **Apps de Shopify**: volver a la versión anterior desde el Partner Dashboard (Versions → Release).
+
+## 10b. Credenciales del `.env.test` de extensions (Angelo, 21/10)
+
+`vio-extensions-microservice` tenía commiteado desde el 21/04 un `.env.test` con credenciales con pinta real de QA
+(clave privada de Firebase de `outshifter-qa`, Mailjet, Mixpanel, Klarna, Vipps, Aftership, Postmen, tipos de cambio,
+Stripe test). Hecho: valores de mentira en `develop` (extensions [#29](https://github.com/vio-live/vio-extensions-microservice/pull/29),
+entra con el release #28). **No se reescribe el historial** (repo privado). **Falta, Miguel:** ejecutar
+[`cmp-envtest-vs-prod.py`](./assets/2026-10-21-prod/cmp-envtest-vs-prod.py) (compara por hash con los Secrets de prod;
+solo imprime nombres) y **rotar únicamente lo que salga «COINCIDE CON PROD»**; lo que sea solo de QA no se rota (regla de
+Angelo). Anotar en el canal qué se rotó.
+
+En el mismo release, los logs dejan de sacar credenciales: el kernel 1.0.280 tapa `token|secret|password|apikey|…` en
+los volcados INIT/FINISH de los 12 micros, y extensions #29 hace lo mismo en `findProductById`/`findAllProducts` (sacaban
+el `accessToken` y el `refreshToken` de Shopify de cada tienda). Las keys que ya estén en logs viejos **no se rotan**
+(decisión de Angelo del 20/10).
 
 ## 11. Fuera de este release
 
