@@ -20,9 +20,9 @@ anterior no manda esos campos.
 ## Done
 
 - **Rama `feat/analytics-neto`** desde `origin/develop` (`8a1ab40`, el merge de #67), worktree
-  `~/vio-commerce/worktrees/webapp-compensacion`, tres commits `8497623` + `a679b63` + `684b679`,
+  `~/vio-commerce/worktrees/webapp-compensacion`, cuatro commits `8497623` + `a679b63` + `684b679` + `458c67b`,
   **[PR #68](https://github.com/vio-live/webapp-vio-commerce/pull/68)** a `develop`, revisado (MERGE con mejoras
-  dentro), sin mergear. 28 archivos, +1476/−400.
+  dentro), sin mergear. 29 archivos, +1335/−259.
 - **`src/lib/stats.js`**: `netOf(raw, gmv = 'gmv')` → `{ gmvGross, refundedValue, cancelledOrders, purchasesNet }`
   con el fallback «campos ausentes» (bruto = neto, 0 devuelto, 0 cancelados, neto de pedidos = hechos). Entra en
   `fromKpis` (`KPI_KEYS` crece a 20, los cuatro nuevos nunca son null), `fromCampaignSummary`, `fromChannelRow`,
@@ -100,9 +100,12 @@ anterior no manda esos campos.
     `refunded_value`; serie `orders_net`, `gmv_gross`) cuando `netKnown` es false — ni ceros ni copias del neto.
     `seriesCsvFor` desaparece: `SERIES_CSV_COLUMNS` es constante con celdas vacías.
   - **Nits.** `sumKpis` ya no usa el `aov` del colector como fallback (sin pedidos netos → «—», no «kr 0»; la
-    conversión del colector sí vale si falta `impression_sessions`); `NET_HELP` = «Net = placed − cancelled/refunded,
-    as reported by Commerce. Refunds count in the period they were recorded.»; `revenueNote` ya no repite «N
-    cancelled» (queda solo en Orders).
+    conversión del colector sí vale si falta `impression_sessions`); `revenueNote` ya no repite «N cancelled»
+    (queda solo en Orders); `NET_HELP` (commit `458c67b`, tras la corrección del coordinador) = «Net = placed −
+    cancelled/refunded, as reported by Commerce. Refunds count against the purchase they belong to, even when
+    recorded later, so past periods can change.» — **semántica del colector: un periodo muestra sus compras netas a
+    día de hoy**; una devolución resta a la compra a la que pertenece aunque llegue después del cierre y el informe
+    se reexpresa (no «en el periodo en que se registró»).
   - Tests: `series-net-aware` (detección por cuerpo, memoria, `useNetAware` de memoria con otros filtros,
     `useCampaignNetAware` contra los mocks, CSV de la serie), `kpi-grid` (W2 con el colector anterior, W1 sin
     parpadeo al cambiar filtros, `scope.netAware` manda), `by-campaign-card`, `active-campaigns`, `components-card`
