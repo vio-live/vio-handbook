@@ -20,9 +20,9 @@ anterior no manda esos campos.
 ## Done
 
 - **Rama `feat/analytics-neto`** desde `origin/develop` (`8a1ab40`, el merge de #67), worktree
-  `~/vio-commerce/worktrees/webapp-compensacion`, un commit `8497623`,
-  **[PR #68](https://github.com/vio-live/webapp-vio-commerce/pull/68)** a `develop`, sin mergear. 25 archivos,
-  +765/−214.
+  `~/vio-commerce/worktrees/webapp-compensacion`, dos commits `8497623` + `a679b63`,
+  **[PR #68](https://github.com/vio-live/webapp-vio-commerce/pull/68)** a `develop`, sin mergear. 27 archivos,
+  +1016/−241.
 - **`src/lib/stats.js`**: `netOf(raw, gmv = 'gmv')` → `{ gmvGross, refundedValue, cancelledOrders, purchasesNet }`
   con el fallback «campos ausentes» (bruto = neto, 0 devuelto, 0 cancelados, neto de pedidos = hechos). Entra en
   `fromKpis` (`KPI_KEYS` crece a 20, los cuatro nuevos nunca son null), `fromCampaignSummary`, `fromChannelRow`,
@@ -62,7 +62,20 @@ anterior no manda esos campos.
   abre con foco); `by-campaign-card` (surface nueva + vieja: «3» con title «4 placed · 1 cancelled», «kr 300 /
   gross kr 400»); `series-chart` (bruto apagado hasta pulsarlo); rótulos en `active-campaigns`, `components-card`;
   `active-campaigns-sin-vio` lee los mocks reales y ahora espera neto.
-- **Verificación**: `npx jest` 77/79 suites · 769/771 tests (las 2 rojas, `payments-lib` y
+- **Segundo commit `a679b63` (pedido del coordinador): la serie pide las métricas netas solo si el overview
+  dice que el colector compensa.** `useNetAware(surfaceIds, filters)` lee el overview (misma clave SWR que las
+  KPIs del home; en el detalle, el de la surface) y `netAwareOf` devuelve true si alguno trae `gmv_gross`, false si
+  ninguno o si la lectura falló, undefined mientras no se sabe. Con true la serie pide `SERIES_METRICS_NET`
+  (`…,purchases_net,gmv_gross`) y ofrece «Gross revenue» apagada (`publisherSeriesFor`, `seriesCsvFor` con
+  `orders_net`/`gmv_gross`); con false pide `SERIES_METRICS` (las de siempre) y dibuja «Net revenue» = gmv sin
+  «Gross revenue» ni esas columnas; con undefined no pide nada (`useScopedRead … enabled: false`,
+  `useCampaignTimeseries(sid, cid, filters, netAware)` con `campaignReadKey` null). El orden de despliegue
+  colector/webapp deja de importar, también en prod. Tests: `test/lib/series-net-aware.test.js` (puros + hooks
+  contra los mocks) y `test/dashboard/series-card.test.jsx` (las tres situaciones y el bucket por hora).
+- **Comprobado que «N placed · M cancelled» no recalcula:** `ordersNote` toma `purchases` y `cancelled_orders`
+  tal cual (`fromKpis({ purchases: 10, purchases_net: 7, cancelled_orders: 2 })` → «10 placed · 2 cancelled», no
+  3); `purchasesNet` solo decide si hay algo que contar. Test añadido en `analytics.test.js`.
+- **Verificación (cierre)**: `npx jest` **79/81 suites · 779/781 tests** (las 2 rojas, `payments-lib` y
   `qliro-shipping-config`, fallan igual en `93de3e7`); `npm run lint` con los 3 preexistentes (combobox + `<a>`
   del shell, archivos sin tocar); `next build` verde (36 páginas, 20 exportadas).
 
@@ -80,7 +93,10 @@ anterior no manda esos campos.
   `previous` ni `impression_sessions`).
 - **Filas sin los campos cuentan como «nada compensado»** al sumar (`withNetDefaults`): evita que una surface con
   el colector viejo reste pedidos que nadie canceló cuando se mezcla con una del nuevo.
-- La serie **pide** `purchases_net` y `gmv_gross` ya (el encargo los declara métricas válidas); ver riesgo abajo.
+- La serie **pide** `purchases_net` y `gmv_gross` solo cuando el overview de la misma lectura trajo `gmv_gross`
+  (decisión del coordinador tras el primer reporte): la capacidad del colector se detecta por lectura, no se
+  asume por entorno, y mientras no se sabe la serie espera (el overview ya lo piden las KPIs, no cuesta una
+  llamada más).
 
 ## Blockers / open questions
 
@@ -88,9 +104,8 @@ anterior no manda esos campos.
   19/10): todo está codificado contra los nombres del encargo. Cuando salga, sustituir las fixtures de
   `test/fixtures/collector.js` y re-correr; ajustar `netOf` si el nombre o la semántica difieren (p. ej. si
   `cancelled_orders` cuenta solo cancelaciones totales y `refunded_value` incluye lo cancelado).
-- **Riesgo en `timeseries` con el colector anterior**: si rechaza métricas desconocidas (`purchases_net`,
-  `gmv_gross`) en vez de ignorarlas, la serie mostrará el error hasta que se despliegue el colector de ADR-0036.
-  Orden recomendado colector → webapp; comprobar en staging.
+- ~~Riesgo en `timeseries` con el colector anterior~~ — resuelto en `a679b63` (ver Done): con el colector
+  anterior se piden las métricas de siempre.
 - **Sin verificar en navegador ni en staging** (el dashboard exige login; el harness de puppeteer con sesión
   inyectada no se corrió).
 - **Volvió a pasar el gotcha del `node_modules` symlinkeado** (ya documentado el 2026-10-14 en
@@ -105,6 +120,4 @@ anterior no manda esos campos.
 - Cuando el colector publique el shape: fixtures reales, re-correr, y verificar en staging el home del publisher
   (tiles, tablas, serie con «Gross revenue») y el detalle de una campaña con una orden cancelada de verdad (lo que
   prueba Alan en Vipps/Shopify/Woo): `purchases_net` y `gmv` bajan, `purchases` y `gmv_gross` no.
-- Si el colector viejo rechaza las métricas nuevas en `timeseries`, pedirlas solo cuando el `overview` traiga
-  `gmv_gross` (o reintentar sin ellas ante 400).
 - `/orders` sigue siendo la vista de estados por pedido (ADR-0036): nada que cambiar ahí.

@@ -112,7 +112,8 @@ al instante; el resto de eventos están disponibles y sin cablear.
   > `gmv_gross`, `refunded_value`, `cancelled_orders`, `purchases` (hechos) y `purchases_net` en todas las lecturas (products:
   > `revenue`, `revenue_gross`, `refunded_value`), con fallback bruto = neto si el colector no los manda; AOV y conversión se
   > derivan sobre lo neto; «Net revenue» con «gross · refunded · cancelled», «Orders» netos con «placed · cancelled», «Gross
-  > revenue» como serie apagada en la leyenda. Journal
+  > revenue» como serie apagada en la leyenda — y la serie solo pide `purchases_net`/`gmv_gross` si el overview de la misma
+  > lectura trajo `gmv_gross` (`useNetAware`): con el colector anterior pide lo de siempre. Journal
   > [`2026-10-20-front-commerce-analytics-neto`](../journal/2026-10/2026-10-20-front-commerce-analytics-neto.md).
 - **/listings** + detalle — ciclo completo (crear, editar, variantes,
   shipping por país `{country, amount, currencyCode}`, publicar con gate;
