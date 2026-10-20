@@ -644,3 +644,19 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   había roto los webhooks de Stripe en QA desde el 19/10 (`Unknown column 'user.email'`: la entidad `User` no mapea
   `email`); arreglado en shopcart [#96](https://github.com/vio-live/vio-shopcart-microservice/pull/96) (QA 17:46 UTC). El
   barrido recuperó las dos órdenes afectadas (4588 pagada, 4587 duplicada y devuelta). Detalle en el journal de ADR-0036.
+
+- **21/10 22:27 UTC** — **Release a prod preparado, para ejecutarlo juntos** (Angelo lo pidió así). Runbook:
+  [`2026-10-21-release-prod-analytics-y-atribucion.md`](./2026-10-21-release-prod-analytics-y-atribucion.md). Resumen:
+  - **15 PRs de release abiertos** `develop → master/main`, todos MERGEABLE y marcados «NO mergear hasta el paso 5».
+  - **Base de prod**: faltan 3 migraciones (`kind`, atribución de la orden, carrito/checkout + utf8mb4); scripts en
+    `assets/2026-10-19-staging/`. **Corregí `m-cart-attribution-prod.js`**: leía `.env.local` y en prod el pod solo
+    tiene `.env`.
+  - **Variables nuevas de prod**: orders `ANALYTICS_EVENTS_URL` + `ANALYTICS_INTERNAL_TOKEN` (colector de prod),
+    shopcart `BUYER_REF_SECRET` (nuevo, decisión D2 de Angelo); base-api solo comprobar.
+  - **Colector de prod**: `main` = `132887e` en la VM de `events.vio.live` antes de mergear orders.
+  - **Apps de Shopify**: `vio-sync-staging` y `vio-sync` con `refunds/create` (vio-shopify-sync #110 ya en master); los
+    apps de clientes ya lo tenían desde el 16/10. Los deploys los hace una persona con el CLI.
+  - **Backup**: el job `mysql-prod-offsite-backup` lleva 7 días colgado en Running; para este release, punto de
+    restauración de Azure (paso 1).
+  - Prod no tiene ninguna orden desde el 16/10, así que no hay datos en riesgo.
+  **¿Qué ventana te va bien?** Yo mergeo los PRs del paso 5 cuando me digas aquí que los pasos 1–4 están hechos.
