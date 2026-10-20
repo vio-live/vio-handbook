@@ -20,9 +20,9 @@ anterior no manda esos campos.
 ## Done
 
 - **Rama `feat/analytics-neto`** desde `origin/develop` (`8a1ab40`, el merge de #67), worktree
-  `~/vio-commerce/worktrees/webapp-compensacion`, dos commits `8497623` + `a679b63`,
-  **[PR #68](https://github.com/vio-live/webapp-vio-commerce/pull/68)** a `develop`, sin mergear. 27 archivos,
-  +1016/−241.
+  `~/vio-commerce/worktrees/webapp-compensacion`, tres commits `8497623` + `a679b63` + `684b679`,
+  **[PR #68](https://github.com/vio-live/webapp-vio-commerce/pull/68)** a `develop`, revisado (MERGE con mejoras
+  dentro), sin mergear. 28 archivos, +1476/−400.
 - **`src/lib/stats.js`**: `netOf(raw, gmv = 'gmv')` → `{ gmvGross, refundedValue, cancelledOrders, purchasesNet }`
   con el fallback «campos ausentes» (bruto = neto, 0 devuelto, 0 cancelados, neto de pedidos = hechos). Entra en
   `fromKpis` (`KPI_KEYS` crece a 20, los cuatro nuevos nunca son null), `fromCampaignSummary`, `fromChannelRow`,
@@ -75,7 +75,40 @@ anterior no manda esos campos.
 - **Comprobado que «N placed · M cancelled» no recalcula:** `ordersNote` toma `purchases` y `cancelled_orders`
   tal cual (`fromKpis({ purchases: 10, purchases_net: 7, cancelled_orders: 2 })` → «10 placed · 2 cancelled», no
   3); `purchasesNet` solo decide si hay algo que contar. Test añadido en `analytics.test.js`.
-- **Verificación (cierre)**: `npx jest` **79/81 suites · 779/781 tests** (las 2 rojas, `payments-lib` y
+- **Tercer commit `684b679` — revisión de #68 (W1–W3 + nits):**
+  - **W1 · capacidad recordada por surface.** `netAwareOfBody` juzga cualquier cuerpo del colector
+    (`kpis.gmv_gross`, o una fila de dinero con `gmv_gross`/`revenue_gross` en campaigns / channels / surfaces /
+    content / products / sources / landing / slots / rows; `points` no cuenta porque solo trae lo pedido; listas
+    vacías no juzgan). `netAwareFor({ bodies | rows, error }, surfaceIds)`: lo que diga la lectura (y se recuerda
+    por surface, `'brand'` para el comodín) > lo recordado > false si resolvió/falló sin nada que juzgar > undefined
+    mientras carga sin memoria. Memoria de módulo (`rememberedNetAware`, `resetNetAwareMemory` para tests):
+    cambiar filtros o de página ya no devuelve undefined ni hace esperar a la serie; solo la primera lectura de la
+    sesión espera. **Detalle de campaña:** no hay overview ni KPIs propios en el webapp (lee funnel, timeseries,
+    content, products, breakdown, slots y orders), así que `useCampaignNetAware` usa lo recordado para la surface o
+    el `content` de la campaña que Articles ya pide (misma clave SWR, cero lecturas extra); content vacío → lo de
+    siempre. **Home:** `useScopeNetAware` (overview de las surfaces con la misma clave que las KPIs; la brand desde
+    by-campaign) → `scope.netAware`, y cada tarjeta cae a su propia lectura (`scope.netAware ?? netAwareFor(q, …)`;
+    Active campaigns desde `rows` normalizadas por `netKnown`).
+  - **W2 · rótulos sin "net" con el colector anterior.** `kpisFor(netAware)` (tiles planas: "Revenue", "AOV",
+    "Conversion", sin `sub`/`help`/`note`), `revenueLabel`, `aovLabel`; aplicado a tiles, Total transactions, By
+    surface/campaign/channel, Active campaigns, Top products, entrada, breakdown (`moneyName` de `BreakdownBars`),
+    serie (`PUBLISHER_SERIES_PLAIN`: leyenda "Revenue", sin "Gross revenue") y Articles / Products / Components del
+    detalle. Mientras no se sabe (`undefined`) tampoco se afirma "net".
+  - **W3 · CSV sin copias.** Las filas llevan `netKnown` (= la fila trajo el bruto) desde `netOf`, `fromProductRow`,
+    `fromTimeseries`; se propaga en `sumKpis`, `mergeRows`, `addStats`, `sumStats`, `transactionsOf`. `netCell(key)`
+    deja VACÍAS `gmv_gross`, `refunded_value`, `cancelled_orders`, `orders_net` (products `revenue_gross`,
+    `refunded_value`; serie `orders_net`, `gmv_gross`) cuando `netKnown` es false — ni ceros ni copias del neto.
+    `seriesCsvFor` desaparece: `SERIES_CSV_COLUMNS` es constante con celdas vacías.
+  - **Nits.** `sumKpis` ya no usa el `aov` del colector como fallback (sin pedidos netos → «—», no «kr 0»; la
+    conversión del colector sí vale si falta `impression_sessions`); `NET_HELP` = «Net = placed − cancelled/refunded,
+    as reported by Commerce. Refunds count in the period they were recorded.»; `revenueNote` ya no repite «N
+    cancelled» (queda solo en Orders).
+  - Tests: `series-net-aware` (detección por cuerpo, memoria, `useNetAware` de memoria con otros filtros,
+    `useCampaignNetAware` contra los mocks, CSV de la serie), `kpi-grid` (W2 con el colector anterior, W1 sin
+    parpadeo al cambiar filtros, `scope.netAware` manda), `by-campaign-card`, `active-campaigns`, `components-card`
+    (mockea `useCampaignNetAware`), `series-card`, `analytics` (nits, `kpisFor`, CSV vacío). Mocks de content con
+    el bruto para que el detalle de demo sea coherente.
+- **Verificación (cierre)**: `npx jest` **79/81 suites · 788/790 tests** (las 2 rojas, `payments-lib` y
   `qliro-shipping-config`, fallan igual en `93de3e7`); `npm run lint` con los 3 preexistentes (combobox + `<a>`
   del shell, archivos sin tocar); `next build` verde (36 páginas, 20 exportadas).
 
@@ -93,10 +126,13 @@ anterior no manda esos campos.
   `previous` ni `impression_sessions`).
 - **Filas sin los campos cuentan como «nada compensado»** al sumar (`withNetDefaults`): evita que una surface con
   el colector viejo reste pedidos que nadie canceló cuando se mezcla con una del nuevo.
-- La serie **pide** `purchases_net` y `gmv_gross` solo cuando el overview de la misma lectura trajo `gmv_gross`
-  (decisión del coordinador tras el primer reporte): la capacidad del colector se detecta por lectura, no se
-  asume por entorno, y mientras no se sabe la serie espera (el overview ya lo piden las KPIs, no cuesta una
-  llamada más).
+- La serie **pide** `purchases_net` y `gmv_gross` solo cuando el colector manda el bruto (decisión del coordinador
+  tras el primer reporte): la capacidad se detecta por lectura, no se asume por entorno, y se **recuerda por
+  surface** (revisión W1): solo la primera lectura de la sesión espera; en el detalle, sin overview propio, la dice
+  el `content` que ya se pide.
+- **Con el colector anterior no se afirma «net»** (revisión W2): rótulos a secas, sin «?» ni líneas secundarias, y
+  el CSV deja vacías las celdas netas (W3) en vez de copiar el neto — una hoja de cálculo sumaría las copias como
+  datos.
 
 ## Blockers / open questions
 
