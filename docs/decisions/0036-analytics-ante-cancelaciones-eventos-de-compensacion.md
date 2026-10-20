@@ -52,3 +52,20 @@ La 3. Commerce es la verdad del dinero y **se lo cuenta a analytics**:
   desde `order.status` si hace falta.
 - Lo que hoy prueba Alan en las tarjetas de Vipps/Shopify/Woo pasa a tener una expectativa clara: tras cancelar,
   `purchases_net` y `gmv` bajan; `purchases` y `gmv_gross` no.
+
+## Matices tras la revisión independiente (20/10)
+
+- La deduplicación del colector por tabla es `(client_app_id, ts, event_id)`; una re-emisión separada llega con otro
+  `ts`. Por eso **las lecturas de compensación deduplican por `event_id`** (primera fila gana) antes de sumar, y el
+  `value` de un evento es función de su clave: para devoluciones desde la tienda, extensions manda el **importe de ese
+  reembolso** (`refundAmountMinor`) y su id; sin cifra fiable, orders no emite (nunca un total acumulado).
+- Las claves de eventos de línea son siempre por líneas (`refund:<id>:items:<ids>`), aunque la última línea deje la
+  orden sin valor; `order:<id>:cancel` solo para la cancelación entera en una llamada. Así dos cancelaciones de línea
+  concurrentes (Woo las manda en paralelo) no colisionan.
+- Cubierto: cancelación entera (revendedor, supplier, cron de no envío), línea a línea, devolución total y parcial del
+  PSP, total y parcial desde Shopify y Woo. **Fuera de alcance por ahora**: `RETURNED` desde base-api, `deleteOrder`
+  (borrado lógico), y órdenes que nacen con líneas canceladas por stock.
+- Entrega sin durabilidad (reintentos en memoria, ~11 s): si el colector está caído más tiempo o el pod se reinicia, la
+  compensación se pierde y queda `not sent after 3 attempts` en el log. Seguimiento: reconciliador que reemita desde
+  `order.status` o un outbox como el de vio-backend.
+
