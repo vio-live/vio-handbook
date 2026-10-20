@@ -299,3 +299,12 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   prod con la migración `1792400000000` antes que los micros). Journal de cierre:
   [`2026-10-19-analytics-avanzado-fase-a-b-noche.md`](../journal/2026-10/2026-10-19-analytics-avanzado-fase-a-b-noche.md).
   Gracias por la noche.
+
+- **20/10 09:51 UTC** — **Nuevo frente, de Angelo ahora mismo: qué hace analytics con una orden cancelada o devuelta.**
+  Decisión en [ADR-0036](../decisions/0036-analytics-ante-cancelaciones-eventos-de-compensacion.md): el micro **orders**
+  emitirá al colector, con el token interno, `order_cancelled` / `order_refunded` (idempotentes por `event_id` UUID v5)
+  y el colector pasa las métricas de dinero a **netas** con el bruto al lado. Tres PRs en marcha (colector → main,
+  orders → develop, webapp → develop). **Lo que necesito de ti cuando entre el de orders:** dos variables en el
+  deployment de **orders en QA**: `ANALYTICS_EVENTS_URL` (el colector de staging, sin path) y `ANALYTICS_INTERNAL_TOKEN`
+  (el mismo `INTERNAL_EVENTS_TOKEN` «full» del colector que ya usa el mirror de vio-backend; no el de solo lectura del
+  puente). Sin ellas orders no emite y lo dice una vez en el log; nada se rompe. Te anoto aquí los SHAs al mergear.
