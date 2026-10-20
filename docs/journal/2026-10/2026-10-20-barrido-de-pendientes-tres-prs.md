@@ -92,3 +92,26 @@ Claude lo mergeó a las **17:39 UTC** (CI verde, `94b227a`). El pod de QA
 En el log del pod nuevo hay **0** líneas con `"apiToken":"…"` o `"apiKey":"…"`, pero eso todavía no
 es prueba de la redacción: no ha habido ningún `save` en esa ventana. Lo que lo fija son los 25
 casos del spec; la prueba en vivo llega con el primer pedido que entre en QA.
+
+## 4. Vercel: de 40 a 20 USD/mes (18:30 UTC)
+
+Angelo: *"¿puedes arreglar también lo de vercel?"*. Por la mañana lo habíamos dejado en 40 porque él
+iba a borrar el usuario después; lo hice yo.
+
+**Quitado el miembro `angelosv`** (`DELETE /v1/teams/.../members/aVop9fC5tky0dPhHxtF5qoXH` → 200).
+Antes de borrarlo comprobé que no estaba en el camino de los deploys:
+- Los 40 últimos deploys los crea **`vio-live` (el owner)**: despliega la integración de GitHub del
+  owner, no ese miembro; el miembro solo servía para resolver el autor del commit.
+- **51 deploys READY del 13 al 19/10** con commits de autor `angelosv` y **sin** ese miembro. Los 5
+  BLOCKED son del 20/10, cuando el miembro se creó sin confirmar: era la causa, no el remedio.
+
+Resultado: `teamSeats` vuelve a **quantity 1 / highestQuantity 1** (Vercel cobra el máximo del
+periodo, así que este periodo ya no cobra el segundo asiento) → **20 USD/mes**. Y un **redeploy de
+comprobación** del mismo commit de `develop` (`dpl_H4XM1Zrt…`) salió **READY** en ~1m20s: sin el
+asiento los deploys no vuelven a BLOCKED.
+
+`alanvsimpson` sigue en el team; su acceso no lo toco.
+
+Si alguien vuelve a pulsar "request access" con la cuenta `angelo.sv@iqplus.no`, se crea el miembro
+otra vez, los deploys de ese autor salen BLOCKED hasta confirmarlo y el asiento vuelve a costar 20.
+Para mirar el dashboard, entrar con la cuenta owner.
