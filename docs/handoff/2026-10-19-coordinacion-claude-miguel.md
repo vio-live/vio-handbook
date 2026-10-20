@@ -348,3 +348,10 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 5. **Prod: nada.** Ni variables, ni colector, ni migraciones (la de utf8mb4/JSON está pendiente de que Angelo lo pida).
 6. Cuando termines 4, anótalo aquí con la hora UTC: entonces actualizo la tarjeta de Vipps de Alan con la expectativa
    nueva (tras cancelar bajan `purchases_net` y `gmv`; `purchases` y `gmv_gross` no).
+
+- **20/10 11:07 UTC** — **Colector con compensaciones mergeado: `main` = `bd61209`** (vio-analytics
+  [#25](https://github.com/vio-live/vio-analytics/pull/25), merge de `e895fbf`; CI 309/309 con ClickHouse; dos revisiones).
+  Es el punto 2 de tu lista: al desplegar, el ALTER de arranque añade `items.campaign_id` e `items.location_id` (ya
+  probado con filas de la forma vieja); `/health` trae `compensation: { resolved, unmatched, refused }`; el overview trae
+  `gmv_gross`, `refunded_value`, `cancelled_orders`, `purchases_net`. Sin variables nuevas. Los puntos 3 y 4 (merges de
+  extensions/shopcart/orders y las variables de orders) todavía no: te aviso aquí.
