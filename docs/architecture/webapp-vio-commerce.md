@@ -108,6 +108,12 @@ al instante; el resto de eventos están disponibles y sin cablear.
   > `feat/analytics-por-campana-y-slot`, el home cruza las campañas del micro con `GET /stats/surfaces/:id/campaigns` (publisher)
   > o `/stats/campaigns` (brand, `id: 'cmp-<id>'`), y el detalle de la campaña tiene "Performance" por slot. Ver el journal
   > [`2026-10-19-front-commerce-analytics-por-campana-y-slot`](../journal/2026-10/2026-10-19-front-commerce-analytics-por-campana-y-slot.md).
+  > **2026-10-20 (ADR-0036, PR #68):** el dinero es **neto** por defecto. `netOf()` en `src/lib/stats.js` lee `gmv` (neto),
+  > `gmv_gross`, `refunded_value`, `cancelled_orders`, `purchases` (hechos) y `purchases_net` en todas las lecturas (products:
+  > `revenue`, `revenue_gross`, `refunded_value`), con fallback bruto = neto si el colector no los manda; AOV y conversión se
+  > derivan sobre lo neto; «Net revenue» con «gross · refunded · cancelled», «Orders» netos con «placed · cancelled», «Gross
+  > revenue» como serie apagada en la leyenda. Journal
+  > [`2026-10-20-front-commerce-analytics-neto`](../journal/2026-10/2026-10-20-front-commerce-analytics-neto.md).
 - **/listings** + detalle — ciclo completo (crear, editar, variantes,
   shipping por país `{country, amount, currencyCode}`, publicar con gate;
   límites de plan server-side, Free = 20 SKUs).
@@ -245,7 +251,8 @@ journal `2026-10/2026-10-13-front-commerce-surfaces-y-campanas.md`.
   en Linux). NUNCA `next build` con `next dev` corriendo.
 - **`next build` en un worktree con `node_modules` symlinkeado** falla en "Collecting page data"
   (`TypeError: c(...) is not a function` en `_app.js`, 2026-10-14): `next/font/local` resuelve
-  fuera del proyecto. Para el build, copiar `node_modules` con `cp -cR` (clon APFS).
+  fuera del proyecto. Para el build, copiar `node_modules` con `cp -cR` (clon APFS) o `npm ci` en el
+  worktree (sin deps privadas, ~1 min). Volvió a morder el 2026-10-20: ya está también en el brief.
 - **El build y `next dev` no necesitan el `.env` real** (2026-10-14): con variables ficticias
   en el entorno (`FIREBASE_API_KEY=dummy …`, `API_HOST=https://api.fake.test`) el
   `next build` pasa "Collecting page data". El `auth/invalid-api-key` sale solo si la key
