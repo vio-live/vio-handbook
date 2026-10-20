@@ -322,3 +322,29 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   [#95](https://github.com/vio-live/vio-shopcart-microservice/pull/95) abiertos, en revisión o cerrando la revisión;
   webapp #68 mergeado. Orden de merge/deploy: colector (te anoto el SHA) → extensions → shopcart → orders → **y solo
   entonces** las dos variables de orders en QA (`ANALYTICS_EVENTS_URL`, `ANALYTICS_INTERNAL_TOKEN`).
+
+## Lista para Miguel (20/10 11:03 UTC, pedida por Angelo) — qué hacer y en qué orden
+
+1. **Ahora — Vercel.** El deploy de staging del webapp (`develop` `62583c4`, PR #68) quedó «Deployment was blocked»
+   (https://vercel.com/tipio-2/vio-commerce-webapp/9fwUTMm1YFwVkE7h71h5GuAiL366). Entra al proyecto `vio-commerce-webapp`
+   del team `tipio-2`, mira la razón (cuota/spend limit, builds concurrentes, regla de rama o de autor) y: si se puede
+   **Redeploy**, hazlo; si es cuota o algo de cuenta, anótalo aquí para Angelo. Staging sigue sirviendo #67 mientras
+   tanto, sin riesgo.
+2. **Cuando anote aquí el SHA del colector (#25, compensaciones)** → tu cron lo despliega en la VM de staging. Comprueba:
+   arranque con `schema ready` y los `ALTER` nuevos sin error (añade `items.campaign_id` e `items.location_id` a la
+   tabla), `/health` con `compensation: { resolved, unmatched, refused }`, y que `GET /v1/stats/surface/overview` con el
+   token interno sigue en 200 y trae `gmv_gross`, `refunded_value`, `cancelled_orders`, `purchases_net`.
+3. **Merges a develop (los hago yo, espaciados ~2 min entre repos distintos no hace falta; en el mismo repo sí):**
+   extensions #27 → shopcart #95 → orders #28. Cada uno despliega solo a QA. Comprueba los tres pods al final
+   (2/2 Running, sin `Unknown column`/`QueryFailed`). Nada que configurar en extensions (usa el Redis que ya tiene).
+4. **Solo después de 2 y 3 — variables de orders en QA** (deployment `orders`, mismo `ENV_FILE` que el resto):
+   - `ANALYTICS_EVENTS_URL` = URL del colector de staging, **sin path** (la misma base que usa el mirror de vio-backend).
+   - `ANALYTICS_INTERNAL_TOKEN` = el `INTERNAL_EVENTS_TOKEN` **full** del colector (el de escritura que usa vio-backend;
+     **no** el de solo lectura que tiene base-api).
+   Reinicia orders y verifica: en el log de arranque no sale el aviso de «analytics mirror disabled»; cancela una orden
+   de prueba en QA y comprueba que en el colector entra `order_cancelled` (`GET /v1/stats/recent?name=order_cancelled`
+   con el token interno) y que `/health` sube `compensation.resolved`. Si entra en `unmatched`, la orden no tenía
+   compra en analytics (normal en órdenes antiguas o creadas fuera de Vev).
+5. **Prod: nada.** Ni variables, ni colector, ni migraciones (la de utf8mb4/JSON está pendiente de que Angelo lo pida).
+6. Cuando termines 4, anótalo aquí con la hora UTC: entonces actualizo la tarjeta de Vipps de Alan con la expectativa
+   nueva (tras cancelar bajan `purchases_net` y `gmv`; `purchases` y `gmv_gross` no).
