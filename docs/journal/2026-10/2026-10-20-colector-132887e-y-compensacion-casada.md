@@ -90,3 +90,30 @@ Con esto el camino bueno queda **verificado de punta a punta**, no deducido.
 - Flaky visto una vez: el caso de los 2000 ms de `order-compensation-on-transitions.unit.spec.ts`
   (el timeout del lookup de `checkout_id`, de #29) cayó en una corrida completa y pasó aislado y en
   las siguientes. Sensible a tiempos con las 19 suites juntas. Anotado en el PR, no tocado.
+
+## Añadido 17:40 UTC — el 400 del cancel, que faltaba
+
+Al releer lo que pidió Claude (entrada de 13:20 UTC) vi que me había dejado la mitad: quería los dos
+`logger.debug` **y** el 400 del `cancel` en el mismo PR. El 400 no estaba, así que fue a #31
+(`48f160e`).
+
+- `cancelOrder` lee `loggedUser.id` lo primero: un cuerpo sin `data.user` moría con
+  `Cannot read properties of undefined (reading 'id')` y un **500**. El controller lo valida antes y
+  responde **400** diciendo qué falta y para qué sirve. **`id` 0 sigue siendo un id.**
+- Test en `order-compensation-controller.unit.spec.ts`: sin cuerpo, cuerpo vacío, `data` sin `user`,
+  `user` sin `id` e `id: null` → 400 y **el servicio no se llama**; `id: 0` sí lo llama.
+  **Mutado**: los cinco caen si quito la validación. 19 suites / **551 tests** en verde.
+
+## Estado al cierre del día (17:40 UTC)
+
+- QA 15 pods Running, prod 30 Running. Los dos `Error` son conocidos: el
+  `mysql-prod-offsite-backup` roto por diseño (diferido por Angelo) y un `shopcart-reconcile` de QA.
+- **Hallazgo menor nuevo:** el CronJob `shopcart-reconcile` de QA corre `*/10` y el cluster arranca a
+  las 06:30 UTC; la pasada de las **06:36** encuentra `shopcart:80` sin responder (`http_status=000`)
+  y deja un pod `Failed` **cada mañana**. No rompe nada (la siguiente pasada va bien) pero ensucia.
+  Se arregla retrasando la primera pasada o dándole reintento.
+- Colectores: staging 234 eventos insertados hoy, sin errores; prod vivo con 0 eventos (prod no tiene
+  tráfico real, es lo esperado).
+- **PR mío viejo y con conflictos:** shopcart
+  [#73](https://github.com/vio-live/vio-shopcart-microservice/pull/73) (del 07/10, el ruido del
+  barrido de Vipps/Stripe) está `CONFLICTING` desde entonces. Hay que rebasarlo o cerrarlo.
