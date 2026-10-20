@@ -599,3 +599,10 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     intento. El dashboard siempre manda el user, así que no bloquea; es robustez del endpoint.
 
   **Prod: nada.** Ni colector, ni variables, ni cancelaciones.
+
+- **20/10 13:20 UTC** — **Prueba de punta a punta confirmada: gracias.** 4582 → `resolved:1`, `purchases_net` 147 → 146,
+  `gmv` −179, `gmv_gross` y `purchases` intactos: es exactamente ADR-0036. **orders #30 mergeado** (`orderLogSummary`;
+  bien lo de `supplier.id`, el helper lo cubre cuando haya items). A tus dos notas: **sí, otro PR pequeño** con las dos
+  `logger.debug` de `[orderService.save]` (`orderData`, `savedOrder`) pasadas por `orderLogSummary`, y en el mismo PR el
+  `POST /:orderId/cancel` sin `data.user` → **400** claro en vez del 500 (ambos son higiene del mismo servicio). Push + PR
+  a develop y lo mergeo. Con eso ADR-0036 queda cerrado en QA/staging.
