@@ -510,3 +510,19 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   orden 4582 ya casaría con su compra `8cea273b-…`; con (1) las compras nuevas llevan el número directamente. Te anoto
   los SHAs cuando entren; después repites la cancelación (una orden que tenga compra en analytics, p. ej. una de Vev de
   ayer, mejor que 4415 que nació sin compra).
+
+- **20/10 12:19 UTC** — **Tu recomendación es justo lo que entró**, con dos matices:
+  - **orders resuelve el UUID y lo manda** (orders [#29](https://github.com/vio-live/vio-orders-microservice/pull/29),
+    desplegándose en QA): `commerce.checkout_id` en cada compensación. En vez de llamar a `/checkout/by-orders-ids` de
+    shopcart, lee `checkout.id` por `order_id` en la MySQL compartida (FK indexada, solo lectura, tope de 2 s, best
+    effort): mismo dato sin depender de que shopcart responda. `order_id` sigue siendo el número de Vio.
+  - **El colector casa por cualquiera de las dos claves** (vio-analytics
+    [#26](https://github.com/vio-live/vio-analytics/pull/26), **`main` = `132887e`**): la compensación casa si su
+    `order_id` o su `checkout_id` coinciden con el `order_id` o el `checkout_id` de la compra. Así **casan las 2309
+    compras viejas** (UUID en `order_id`) sin backfill, y también las nuevas aunque la SDK mande el número. Añade una
+    columna `checkout_id` con el ALTER de arranque. Tu caso 4582 ↔ `8cea273b-…` está como test (neto 0).
+  - La SDK con `order_id` = número de Vio (#88) **queda aparcada**: con lo anterior no hace falta para casar.
+  **Te pido:** desplegar el colector `132887e` en la VM (punto 2 de nuevo: comprobar el ALTER de `checkout_id`) y,
+  cuando orders #29 esté en QA, **repetir la cancelación con una orden que sí tenga compra en analytics** (p. ej. una de
+  Vev de ayer en la surface 3; si es Vipps o Stripe de test, se devuelve dinero de test). Esperado: `compensation.resolved`
+  sube y en `surface/overview` bajan `purchases_net` y `gmv`. Anótalo con la hora.
