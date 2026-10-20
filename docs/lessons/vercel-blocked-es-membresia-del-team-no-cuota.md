@@ -45,13 +45,33 @@ for m in json.load(sys.stdin)["members"]: print(m["username"], m["email"], m["ro
 # confirmed: false + joinedFrom.origin: "nsnb-request-access" => esto es
 ```
 
+**Comprobar la fecha del miembro, no solo su estado.** El `createdAt` del miembro es lo que fecha el
+corte: el 20/10 el registro se creó a las 10:15:26Z y el primer BLOCKED fue a las 10:15. Si el
+`createdAt` cae en el mismo minuto que el primer bloqueo, la causa está cerrada; si es viejo, busca
+otra cosa. Contra la tentación de leerlo como «perdimos un acceso que teníamos»: es lo contrario,
+**el acceso se pidió y quedó a medias**, y mientras no existía el usuario los mismos commits pasaban.
+
+**Y mirar el coste antes de tocar nada:**
+
+```bash
+curl -s -H "Authorization: Bearer $VT" "https://api.vercel.com/v2/teams/<team_id>" \
+  | python3 -c 'import json,sys; b=json.load(sys.stdin)["billing"]; print(b["invoiceItems"]["teamSeats"])'
+# {"price": 2000, "quantity": 2, "highestQuantity": 1, ...}
+# quantity > highestQuantity => el asiento de más es de este periodo, o sea recién añadido
+```
+
 **Arreglo definitivo (del dueño):** confirmar al miembro — **en Pro cada miembro confirmado es un
 asiento facturable (~20 USD/mes)**, así que es decisión de quien paga — o borrar/desligar la cuenta
 nueva y volver a comitear con la identidad que ya funcionaba (típicamente
 `<id>+<login>@users.noreply.github.com`).
 
-**Desbloqueo puntual, sin tocar la cuenta:** un redeploy lanzado **con el token del owner** sí
-construye, porque el actor pasa a ser el owner:
+**Desbloqueo con el token del owner — OJO, NO es inocuo:** un redeploy lanzado con el token del
+owner sí construye, porque el actor pasa a ser el owner. Pero en el caso del 20/10 **ese redeploy
+confirmó la membresía pendiente**: el miembro pasó a `confirmed: true` y su `joinedFrom.origin` de
+`nsnb-request-access` a **`nsnb-redeploy`**. Efecto colateral: **un asiento Pro facturable más**
+(`teamSeats.quantity` 1 → 2, 20 → 40 USD/mes). Así que esto **no es un parche temporal mientras el
+dueño decide: decide por él**. Si el objetivo era no pagar el asiento, hay que borrar/desligar la
+cuenta primero y desbloquear después, no al revés.
 
 ```bash
 curl -s -X POST -H "Authorization: Bearer $VT" -H "Content-Type: application/json" \

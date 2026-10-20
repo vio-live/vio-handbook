@@ -26,10 +26,25 @@ author: miguel
   - **Desbloqueado** con un redeploy lanzado con el token del owner:
     `dpl_C5zruuCSS37A1CutGzPa9DVsm6Rq`, READY 11:08 UTC, `aliasAssigned: true`.
     `https://dashboard-staging.ecom.vio.live/` → **200** sirviendo `62583c4`.
-- Pendiente (de Angelo, es dinero): confirmar al miembro `angelosv` en Tipio 2 → Members
-  (**cada miembro confirmado es un asiento Pro de ~20 USD/mes**) o borrar/desligar esa cuenta y
-  seguir comiteando con `31110038+angelosv@users.noreply.github.com`. Hasta entonces **cada push a
-  `develop` seguirá saliendo BLOCKED** y hay que desbloquearlo a mano. Lección:
+- **Corrección del mecanismo (13:55 CEST, sobre lo escrito arriba a las 11:08).** Angelo preguntó
+  por qué se rompió «si ya teníamos acceso». Al releer el API: **no había acceso previo, el acceso
+  se pidió hoy, y pedirlo a medias es lo que bloqueó**.
+  - El miembro `angelosv` se **creó hoy 20/10 a las 10:15:26Z** (`createdAt 1792491326450`), el
+    mismo minuto del primer BLOCKED. Hasta el 19/10 19:51Z todos los deploys de ese mismo login
+    salían READY porque **no existía usuario del team al que resolver el autor del commit**.
+  - El redeploy con el token del owner (11:06Z) no solo desbloqueó ese build: **confirmó la
+    membresía**. El miembro figura ahora `confirmed: true` con `joinedFrom.origin: nsnb-redeploy`
+    (ya no `nsnb-request-access`). Es decir, **los pushes a `develop` ya NO salen BLOCKED**: lo que
+    escribí arriba — «cada push seguirá saliendo BLOCKED» — quedó obsoleto en el momento mismo del
+    redeploy.
+  - Coste: `billing.invoiceItems.teamSeats` = `price 2000` (20 USD), **`quantity: 2`** con
+    **`highestQuantity: 1`** en el periodo 02/10–02/11. El segundo asiento es de hoy: **20 → 40
+    USD/mes**.
+  - No sé explicar por qué `alanvsimpson` (confirmado desde el 13/04) no aparecía ya como segundo
+    asiento; el periodo venía facturando 1. No lo verifiqué, queda como duda abierta.
+- **Decisión de Angelo (20/10 13:54): se queda en 40 USD/mes.** El borrado del otro usuario lo hace
+  él más tarde. **No hay acción pendiente para mí en Vercel** y no hay que desbloquear deploys a
+  mano. Lección (corregida):
   [`vercel-blocked-es-membresia-del-team-no-cuota.md`](../../lessons/vercel-blocked-es-membresia-del-team-no-cuota.md).
 
 ## Colector de analytics: PR #25 (compensaciones, ADR-0036) desplegado en staging — miguel
