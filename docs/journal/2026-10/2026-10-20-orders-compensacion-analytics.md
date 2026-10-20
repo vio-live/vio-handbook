@@ -83,6 +83,30 @@ determinista (UUID v5), fire-and-forget, y sin romper nada si faltan las variabl
 - Números tras la revisión: `jest.unit` **17 suites / 472 OK** (+2 skips preexistentes); `tsc` limpio salvo
   el histórico.
 
+## Revisión 2 aplicada (commit `ff28f12`, mismo PR)
+
+- **C1 — un reembolso, un evento.** Vipps y Stripe (`PSP_REPORTS_REFUNDS` en `order-compensation.ts`) los
+  reporta shopcart a `/:id/payment-refunded` (Vipps desde dentro de nuestra propia llamada `refunded-in-shop`;
+  Stripe en cada `charge.refunded`, shopcart #95 `1166754`). En `refundedInShop` parcial, si el payment service
+  movió dinero (`money.refunded > 0`) en uno de esos → **no** se emite el evento de tienda; el del PSP
+  (`refund:<id>:psp:<refundId>`) es el que cuenta. Nada movido / otro procesador → el de tienda. Tests: Vipps
+  encadenado (el mock de shopcart llama a `markPaymentRefunded` desde dentro) → un solo evento; Stripe → sin
+  evento de tienda y el del webhook después; Stripe con 0 / sin referencia → el de tienda.
+- **`refundAmountMinor` autoritativo incluido 0** (extensions #27 lo manda siempre; Shopify `transactions: []`
+  = restock/cambio): 0 → no se emite ni se mira el delta del PSP; solo si falta el campo se usa el delta. Woo
+  manda una llamada por reembolso con su `refundId` → una clave por reembolso (test ids 8 y 9).
+- **Stripe `full: true` por webhook** (nuevo con #95): `markPaymentRefunded` no manda emails ni notificaciones
+  en ningún caso; orden ya cerrada por la tienda → guard `closed` antes de líneas/socket/evento; abierta → líneas
+  `REFUNDED`, un `socket-service:publish`, un evento. Tests para ambos.
+- **Fixture del contrato**: `test/fixtures/analytics-event-schema.ts`, copia literal del schema del colector
+  @ `e895fbf` (la primera copia, @ `7bdeefe`, ya estaba vieja al verificar: el colector añadió `campaign_id`/
+  `location_id` por ítem; el `diff` del flujo de refresco lo detectó). El test de contrato corre **sin skip**;
+  `ANALYTICS_SCHEMA_PATH` lo sustituye por el archivo vivo (probado), una ruta rota falla. `zod ^3.25.76` en
+  devDependencies y entrada de `yarn.lock` **escrita a mano** con el integrity del `pnpm-lock` del colector
+  (401 desde la laptop); zod copiado al overlay local para poder ejecutar aquí. **Angelo: revisar esa entrada
+  del lockfile antes de mergear.**
+- Docblock de `compensate()` recolocado. Números: `jest.unit` **17 suites / 488 OK** (+2 skips).
+
 ## Decisions
 
 - Shape **anidado** como lo valida el colector (`commerce.*`, `context.*`), no plano: es el único que acepta.
