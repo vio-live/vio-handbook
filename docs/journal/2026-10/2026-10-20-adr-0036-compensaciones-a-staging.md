@@ -90,3 +90,14 @@ De paso: el log de `cancelOrder` volcaba `apiKey`/`apiToken` y datos del cliente
 [#30](https://github.com/vio-live/vio-orders-microservice/pull/30) (Miguel), sin rotar las keys (decisión de Angelo).
 Queda un PR pequeño de Miguel: los dos `logger.debug` de `save` y un 400 en `/cancel` sin `data.user`. Tarjetas de Alan
 (Vipps, Shopify, Woo) con la expectativa verificada.
+
+## Devolución de Alan desde Shopify perdida por token caducado (14:19 UTC)
+
+`refunds/create` de `alan-test-supplier` llegó a extensions pero no se reportó a orders: la conexión 556 tenía un token
+de una hora (reconectado 13:15 UTC) que solo el app `vio-client-dev` puede renovar (su ruta de sincronización de tokens
+existe en `custom/client-app`, `app/lib/syncTokens.server.ts`, pero en el app de desarrollo no hay cron que la llame).
+Extensions intentó renovar y Shopify dijo revocado. No es de ADR-0036. Alan: reconectar antes de cada ronda y probar
+dentro de la hora (comentado en su tarjeta [tyByDaBK](https://trello.com/c/tyByDaBK)). Seguimiento: un cron para el app
+de desarrollo, o que extensions avise en el dashboard cuando una conexión muere. Visto de paso: extensions vuelca en
+`INFO` el `accessToken` y el `refreshToken` completos de Shopify (`getEcomUser` FINISH, `findProductById` INIT); queda en
+la lista de Angelo junto al `.env.test`.
