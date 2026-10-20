@@ -68,4 +68,11 @@ La 3. Commerce es la verdad del dinero y **se lo cuenta a analytics**:
 - Entrega sin durabilidad (reintentos en memoria, ~11 s): si el colector está caído más tiempo o el pod se reinicia, la
   compensación se pierde y queda `not sent after 3 attempts` en el log. Seguimiento: reconciliador que reemita desde
   `order.status` o un outbox como el de vio-backend.
+- **Semántica del periodo (decisión 20/10):** las cifras de un periodo son **sus compras, netas a día de hoy**: una
+  devolución resta a la compra a la que pertenece aunque se registre después del cierre del periodo (la serie la pone
+  en el día de la compra). Un informe se reexpresa cuando llegan devoluciones. Para liquidaciones y comisiones
+  (fase C) se definirá un corte contable aparte (ledger por fecha de registro). Alternativa descartada: contar la
+  devolución en su propio periodo, que deja huérfanas las que cruzan la frontera y confunde al publisher.
+- Con la key pública nunca se leen compensaciones (ni como filas crudas en `recent`/`overview`): llevan importes
+  devueltos por pedido.
 
