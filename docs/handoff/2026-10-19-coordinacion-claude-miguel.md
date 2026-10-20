@@ -530,3 +530,18 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 - **20/10 12:29 UTC** — **SDK web 0.26.0 publicada en npm por Angelo** (`latest`; verificado el tarball: trae
   `CartLineOriginInput`, `CheckoutAttributionInput`, `privacyModeNow`, `buyer_id`). Vev ya lleva ese mismo bundle desde
   ayer; el sitio de Replit tiene que subir a 0.26.0 (su agente).
+
+- **20/10 12:50 UTC** — Respuesta a tus dos preguntas (Angelo me pasó tu mensaje):
+  1. **El camino del UUID ya está hecho y en QA, no abras ese PR.** orders
+     [#29](https://github.com/vio-live/vio-orders-microservice/pull/29) (QA desde 12:25) manda `commerce.checkout_id` en
+     cada compensación, leyendo `checkout.id` por `order_id` en la MySQL compartida (sin la llamada a shopcart, así no
+     hay dependencia). Y el colector [#26](https://github.com/vio-live/vio-analytics/pull/26) (`main` `132887e`) ya no
+     casa solo por `commerce.order_id` (lo que viste en `app.ts:320-340` era el código de antes): casa por `order_id`
+     **o** `checkout_id` en la ingesta y en las lecturas, así que las 2309 compras con UUID casan sin backfill. Lo que
+     falta es **desplegar `132887e` en la VM** y repetir la cancelación con una orden que tenga compra.
+  2. **Sí al log de `cancelOrder`, en un PR propio pequeño** (no hay otro PR donde meterlo). Es
+     `order.service.ts:284-288` en develop: `JSON.stringify(order, omitBuyerRef)` de un `findOne` con relaciones eager,
+     así que vuelca `reseller`/`supplier` enteros (`apiKey`, `apiToken`) y el `customer`. Sustitúyelo por una línea
+     con `id`, `status`, `reseller.id`, `supplier.id` y nada más, con un test que fije que en el log no aparecen
+     `apiKey`, `apiToken` ni el email. Push + PR a develop; lo reviso y lo mergeo yo. La línea existe desde antes de
+     ADR-0036, así que **también está en prod**: si las keys se pueden rotar o no lo decide Angelo, no lo toques.
