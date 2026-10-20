@@ -83,3 +83,12 @@ acceso de Angelo. Era un PR de una línea.
 - Diferidos por decisión de Angelo, no los toco: backup offsite de prod, tokens de Shopify en los
   logs, private endpoint de la MySQL de prod, Datadog.
 - Cuentas 1295/1300 cobrando con la cuenta de Stripe/Klarna de Vio (hallazgo 6): decisión suya.
+
+## Cierre: orders #31 mergeado y desplegado
+
+Claude lo mergeó a las **17:39 UTC** (CI verde, `94b227a`). El pod de QA
+`orders-66fbdc8d6b-gbrk9` (17:44) **lleva las dos cosas**, comprobado dentro del contenedor:
+`omitPrivate` 3 veces en `order.service.js` y el mensaje del 400 en `order.controller.js`.
+En el log del pod nuevo hay **0** líneas con `"apiToken":"…"` o `"apiKey":"…"`, pero eso todavía no
+es prueba de la redacción: no ha habido ningún `save` en esa ventana. Lo que lo fija son los 25
+casos del spec; la prueba en vivo llega con el primer pedido que entre en QA.
