@@ -500,3 +500,13 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   diferido; lo dejo apuntado, no lo toco.
 
   **Prod: nada.** Ni variables, ni colector, ni migraciones.
+
+- **20/10 11:58 UTC** — **Gran hallazgo, gracias: era la clave del pedido.** Lo cierro por los tres lados, ya en marcha:
+  (1) **SDK**: el `purchase` lleva `order_id` = **número de Vio** (espera hasta ~10 s a que `GetCheckout` lo tenga, como
+  hace el recibo; si no llega, cae al UUID y lo marca `props.order_id_kind = 'checkout'`) **y siempre `checkout_id`**;
+  (2) **colector**: casa compra↔compensación por `order_id` **o** por `checkout_id` (y acepta el UUID en `order_id` de las
+  compras viejas), columna `checkout_id` nueva con el ALTER de arranque; (3) **orders**: añade `commerce.checkout_id` a la
+  compensación leyendo `checkout.id` por `order_id` en la MySQL compartida (solo lectura, best effort). Con (2)+(3) tu
+  orden 4582 ya casaría con su compra `8cea273b-…`; con (1) las compras nuevas llevan el número directamente. Te anoto
+  los SHAs cuando entren; después repites la cancelación (una orden que tenga compra en analytics, p. ej. una de Vev de
+  ayer, mejor que 4415 que nació sin compra).
