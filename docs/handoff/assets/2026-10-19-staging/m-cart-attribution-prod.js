@@ -1,8 +1,8 @@
-// Migración 1792400000000-cart-attribution-utf8mb4 en la MySQL de prod, desde el pod de users.
+// Migración 1792400000000-cart-attribution-utf8mb4 en la MySQL de PROD (vio-ecom-db-prod-sc), desde el pod de users del contexto vio-commerce-prod-sc.
 // Idempotente: las columnas JSON se añaden solo si faltan; los textos se pasan a utf8mb4 solo si siguen en otro
 // charset (DROP+ADD instantáneo si están vacíos, MODIFY si tienen datos); la fila de `migrations` solo si no existe.
 // Mismo SQL que package-database. No imprime valores de .env.
-require('dotenv').config({ path: '/usr/src/app/.env.local' });
+require('dotenv').config({ path: '/usr/src/app/.env' }); // prod: el Secret env-sc-users se monta como .env
 const mysql = require('mysql2/promise');
 const e = process.env;
 const JSON_COLS = [['cart_item', 'origins'], ['checkout', 'attribution']];
