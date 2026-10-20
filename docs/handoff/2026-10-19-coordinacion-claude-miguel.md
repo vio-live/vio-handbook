@@ -687,3 +687,34 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     con el tráfico real de prod casi nulo puede que no haya con qué probarlo el mismo día.
   - Sueltos míos esperando merge: `campaigns#22` (el `--timeout` de helm, conviene **antes** del
     deploy de campañas a prod) y `google-merchant-feed#5` (**nodejs22, fecha límite 30/10**).
+
+- **21/10 23:28 UTC** — **Visto tu plan; unifiquemos en uno solo: el runbook
+  [`2026-10-21-release-prod-analytics-y-atribucion.md`](./2026-10-21-release-prod-analytics-y-atribucion.md)**, que ya
+  recoge tus comprobaciones (Secrets de orders y shopcart sin las variables, colector sin compensaciones). Angelo está
+  fuera y pidió que lo subamos tú y yo ahora. A tus preguntas:
+  1. **Orden**: migraciones → colector → Secrets → **extensions → orders → shopcart** → graphql, campaigns, base-api → los
+     micros que solo suben el kernel → webapp → apps de Shopify. **orders antes que shopcart**, al revés de tu plan:
+     shopcart #95 ya manda `processor: 'STRIPE'` a `/payment-refunded`; con el orders viejo cada `charge.refunded` daría
+     500 y Stripe reintentaría durante días.
+  2. **Migraciones**: el 19/10 la de `slot.source` **la corriste tú**, por la opción B (script desde el pod de users;
+     está en tu journal `2026-10-19-prod-migracion-source-release-campaigns.md`, apartado «Quién: Miguel»). Igual ahora con
+     los tres scripts del paso 2, en orden. Corregí `m-cart-attribution-prod.js` para que lea `.env` (en prod no hay
+     `.env.local`).
+  3. **Alcance**: no son 3 servicios. Hacen falta también extensions (importe de cada devolución y logs sin tokens),
+     graphql (la atribución en las mutaciones), base-api y webapp (el dashboard nuevo), y **el kernel 1.0.280 en los 12
+     micros**: Angelo pidió hoy arreglar los tokens de Shopify y las keys en los logs (ya no es un diferido), y el arreglo
+     está en `@vio-/logger` (package-logger #10). El release `pkg=all` → 1.0.280 está corriendo; **los PRs de release se
+     mergean cuando los bumps de 1.0.280 hayan entrado en develop** (te aviso aquí).
+  4. **Los ~62 s de 503 por deploy**: prod tiene 0 órdenes desde el 16/10 y Angelo quiere que se haga ya, así que no
+     esperamos hora. Son ~15 deploys, pero los micros que solo suben el kernel no tienen tráfico.
+  5. **Verificación de ADR-0036 en prod**: de acuerdo contigo. Comprobamos el cableado (colector alcanzable desde el pod de
+     orders con su token, overview en 200 con los campos netos, contadores de compensación) y la prueba con una compra y
+     cancelación reales queda anotada para Angelo, sin darla por buena.
+  6. **Tus PRs**: `campaigns#22` mergeado (entra en el release #23) y `google-merchant-feed#5` mergeado a develop; el paso a
+     prod del feed es tuyo.
+  7. **Credenciales del `.env.test` de extensions** (Angelo, 21/10): valores de mentira ya en develop (#29). Te toca correr
+     [`cmp-envtest-vs-prod.py`](./assets/2026-10-21-prod/cmp-envtest-vs-prod.py) (compara por hash con los Secrets de prod
+     y solo imprime nombres) y rotar **solo** lo que salga «COINCIDE CON PROD».
+  **Reparto**: tú pasos 1–4 (punto de restauración, migraciones, Secrets, colector), el paso 6 (los `shopify app deploy` de
+  `vio-sync-staging` y `vio-sync`) y lo de las credenciales; yo mergeo y verifico el paso 5 en cuanto escribas aquí «pasos
+  1–4 hechos» y yo haya confirmado el kernel 1.0.280. La verificación final la hacemos juntos.
