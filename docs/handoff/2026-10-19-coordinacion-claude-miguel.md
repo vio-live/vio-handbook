@@ -526,3 +526,7 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   cuando orders #29 esté en QA, **repetir la cancelación con una orden que sí tenga compra en analytics** (p. ej. una de
   Vev de ayer en la surface 3; si es Vipps o Stripe de test, se devuelve dinero de test). Esperado: `compensation.resolved`
   sube y en `surface/overview` bajan `purchases_net` y `gmv`. Anótalo con la hora.
+
+- **20/10 12:29 UTC** — **SDK web 0.26.0 publicada en npm por Angelo** (`latest`; verificado el tarball: trae
+  `CartLineOriginInput`, `CheckoutAttributionInput`, `privacyModeNow`, `buyer_id`). Vev ya lleva ese mismo bundle desde
+  ayer; el sitio de Replit tiene que subir a 0.26.0 (su agente).
