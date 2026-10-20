@@ -441,3 +441,62 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   purchases_net 147 / gmv 127411 / gmv_gross 127411`. shopcart `695e383` 2/2 desde 11:45 (el `ECONNREFUSED` del arranque
   es el reintento de TypeORM antes del sidecar, como los de ayer). **Lo único que queda es tu cancelación real de prueba**;
   anótala con la hora y los contadores. Todo lo demás (ADR, journals, tabla, tarjetas de Alan) está escrito. Gracias.
+
+- **20/10 11:55 UTC — Puntos 3 y 4 HECHOS. El cable funciona; la cancelación de prueba sale
+  `unmatched`, y el motivo no es "orden antigua": las dos partes no comparten la clave de la orden.**
+
+  **Punto 3 — los tres pods de QA, bien.** CI/CD de los tres en verde (ext `5158350` 11:34,
+  orders `57fdf23` 11:36, shopcart `695e383` 11:44) y los tres pods **2/2 Running** y nuevos:
+  `extensions-7d58798955-jzm2t`, `orders-66fbdc8d6b-p5zb6`, `shopcart-765b9bf686-p5hs9`.
+  `Nest application successfully started` en los tres, **0 líneas** de `Unknown column` o
+  `QueryFailedError`. (Nota aparte, no es de esto: el CronJob `shopcart-reconcile` tiene un pod en
+  `Error` de las 06:44 UTC, de antes de estos merges; los tres siguientes salieron `Completed`.)
+
+  **Punto 4 — las variables llegaron a la imagen y el espejo está activo.** En el pod nuevo de
+  orders (digest `sha256:3edfec5b…`): `ANALYTICS_EVENTS_URL=https://events-staging.vio.live` y
+  `ANALYTICS_INTERNAL_TOKEN` de 64 hex, horneadas desde el blob. En el arranque **no sale**
+  `[analyticsMirror] ... not set`. No hubo que reiniciar nada a mano.
+
+  **La cancelación de prueba (orden 4415 de QA, 1000 NOK, 1 línea, `Partner`/`Other` a propósito
+  para no tocar Vipps ni Stripe), 11:53:05 UTC:**
+  - orders construyó el evento: `[orderService.compensate] order 4415 order_cancelled
+    6ac11941-c373-5bb5-8b20-9534055eaac1: 1000 NOK from 1 line(s), full=true, source=dashboard`.
+  - **Llegó al colector y autenticado** (`POST /v1/events` en su log, sin 401): URL y token buenos.
+  - El colector lo **descartó**: `compensation.unmatched: no purchase with that order_id —
+    discarded`, `order_ids: ["4415"]`. `/health` pasó a `compensation: {resolved:0, unmatched:1,
+    refused:0}`. `recent?name=order_cancelled` → `count: 0`, `surface/overview` igual que antes
+    (`purchases 147`, `purchases_net 147`, `gmv_gross 127411`). La orden sí quedó CANCELED en la DB
+    y orders dejó la rejection como **WARN**, no como error: la cancelación siguió. Eso está bien.
+
+  **Y aquí está lo que te interesa antes de tocar la tarjeta de Alan: con los datos de hoy
+  NINGUNA compensación puede casar.** Dos cosas, las dos medidas:
+  1. **El `order_id` de la compra y el de la compensación son claves distintas.** orders manda
+     `order_id = String(order.id)` (el número de Vio, p. ej. `4415`), y **todas** las compras de
+     staging llevan el **UUID del checkout**: consulté ClickHouse y no hay **ni una** compra con
+     `order_id` numérico de ≤6 cifras. El par que lo demuestra: orden **4582** (179 NOK,
+     19/10 14:26:02) y la compra **`8cea273b-08c4-41fd-9747-ab037ab123b1`** (179 NOK, 14:26:13,
+     surface 3, campaña 9) son **la misma compra** con dos nombres. En la SDK viene de
+     `purchaseFromPaymentSuccess` → `firstId(d.orderId, r.confirmation?.orderId, d.checkoutId)`:
+     cuando el número de Vio no está listo al pagar, cae al `checkoutId`. La SDK **ya sabe** pedir
+     el número (`order_id` de `GetCheckout`, 08/10) para el recibo, pero no lo usa para el evento.
+  2. **Ningún pedido de QA trae su surface**: `surface_id`, `campaign_id` y `buyer_ref` están a
+     NULL en **los 2309** pedidos. Sin uno de los dos caminos (surface en el pedido, o compra con
+     el mismo `order_id`) el colector no tiene a quién atribuir la compensación y la tira.
+     Para pedidos nuevos (tras shopcart#94 de hoy) el `surface_id` debería venir y el evento se
+     **guardaría**, pero ojo: con `clientAppId` puesto el colector **no cuenta `resolved`**, y las
+     lecturas netas unen compensación y compra por `(client_app_id, order_id)`, así que **el dinero
+     neto sigue necesitando que la clave coincida**.
+
+  **Lo que yo no voy a hacer sin que lo digas:** fabricar un `order_cancelled` a mano contra una
+  compra real de staging (p. ej. la `8cea273b`) para ver el camino bueno. Probaría la resolución y
+  movería las tiles netas en staging, pero mete un dato falso en las métricas con las que estás
+  verificando el webapp. Si lo quieres, lo hago en un minuto y lo dejo anotado; si no, el camino
+  bueno queda por verificar hasta que una compra y su pedido compartan clave.
+
+  **Extra que me encontré y no es de este cambio:** el log de orders imprime la orden entera en
+  `[orderService.cancelOrder] order ... found`, y ahí van los `apiCredentials` del vendedor
+  (`apiKey` **y** `apiToken`) **en claro**. En QA es un usuario de prueba, pero es el mismo código
+  en producción. Misma familia que los tokens de Shopify en los logs de prod que Angelo dejó
+  diferido; lo dejo apuntado, no lo toco.
+
+  **Prod: nada.** Ni variables, ni colector, ni migraciones.
