@@ -90,3 +90,54 @@ author: miguel
   orders), que en el arranque **no** salga `[analyticsMirror] ... not set`, y una cancelación de
   prueba con `order_cancelled` en el colector + `compensation.resolved` subiendo.
 - Prod: **nada tocado**.
+
+## Espejo de compensaciones activo en QA: emite, pero la compensación no casa con su compra — miguel
+
+- Quién: Miguel.
+- Dónde: `kubernetesqa-sc` (pods `extensions`, `shopcart`, `orders`), colector de staging
+  `129.151.196.99`, MySQL de QA (`outshifter` por IP privada), ClickHouse `vio_staging`.
+- Cuándo: 20/10 11:45–11:56 UTC.
+- Contexto: tras mergear extensions#27 (`5158350`), orders#28 (`57fdf23`) y shopcart#95 (`695e383`),
+  tocaba comprobar los tres pods y verificar el espejo de compensaciones con una cancelación real.
+- Hecho:
+  - **Pods:** los tres **2/2 Running** y nuevos, `Nest application successfully started`, **0**
+    `Unknown column` / `QueryFailedError`.
+  - **Variables en la imagen:** en el pod de orders (digest `sha256:3edfec5b…`) están
+    `ANALYTICS_EVENTS_URL` y `ANALYTICS_INTERNAL_TOKEN` (64 hex) horneadas desde el blob, y en el
+    arranque **no** sale `[analyticsMirror] ... not set`. No hizo falta reiniciar a mano: las puse
+    en el blob antes del merge y el build del merge las horneó.
+  - **Cancelación de prueba:** orden **4415** de QA (1000 NOK, 1 línea, canal `Partner`, procesador
+    `Other` **elegido a propósito** para no disparar la cancelación en Shopify/Woo ni el reembolso
+    de Vipps/Stripe). `POST /4415/cancel` contra el propio micro, 11:53:05 UTC → 200.
+    - orders emitió: `order_cancelled 6ac11941-c373-5bb5-8b20-9534055eaac1`, 1000 NOK, `full=true`,
+      `source=dashboard`.
+    - **Llegó al colector y autenticado** (`POST /v1/events` en su journal, sin 401): la URL y el
+      token funcionan. Eso es lo que yo tenía que probar.
+    - El colector lo **descartó**: `compensation.unmatched: no purchase with that order_id —
+      discarded`, `order_ids: ["4415"]`; `/health` → `compensation {resolved:0, unmatched:1,
+      refused:0}`; `recent?name=order_cancelled` → `count: 0`; `surface/overview` sin cambio.
+      La orden quedó CANCELED en la DB y orders registró el rechazo como **WARN**: la cancelación
+      no se rompe por el espejo, que es el diseño.
+- Hallazgo (medido, no deducido): **con los datos de hoy ninguna compensación puede casar.**
+  1. orders manda `order_id = String(order.id)` (el número de Vio) y **todas** las compras de
+     staging llevan el **UUID del checkout**. En ClickHouse no hay **ni una** compra con `order_id`
+     numérico de ≤6 cifras. El par que lo prueba: orden **4582** (179 NOK, 19/10 14:26:02) y compra
+     **`8cea273b-08c4-41fd-9747-ab037ab123b1`** (179 NOK, 14:26:13, surface 3, campaña 9) son la
+     misma compra con dos claves. Viene de `purchaseFromPaymentSuccess` en la SDK:
+     `firstId(d.orderId, r.confirmation?.orderId, d.checkoutId)` cae al `checkoutId` cuando el
+     número de Vio no está listo al pagar (la SDK ya sabe pedirlo — `order_id` de `GetCheckout`,
+     08/10 — pero para el recibo, no para el evento).
+  2. **Ningún pedido de QA trae su surface:** `surface_id`, `campaign_id` y `buyer_ref` están a NULL
+     en **los 2309** pedidos. Sin surface en el pedido ni compra con el mismo `order_id`, el
+     colector no puede atribuir la compensación y la tira. Para pedidos nuevos el `surface_id`
+     debería venir y el evento se guardaría, pero con `clientAppId` puesto el colector **no cuenta
+     `resolved`** y las lecturas netas unen compensación y compra por `(client_app_id, order_id)`:
+     **el dinero neto sigue exigiendo que la clave coincida**.
+- No hecho a propósito: fabricar un `order_cancelled` contra una compra real de staging para
+  ejercitar el camino bueno. Probaría la resolución, pero mete un dato falso en las métricas con las
+  que se está verificando el webapp. Queda ofrecido en el canal del handoff.
+- Hallazgo colateral, ajeno a este cambio: `[orderService.cancelOrder] order ... found` imprime la
+  orden entera y con ella los `apiCredentials` del vendedor (`apiKey` y `apiToken`) **en claro** en
+  el log. Es el mismo código en producción. Misma familia que los tokens de Shopify en claro que
+  Angelo dejó diferido; anotado, no tocado.
+- Prod: **nada**.
