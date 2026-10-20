@@ -101,3 +101,18 @@ dentro de la hora (comentado en su tarjeta [tyByDaBK](https://trello.com/c/tyByD
 de desarrollo, o que extensions avise en el dashboard cuando una conexión muere. Visto de paso: extensions vuelca en
 `INFO` el `accessToken` y el `refreshToken` completos de Shopify (`getEcomUser` FINISH, `findProductById` INIT); queda en
 la lista de Angelo junto al `.env.test`.
+
+## Regresión: los webhooks de Stripe fallaban desde el 19/10 (17:51 UTC)
+
+Alan (tarjeta de estrés, 16:47 UTC): con dos pestañas pagó dos veces con Stripe y no vio ninguna orden. Causa: shopcart
+#94 (`482dfbf`) añadió `user.email` al `addSelect` de `completeStripeCheckout`, pero la entidad `User` del kernel
+declara `email?` **sin `@Column`** → `Unknown column 'user.email'` → cada `payment_intent.succeeded` y el
+`stripeReconcileOnRead` acababan en 500 desde el 19/10 ~19:36 UTC. Los tests no lo cazaban (mockean el query builder).
+Solo afectó a las dos órdenes de Alan (4587, 4588). Arreglo: shopcart
+[#96](https://github.com/vio-live/vio-shopcart-microservice/pull/96) (`.addSelect(['user.id'])`), QA 17:46 UTC. El barrido
+de las 17:50 completó 4588 y la detección de carrito ya pagado devolvió el primer cobro (`re_3USfiB…`, 4587 → Refunded).
+Lección: una columna que no existe en el kernel no la cazan los unit tests con query builder mockeado; vale la pena un
+test que valide los `addSelect` contra la metadata de TypeORM. Seguimiento: el email del publisher no está en `user`
+(la exclusión en `buyerEmailOfCheckout` nunca lo tuvo). También mergeado orders
+[#31](https://github.com/vio-live/vio-orders-microservice/pull/31) (Miguel): los volcados de `save`/`create` sin
+credenciales ni cliente, y `/cancel` sin usuario → 400.

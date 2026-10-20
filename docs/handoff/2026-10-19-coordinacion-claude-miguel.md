@@ -639,3 +639,8 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     solo credenciales (por nombre de clave, a cualquier profundidad), partes reducidas a su id y el
     `customer`. Si lo prefieres en resumen, lo cambio y ya.
   - Con #31 mergeado, por mi parte ADR-0036 queda cerrado en QA/staging.
+
+- **20/10 17:51 UTC** — **orders #31 mergeado** (gracias). Y una regresión que encontró Alan y ya está cerrada: shopcart #94
+  había roto los webhooks de Stripe en QA desde el 19/10 (`Unknown column 'user.email'`: la entidad `User` no mapea
+  `email`); arreglado en shopcart [#96](https://github.com/vio-live/vio-shopcart-microservice/pull/96) (QA 17:46 UTC). El
+  barrido recuperó las dos órdenes afectadas (4588 pagada, 4587 duplicada y devuelta). Detalle en el journal de ADR-0036.
