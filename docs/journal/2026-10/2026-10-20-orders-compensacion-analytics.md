@@ -55,13 +55,43 @@ determinista (UUID v5), fire-and-forget, y sin romper nada si faltan las variabl
   (`markPaymentRefunded` recibe el `source` como tercer argumento; la relectura de líneas tras cancelar una
   no es una liquidación).
 
+## Revisión independiente aplicada (commit `a46c47b`, mismo PR)
+
+- **B1 — `value` función de la clave.** Un reembolso parcial en la tienda se cuenta por
+  `data.refundAmountMinor` (×100, como los totales de extensions) bajo `refund:<id>:shop:<refundId>`; sin
+  él, lo que movió el PSP esta vez (`money.refunded`, minor real); **desaparece el total acumulado**
+  (`shop_running_total`): sin cifra fiable o sin clave estable no se emite, `warn` una vez y luego `info`.
+  El mismo `refundId` re-enviado por Woo en cada `order.updated` → mismo `event_id`, mismo importe, diga lo
+  que diga el PSP esa vez (test). `RefundedInShopDto.refundAmountMinor` nuevo.
+- **B2 — claves por línea.** `refund:<id>:items:<ids>` siempre para líneas, también la última
+  (`order_cancelled`, `full: true`, bajo la clave de la línea). `order:<id>:cancel` solo para la orden
+  entera en una llamada (reseller; supplier cuyas líneas eran todas y nadie había cancelado antes). Dos
+  `deleteItemOrder` concurrentes → dos claves, Σ = total; una + otra + el reseller el resto → Σ = total,
+  un solo `full` (repositorio con estado en el test).
+- **W2 — parcial del PSP.** `markPaymentRefunded` con `full: false` emite `order_refunded` por `amountMinor`
+  (minor real por moneda) bajo `refund:<id>:psp:<refundId>` (`PaymentRefundedDto.refundId` nuevo) o, sin
+  id, `psp-total:<refundedMinor>`; sin nada estable, no emite. Orden ya cerrada → nada más.
+- **W3 — `source` desde el controller.** `data.source` (`shopify|woo|dashboard|psp`) en `/:orderId/cancel`
+  (`CancelOrderDto`), `/post/updateStatusItemOrder` y `/:orderId/items/:itemId`; default `dashboard`.
+  Tests de controller para los cuatro cableados (incluido `paymentRefunded`).
+- **W5** `items` ≤ 100 (el `value` entero) y `quantity` ≤ 9999. **W6** `fromHundredths` (extensions, siempre
+  ×100) y `fromPspMinor` (minor real, monedas sin decimales) separados, probados con NOK y JPY.
+- **Nit** `deleteItemOrder` lee las líneas una vez (`linesAfterCancelling`) para compensación y liquidación.
+- **Test de contrato** `order-compensation-contract.unit.spec.ts`: importa el `analyticsEventSchema` real
+  de `worktrees/analytics-compensacion` y valida los cuatro eventos de muestra — **corre, no se salta**
+  (el colector ya acepta los nombres); si el worktree o los nombres faltan, `describe.skip` con el motivo.
+- Números tras la revisión: `jest.unit` **17 suites / 472 OK** (+2 skips preexistentes); `tsc` limpio salvo
+  el histórico.
+
 ## Decisions
 
 - Shape **anidado** como lo valida el colector (`commerce.*`, `context.*`), no plano: es el único que acepta.
   Los campos por ítem `value`/`campaign_id`/`location_id` son aditivos (el item schema hace `.strip()`).
-- La última línea cancelada suelta emite **`order_cancelled`** (la orden queda sin valor) con el `value` de esa
-  línea sola y la misma clave `order:<id>:cancel` que una cancelación entera: el colector suma `value`s y usa
-  `full` para marcar la orden vacía; nunca se envía el total de la orden si parte ya se compensó.
+- La última línea cancelada suelta emite **`order_cancelled`** (`full: true`) con el `value` de esa línea
+  sola y **bajo la clave de la línea** (`refund:<id>:items:<id>`), no bajo `order:<id>:cancel`: así el
+  mismo importe nunca entra por dos claves y las compensaciones de una orden suman la orden, nunca más.
+- Parcial seguido de total: el total va por las líneas de Commerce (bruto) con `full: true`; el colector
+  fija la orden a cero en vez de sumar (para eso está `full`).
 - `sponsor_id` no va: la orden no lo tiene.
 
 ## Blockers / open questions
