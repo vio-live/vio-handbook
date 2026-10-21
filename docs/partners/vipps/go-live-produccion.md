@@ -106,7 +106,19 @@ del `:latest` del registro. Ninguna migración.
    1.0.270–1.0.273, `Cart.seller`). Va en la próxima release completa.
 3. Las purgas de Datadog esperan a esa misma release.
 
-## Fase 2 — Partner keys (de Vipps a nosotros) — POR LOCALIZAR
+## Fase 2 — Partner keys (de Vipps a nosotros) — HECHA, verificadas el 21/10
+
+> **21/10, verificadas contra el Vipps de producción.** Son las del Excel cifrado «NewCo AS -
+> Partner Keys» del 16/10 (JSON del onboarding: `client_Id`, `client_Secret`, dos subscription
+> keys y MSN vacío). Probadas sin imprimir ningún valor:
+> - `POST https://api.vipps.no/accesstoken/get` con las tres claves y `Merchant-Serial-Number:
+>   1179558` → **200**;
+> - ePayment `GET /epayment/v1/payments/<referencia inventada>` para el MSN 1179558 → **404**, es
+>   decir, las claves pueden actuar por Careless;
+> - Management API `GET /management/v1/sales-units/1179558` → **200**, «Careless AS».
+>
+> El «inválidas» del 16/10 era un fallo de cómo se probaron, no de las claves. Lo siguiente es la
+> fase 3: cargarlas en producción.
 
 > **21/10, leída la documentación oficial de Vipps.** Fuentes:
 > [partner keys](https://developer.vippsmobilepay.com/docs/partner/partner-keys/),
