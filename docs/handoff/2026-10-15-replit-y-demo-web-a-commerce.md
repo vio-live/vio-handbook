@@ -115,7 +115,8 @@ muestra los productos de esa campaña en la siguiente carga; en analytics los ev
 
 1. **Surface web** «Mote & Livsstil (Replit)» del publisher Aller, con su key, en el dashboard de staging.
 2. **Brand Careless en QA** con un channel activo (Stripe test y Vipps test) y los cinco productos del artículo
-   (copia desde prod: scripts en preparación, ver el journal del 21/10).
+   (no están en prod: salen de la tienda de Careless con el import de
+   [`assets/2026-10-21-careless-qa`](./assets/2026-10-21-careless-qa/README.md)).
 3. **Una campaña** «Careless · 10 nyheter» en esa surface con Careless de brand principal, activa.
 4. La key de la surface, al agente de Replit (la pega Angelo; nunca en el repo).
 
