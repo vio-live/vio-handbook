@@ -54,3 +54,11 @@ subáis a prod»*.
 
 - Miguel: «pasos 1–4 hechos» en el canal → claude mergea el paso 5 → Miguel paso 6 → verificación juntos.
 - Angelo: prueba real en prod; resultado de la comparación de credenciales; republicar páginas de prod en Vev.
+
+## Ejecutado (21/10 08:00–09:06 UTC)
+
+Miguel: punto de restauración (`pre-release-20261021`), las tres migraciones, variables (orders y shopcart; base-api ya
+tenía las suyas) y colector `132887e` en `events.vio.live`, todo verificado. claude: los 15 PRs de release mergeados en
+el orden del runbook, CI/CD en verde, pods 2/2 con kernel 1.0.280 y 0 errores de arranque; webapp en Vercel prod sin
+bloqueo. Logs de prod: 0 credenciales en claro desde el deploy, 35 `[redacted]` en extensions. Pendiente: `shopify app
+deploy` de los dos apps, comparación de credenciales y prueba real de ADR-0036 (prod sin surfaces ni campañas).

@@ -7,6 +7,11 @@ status: live
 
 # Release a prod — slots v2, analytics avanzado, atribución y cancelaciones (ADR-0034/0035/0036)
 
+> **Estado 21/10 09:08 UTC:** pasos 1–4 hechos por Miguel (08:00–08:10 UTC) y paso 5 hecho por claude (08:15–09:06 UTC):
+> los 15 repos en prod con kernel 1.0.280, todos los pods sanos, logs sin credenciales comprobado. **Pendiente:** paso 6
+> (`shopify app deploy` de `vio-sync-staging` y `vio-sync`), la comparación de credenciales del §10b, y la prueba real
+> de ADR-0036 (prod aún sin surfaces ni campañas).
+
 Lo que está en QA/staging desde el 19–20/10 pasa a prod. Ejecuta **Miguel**; claude mergea los PRs del paso 5 si se lo
 pides en el canal. Prod hoy **no tiene ventas** (0 órdenes desde el encendido del 16/10), así que no hay datos en riesgo:
 este release es para que la primera campaña real ya nazca atribuida y con analytics completo.
