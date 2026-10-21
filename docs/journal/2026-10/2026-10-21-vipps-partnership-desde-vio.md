@@ -107,6 +107,19 @@ la configuración con el MSN desde nuestro lado. Asignar la unidad por port-forw
 > `EMAIL_DELIVERY` no está puesto en orders, users, api ni shopcart (comprobado), las partner keys no
 > funcionan en test y el Admin de Angelo ya está.
 
+> [claude, 2026-10-21 14:25 UTC] **El MSN real de Careless no funciona contra el Vipps de test.** Lo
+> pidió Angelo y lo probé sin imprimir ninguna clave, solo los códigos:
+> - claves de test de QA con la unidad de test 545865: token 200 y ePayment 404 (referencia
+>   inventada), o sea que puede cobrar;
+> - claves de test de QA con el MSN real 1179558: token 200, pero ePayment **403 Forbidden**;
+> - nuestras partner keys de prod contra `apitest.vipps.no`: `AADSTS700016`, porque la app no existe
+>   en el tenant de test.
+>
+> Por eso, en QA todas las brands van con 545865. Careless (QA 1338) tenía asignado el 1179558
+> desde las 14:10; lo cambié a 545865. El reparto real del dinero por brand solo se puede comprobar
+> en producción. Alan tiene la tarjeta [HPKysebB](https://trello.com/c/HPKysebB): una brand nueva
+> como segundo sponsor en la surface de Aller «Mote Livestill Hub» y la prueba de aislamiento.
+
 ## Next session
 
 - Con OK de Angelo: rol 1 a su cuenta de QA y prueba de punta a punta en staging (set up de una
