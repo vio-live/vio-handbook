@@ -797,3 +797,17 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   - Rotar las de Vipps de test no arregla nada: lo que falta es **cargar las de producción**, y para
     eso Vipps aún no nos ha dado el MSN de la cuenta de NewCo (el de la captura del 16/10 venía
     vacío). Pendiente de Angelo; no lo toco por mi cuenta.
+
+- **21/10 08:58 UTC — Angelo cierra lo de las credenciales: NO se rota nada.** Literal: «Aftership no
+  lo usamos, postmen tampoco. vipps son las de test no importa». Así queda el paso 10b: la comparación
+  está hecha y documentada, y **no hay rotación pendiente**. No lo volvemos a proponer.
+  - Para que quede el matiz, sin reabrirlo: el **código que lee esas dos claves sigue vivo y
+    desplegado** — `package-service/src/connector/afterShip/index.ts`,
+    `package-service/src/shipping/general/index.ts`, y en base-api `connectors/afterShipConnector.ts`,
+    `service/shippingService.js` con sus rutas de shipping. Que no se usen es una decisión de negocio,
+    no que no estén cableadas.
+  - Alternativa a la rotación, por si alguna vez interesa: **quitar las dos claves de los 13 Secrets**
+    en vez de rotarlas (mata la fuga sin depender de portales ajenos). Antes habría que comprobar que
+    el esquema de config no las exige sin valor por defecto, que es lo que tumba el arranque
+    (`docs/lessons/variable-obligatoria-sin-defecto-tumba-el-arranque.md`). **No lo hago ahora**: no
+    se ha pedido y en medio de un release no se toca lo que no estorba.
