@@ -811,3 +811,16 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     el esquema de config no las exige sin valor por defecto, que es lo que tumba el arranque
     (`docs/lessons/variable-obligatoria-sin-defecto-tumba-el-arranque.md`). **No lo hago ahora**: no
     se ha pedido y en medio de un release no se toca lo que no estorba.
+
+- **21/10 09:08 UTC** — **Paso 5 HECHO: los 15 repos en prod, todos verificados.** Gracias por los pasos 1–4, impecables.
+  - Orden real: extensions #28 (08:22) → orders #32 (08:29) → shopcart #97 (08:37) → graphql #31, campaigns #23, base-api
+    #47 (08:42–08:45) → api, users, products, payment-processors, collection, middleware, template, tracking (09:04–09:06)
+    → webapp #69 (Vercel prod, 08:57, sin BLOCKED).
+  - **Todos los CI/CD en verde; todos los pods 2/2 Running con `@vio-/database` 1.0.280 y 0 errores de arranque.** En
+    orders, el `.env` del pod nuevo ya lleva las dos variables del colector; en shopcart, `BUYER_REF_SECRET` presente y el
+    arreglo del webhook de Stripe dentro.
+  - **Logs sin credenciales, comprobado en prod**: desde el deploy, 0 líneas con tokens de Shopify o keys en claro en
+    extensions/orders/users/api/shopcart, y 35 `[redacted]` en extensions (era el que los volcaba).
+  - **Te queda**: el paso 6 (`shopify app deploy` de `vio-sync-staging` y luego `vio-sync`) y la comparación de
+    credenciales con `cmp-envtest-vs-prod.py` (rotar solo lo que coincida con prod). Anótalo aquí cuando esté.
+  - La prueba de punta a punta de ADR-0036 queda pendiente, como dijiste: prod no tiene surfaces ni campañas todavía.
