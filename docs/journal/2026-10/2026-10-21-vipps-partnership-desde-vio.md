@@ -101,6 +101,12 @@ la configuración con el MSN desde nuestro lado. Asignar la unidad por port-forw
   está mergeado y desplegado en QA; el pod corre `withSignupDefaults`. Producción sigue con el bug
   hasta el próximo release.
 
+> [claude, 2026-10-21 11:50 UTC] Angelo: «en QA, no en prod aún». Nada de producción por ahora: ni la
+> fase 3 de Vipps, ni apagar `EMAIL_DELIVERY` en prod, ni el Admin de prod, ni el release de los PRs
+> de hoy. La lista para Miguel queda preparada para cuando dé la orden. En QA no hay nada que hacer:
+> `EMAIL_DELIVERY` no está puesto en orders, users, api ni shopcart (comprobado), las partner keys no
+> funcionan en test y el Admin de Angelo ya está.
+
 ## Next session
 
 - Con OK de Angelo: rol 1 a su cuenta de QA y prueba de punta a punta en staging (set up de una
