@@ -72,3 +72,13 @@ líneas, y quien mira la caja de la surface mira `charged`.
 - `orders_unattributed` puede salir alto al principio en superficies con bloqueadores: es un hallazgo, no un fallo.
 - Una orden pagada de una surface sin `purchase` **no tiene sesión**: no entra en `conversion` ni en el funnel, y así
   se documenta en el dashboard.
+
+## Implementación (2026-10-21)
+
+| Repo | PR | Qué |
+|---|---|---|
+| vio-analytics | [#27](https://github.com/vio-live/vio-analytics/pull/27) | contrato, ingesta (403 con key de surface), filas fuera del scan de comportamiento, lecturas `charged` / `orders_paid` / `orders_unattributed` en overview de surface y summary de campaña |
+| vio-orders-microservice | [#33](https://github.com/vio-live/vio-orders-microservice/pull/33) | `order-paid.ts` + emisión en `processOrderPaidByCustomer` |
+
+Falta: la webapp (mostrar la caja al lado del gmv y señalar `orders_unattributed`), y decidir si
+`conversion` menciona que las ventas sin sesión quedan fuera.
