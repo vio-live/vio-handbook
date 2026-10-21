@@ -90,3 +90,20 @@ antes que están en prod.
 - Envío nuevo de 1338: «Default Shipping», 10 NOK, Noruega; es lo que crea products si la marca no tiene ninguno.
 - **Pendiente:** el channel de Careless con Stripe y Vipps de test y estos cinco productos dentro (desde el dashboard),
   la surface de Replit y la campaña.
+
+## Tarde-noche: segunda tanda a prod y la marca en el SDK
+
+- **Segunda tanda a prod, desplegada y verificada (18:21 UTC):** api, base-api, users, orders, campaigns, webapp y el
+  feed. Detalle y lo pendiente (paso 1 de Miguel, decisiones de Vipps): [runbook](../../handoff/2026-10-21-release-prod-2-caja-y-vipps-partner.md).
+  - **Orders fue por una rama de release:** `master` tiene su propio chart de prod, y el `.tgz` se reempaquetó con los valores de prod y el CronJob.
+  - **El barrido ya corre en prod.**
+- **Conexión Careless ↔ Aller en QA:** funcionaba. La solicitud quedó aceptada a las 14:00 UTC y Vio copió los cinco
+  productos a Aller. Los 409 de antes eran reintentos con la solicitud ya pendiente.
+- **SDK 0.27.0, pedido de Replit:** nombre y logo de la brand en la ficha, el checkout y la confirmación; sale del
+  checkout, no de la página; se recupera al volver de Vipps y al recargar.
+  - **PRs:** [#91](https://github.com/vio-live/vio-web-sdk/pull/91) y [#92](https://github.com/vio-live/vio-web-sdk/pull/92), mergeados.
+  - **Tests:** 712 pasan; los 16 que fallan ya fallaban en `main`.
+  - **En revisión** quité el nombre repetido en la ficha: sin logo, la topbar ya nombra al vendedor.
+  - **Publicar en npm:** Angelo. El texto para Replit está en su handoff.
+- **El clasificador del agente** pidió un OK explícito para desplegar en prod y para mergear el SDK. «Arranca» no
+  bastó; «te autorizo» y «sube los cambios» sí.

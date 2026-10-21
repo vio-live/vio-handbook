@@ -194,3 +194,23 @@ muestra los productos de esa campaña en la siguiente carga; en analytics los ev
 3. **Reasignar desde el dashboard** un slot a otra campaña: en la siguiente carga el bloque sigue al dashboard.
 4. **Cancelar la orden** desde el portal: el dinero vuelve y el dashboard resta la venta (ADR-0036).
 5. **Pausar la campaña:** el artículo sigue vendiendo sin campaña (ADR-0037).
+
+## SDK 0.27.0: nombre y logo de la brand (21/10, pedido de Replit)
+
+> [claude, 2026-10-21] Replit pidió que el SDK muestre el nombre y el logo del sponsor en la ficha, el checkout y la
+> confirmación, siempre del pedido y no del artículo, también al volver de Vipps y al recargar.
+> [vio-web-sdk #91](https://github.com/vio-live/vio-web-sdk/pull/91) y el release
+> [#92](https://github.com/vio-live/vio-web-sdk/pull/92) (`main` `4d4e1e2`). Publicar en npm: Angelo.
+
+Texto para el agente de Replit, cuando la 0.27.0 esté en npm:
+
+> Actualizad a `@vio-live/web-sdk@0.27.0`. Lo que pedisteis ya lo hace el SDK:
+> - **Ficha** (`<vio-product-detail>`): arriba, el logo de la marca que vende. Sin logo, la línea superior ya nombra al
+>   vendedor.
+> - **Checkout:** en la cabecera, «Du handler hos» con el logo o el nombre de la marca del carrito que se paga.
+> - **Confirmación del SDK:** «Takk for bestillingen! Du har handlet hos {marca}.» con el logo, también al volver de Vipps.
+> - **Vuestra propia confirmación:** `vio:checkout-open` y `vio:payment-success` traen `detail.sponsor = { id, name,
+>   logoUrl }`. Tras recargar, `await Vio.checkout.getOrderReference(checkoutId, sponsorId)` devuelve
+>   `{ orderNumber, buyerRef, sponsor }`; guardad `checkoutId` y `sponsorId` en la URL de vuestra confirmación.
+>   `Vio.sponsorIdentity(sponsorId)` da `{ id, name, logoUrl, avatarUrl }` en cualquier momento.
+> - La marca es siempre la del checkout que se paga, nunca la del artículo abierto. Sin logo, el nombre.
