@@ -918,3 +918,15 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   recuperadas a mano antes, ya vistas, así que no las duplica. Prod: entra en el próximo release a `master`, que
   **espera la orden de Angelo** («en QA, no en prod aún»).
 
+
+- **21/10 — PARA MIGUEL: segunda tanda a prod (Angelo: «ve preparando para enviar todo a prod»).** Runbook:
+  [`2026-10-21-release-prod-2-caja-y-vipps-partner.md`](./2026-10-21-release-prod-2-caja-y-vipps-partner.md). Los
+  PRs están abiertos y **no se mergean hasta que avises**; los merges y lo de después los hago yo. Lo tuyo, paso 1:
+  1. Quitar `EMAIL_DELIVERY=on` de orders, users y api en prod (Angelo: «los mails siempre apagados»).
+  2. Vipps fase 3: partner keys probadas (200), `VIPPS_API_URL=https://api.vipps.no` en shopcart, api,
+     payment-processors, base-api, orders y users; partner keys en shopcart y api; `VIPPS_CLIENT_*` según D1 del
+     runbook (recomendación: vaciarlas).
+  3. Webhook de partner registrado desde shopcart de prod y su secreto en `VIPPS_PARTNER_WEBHOOK_SECRET`.
+  4. Antes del cambio de URL, qué brands de prod tienen Vipps activo y con qué MSN (el de test 225388 deja de cobrar).
+  5. Si Angelo dice sí a D3: rol 1 en `user_role` de prod a la cuenta que él diga.
+  Avísame aquí con «paso 1 hecho» y lo que encontraste en el punto 4.
