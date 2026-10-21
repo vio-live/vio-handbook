@@ -897,3 +897,13 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   - **Ruido de dependabot en `vio-shopify-sync`: 17 PRs abiertos**, varios con saltos mayores
     (typescript 7, eslint 10, vitest 5, react-router). No los toco: no se mergean a ciegas y no son de
     este release. Conviene decidir si se cierran en bloque o se repasan.
+
+- **21/10 11:50 UTC — Angelo cierra el punto del publisher: espera al plugin.** Literal: «lo de prod
+  lo haremos cuando instalen el plugin de prod». Así que **no siembro el Admin** en `user_role` (sigue
+  a 0 filas) ni doy de alta el publisher, y **el flujo no se ejercita en prod** por ahora. No es un
+  bloqueo abierto, es una espera con disparador: que instalen el plugin. No lo volvemos a sacar en los
+  repasos.
+  Lo que estará listo ese día, sin repetir nada: las 3 migraciones de atribución, los Secrets de
+  orders y shopcart, el colector en `67501a2` y los 15 PRs del release con kernel 1.0.280. Y dos cosas
+  a recordar entonces: **Vipps de prod apunta a `apitest.vipps.no`** (MSN 225388, falta el real;
+  Stripe sí es `sk_live`) y **orders en prod todavía no emite `order_paid`**.
