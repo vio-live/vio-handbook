@@ -143,6 +143,28 @@ la configuración con el MSN desde nuestro lado. Asignar la unidad por port-forw
 > el texto nuevo está publicado. A Alan le contesté su pregunta: una cuenta admin es del equipo de
 > Vio, no una brand, y la brand va en una cuenta aparte.
 
+> [claude, 2026-10-21 21:07 UTC] **Tercer reporte de Alan en HPKysebB (20:45 UTC). Es un bug de dinero.**
+> Una devolución parcial en Shopify **antes de capturar** el pago de Vipps (orden 4596, brand 1340, partner
+> 545865) no movía nada. Al capturar se habría cobrado la reserva entera, incluido lo que la tienda ya
+> había devuelto. Causa: shopcart descartaba la devolución con «nothing captured yet: a reservation
+> cannot be partly released», porque Vipps no libera una parte de una reserva.
+>
+> Arreglo:
+> - [vio-shopcart-microservice#98](https://github.com/vio-live/vio-shopcart-microservice/pull/98): cubre
+>   la captura al enviar.
+> - [#99](https://github.com/vio-live/vio-shopcart-microservice/pull/99): cubre la captura a mano desde la
+>   tarjeta, que es el modo que usa Alan («account»). La primera versión había supuesto la captura al
+>   enviar sin mirar el modo de su brand.
+>
+> Con los dos, el total devuelto en la tienda se apunta en el pago (`SHOP_REFUND_BEFORE_CAPTURE`). Al
+> capturar, Vio cobra solo lo que queda y libera lo devuelto (`SHOP_REFUND_NOT_CAPTURED`). Las
+> devoluciones siguientes no lo vuelven a contar, y la tarjeta muestra el importe correcto que falta
+> por capturar.
+>
+> Verificado en QA: reproduje la devolución de la 4596 llamando directamente a shopcart (no a orders,
+> para no duplicar la compensación en analytics) y su tarjeta quedó en 52,90 por capturar de 87,80.
+> **El bug sigue en prod hasta el próximo release.**
+
 ## Next session
 
 - Con OK de Angelo: rol 1 a su cuenta de QA y prueba de punta a punta en staging (set up de una
