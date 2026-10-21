@@ -108,6 +108,29 @@ del `:latest` del registro. Ninguna migración.
 
 ## Fase 2 — Partner keys (de Vipps a nosotros) — POR LOCALIZAR
 
+> **21/10, leída la documentación oficial de Vipps.** Fuentes:
+> [partner keys](https://developer.vippsmobilepay.com/docs/partner/partner-keys/),
+> [partner checklist](https://developer.vippsmobilepay.com/docs/partner/partner-checklist/),
+> [standard](https://developer.vippsmobilepay.com/docs/APIs/access-token-api/standard-authentication/)
+> y [specialized authentication](https://developer.vippsmobilepay.com/docs/APIs/access-token-api/specialized-authentication/).
+>
+> - **No se sacan del portal.** El correo de bienvenida trae solo las claves de la unidad de test
+>   (NewCo 545865). Tras aprobar el checklist, *partner@vippsmobilepay.com* manda «la información
+>   que falta»; ahí vienen las partner keys de producción. Si se pierden, se piden al partner
+>   manager (Fredrik Rogne) o a partner@.
+> - **Solo funcionan en producción** (en test no hay funcionalidad de partner), y **la cabecera
+>   `Merchant-Serial-Number` es obligatoria** en cada llamada.
+> - **ePayment** usa la autenticación estándar: `POST https://api.vipps.no/accesstoken/get` con
+>   `client_id`, `client_secret` y `Ocp-Apim-Subscription-Key`.
+> - La **Report API** y la **Sales API** usan claves de contabilidad y la autenticación
+>   especializada: `POST https://api.vipps.no/miami/v1/token`, Basic `client_id:client_secret`,
+>   `grant_type=client_credentials` y **sin** subscription key. Es otro juego de claves.
+> - **Nuestra propia unidad de producción no hace falta.** El partner hace todo en test, y en
+>   producción opera con las unidades de sus comercios (Careless, MSN 1179558).
+> - Siguiente paso: reprobar las claves del 16/10 con la autenticación estándar y el MSN de
+>   Careless. Si da `AADSTS7000215` otra vez, pedir a Fredrik o a partner@ que las reenvíen por un
+>   canal seguro.
+
 - **19/10 (corrige al 16/10):** el partner portal **no muestra las partner keys**. Solo tiene
   *Product Orders*, *Product Order Templates*, *Sales Units*, *Prices* y *Developers* (webhooks),
   según la [documentación del portal](https://developer.vippsmobilepay.com/docs/partner/partner-portal/).
