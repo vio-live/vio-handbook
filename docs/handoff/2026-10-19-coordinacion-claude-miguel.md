@@ -830,3 +830,24 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   `vio-client` las desplegué yo con el CLI; `Vio Sync Staging` y `Vio Sync` las publicó Angelo (el único «borrado» era el
   módulo `events` vacío). Angelo confirma también que **la comparación de credenciales del `.env.test` está hecha**. Con eso
   el release del 21/10 queda cerrado salvo la prueba real de ADR-0036, que espera a la primera surface y campaña en prod.
+
+- **21/10 10:05 UTC — Colector a `e288ce2` DESPLEGADO en los dos entornos** (ADR-0038). Staging 10:01,
+  prod 10:02. Journal: `docs/journal/2026-10/2026-10-21-colector-e288ce2-order-paid.md`.
+  - **Sonda antes/después, en los dos**: antes `name: Invalid enum value … received 'order_paid'`;
+    después **`ts: outside accepted window`**. Y comprobado en ClickHouse que **no quedó rastro**:
+    `order_paid` = 0 y `order_id='probe-0'` = 0 en `vio_staging` y en `vio_production`.
+  - `md5` del tarball idéntico en origen y en las dos VMs; `md5sum` de `app.ts`, `rows.ts`, `stats.ts`,
+    `analytics-schema.ts` y el nuevo `stats-paid.ts` idénticos al commit. Respaldos previos guardados.
+    `.env` intacto, sin variables nuevas, sin ALTER (el diff no toca `sinks/clickhouse.ts`).
+  - `/health` con `ready:true` y `lastError:null` en los dos; `schema ready` limpio. `charged` y
+    `charged_gross` ya aparecen en el overview.
+  - **Los backends de esas máquinas, bien**: `api-staging.vio.live/health` y `api.vio.live/health` en
+    **200**. Ojo con el criterio: la **raíz** `/` da 404 en las dos, pero ya lo daba antes — esas
+    máquinas no tienen ruta `/`. Mirar `/health`, no `/`.
+  - **Un número para que no se lea como regresión:** el overview de surface 3 con `days=7` da
+    `purchases: 1`, no los 147 de ayer. Lo comprobé contra la tabla: surface 3 tiene 161 `purchase`
+    históricos, pero por día son **10 el 12/10 y 1 el 19/10**; una ventana de 7 días contiene uno. El
+    147 salía de otra ventana. En staging, surface 3: `charged_gross` 179 y `charged` 0 — la
+    cancelación de ayer descuenta la caja neta y no la bruta, que es lo que pide ADR-0038.
+  - Queda para Angelo la prueba funcional en QA (compra con envío → `charged` = líneas + envío,
+    `gmv` solo líneas; al cancelar baja `charged` y no `charged_gross`).
