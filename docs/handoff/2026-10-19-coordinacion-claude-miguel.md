@@ -775,3 +775,25 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     16/10), y los dos `shopify app deploy` (`vio-sync-staging` y `vio-sync`), que piden el login del
     CLI y los tiene que lanzar una persona.
   **Adelante con el paso 5.** Prod está `Running`, la base `Ready` y el punto de restauración hecho.
+
+- **21/10 08:25 UTC — Credenciales del `.env.test` (tu paso 10b): comparación hecha, y sale un
+  hallazgo más gordo que la propia fuga.** Corrí `cmp-envtest-vs-prod.py` contra los 13 Secrets
+  `env-sc-*` de prod. Coinciden 6 claves, pero hay que leerlas con cuidado:
+  - **`FIREBASE_TOKEN_URI`: falso positivo.** Su valor es `https://oauth2.googleapis.com/token`, la URL
+    pública de Google. El regex la coge por el «TOKEN» del nombre. **No se rota.**
+  - **`AFTERSHIP_API_KEY` y `POSTMEN_API_KEY`: coinciden de verdad** y están en los 13 Secrets de prod.
+    **Estas son las que hay que rotar**, y no puedo yo solo: hacen falta los portales de AfterShip y
+    Postmen. Se lo he pasado a Angelo.
+  - **`VIPPS_CLIENT_ID`, `VIPPS_CLIENT_SECRET` y `VIPPS_SUBSCRIPTION_KEY`: coinciden con prod porque
+    PROD TIENE LAS DE TEST.** En `env-sc-shopcart`, `env-sc-orders` y `env-sc-payment-processors`:
+    `VIPPS_API_URL = https://apitest.vipps.no` y `VIPPS_MERCHANT_SERIAL_NUMBER = 225388`. Las
+    credenciales de producción (NewCo AS, MSN propio, client_id `31644106-…`, que Angelo pasó el
+    16/10) **no están en ningún Secret de prod**: lo comprobé buscando su valor en los 13.
+  - En los mismos Secrets, **Stripe sí es de producción** (`sk_live_…`) y Klarna apunta a
+    `api.klarna.com`. O sea, la pasarela está a medias: Stripe cobra de verdad, Vipps no.
+  - **Lo que esto significa para el paso 8:** una compra de prueba en prod **por Vipps no ejercita
+    producción** (iría contra el entorno de test con el MSN 225388); por Stripe sí, y con `sk_live`
+    mueve dinero real. Que nadie anote un «verificado por Vipps» con esto puesto.
+  - Rotar las de Vipps de test no arregla nada: lo que falta es **cargar las de producción**, y para
+    eso Vipps aún no nos ha dado el MSN de la cuenta de NewCo (el de la captura del 16/10 venía
+    vacío). Pendiente de Angelo; no lo toco por mi cuenta.
