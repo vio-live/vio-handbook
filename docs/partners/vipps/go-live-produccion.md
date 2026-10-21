@@ -197,8 +197,16 @@ del `:latest` del registro. Ninguna migración.
    - *Developers → Webhooks* está vacío: todavía no hay webhook de partner (fase 3).
    - Partner Manager: Fredrik Rogne. Contacto principal y técnico: Michael. Las partner keys, que
      llegan por correo, las tendrá Michael.
-3. En el dashboard de producción, el comercio crea su Vipps en modo *Vipps through Vio*. Vio asigna el
-   MSN: `PATCH api-ms /paymentmethod/:id/vipps-sales-unit` (interno, por port-forward).
+3. **Lo arma el equipo de Vio desde el dashboard** (21/10): las brands no entran al dashboard y el de
+   Aller no tiene pagos. Página **Vio team › Vipps partner** (`/vipps-partner`, solo cuentas
+   `internal`; base-api exige rol admin): elegir la brand → *Set up* (nº de organización, Express,
+   envío, captura) → *Find its sales units in Vipps* (en producción lista las unidades de esa
+   organización bajo el partner) → *Assign*, que verifica contra la Management API que la unidad es de
+   esa organización y enciende Vipps en la cuenta. En QA no hay partner keys: la lookup dice que solo
+   funciona en producción y el MSN se tipea. Código: vio-api-microservice#51 y #52, vio-base-api#48,
+   webapp-vio-commerce#72 — **en QA/staging, todavía no en producción** (entraron después del
+   release del 21/10). El `PATCH api-ms /paymentmethod/:id/vipps-sales-unit` por port-forward queda
+   como plan B.
 4. Ajustes del comercio: Express encendido; envío fijo o dinámico; modo de captura (decisión 3);
    devolver y cancelar quedan siempre encendidos en modo partner.
 5. Canal: método Vipps encendido, mercado con Noruega, términos de compra.
