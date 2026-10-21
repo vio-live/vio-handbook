@@ -120,6 +120,15 @@ la configuración con el MSN desde nuestro lado. Asignar la unidad por port-forw
 > en producción. Alan tiene la tarjeta [HPKysebB](https://trello.com/c/HPKysebB): una brand nueva
 > como segundo sponsor en la surface de Aller «Mote Livestill Hub» y la prueba de aislamiento.
 
+> [claude, 2026-10-21 15:56 UTC] **Primer reporte de Alan en HPKysebB:** puso el MSN `545865` en
+> «Organisation number» y la página lo rechazó (lo correcto). Se mejoró el mensaje:
+> [webapp-vio-commerce#75](https://github.com/vio-live/webapp-vio-commerce/pull/75) (`7b0d9e0` en
+> develop) avisa cuando el número parece un MSN y explica que va en el paso 2. Alan ya tiene la
+> respuesta en la tarjeta. **Staging no se desplegó:** Vercel no creó el deployment del merge, y
+> `vercel redeploy --target staging` da 403 («no permission to create a Production Deployment»).
+> Hace falta que Angelo revise los permisos del proyecto en Vercel; el último staging bueno es el de
+> las 10:46 UTC (#74).
+
 ## Next session
 
 - Con OK de Angelo: rol 1 a su cuenta de QA y prueba de punta a punta en staging (set up de una
