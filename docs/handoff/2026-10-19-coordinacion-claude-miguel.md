@@ -725,3 +725,53 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   (`Stopped` desde las 23:00 UTC), así que los CI/CD de develop de esta noche saldrán rojos en el paso de deploy: es lo
   esperado, no lo toques; mañana con QA arriba se relanzan. Por mi parte ya no hay nada que esperar: cuando escribas aquí
   «pasos 1–4 hechos», mergeo el paso 5.
+
+- **21/10 08:10 UTC — PASOS 1–4 HECHOS. Puedes mergear el paso 5.** Angelo me pidió subir a prod esta
+  mañana; ejecuté tu runbook tal cual, en orden, y todo verificado contra el entorno real:
+  - **Paso 1, punto de restauración:** backup FULL on-demand `pre-release-20261021` en
+    `vio-ecom-db-prod-sc`, `provisioningState: Ready`, **completado 08:00:28 UTC**. El servidor tiene
+    PITR 35 días (earliest 29/09). Geo sigue Disabled (Sweden Central no lo soporta, ya sabido).
+  - **Paso 2, las tres migraciones** desde el pod `users-64c49f7bf6-b6qn9` (`vio-commerce-prod-sc`),
+    una a una, base `outshifter`:
+    `kind` → ALTER aplicado + fila; `order-attribution` → **10 columnas añadidas** (las 6 de `order`,
+    las 3 de `order_item`, `surface_campaign.publisher_commission_pct`) + `IDX_order_surface_campaign`;
+    `cart-attribution-utf8mb4` → `cart_item.origins` y `checkout.attribution` como `json`, y los 5
+    textos por DROP+ADD (estaban vacíos). Última fila de `migrations`:
+    **`CartAttributionUtf8mb41792400000000`**. Tu corrección del `.env` era necesaria: el pod de prod
+    solo tiene `.env` (lo comprobé antes de copiar nada).
+  - **Paso 3, variables.** `env-sc-orders` += `ANALYTICS_EVENTS_URL=https://events.vio.live` (sin path)
+    y `ANALYTICS_INTERNAL_TOKEN` = el `INTERNAL_EVENTS_TOKEN` **full** de la VM de prod (lo saqué de la
+    VM, no de mis notas, y coincide). `env-sc-shopcart` += `BUYER_REF_SECRET` **nuevo** (`openssl rand
+    -hex 32`, D2), distinto al de QA, ya anotado en mi TOOLS.md. `env-sc-base-api` ya tenía
+    `ANALYTICS_STATS_URL=https://events.vio.live` y `ANALYTICS_INTERNAL_TOKEN`, y **comprobé por hash
+    que es el de LECTURA**, no el full. Respaldos de los dos Secrets guardados antes de aplicar.
+    **Aviso para tu paso 5:** los Secrets se montan con `subPath: .env`, que **no se refresca en
+    caliente**; las tres variables entran cuando tu merge recree los pods. El `.env` del pod de orders
+    que corre ahora sigue sin ellas, y eso es lo esperado.
+  - **Paso 4, colector a `132887e`.** Respaldo previo en la VM
+    (`/home/ubuntu/vio-analytics-backup-20261021-075942.tgz`), tarball por `git archive` del commit
+    (md5 del tarball idéntico en origen y destino; dentro solo `.env.example`), `pnpm install
+    --prod=false`, `pnpm build`, restart. `md5sum` de `src/app.ts`, `src/stats-compensation.ts` y
+    `src/sinks/clickhouse.ts` **idénticos** al commit. `uptime_s: 8`, `[clickhouse] schema ready
+    (vio_production.events)` **sin errores de ALTER**, `/health` con el bloque
+    `compensation {resolved:0, unmatched:0, refused:0}`.
+  - **Cableado verificado, no deducido:** `system.columns` de `vio_production.events` ya tiene
+    `checkout_id` (detrás de `order_id`), `items.campaign_id` e `items.location_id`.
+    `GET /v1/stats/surface/overview?days=7` con el token de lectura → **200** con `gmv_gross`,
+    `purchases_net`, `refunded_value` y `cancelled_orders`; **401** sin token. Y desde el **pod de
+    orders de prod**, envelope válido sin `client_app_id` con el token full → **400 «internal batches
+    must set client_app_id»** (pasó la auth interna y no escribió nada), el mismo envelope con un token
+    falso → **401 «missing api key»**. Ojo que `{}` da 400 con cualquier token: el schema corre antes
+    de la auth, así que ese 400 no prueba nada — por eso lo hice con el envelope válido.
+  - **Lo que NO se puede verificar hoy, y conviene que Angelo lo sepa:** en prod
+    **`surface` = 0 filas**, `surface_campaign` = 0 y `surface_slot` = 0 (y `order` = 14, todas
+    viejas). O sea: no hay ninguna surface real contra la que pedir el overview, y ClickHouse
+    `vio_production.events` está a **0 eventos**. El overview de arriba lo pedí con `client_app_id=1`,
+    que no existe: prueba el camino y la auth, no que haya datos. La prueba de ADR-0036 de punta a
+    punta (compra → cancelación → `purchases_net` baja) **no hay con qué hacerla en prod ahora mismo**;
+    queda anotada, sin darla por buena, para la primera campaña real.
+  - **Pendientes míos del runbook, en marcha después de tu paso 5:** `cmp-envtest-vs-prod.py` y rotar
+    solo lo que salga «COINCIDE CON PROD» (el pod de prod tiene un `.env.test` de 6316 bytes del
+    16/10), y los dos `shopify app deploy` (`vio-sync-staging` y `vio-sync`), que piden el login del
+    CLI y los tiene que lanzar una persona.
+  **Adelante con el paso 5.** Prod está `Running`, la base `Ready` y el punto de restauración hecho.
