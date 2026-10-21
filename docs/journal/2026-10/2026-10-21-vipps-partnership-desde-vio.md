@@ -68,14 +68,16 @@ la configuración con el MSN desde nuestro lado. Asignar la unidad por port-forw
   ([runbook](../../handoff/2026-10-21-release-prod-analytics-y-atribucion.md)). Para Careless en prod
   hacen falta un release de api, base-api y webapp, y además la fase 3 de Miguel: partner keys
   en shopcart y api, `VIPPS_API_URL` de producción y el webhook de partner.
-- **Quién la usa en QA.** Hacen falta dos cosas a la vez: una cuenta `internal` en vio-backend
-  (`super_admin`) y rol 1 en base-api. En QA el rol 1 solo lo tienen cuentas de prueba viejas
-  (`test`, `testseller`, `outshifteras`, `shopifysupplier`, `reachuexport1`). Darle rol 1 a la
-  cuenta de Angelo es un cambio de permisos y espera su OK.
-- **En producción la entrada depende de la cuenta de Vio.** Sin cuenta de Vio (`/auth/me` caído o
-  sin `VIO_API_HOST`) la página no se muestra. [env-vars-vercel](../../infrastructure/env-vars-vercel.md)
-  dice que `VIO_API_HOST` está en producción, pero no lo comprobé en Vercel. Quien la use en prod
-  necesita además ser `super_admin` en vio-backend de prod y tener rol 1 en base-api de prod.
+- **Quién la usa: una sola condición, el rol 1 (Admin) activo en la base de Commerce.** El
+  webapp saca el tipo de cuenta del `/auth/me` del micro de campañas, y el micro da `internal` a
+  quien tiene el rol 1 (`src/adapters/commerce/account-type.ts`). base-api pide ese mismo rol.
+  - En QA el rol 1 solo lo tienen cuentas de prueba viejas (`test`, `testseller`, `outshifteras`,
+    `shopifysupplier`, `reachuexport1`). Darle el rol 1 a la cuenta de Angelo es un cambio de
+    permisos y espera su OK.
+  - En prod, según el handoff del 19/10
+    ([prod sin publisher](../../handoff/2026-10-19-prod-no-hay-publisher-para-el-flow.md)),
+    `user_role` estaba vacío: nadie es admin. Hace falta dar el rol 1 a la cuenta del equipo de
+    Vio en la base de prod. No lo volví a comprobar.
 
 ## Next session
 
