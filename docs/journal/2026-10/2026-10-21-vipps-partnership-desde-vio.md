@@ -129,6 +129,20 @@ la configuración con el MSN desde nuestro lado. Asignar la unidad por port-forw
 > manual, que sobraba. Verificado en staging (el texto nuevo está en el chunk de la página) y avisado
 > a Alan a las 16:0x UTC.
 
+> [claude, 2026-10-21 17:27 UTC] **Segundo reporte de Alan en HPKysebB** (17:12 UTC, con su cuenta del
+> equipo de Vio):
+> 1. Recargar `/settings/brand` daba el 404 de la app. Es un bug real y afecta a cualquier cuenta:
+>    esa sección no estaba en las rutas que genera el export estático.
+> 2. Settings › Brand decía «Couldn't load your brand.». Es correcto que no cargue: el micro de
+>    campañas responde 403 a una cuenta `internal` (rol Admin), que no es una brand.
+>
+> Arreglo: [webapp-vio-commerce#77](https://github.com/vio-live/webapp-vio-commerce/pull/77)
+> (`ec3b5e7`). Las rutas pasan a `src/lib/settings-paths.js`, con un test que cubre todas las
+> secciones de la matriz. Con un 403, la página ahora dice «This account isn't a brand» en vez de
+> mostrar un Retry inútil. Lo verifiqué en staging: `/settings/brand` sirve la página de Settings y
+> el texto nuevo está publicado. A Alan le contesté su pregunta: una cuenta admin es del equipo de
+> Vio, no una brand, y la brand va en una cuenta aparte.
+
 ## Next session
 
 - Con OK de Angelo: rol 1 a su cuenta de QA y prueba de punta a punta en staging (set up de una
