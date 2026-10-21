@@ -1,5 +1,5 @@
 ---
-status: propuesta
+status: aceptada
 date: 2026-10-21
 deciders: [angelo]
 consulted: [claude]
@@ -79,6 +79,10 @@ líneas, y quien mira la caja de la surface mira `charged`.
 |---|---|---|
 | vio-analytics | [#27](https://github.com/vio-live/vio-analytics/pull/27) | contrato, ingesta (403 con key de surface), filas fuera del scan de comportamiento, lecturas `charged` / `orders_paid` / `orders_unattributed` en overview de surface y summary de campaña |
 | vio-orders-microservice | [#33](https://github.com/vio-live/vio-orders-microservice/pull/33) | `order-paid.ts` + emisión en `processOrderPaidByCustomer` |
+| webapp-vio-commerce | [#73](https://github.com/vio-live/webapp-vio-commerce/pull/73) | tile «Charged» con el envío dentro, aviso de ventas sin atribuir; sin `orders_paid` no se enseña nada |
 
-Falta: la webapp (mostrar la caja al lado del gmv y señalar `orders_unattributed`), y decidir si
-`conversion` menciona que las ventas sin sesión quedan fuera.
+**Los tres mergeados el 2026-10-21.** `status: aceptada`.
+
+Falta **desplegar el colector** en las dos VMs de Oracle (manual, Miguel): hasta entonces las lecturas no
+traen la caja y el dashboard no enseña la tile — por diseño, no finge ceros. orders y la webapp ya salen
+solos por CI/Vercel.
