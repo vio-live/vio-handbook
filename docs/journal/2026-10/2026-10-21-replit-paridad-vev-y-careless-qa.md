@@ -72,3 +72,21 @@ antes que están en prod.
 1. Angelo crea en staging la cuenta Careless con su channel, la surface de Replit y la campaña.
 2. Import a QA con `QA_USER_ID` y `QA_CHANNEL_ID` (primero con `DRY_RUN=1`).
 3. Pasar el prompt de Replit con la key de la surface y, tras su deploy, la prueba del flujo del handoff.
+
+## Import hecho (21/10)
+
+- Angelo creó la cuenta Careless en QA: **usuario 1338** (Noruega, NOK). El channel lo crea él después.
+- Import desde la tienda de Careless, comprobado leyendo QA después: los cinco productos con `status=1` y
+  `active=1`, siete tallas, opciones, imágenes y envío cada uno. Stock de 10 por talla disponible.
+
+| Producto en QA | Nombre | Precio |
+|---|---|---|
+| 411991 | Cassia jakke - Brun | 1499 NOK |
+| 411992 | Hennie cardigan - Beige | 599 NOK |
+| 411993 | Vilde genser - Brun | 599 NOK |
+| 411994 | Sofie genser - Brun | 699 NOK |
+| 411995 | Active pile fleece half-zip - Brun | 699 NOK |
+
+- Envío nuevo de 1338: «Default Shipping», 10 NOK, Noruega; es lo que crea products si la marca no tiene ninguno.
+- **Pendiente:** el channel de Careless con Stripe y Vipps de test y estos cinco productos dentro (desde el dashboard),
+  la surface de Replit y la campaña.
