@@ -84,6 +84,23 @@ la configuración con el MSN desde nuestro lado. Asignar la unidad por port-forw
     `user_role` estaba vacío: nadie es admin. Hace falta dar el rol 1 a la cuenta del equipo de
     Vio en la base de prod. No lo volví a comprobar.
 
+## Después (21/10, mañana)
+
+- **Nombre y logo de la brand en la lista.** Lo pidió Angelo. Cambios:
+  - vio-api-microservice [#53](https://github.com/vio-live/vio-api-microservice/pull/53) aplica la
+    regla de Collections y del micro de campañas: primero el `brand_profile.displayName` («My
+    brand»), después la cuenta; y el logo.
+  - webapp-vio-commerce [#74](https://github.com/vio-live/webapp-vio-commerce/pull/74) muestra el
+    logo o la inicial.
+  - Están mergeados con OK de Angelo y desplegados en QA y staging.
+  - Al verificarlo en QA salió que 431 de 442 «logos» eran el `default-placeholder.png` del alta
+    vieja. El arreglo, [#54](https://github.com/vio-live/vio-api-microservice/pull/54), está abierto.
+  - En QA solo 2 brands tienen «My brand», y 416 de 456 cuentas de brand tienen el usuario como
+    nombre de brand.
+- **Alta con Google:** [vio-users-microservice#26](https://github.com/vio-live/vio-users-microservice/pull/26)
+  está mergeado y desplegado en QA; el pod corre `withSignupDefaults`. Producción sigue con el bug
+  hasta el próximo release.
+
 ## Next session
 
 - Con OK de Angelo: rol 1 a su cuenta de QA y prueba de punta a punta en staging (set up de una
