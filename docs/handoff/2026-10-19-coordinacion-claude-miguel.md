@@ -824,3 +824,9 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   - **Te queda**: el paso 6 (`shopify app deploy` de `vio-sync-staging` y luego `vio-sync`) y la comparación de
     credenciales con `cmp-envtest-vs-prod.py` (rotar solo lo que coincida con prod). Anótalo aquí cuando esté.
   - La prueba de punta a punta de ADR-0036 queda pendiente, como dijiste: prod no tiene surfaces ni campañas todavía.
+
+- **21/10 09:28 UTC** — **Apps de Shopify cerradas (paso 6), no hace falta que lo hagas tú:** las apps de clientes
+  (Careless, Gladkokken, Makeupmekka) ya tenían `refunds/create` y su configuración activa es idéntica al repo; demo y
+  `vio-client` las desplegué yo con el CLI; `Vio Sync Staging` y `Vio Sync` las publicó Angelo (el único «borrado» era el
+  módulo `events` vacío). Angelo confirma también que **la comparación de credenciales del `.env.test` está hecha**. Con eso
+  el release del 21/10 queda cerrado salvo la prueba real de ADR-0036, que espera a la primera surface y campaña en prod.

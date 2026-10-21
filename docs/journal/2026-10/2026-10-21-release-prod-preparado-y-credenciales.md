@@ -62,3 +62,13 @@ tenía las suyas) y colector `132887e` en `events.vio.live`, todo verificado. cl
 el orden del runbook, CI/CD en verde, pods 2/2 con kernel 1.0.280 y 0 errores de arranque; webapp en Vercel prod sin
 bloqueo. Logs de prod: 0 credenciales en claro desde el deploy, 35 `[redacted]` en extensions. Pendiente: `shopify app
 deploy` de los dos apps, comparación de credenciales y prueba real de ADR-0036 (prod sin surfaces ni campañas).
+
+## Apps de Shopify y cierre (09:28 UTC)
+
+- Apps de clientes (`custom/client-app`): Careless, Gladkokken y Makeupmekka ya con `refunds/create` y activo = repo;
+  demo y `vio-client` desplegadas hoy (`vio-sync-3`). Comprobado con `shopify app config pull`.
+- Apps públicas: versiones creadas sin publicar; el CLI pedía confirmar un borrado. Leído el resumen en una terminal
+  simulada (cancelando con Ctrl-C): solo `events (removed)`, el módulo declarado vacío. Las publicó Angelo; activas con
+  `refunds/create` y la privacidad intacta. Error mío por el camino: creí que faltaban los webhooks de privacidad (estaban
+  en `[webhooks.privacy_compliance]`, que no leí); PR #126 revertido en #127 sin llegar a desplegar.
+- Credenciales del `.env.test`: comparación hecha (Angelo).

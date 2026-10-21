@@ -8,8 +8,7 @@ status: live
 # Release a prod — slots v2, analytics avanzado, atribución y cancelaciones (ADR-0034/0035/0036)
 
 > **Estado 21/10 09:08 UTC:** pasos 1–4 hechos por Miguel (08:00–08:10 UTC) y paso 5 hecho por claude (08:15–09:06 UTC):
-> los 15 repos en prod con kernel 1.0.280, todos los pods sanos, logs sin credenciales comprobado. **Pendiente:** paso 6
-> (`shopify app deploy` de `vio-sync-staging` y `vio-sync`), la comparación de credenciales del §10b, y la prueba real
+> los 15 repos en prod con kernel 1.0.280, todos los pods sanos, logs sin credenciales comprobado. **Pasos 6 y §10b cerrados** (apps de Shopify y credenciales). **Pendiente:** la prueba real
 > de ADR-0036 (prod aún sin surfaces ni campañas).
 
 Lo que está en QA/staging desde el 19–20/10 pasa a prod. Ejecuta **Miguel**; claude mergea los PRs del paso 5 si se lo
@@ -143,9 +142,10 @@ no cambia; el commit de #110 sale BLOCKED en Vercel por D1, pero como solo toca 
   configuración activa idéntica al repo (comprobado con `shopify app config pull`); **demo y `vio-client` desplegadas hoy**
   (`vio-sync-3`) con `refunds/create`. `vio-client-dev` (Alan) ya lo tenía. Todas apuntan a la cola de prod `vio-sync`
   (la de desarrollo, a `vio-sync-staging`).
-- **Apps públicas** `Vio Sync Staging` y `Vio Sync`: versiones **creadas sin publicar** (staging 12, prod 13). Al publicar,
-  el CLI pide confirmar un **borrado** que no sale del repo (la versión activa, del 09/09, la creó otro usuario de Shopify):
-  hay que mirar en el panel qué se elimina antes de pulsar Release. Los clientes no usan estas apps.
+- **Apps públicas** `Vio Sync Staging` (versión 12) y `Vio Sync` (versión 13): **publicadas por Angelo (09:28 UTC)**,
+  activas con `refunds/create` y los webhooks de privacidad intactos (comprobado con `config pull`). El «borrado» que
+  pedía confirmar el CLI era solo el módulo `events`, declarado vacío en el repo (apaño de un bug antiguo del CLI; el app
+  no usa Events). **Paso 6 cerrado.**
 
 **Verificación**: en el Partner Dashboard, la versión nueva de cada app lista `refunds/create`; desde el pod de extensions
 de prod, `/internal/token` de cada app sigue en 200 (como el 16/10).
