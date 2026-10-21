@@ -124,10 +124,10 @@ la configuración con el MSN desde nuestro lado. Asignar la unidad por port-forw
 > «Organisation number» y la página lo rechazó (lo correcto). Se mejoró el mensaje:
 > [webapp-vio-commerce#75](https://github.com/vio-live/webapp-vio-commerce/pull/75) (`7b0d9e0` en
 > develop) avisa cuando el número parece un MSN y explica que va en el paso 2. Alan ya tiene la
-> respuesta en la tarjeta. **Staging no se desplegó:** Vercel no creó el deployment del merge, y
-> `vercel redeploy --target staging` da 403 («no permission to create a Production Deployment»).
-> Hace falta que Angelo revise los permisos del proyecto en Vercel; el último staging bueno es el de
-> las 10:46 UTC (#74).
+> respuesta en la tarjeta. Vercel desplegó staging unos 10 minutos después del merge (va en cola
+> detrás de la preview); el 403 de `vercel redeploy --target staging` era solo de ese redeploy
+> manual, que sobraba. Verificado en staging (el texto nuevo está en el chunk de la página) y avisado
+> a Alan a las 16:0x UTC.
 
 ## Next session
 
