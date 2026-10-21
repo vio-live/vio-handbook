@@ -74,6 +74,10 @@ Quién lee de verdad las variables de Vipps (comprobado en `develop` el 16/10):
 
 ## Fase 0 — Dos riesgos vivos, independientes de Vipps (hacer ya)
 
+> **21/10, Angelo: «los mails siempre apagados»**, también en producción. El punto 1 de abajo queda
+> al revés: hay que **quitar** `EMAIL_DELIVERY=on` de orders, users y api en producción (se puso el
+> 16/10). Es un cambio de Miguel en los Secrets y el blob.
+
 1. **Los correos de producción están apagados desde el 12/10 13:18 UTC.** orders, users y api corren
    el kernel `@vio-/service` 1.0.268, que no envía nada si `EMAIL_DELIVERY` no está puesto (arranque:
    `[mailService] EMAIL_DELIVERY=off (unset → off)`). Sin órdenes desde entonces no se perdió ningún
@@ -219,7 +223,8 @@ Angelo, con su propio Vipps y un producto barato. Cada paso deja referencia `VIO
 el journal del día.
 
 1. Pago normal desde la kasse → orden creada, recibo en la app de Vipps, webhook con `signed: true`
-   en el log de shopcart, correo de confirmación recibido.
+   en el log de shopcart. **Sin correo de Vio**: los correos van apagados en todos los entornos
+   (Angelo, 21/10); el comprador tiene el recibo de Vipps y lo que mande la tienda de la brand.
 2. Express desde la ficha → dirección y envío en la app → importe = productos + envío elegido.
 3. Captura (al enviar con tracking, o desde la card de la orden).
 4. Devolución parcial y luego total desde la card.

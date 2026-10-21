@@ -32,5 +32,6 @@ fueron), decirlo así: «la causa no está demostrada», no rellenar el hueco co
   el ticket a Mailjet pide que ellos digan qué lo disparó.
 - Decisión posterior de Angelo: correos apagados por defecto en todos los entornos (`EMAIL_DELIVERY`),
   que vale con o sin acceso a la cuenta.
+  > [claude, 2026-10-21] Angelo lo confirmó para producción también: «los mails siempre apagados».
 
 Relacionado: [verificar afirmaciones contra el código](verify-alan-claims-against-code.md).

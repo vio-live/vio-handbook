@@ -66,7 +66,7 @@ Comprobación tras el deploy: `kubectl --context kubernetesqa-sc exec deploy/<sv
 
 | Variable | Dónde | Qué hace |
 |---|---|---|
-| `EMAIL_DELIVERY` | orders-ms, users-ms, api-ms (vía `@vio-/service`, kernel ≥ 1.0.268) | `off` (por defecto, también si falta): no sale ni se escribe nada en Mailjet, una línea `[mailService] … skipped` por llamada. `sandbox`: Mailjet valida sin entregar. `on`: entrega real, contactos y listas incluidos. **Prod debe llevar `on`** o deja de mandar correos (decidido 2026-10-06 tras el bloqueo de la cuenta de Mailjet por tráfico de pruebas de QA). |
+| `EMAIL_DELIVERY` | orders-ms, users-ms, api-ms (vía `@vio-/service`, kernel ≥ 1.0.268) | `off` (por defecto, también si falta): no sale ni se escribe nada en Mailjet, una línea `[mailService] … skipped` por llamada. `sandbox`: Mailjet valida sin entregar. `on`: entrega real, contactos y listas incluidos. **Apagado en todos los entornos, prod incluido** (Angelo, 2026-10-21: «los mails siempre apagados»; reemplaza el «prod debe llevar `on`» del 06/10). Prod lo tenía `on` en orders, users y api desde el release del 16/10: hay que quitarlo. |
 
 ## Kernel compartido (`@vio-/*`) — no se "despliega", se publica
 
