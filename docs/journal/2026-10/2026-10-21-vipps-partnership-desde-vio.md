@@ -71,9 +71,14 @@ la configuración con el MSN desde nuestro lado. Asignar la unidad por port-forw
 - **Quién la usa: una sola condición, el rol 1 (Admin) activo en la base de Commerce.** El
   webapp saca el tipo de cuenta del `/auth/me` del micro de campañas, y el micro da `internal` a
   quien tiene el rol 1 (`src/adapters/commerce/account-type.ts`). base-api pide ese mismo rol.
-  - En QA el rol 1 solo lo tienen cuentas de prueba viejas (`test`, `testseller`, `outshifteras`,
-    `shopifysupplier`, `reachuexport1`). Darle el rol 1 a la cuenta de Angelo es un cambio de
-    permisos y espera su OK.
+  - En QA el rol 1 lo tenían solo cuentas de prueba viejas (`test`, `testseller`, `outshifteras`,
+    `shopifysupplier`, `reachuexport1`). **Con OK de Angelo, el rol 1 se le dio a su cuenta nueva
+    `angelo@vio.live` (usuario 1337, `vio-admin`) el 21/10 a las 10:2x UTC.**
+  - Para crear esa cuenta salió un bug: el alta con Google fallaba para toda cuenta nueva
+    (`Field 'description' doesn't have a default value`) y dejaba el usuario en Firebase sin cuenta
+    de Commerce, además de escribir el token de Google en los logs. El arreglo es
+    [vio-users-microservice#26](https://github.com/vio-live/vio-users-microservice/pull/26), que espera
+    el merge de Angelo. Mientras tanto, *Create an account* sí funciona.
   - En prod, según el handoff del 19/10
     ([prod sin publisher](../../handoff/2026-10-19-prod-no-hay-publisher-para-el-flow.md)),
     `user_role` estaba vacío: nadie es admin. Hace falta dar el rol 1 a la cuenta del equipo de
