@@ -3,7 +3,7 @@ title: "Release a prod del 21/10, segunda tanda: la caja, el barrido, Vipps part
 date: 2026-10-21
 owner: angelo
 author: claude
-status: live
+status: live — código en prod 21/10 18:21 UTC; falta el paso 1 de Miguel
 ---
 
 # Release a prod del 21/10, segunda tanda
@@ -12,6 +12,27 @@ Angelo (21/10, tarde): «ve preparando para enviar todo a prod. Lo que Miguel te
 después tú te encargas de todo». Primera tanda de hoy:
 [release del 21/10](./2026-10-21-release-prod-analytics-y-atribucion.md). Canal con Miguel:
 [coordinación](./2026-10-19-coordinacion-claude-miguel.md).
+
+## Estado (21/10, 18:22 UTC): código en prod
+
+Angelo dio la orden de desplegar sin esperar al paso 1 de Miguel: el código no depende de sus variables.
+
+| Repo | Merge | Deploy | Verificado |
+|---|---|---|---|
+| google-merchant-feed #6 | 17:46 | 17:48 | Cloud Function desplegada |
+| api #55 | 17:46 | 17:52 | 2 pods, kernel 1.0.280, sin errores de arranque |
+| base-api #49 | 17:53 | 17:59 | 4 pods, sin errores de arranque |
+| users #27 | 17:59 | 18:06 | 2 pods, kernel 1.0.280, sin errores de arranque |
+| orders #38 | 18:06 | 18:13 | 2 pods, kernel 1.0.280; CronJob `orders-reconcile` creado |
+| campaigns #26 | 18:13 | 18:19 | el `dist` lleva la comisión por defecto |
+| webapp #76 | 18:20 | 18:21 | Vercel `master` |
+
+- Primera vuelta del barrido en prod (18:15): `http_status=200`,
+  `{checked:0, surfaces:0, resentPaid:0}`. Prod no tiene ventas con surface todavía.
+- Comisión en prod: nada que rellenar, 0 campañas (Miguel, 17:50 UTC). En QA, las 10 en 15.
+- Cero líneas de error en los logs de api, base-api, users, orders y campaigns a las 18:21.
+- **Pendiente:** el paso 1 de Miguel (correos, Vipps fase 3, webhook de partner), las decisiones D1–D3 y el paso 5
+  (Careless en prod).
 
 ## 1. Qué entra
 

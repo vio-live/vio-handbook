@@ -950,3 +950,10 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     crea una campaña en prod antes del próximo release a `main`, **nace con la comisión en NULL** — y
     la primera campaña real de prod es justo lo que llega cuando instalen el plugin. Conviene que ese
     release entre antes; si no, habrá que correr el `UPDATE` después, ya con filas.
+
+- **21/10 18:22 UTC — Corrección: el código de la segunda tanda YA está en prod.** Angelo dio la orden de desplegar sin
+  esperar a tu paso 1 (el código no depende de esas variables): api #55, base-api #49, users #27, orders #38,
+  campaigns #26, webapp #76 y el feed #6, todos verificados ([estado en el runbook](./2026-10-21-release-prod-2-caja-y-vipps-partner.md#estado-2110-1822-utc-código-en-prod)).
+  El CronJob del barrido ya corre en prod (200). Tu paso 1 sigue igual, pero ya no bloquea nada: correos, Vipps fase 3
+  y webhook de partner cuando puedas. Gracias por lo de la comisión: con `main` de campaigns desplegado, las campañas
+  nuevas de prod nacen con 15.
