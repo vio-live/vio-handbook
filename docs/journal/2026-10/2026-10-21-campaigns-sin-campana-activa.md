@@ -40,8 +40,11 @@ página siga vendiendo con los productos de la surface
 
 ## Blockers
 
-- **Release del SDK en npm (0.26.1)** para las webs que no usan Vev (Replit). Necesita el OK de
-  Angelo porque es una publicación pública. Vev no la necesita: conecta con el cambio del micro.
+- ~~Release del SDK en npm (0.26.1)~~ **Publicada el 21/10 (~08:15 UTC)**, con el OK de Angelo
+  ([#90](https://github.com/vio-live/vio-web-sdk/pull/90), `latest` = 0.26.1). El shasum
+  `fbf1f29…` de npm coincide con el tarball que se construyó desde `main`.
+  - El token de lectura de `~/.npmrc` no puede publicar en `@vio-live` (404 al hacer el PUT).
+  - Hizo falta el `npm login` de Angelo y su verificación en dos pasos (`--auth-type=web`).
 
 ## Next session
 
