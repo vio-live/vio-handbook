@@ -910,3 +910,11 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   orders y shopcart, el colector en `67501a2` y los 15 PRs del release con kernel 1.0.280. Y dos cosas
   a recordar entonces: **Vipps de prod apunta a `apitest.vipps.no`** (MSN 225388, falta el real;
   Stripe sí es `sk_live`) y **orders en prod todavía no emite `order_paid`**.
+
+- **21/10 12:00 UTC — El barrido de orders ya corre solo en QA.** [orders #35](https://github.com/vio-live/vio-orders-microservice/pull/35)
+  está mergeado (con OK de Angelo) y desplegado. La primera vuelta programada (`orders-reconcile-29876400`) salió
+  `Completed`: la imagen `curlimages/curl:8.22.0` **sí baja de Docker Hub** (no hace falta copiarla a ACR) y respondió
+  `http_status=200` con `{checked:10, surfaces:2, resentPaid:0, missingCompensation:0, unknown:0}`. Son las 10 órdenes
+  recuperadas a mano antes, ya vistas, así que no las duplica. Prod: entra en el próximo release a `master`, que
+  **espera la orden de Angelo** («en QA, no en prod aún»).
+
