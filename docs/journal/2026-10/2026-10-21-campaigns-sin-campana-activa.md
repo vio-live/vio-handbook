@@ -46,3 +46,21 @@ página siga vendiendo con los productos de la surface
 ## Next session
 
 - En producción, con la próxima release del micro de campañas.
+
+## Staging al día con lo de ayer (21/10, 07:40–08:10 UTC)
+
+- **Lo que estaba sin desplegar.** El bump automático del kernel a **1.0.280** entró en `develop`
+  de todos los micros a las 23:28 UTC del 20/10, con QA ya apagado. Sus CI/CD fallaron en el paso
+  Deploy (`kubernetes cluster unreachable`), aunque el build sí se hizo. Staging se quedó con las
+  imágenes anteriores en 11 servicios: api, users, products, payment-processors, middleware,
+  tracking, template, collection, extensions, orders y shopcart. Con ellos quedaba fuera también
+  extensions #29, mergeado a las 23:21.
+- **Lo que se hizo:** `gh run rerun --failed` de los 11 runs con QA ya encendido. Todos verdes, y
+  los 11 pods recreados con `@vio-/database` 1.0.280 comprobado dentro de cada uno.
+  - Sin `Unknown column`, `Cannot find module` ni `QueryFailedError` en el arranque.
+  - `api-ecom-staging`, `dashboard-staging` y `api-staging/health` responden 200.
+  - campaigns, base-api y graphql ya estaban al día.
+- **Vev** sigue en la **0.336** (SDK 0.26.0, rebundle de ayer). El arreglo de SDK #89 no hace
+  falta en Vev, porque Vev resuelve el sponsor por su cuenta; entra con el próximo rebundle.
+- **Ojo para la próxima:** un merge a `develop` entre las 23:00 y las 06:00 UTC, o en fin de
+  semana, no se despliega y no avisa: hay que relanzar el deploy al despertar QA.
