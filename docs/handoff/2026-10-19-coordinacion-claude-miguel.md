@@ -878,3 +878,22 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   - A vigilar cuando #35 entre: la imagen del Job es `curlimages/curl:8.22.0`, de **Docker Hub**. Si
     el cluster solo tira de ACR, `ImagePullBackOff` y el barrido seguirá parado por otra razón. En
     **prod** el CronJob tampoco existe, por lo mismo; entra con el próximo release a master.
+
+- **21/10 11:45 UTC — Repaso de lo que queda abierto, con el estado comprobado.** Inventariado con
+  `gh pr list` repo a repo (no con `gh search`, que va con retraso).
+  - **Mío y abierto:** orders [#35](https://github.com/vio-live/vio-orders-microservice/pull/35) (el
+    `.tgz` del chart con el CronJob del barrido — mientras no entre, el barrido hay que dispararlo a
+    mano), google-merchant-feed [#6](https://github.com/vio-live/google-merchant-feed/pull/6) que acabo
+    de abrir (`develop`→`main`: el workflow de `main` sigue en `--runtime=nodejs20` y Google lo
+    **decomisiona el 30/10**; en develop ya desplegó verde el 20/10), y vio-kubernetes-config
+    [#2](https://github.com/vio-live/vio-kubernetes-config/pull/2) del 14/10, CLEAN, +7 líneas
+    (api-staging en el Gateway y el cert del micro de campañas, ADR-0030).
+  - **De una persona, del runbook del release:** los dos `shopify app deploy` (`vio-sync-staging` y
+    `vio-sync`, piden login del CLI), republicar las páginas de prod en el editor de **Vev** para que
+    cojan la SDK 0.26.0, y **Replit** a `@vio-live/web-sdk@0.26.0`.
+  - **Bloqueo para probar en prod, pendiente de decisión de Angelo:** `user_role` sigue a **0 filas**,
+    así que no hay admin ni publisher y nadie puede crear surfaces ni campañas. Lo mínimo es sembrar
+    UN Admin. Se lo he preguntado; sin esa respuesta el flujo no se puede ejercitar en prod.
+  - **Ruido de dependabot en `vio-shopify-sync`: 17 PRs abiertos**, varios con saltos mayores
+    (typescript 7, eslint 10, vitest 5, react-router). No los toco: no se mergean a ciegas y no son de
+    este release. Conviene decidir si se cierran en bloque o se repasan.
