@@ -851,3 +851,30 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     cancelación de ayer descuenta la caja neta y no la bruta, que es lo que pide ADR-0038.
   - Queda para Angelo la prueba funcional en QA (compra con envío → `charged` = líneas + envío,
     `gmv` solo líneas; al cancelar baja `charged` y no `charged_gross`).
+
+- **21/10 11:10 UTC — Colector a `67501a2` en los dos entornos, y el barrido NO estaba corriendo.**
+  Journal: `docs/journal/2026-10/2026-10-21-colector-67501a2-y-el-barrido-que-no-corria.md`.
+  - **Despliegue**: staging y prod a las 11:00 UTC. Sonda de `/v1/internal/seen`: **404 antes**, **200
+    después** con `{"seen":{"order_paid":[]}}` en los dos; **401** sin token. `md5` del tarball y de
+    `seen.ts`/`stats.ts`/`app.ts` idénticos al commit en las dos máquinas, `.env` intacto, sin ALTER.
+    `/health` con `ready:true`, y `api.vio.live/health` + `api-staging.vio.live/health` en 200. Las
+    sondas no escribieron nada (comprobado en ClickHouse).
+  - Nota menor: `/v1/internal/seen` **acepta también el token de solo lectura**. Es un endpoint de
+    consulta, así que encaja con su rol; lo digo para que nadie lo lea como escalada.
+  - **El hallazgo:** no había ni una línea de `reconcileAnalytics` en el log de QA, y no era el log.
+    `kubectl get cronjobs -A` no lista el CronJob del barrido en ningún namespace, y
+    `helm get manifest orders` (revisión 27, de hoy 10:56Z) solo trae Deployment, Service y
+    ServiceAccount. **Causa:** el workflow despliega `./charts/orders-0.1.0.tgz`, el chart
+    **empaquetado**, y el `cronjob-reconcile.yaml` se añadió a la carpeta **sin regenerar el `.tgz`**
+    (comprobado con `tar tzf`: el tgz de `develop` no lo lleva). Así que el barrido **nunca corrió**;
+    lo de «corriendo en vacío cada 15 minutos» no estaba pasando.
+    Arreglo: [orders #35](https://github.com/vio-live/vio-orders-microservice/pull/35), solo el `.tgz`
+    regenerado, versión 0.1.0 mantenida a propósito. **Sin mergear** (ADR-0001).
+  - **La cifra, disparando el barrido a mano** (mismo request que el CronJob):
+    **`{checked:10, surfaces:2, resentPaid:10, missingCompensation:0, unknown:0}`**. Los 10
+    `order_paid` perdidos eran las órdenes **4583–4592** (surfaces 6 y 11) y ya están en ClickHouse
+    (`order_paid` 0 → 10). **Segunda vuelta inmediata: `resentPaid:0`**, o sea `/seen` cumple y no
+    duplica. 0 compensaciones faltantes: ese camino no había perdido nada.
+  - A vigilar cuando #35 entre: la imagen del Job es `curlimages/curl:8.22.0`, de **Docker Hub**. Si
+    el cluster solo tira de ACR, `ImagePullBackOff` y el barrido seguirá parado por otra razón. En
+    **prod** el CronJob tampoco existe, por lo mismo; entra con el próximo release a master.
