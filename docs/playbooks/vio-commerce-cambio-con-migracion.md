@@ -85,3 +85,14 @@ el kernel (ya está).
 > entorno (script idempotente desde el pod de users, assets `m-*-{qa,prod}.js`) **antes** de mergear el kernel, y no
 > cancelar runs. Entre dos merges al mismo micro, ~2 min (carrera de helm). Arreglo de fondo pendiente: que el freno
 > compare contra la última versión bumpeada en los micros, no contra el último tag.
+
+## Nota 2026-10-21 — un cambio en un solo paquete del kernel (sin migración)
+
+> [claude, 2026-10-21] El paso «Read published version» del workflow lee la versión de **`package-database`** y es la que
+> se manda a los micros en `kernel-published`. Si el cambio es solo de otro paquete (p. ej. `@vio-/logger`), el run de
+> push lo publica a X+1 pero los micros reciben la versión de database, que no cambió: el arreglo **no llega a nadie**.
+> Cómo se hizo con el logger sin credenciales (1.0.280): mergear el PR del paquete **con `[skip ci]` en el título del
+> merge** (para que no corra el run de push de un solo paquete) y lanzar `pkg=all`
+> (`gh workflow run 350049503 --repo vio-live/package-database --ref develop -f pkg=all`): publica los siete alineados y,
+> como no hay migración nueva, despacha el bump a los 12 micros solo. Comprobar después que `develop` de cada micro pina
+> la versión nueva. De noche QA está apagado: los deploys de develop salen rojos y se relanzan por la mañana.

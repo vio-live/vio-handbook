@@ -72,3 +72,27 @@ deploy` de los dos apps, comparación de credenciales y prueba real de ADR-0036 
   `refunds/create` y la privacidad intacta. Error mío por el camino: creí que faltaban los webhooks de privacidad (estaban
   en `[webhooks.privacy_compliance]`, que no leí); PR #126 revertido en #127 sin llegar a desplegar.
 - Credenciales del `.env.test`: comparación hecha (Angelo).
+
+## Cierre de la sesión (19–21/10)
+
+Tres días, tres journals: [19/10 noche](./2026-10-19-analytics-avanzado-fase-a-b-noche.md) (ADR-0035 A y B a staging,
+tarjetas de QA para Alan), [20/10](./2026-10-20-adr-0036-compensaciones-a-staging.md) (ADR-0036 de punta a punta, la clave
+del pedido, la regresión de Stripe) y este (release a prod con Miguel, credenciales, apps de Shopify).
+
+- **Prod al día**: 15 repos, kernel 1.0.280, migraciones, colector, variables; apps de Shopify publicadas.
+- **Credenciales del `.env.test`**: Miguel hizo la comparación; Angelo decidió **no rotar nada** (AfterShip y Postmen sin
+  uso, Vipps de test). El código que lee esas claves sigue desplegado (nota de Miguel en el canal, 21/10 08:58 UTC).
+- **Feedback de Angelo** (20/10): tardaba demasiado en llevar cosas a staging y dejaba PRs a medias. Desde ahí: QA es
+  para probar (tests + diff leído → merge y deploy), revisión independiente solo en dinero/auth/aislamiento y en
+  paralelo, una ronda, y ningún PR abierto sin decisión al cerrar. Los PRs viejos (#73, #78, #110) se cerraron o
+  anotaron ese mismo día.
+- **Lecciones nuevas**: [propiedad sin `@Column` rompe el `addSelect`](../../lessons/propiedad-sin-column-rompe-el-addselect.md);
+  notas en el playbook del kernel (cambio de un solo paquete) y en el de apps de Shopify (desplegar sin borrar).
+
+## Next session
+
+- Prueba real de ADR-0036 en prod (compra + cancelación) cuando haya surface y campaña en prod.
+- Alan: las ocho tarjetas de QA del 20/10; repetir dos pestañas con Stripe tras #96.
+- Seguimientos: durabilidad de las compensaciones (outbox/reconciliador), test de `addSelect` contra la metadata de
+  TypeORM, `privacyMode` en `/v2/mobile/config`, `BAD_USER_INPUT` del gateway como 400, renovación de tokens del app de
+  desarrollo de Shopify, SDK #88 y #78 aparcados.

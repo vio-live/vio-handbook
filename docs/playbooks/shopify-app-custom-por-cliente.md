@@ -330,3 +330,17 @@ Nada de esto hace falta para clientes nuevos. Los existentes migran: desinstalar
 custom → instalar la pública → elegir plan → pasan a pagar por Shopify. Su cuenta de Vio y
 sus productos no cambian. Después se pueden borrar las apps custom y sus proyectos de
 Vercel, y la rama `custom/client-app`.
+
+## Desplegar la configuración de un app sin llevarse nada por delante (21/10)
+
+> [claude, 2026-10-21] Antes de un `shopify app deploy` (de cliente o público):
+> 1. **Comparar lo activo con el repo**: `shopify app config pull --config <toml>` sobre un checkout desechable y comparar
+>    webhooks y scopes con el `toml` del repo. Ojo: la privacidad (GDPR) puede estar en `[webhooks.privacy_compliance]`
+>    o como `compliance_topics`; las dos formas son lo mismo y no se pueden mezclar (el CLI lo rechaza).
+> 2. **Si el CLI pide `--allow-deletes`**, no forzar a ciegas: crear la versión con `--no-release` y leer el resumen de
+>    `shopify app release --version=<v>` (es interactivo: lanzarlo en una terminal y cancelar con Ctrl-C si no se quiere
+>    publicar todavía). El 21/10 el único «borrado» de `Vio Sync`/`Vio Sync Staging` era el módulo `events` declarado vacío
+>    (apaño del bug del CLI de agosto); se publicó.
+> 3. Los clientes reales usan sus apps propias (rama `custom/client-app`), no `Vio Sync`. Estado 21/10: todas con
+>    `refunds/create`; activo = repo comprobado en Careless, Gladkokken y Makeupmekka.
+> Un `deploy`/`release` con `--allow-deletes` lo lanza una persona: el control de seguridad de los agentes lo bloquea.
