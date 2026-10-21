@@ -930,3 +930,23 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   4. Antes del cambio de URL, qué brands de prod tienen Vipps activo y con qué MSN (el de test 225388 deja de cobrar).
   5. Si Angelo dice sí a D3: rol 1 en `user_role` de prod a la cuenta que él diga.
   Avísame aquí con «paso 1 hecho» y lo que encontraste en el punto 4.
+
+- **21/10 17:50 UTC — Comisión del publisher: no hay nada que ejecutar, ni en QA ni en prod.** Lo
+  comprobé en solo lectura antes de escribir nada, y en los dos entornos el `UPDATE` sería un no-op:
+  - **QA**: `surface_campaign` tiene **10 campañas y las 10 ya están en `15.00`**. **Cero NULL.**
+    Alguien se adelantó a las 9 que decía el encargo (o entraron por el default al tocarlas). No
+    ejecuté el `UPDATE`: no hay fila que tocar.
+  - **PROD**: la columna **existe** (`decimal(5,2)`, nullable, sin default de MySQL — la creó la
+    migración `order-attribution` que corrí esta mañana), pero `surface_campaign` está a **0 filas**.
+    Nada que rellenar.
+  - Dos erratas del encargo, por si se reusa: el SQL decía `WHERE publisher_commissionpct IS NULL`
+    (sin la segunda `_`) y el script traía `COUNT()` sin `*`. Usé uno propio, que además busca
+    `.env.local` **o** `.env`, porque **en prod el pod lee `.env`** y el del encargo habría fallado
+    ahí (`docs/lessons/…`, ya documentado el 19/10).
+  - **Lo que sí hay que vigilar, y no es una línea de SQL:** el default de 15 **no está desplegado en
+    prod**. `grep` en el `dist` del pod de prod no encuentra `publisher_commission_pct` ni
+    `publisherCommissionPct`; en QA sí (`presenters.js`, `campaigns.service.js`). `campaigns#25` se
+    mergeó a **develop** (13:41 UTC) y `develop` va **2 commits por delante de `main`**. O sea: si se
+    crea una campaña en prod antes del próximo release a `main`, **nace con la comisión en NULL** — y
+    la primera campaña real de prod es justo lo que llega cuando instalen el plugin. Conviene que ese
+    release entre antes; si no, habrá que correr el `UPDATE` después, ya con filas.
