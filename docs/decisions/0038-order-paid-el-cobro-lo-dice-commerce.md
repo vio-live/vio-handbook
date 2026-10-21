@@ -65,8 +65,10 @@ líneas, y quien mira la caja de la surface mira `charged`.
 
 - `orders` necesita `ANALYTICS_EVENTS_URL` y `ANALYTICS_INTERNAL_TOKEN` (ya los tiene desde ADR-0036, en QA y prod).
 - **Misma falta de durabilidad que las compensaciones**: reintentos en memoria; si el colector está caído más tiempo,
-  ese `order_paid` se pierde. El seguimiento es el mismo (reconciliador u outbox) y ahora pesa más, porque esto ya no
-  es solo una corrección sino la caja.
+  ese `order_paid` se pierde. **Resuelto el 2026-10-21 con el barrido de reconciliación** (vio-analytics#28 +
+  vio-orders#34): orders pregunta al colector qué pedidos ya tiene (`POST /v1/internal/seen`) y reemite solo los
+  `order_paid` que faltan, cada 15 min desde un CronJob del chart. Las compensaciones **no** se reemiten (su `value` es
+  lo que se fue en esa transición y no se reconstruye después): se cuentan y se loguean para que el agujero se vea.
 - Las órdenes anteriores a este cambio no tienen `order_paid`: `charged` cae en el `purchase` y queda sin envío. No se
   hace backfill (se podría desde `order`, por `order_id`, si alguna vez hace falta).
 - `orders_unattributed` puede salir alto al principio en superficies con bloqueadores: es un hallazgo, no un fallo.
