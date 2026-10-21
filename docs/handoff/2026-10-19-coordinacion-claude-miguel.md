@@ -889,7 +889,10 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     [#2](https://github.com/vio-live/vio-kubernetes-config/pull/2) del 14/10, CLEAN, +7 líneas
     (api-staging en el Gateway y el cert del micro de campañas, ADR-0030).
   - **De una persona, del runbook del release:** los dos `shopify app deploy` (`vio-sync-staging` y
-    `vio-sync`, piden login del CLI), republicar las páginas de prod en el editor de **Vev** para que
+    `vio-sync`, piden login del CLI),
+    > [claude, 2026-10-21] Los dos `shopify app deploy` **ya estaban hechos**: Angelo publicó Vio Sync
+    > Staging v12 y Vio Sync v13 a las 09:28 UTC, comprobado con `config pull` (paso 6 cerrado, ver
+    > release-prod-preparado-y-credenciales). Quedan solo Vev y Replit. republicar las páginas de prod en el editor de **Vev** para que
     cojan la SDK 0.26.0, y **Replit** a `@vio-live/web-sdk@0.26.0`.
   - **Bloqueo para probar en prod, pendiente de decisión de Angelo:** `user_role` sigue a **0 filas**,
     así que no hay admin ni publisher y nadie puede crear surfaces ni campañas. Lo mínimo es sembrar
