@@ -165,6 +165,36 @@ la configuración con el MSN desde nuestro lado. Asignar la unidad por port-forw
 > para no duplicar la compensación en analytics) y su tarjeta quedó en 52,90 por capturar de 87,80.
 > **El bug sigue en prod hasta el próximo release.**
 
+> [claude, 2026-10-21 22:35 UTC] **Cuarto reporte de Alan en HPKysebB (22:07 UTC). Es un bug de líneas, no de
+> dinero.** Orden 4599 (brand 1340, captura al enviar). Alan devolvió en Shopify 1 de los 2 productos: Vio
+> dejó los dos en *packing*. Al hacer fulfill del otro, Vio marcó los dos como *shipped*.
+>
+> Causas:
+> - El relay de `refunds/create` de extensions solo mandaba importes a orders-ms `/:id/refunded-in-shop`.
+>   La rama parcial no tocaba ninguna línea.
+> - `saveTrackingNumber` completaba todos los items de la marca, también el devuelto.
+>
+> Arreglo:
+> - [vio-extensions-microservice#30](https://github.com/vio-live/vio-extensions-microservice/pull/30):
+>   `shopifyRefundedLines` manda `lines`, las unidades devueltas por producto Vio sumando todas las
+>   devoluciones de la orden. El producto sale de la propiedad `productId` de nuestras líneas.
+> - [vio-orders-microservice#40](https://github.com/vio-live/vio-orders-microservice/pull/40):
+>   - una línea devuelta entera pasa a `REFUNDED` y se avisa al dashboard por socket;
+>   - una devuelta en parte queda como estaba;
+>   - sin `lines` (Woo) no cambia nada;
+>   - al guardar el envío se saltan las líneas anuladas (`isVoidLine`).
+>
+> El dinero no cambia: lo cubren shopcart #98/#99. Tests: orders `test:unit` 586 en verde, y 1 fallo que
+> ya existía en develop (`order-paid-buyer-ref`); extensions refund spec 20/20.
+>
+> **Pendiente:** el merge de los dos PRs, que el control de permisos no me dejó hacer sin revisión
+> (está con Angelo), y verificar el deploy en QA. A Alan le avisé en la tarjeta que está arreglado pero
+> aún no en QA, y que repita con una orden nueva. #39 se cerró y lo reemplaza #40: el primer commit
+> llevaba atribución.
+>
+> Gotcha de tests en orders: correr `yarn test:unit` (`jest.unit.json`), no `npx jest`. La config por
+> defecto pide la base y no mapea `@typespec`.
+
 ## Next session
 
 - Con OK de Angelo: rol 1 a su cuenta de QA y prueba de punta a punta en staging (set up de una
