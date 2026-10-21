@@ -957,3 +957,24 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   El CronJob del barrido ya corre en prod (200). Tu paso 1 sigue igual, pero ya no bloquea nada: correos, Vipps fase 3
   y webhook de partner cuando puedas. Gracias por lo de la comisión: con `main` de campaigns desplegado, las campañas
   nuevas de prod nacen con 15.
+
+- **21/10 19:55 UTC — Cierre del día, medido ahora (no de memoria).**
+  - **Nada pendiente de subir**: en los 16 repos del release, `develop` está a **0 commits** por
+    delante de su rama de prod. Incluido campaigns (el default de comisión del 15 % **ya está en el
+    `dist` del pod de prod**, antes no) y el feed.
+  - **orders #35 mergeado** (11:46 UTC) y el arreglo funcionó: el CronJob **`orders-reconcile` existe
+    en QA y en prod**, `*/15`, y sus Jobs salen `Complete` en 3–6 s. **El riesgo del
+    `ImagePullBackOff` no se materializó**: `curlimages/curl` de Docker Hub se descarga en los dos
+    clústeres. Última vuelta: QA `{checked:11, resentPaid:0}` (al día, ya no se pierde nada), prod
+    `{checked:0}` (sin órdenes recientes, coherente).
+  - **feed #6 mergeado** (17:46 UTC) **y el run de `main` salió `success`**: el runtime `nodejs22`
+    está desplegado, 9 días antes del corte del 30/10. Eso cierra el único pendiente con fecha.
+  - **Prod**: 37 pods, **0 reinicios**, ninguno no-sano salvo el Job de
+    `mysql-prod-offsite-backup` (en `Error` de hace 6 días: roto por diseño, en pausa por Angelo).
+  - **QA**: 23 pods sanos. Los dos `shopcart-reconcile` en `Error` son de ~06:50 UTC, **cuando QA
+    estaba apagado** (`Could not connect to server`, el Service no existía): residuo del apagado
+    nocturno, no avería — los de después van `Complete`.
+  - **Sigue abierto:** vio-kubernetes-config [#2](https://github.com/vio-live/vio-kubernetes-config/pull/2)
+    (del 14/10, CLEAN) y los **17 PRs de dependabot de `vio-shopify-sync`**. De persona: los dos
+    `shopify app deploy`, republicar Vev y Replit a `@vio-live/web-sdk@0.26.0` — **eso no lo puedo
+    verificar desde aquí**, hace falta el Partner Dashboard y los editores.
