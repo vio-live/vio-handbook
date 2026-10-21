@@ -138,6 +138,15 @@ Los `shopify app deploy` los ejecuta una persona (piden el login del CLI de Shop
 Los dos `toml` no cambiaban desde el 09/09: el deploy solo añade ese webhook. El código del app (Vercel, `sync.vio.live`)
 no cambia; el commit de #110 sale BLOCKED en Vercel por D1, pero como solo toca los `toml`, no hace falta redesplegarlo.
 
+**Estado 09:18 UTC (claude, CLI con la sesión de Angelo):**
+- **Apps propias de clientes** (`custom/client-app`): Careless, Gladkokken y Makeupmekka con `refunds/create` activo y la
+  configuración activa idéntica al repo (comprobado con `shopify app config pull`); **demo y `vio-client` desplegadas hoy**
+  (`vio-sync-3`) con `refunds/create`. `vio-client-dev` (Alan) ya lo tenía. Todas apuntan a la cola de prod `vio-sync`
+  (la de desarrollo, a `vio-sync-staging`).
+- **Apps públicas** `Vio Sync Staging` y `Vio Sync`: versiones **creadas sin publicar** (staging 12, prod 13). Al publicar,
+  el CLI pide confirmar un **borrado** que no sale del repo (la versión activa, del 09/09, la creó otro usuario de Shopify):
+  hay que mirar en el panel qué se elimina antes de pulsar Release. Los clientes no usan estas apps.
+
 **Verificación**: en el Partner Dashboard, la versión nueva de cada app lista `refunds/create`; desde el pod de extensions
 de prod, `/internal/token` de cada app sigue en 200 (como el 16/10).
 
