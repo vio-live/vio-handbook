@@ -117,85 +117,73 @@ muestra los productos de esa campaña en la siguiente carga; en analytics los ev
 2. **Brand Careless en QA** con un channel activo (Stripe test y Vipps test) y los cinco productos del artículo
    (no están en prod: salen de la tienda de Careless con el import de
    [`assets/2026-10-21-careless-qa`](./assets/2026-10-21-careless-qa/README.md)).
-3. **Una campaña** «Careless · 10 nyheter» en esa surface con Careless de brand principal, activa.
+3. **Una campaña** «Careless · 10 nyheter» en esa surface con Careless de brand principal, activa. Careless en QA
+   es el usuario 1338, con los cinco productos ya importados; falta su channel.
 4. La key de la surface, al agente de Replit (la pega Angelo; nunca en el repo).
 
 ### El prompt
 
-> **Contexto.** Mote & Livsstil vende dentro del artículo con Vio: el lector añade al carrito y paga sin salir del
-> sitio, y cada venta queda atribuida al artículo y a la campaña. Esto es la integración completa y sustituye a las
-> instrucciones anteriores de Vio. Es el mismo estándar que ya cumple Vev; casi todo lo hace el SDK solo.
+> [claude, 2026-10-21, tarde] Reescrito con el modelo de Vev: configuración global con la key, y sponsor y
+> campaña por artículo (pedido de Angelo).
+
+> **Contexto.** Mote & Livsstil vende dentro del artículo con Vio: el lector añade al carrito y paga sin salir del sitio, y cada venta queda atribuida al artículo, a la marca (sponsor) y a la campaña. Esto sustituye a las instrucciones anteriores de Vio. Es el mismo modelo que ya usa Vev: una configuración global con la key y, en cada artículo, un sponsor y una campaña.
 >
-> **1. SDK.** `npm i @vio-live/web-sdk@0.26.1` (la `latest`). Importa `Vio` y registra los elementos con
-> `import '@vio-live/web-sdk/ui'` (o usa los wrappers de `@vio-live/web-sdk/react`).
+> **1. SDK.** `npm i @vio-live/web-sdk@0.26.1`. Importa `Vio` y registra los elementos con `import '@vio-live/web-sdk/ui'`, o usa los wrappers de `@vio-live/web-sdk/react`.
 >
-> **2. Arranque, una sola vez al cargar la app:**
+> **2. Configuración global (ya la tenéis).** La key de la surface vive en vuestra configuración global. Con ella:
 > ```ts
-> Vio.init({ apiKey: VIO_API_KEY, environment: 'testing', platform: 'web' })
+> Vio.init({ apiKey: VIO_API_KEY, environment: 'testing', platform: 'web', campaignId: <vioCampaignId del artículo, o nada> })
 > Vio.analytics.start({ host: 'replit', requireConsent: true })
 > // CMP (Didomi): con consentimiento de medición → Vio.analytics.setConsent(true); si se retira → setConsent(false)
 > ```
-> - `environment: 'testing'` es QA (`api-staging.vio.live`). No pongas `apiBase` ni `graphQLBase`.
-> - **Sin `Vio.analytics.start()` no se envía ningún evento.** Es el fallo más fácil de cometer.
-> - La key es la de la surface «Mote & Livsstil (Replit)». Es una key de tienda, como la publicable de Stripe: puede
->   ir al navegador. Para producción habrá otra key y `environment: 'production'`.
+> - `environment: 'testing'` es QA (`api-staging.vio.live`). No pongas `apiBase` ni `graphQLBase`. En producción: otra key y `'production'`.
+> - Sin `Vio.analytics.start()` no se envía ningún evento.
+> - La key es de tienda, como la publicable de Stripe: puede ir al navegador.
+> - Al cambiar de artículo en la SPA con otra campaña, vuelve a llamar a `Vio.init` con el `campaignId` nuevo, o pon `data-vio-campaign` en el `<body>` antes de montar los bloques (punto 4).
 >
-> **3. Cada artículo dice qué es y a qué campaña pertenece.** En la página de un artículo, en el `<body>`:
+> **3. En el CMS, dos campos por artículo: «Vio-sponsor» y «Vio-kampanje».** Usad estos nombres: «Kampanjer» ya son vuestras ofertas de afiliación. Los datos salen de vuestro servidor con la key en la cabecera `X-Api-Key`:
+> - **Vio-kampanje:** `GET https://api-staging.vio.live/v2/mobile/config?platform=web` → `availableCampaigns[]` con `id`, `name`, `status` (`active`, `paused`, `scheduled`), `isDefault`, `startDate`, `endDate`. Listadlas con su estado, activas primero. Vacío = sin campaña propia. Se puede elegir una pausada o programada: el artículo queda preparado.
+> - **Vio-sponsor:** `GET https://api-staging.vio.live/v2/web/brands` → las marcas de la surface, con `connected`. Deshabilitad las que no están conectadas.
+> - **La regla que une los dos, igual que en Vev:**
+>   1. Si la campaña elegida está **activa**, el artículo vende por el **sponsor principal de esa campaña**: `campaigns[]` de la misma config, entrada con ese `id`, campo `primarySponsor`. El campo Vio-sponsor muestra ese sponsor y no se edita. Avisad al editor: «Los bloques venden por el sponsor principal de esta campaña».
+>   2. Si no hay campaña, o está pausada o programada, vende por el **Vio-sponsor** elegido. Cuando la campaña se active, pasa a la regla 1.
+>   3. Si el sponsor o la campaña guardados ya no aparecen en la respuesta, no valen: decídselo al editor y usad el primer sponsor de la lista.
+> - **El selector de productos** pide el catálogo del sponsor que resulta de esa regla: `GET /v2/commerce/sponsors/{sponsorId}/catalog`, desde el servidor con la key. Guardad cada producto como `sponsorId:productId`.
+> - **Si cambia el sponsor que resulta, vaciad los productos elegidos:** los ids son de un canal concreto y en otro sponsor no existen o son otro producto.
+>
+> **4. La página del artículo.** En el `<body>`, antes de montar los bloques:
 > ```html
 > <body data-vio-scope="article-<id>" data-vio-scope-name="<título>" data-vio-campaign="<vioCampaignId>">
 > ```
-> - Ponlos **antes** de montar los elementos de Vio del artículo. El SDK los lee al montar cada elemento y no observa
->   cambios en el `<body>`: en un cambio de ruta de la SPA, actualiza los atributos y vuelve a montar los elementos.
->   Quítalos en páginas que no son artículos.
-> - `data-vio-campaign` solo si el artículo tiene campaña elegida (punto 4). Sin él manda lo que asigne el dashboard.
-> - Mantén por ruta `<link rel="canonical">`, `og:url` y `og:title` correctos, o pon
->   `<meta name="vio:content-id" content="article-<id>">` y `<meta name="vio:content-title" content="<título>">`.
->   El id no puede pasar de 128 caracteres.
+> - `data-vio-campaign` solo si el artículo tiene campaña. El SDK lee estos atributos al montar cada bloque y no observa el `<body>`: en un cambio de ruta, actualizadlos y volved a montar los bloques. Quitadlos fuera de los artículos.
+> - Mantened por ruta `<link rel="canonical">`, `og:url` y `og:title`, o poned `<meta name="vio:content-id" content="article-<id>">` y `<meta name="vio:content-title" content="<título>">`. El id no pasa de 128 caracteres.
 >
-> **4. En el CMS: «Vio-kampanje» por artículo.** No es lo mismo que vuestras *Kampanjer* de afiliación; usa otro
-> nombre en la interfaz.
-> - Desde vuestro servidor: `GET https://api-staging.vio.live/v2/mobile/config?platform=web` con la cabecera
->   `X-Api-Key`. El campo `availableCampaigns[]` trae `id`, `name`, `status` (`active`, `paused`, `scheduled`),
->   `isDefault`, `startDate` y `endDate`. Lista esas en un selector y guarda `vioCampaignId` en el artículo. Una
->   pausada o programada se puede elegir: el artículo queda preparado y vende cuando la campaña se active.
-> - Las marcas de cada campaña activa vienen en `campaigns[]` (`primarySponsor`, `secondarySponsors`), o en
->   `GET /v2/web/brands`.
-> - El selector de productos sigue siendo `GET /v2/commerce/sponsors/{id}/catalog` desde el servidor con la key.
-> - Cambiar de campaña o de marca **vacía los productos elegidos**: los ids de producto son de un canal concreto.
->
-> **5. Bloques de producto.** Las cajas estáticas «Anbefalte produkter (annonselenker)» pasan a ser elementos de Vio
-> con referencias, nunca con precio ni imagen copiados:
+> **5. Bloques de producto.** Las cajas estáticas «Anbefalte produkter (annonselenker)» pasan a ser elementos de Vio con referencias, nunca con precio ni imagen copiados:
 > ```html
-> <vio-product sponsor-id="<id>" product-id="<id>"></vio-product>
+> <vio-product sponsor-id="<sponsorId>" product-id="<productId>"></vio-product>
 > <vio-product-carousel product-refs="<sponsorId>:<productId>,<sponsorId>:<productId>" disclaimer="annonselenker"></vio-product-carousel>
 > <vio-cart></vio-cart>  <!-- una vez, en la raíz de la app -->
 > ```
-> - No nombres los slots: cada elemento se registra solo (`article-<id>-card-1`, `article-<id>-carousel-1`) y aparece
->   en el dashboard con el título del artículo. `vio-slot-name` es opcional si queréis un nombre propio.
-> - Mantén el aviso de publicidad (*annonse*) junto al bloque.
+> - No nombréis los slots: cada bloque se registra solo (`article-<id>-card-1`, `article-<id>-carousel-1`) y sale en el dashboard con el título del artículo. `vio-slot-name` es opcional.
+> - El dashboard puede reasignar un slot a otra campaña: la atribución sigue al dashboard y el bloque sigue mostrando sus productos.
+> - Mantened el aviso *annonse* junto al bloque.
 >
-> **6. Botones propios.** Si añadís al carrito con un botón vuestro, pasad el origen para que la venta se atribuya:
-> `Vio.cart.addProduct({ product, sponsorId, origin: Vio.attribution(slot) })`, o `origin: e.detail.origin` desde el
-> evento del elemento. Con los elementos de Vio no hay que hacer nada.
+> **6. Botones propios.** Si añadís al carrito con un botón vuestro: `Vio.cart.addProduct({ product, sponsorId, origin: Vio.attribution(slot) })`, o `origin: e.detail.origin` desde el evento del bloque.
 >
-> **7. Pagos.** Stripe y Vipps de test en QA. La vuelta de un pago llega por query string a la misma URL: el router no
-> debe borrar la query al cargar. Al terminar se emite `vio:payment-success` con `checkoutId` y `buyerRef`.
+> **7. Pagos.** Stripe y Vipps de test en QA. La vuelta del pago llega a la misma URL con parámetros (`vio_payment`, `vio_method`, `checkout_id`): el router no debe borrar la query al cargar. Al terminar se emite `vio:payment-success` con `checkoutId` y `buyerRef`.
 >
-> **8. Vuestra analítica (Innsikt), opcional.** Si queréis copiar el embudo a `/api/track`, escuchad
-> `vio:product-click`, `vio:added-to-cart`, `vio:checkout-open` y `vio:payment-success`. Guardad `buyerRef` si lo
-> necesitáis; nunca un email.
+> **8. Vuestra analítica, opcional.** Para copiar el embudo a `/api/track`, escuchad `vio:product-click`, `vio:added-to-cart`, `vio:checkout-open` y `vio:payment-success`. Nunca guardéis un email; `buyerRef` sí.
 >
-> **9. Lo que ya no tenéis que hacer.** La privacidad de la surface (`standard` o `minimal`) la fija el dashboard y la
-> aplica el SDK. Si una campaña termina, el artículo sigue vendiendo con la marca de la surface, sin campaña.
+> **9. Lo que hace Vio solo.** La privacidad de la surface (`standard` o `minimal`) la aplica el SDK. Si una campaña termina, el artículo sigue vendiendo por la marca de la surface, sin campaña.
 >
-> **10. Horario.** QA se apaga de 23:00 a 06:30 UTC y los fines de semana: fuera de ese horario el arranque falla.
+> **10. Horario.** QA se apaga de 23:00 a 06:30 UTC y los fines de semana.
 >
-> **11. Qué comprobar y reportar** (con ids de artículo, checkout y orden):
-> 1. `GET /v2/mobile/config?platform=web` con la key: `availableCampaigns` trae la campaña de Careless.
-> 2. En el artículo, los bloques muestran producto, precio e imagen en vivo.
-> 3. En la consola, `Vio.attribution()` devuelve `campaignId`, `contentId` y `contentTitle` del artículo.
-> 4. Compra con Vipps test y con Stripe test: `vio:payment-success` con `checkoutId`.
-> 5. Lo demás lo comprueba Vio: slots en el dashboard, orden atribuida y analytics por campaña y artículo.
+> **11. Qué comprobar y reportar,** con ids de artículo, checkout y orden:
+> 1. En el CMS, Vio-kampanje lista «Careless · 10 nyheter» y Vio-sponsor lista Careless.
+> 2. Con la campaña activa, el selector de productos muestra el catálogo de Careless.
+> 3. En el artículo, los bloques muestran producto, precio e imagen en vivo.
+> 4. En la consola, `Vio.attribution()` devuelve `campaignId`, `sponsorId`, `contentId` y `contentTitle` del artículo.
+> 5. Una compra con Vipps test y otra con Stripe test: `vio:payment-success` con `checkoutId`.
 
 ### Probar el flujo con Replit en QA (nuestro lado, después de su deploy)
 
