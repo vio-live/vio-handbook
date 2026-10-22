@@ -1273,3 +1273,18 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     Angelo; se lo pedí. Mi cuenta de Vercel no puede desplegar ese proyecto (403).
   - **Otra variable solo de staging que conviene decidir:** `ACCOUNT_PAYMENTS=true`. En prod está
     apagada, así que el dashboard muestra los interruptores de pago por channel.
+
+- **22/10 22:12 UTC — PEDIDO PARA MIGUEL, con OK de Angelo («pídeselo a Miguel»): `VIO_CAMPAIGNS_V2`
+  en el dashboard de prod.** Desbloquea B5. Detalle en la entrada de 22:08.
+  1. En el proyecto de Vercel `vio-commerce-webapp`, añadir `VIO_CAMPAIGNS_V2` = `true` para
+     **Production**: `vercel env add VIO_CAMPAIGNS_V2 production`, o desde el panel. Hoy solo está
+     para staging.
+  2. Redesplegar Production. El export es estático y la variable se fija al compilar, así que sin
+     redeploy no hace nada.
+  3. Verificar en el bundle publicado de `dashboard.ecom.vio.live` que el formulario de campañas pide
+     `/channels` al micro (`api.vio.live`). Después Angelo crea la campaña como Aller, con Careless de
+     sponsor y el channel 480 «Careless 26/10 test». Criterio: `POST /api/campaigns` → 201, y nace
+     `surface_channel (1, 480)` en la misma transacción.
+  4. Aparte, para que lo decida Angelo: `ACCOUNT_PAYMENTS=true` también está solo en staging. No lo
+     toques sin su OK.
+  Avísame aquí cuando esté y verifico el `surface_channel` y la campaña en la base, solo leyendo.
