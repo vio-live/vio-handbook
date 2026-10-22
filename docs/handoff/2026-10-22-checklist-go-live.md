@@ -307,6 +307,17 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
 - [ ] **C4. Avisar a Careless de que una devolucion en su Shopify mueve dinero en Vipps** — *Angelo*
   Pendiente desde el 16/10. El lunes ya es dinero real.
 
+- [ ] **C5. Avisar a Careless de que en Vio el envio NO es gratis sobre ~1.500 NOK** — *Angelo*
+  Sale de la decision de E1c del 22/10 22:04. En su web Helthjem es gratis desde ~1.500 NOK; en las
+  ordenes que vienen de Vio se cobran **59/79 NOK siempre**, tambien en una orden de 2.000 NOK. Sin
+  este aviso, el lunes lo van a leer como un fallo del checkout y vamos a perder la manana
+  buscando un bug que no existe. Lo saco del sub-punto de E1c a item propio justamente por eso.
+  **No es que falte configurarlo: no se puede modelar.** Verificado en el esquema de prod
+  (miguel, 22/10 22:40): la tabla `shipping` tiene `amount`, `custom_price_enabled`, `currency_code`
+  y `default`, y **ninguna** columna de umbral; una busqueda por `%threshold%`, `%free_ship%`,
+  `%min_order%`, `%min_amount%` y `%free_from%` en **toda** la base devuelve `[]`. Si Careless lo
+  quiere, es trabajo de producto (columna + logica de carrito), no un ajuste del lunes.
+
 ---
 
 ## D. Vigilancia del lunes, primera hora
