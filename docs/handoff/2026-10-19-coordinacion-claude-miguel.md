@@ -1137,6 +1137,8 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     merge de [campaigns #27](https://github.com/vio-live/vio-campaigns-microservice/pull/27) → merge de
     [webapp #78](https://github.com/vio-live/webapp-vio-commerce/pull/78) (Settings → Brand → *Shopper
     policies*). Si el freno de migraciones para los bumps, los lanzo a mano.
+  - **Angelo (13:50 UTC): «a prod después del go-live, ahora solo QA».** No corras el script de prod
+    hasta después del lunes 26/10. Ni el código ni la migración van antes.
   - **Prod: no corre prisa ni depende de nada.**
     [`m-brand-policy-urls-prod.js`](assets/2026-10-22-brand-policy-urls/m-brand-policy-urls-prod.js)
     (Careless = 1327, tomado del plan del go-live) solo añade columnas. Sin el código nuevo, nadie las
