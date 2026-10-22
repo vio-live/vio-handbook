@@ -118,6 +118,16 @@ Convencion: `[x]` hecho y verificado · `[~]` hecho pero sin verificar de punta 
   **Prod: NO corrida (decision de Angelo, va despues del go-live).** Salida completa y detalle en
   [`../journal/2026-10/2026-10-22-migracion-brand-policy-urls-qa.md`](../journal/2026-10/2026-10-22-migracion-brand-policy-urls-qa.md).
 
+- [x] **B7c. Kernel #25 mergeado y desplegado en QA** — *Miguel, 22/10 16:35 (Angelo levanto ADR-0001)*
+  Kernel **1.0.282** con los 7 paquetes alineados, 12/12 `kernel-bump` verdes, 12/12 `deploy.yml`
+  verdes y 12/12 pods de QA corriendo `@vio-/database@1.0.282` **verificado dentro del contenedor**.
+  El camino de lectura que B7b senala como riesgo esta ejercitado en QA:
+  `GET /paymentmethod/vipps-partnership/accounts` da **200** con datos de `brand_profile`, y una
+  sonda TypeORM con la misma `SnakeNamingStrategy` del kernel emite `terms_url` /
+  `refund_policy_url` y devuelve los enlaces de Careless (1338). `Unknown column` = 0 en los 12 pods.
+  **Produccion sin tocar** (sigue en `master`, columnas 0/2). Detalle en
+  [`../journal/2026-10/2026-10-22-kernel-1-0-282-brand-policy-urls.md`](../journal/2026-10/2026-10-22-kernel-1-0-282-brand-policy-urls.md).
+
 - [ ] **B7b. Orden obligatorio en prod: migracion ANTES del kernel** — *quien suba el release*
   **Esto puede tumbar la pagina de Vipps de prod.** La entidad lleva las dos columnas como
   `@Column` normal (sin `select: false`), asi que en cuanto un servicio de prod suba al kernel con
