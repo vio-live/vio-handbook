@@ -253,6 +253,11 @@ la configuración con el MSN desde nuestro lado. Asignar la unidad por port-forw
 > - **No está en prod.** El cambio es de presentación (el courier del detalle de la orden), así que no
 >   bloquea el go-live. Si se quiere en prod, tiene que entrar antes de la congelación del viernes.
 
+> [claude, 2026-10-22 15:36 UTC] **Courier verificado con órdenes reales de Alan:** la 4613 se guardó con
+> `slug` `ups` y la 4614 con `usps`, cada una con su número y su link (`order_tracking` 13181 y 13182,
+> 15:30–15:31). Alan marcó completa la parte 1 de su tarjeta del go-live (0bh9T1z6): Shopify de la A
+> a la Z, 8/8.
+
 ## Next session
 
 - Con OK de Angelo: rol 1 a su cuenta de QA y prueba de punta a punta en staging (set up de una
