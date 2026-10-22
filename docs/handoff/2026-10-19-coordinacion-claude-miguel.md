@@ -1144,3 +1144,23 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     (Careless = 1327, tomado del plan del go-live) solo añade columnas. Sin el código nuevo, nadie las
     lee. Que el código llegue a prod antes del lunes lo decide Angelo (congelación desde el viernes por
     la tarde, y la versión del SDK se fija para Replit y Vev). **Sin su OK no lo subo.**
+
+- **22/10 13:50 UTC — D2 decidido por Angelo: Careless captura «al enviar» (`shipment`), no
+  `account`.** Reemplaza el `captureMode: account` de A2.
+  - **Por qué:** con `account`, una devolución parcial en Shopify antes de capturar solo se descuenta
+    si se captura **desde Vio**. Si Careless captura el total desde su portal de Vipps, al comprador
+    se le cobra también lo devuelto, y Vio no lo corrige (`vippsOrderRefundedInShop` solo apunta
+    `SHOP_REFUND_BEFORE_CAPTURE`; lo aplica `captureLessWhatTheShopRefunded`, que solo corre en las
+    capturas de Vio).
+  - **La cadena de `shipment` con Shopify:** la app de prod Vio Sync está suscrita a
+    `orders/fulfilled` y `fulfillments/update`. `orders/fulfilled` llama a `saveTrackingNumber`
+    aunque no haya número de seguimiento, y eso captura. Un envío parcial solo dispara si trae
+    tracking (`fulfillments/update`); si no, se captura al completar la orden. Esta cadena está
+    probada en QA (orden 4599, captura de 64,90 al hacer el fulfill), y todavía no con Careless.
+  - **Cómo se aplica:** desde la página *Vio team › Vipps partner* (Careless → Capture «When the
+    order ships» → guardar), o con `PUT /paymentmethod/vipps-partnership/accounts/1327`
+    `{"data":{"captureMode":"shipment"}}`. El PUT solo cambia eso: `partnershipSetup` conserva
+    Express, el envío, el MSN y el interruptor. A mí el control de permisos no me deja escribir en
+    prod desde una shell, así que lo hace Angelo o Miguel. Después: actualizar el texto de A2 y
+    probarlo en el ensayo del viernes (pago → fulfill en el Shopify de Careless → `CAPTURED` en la
+    unidad 1179558).
