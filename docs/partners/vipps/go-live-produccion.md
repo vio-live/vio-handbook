@@ -1,8 +1,8 @@
 ---
 title: "Vipps en producción — plan de salida"
-last-updated: 2026-10-19
+last-updated: 2026-10-22
 owner: angelo
-status: plan — primer comercio firmado (Careless, MSN 1179558); partner keys por localizar; pendiente de las decisiones de Angelo
+status: fase 3 HECHA el 22/10 — partner keys, endpoint de producción y webhook de partner cargados y verificados; falta el primer pago real de Careless
 ---
 
 # Vipps en producción — plan de salida
@@ -51,13 +51,21 @@ para encender Vipps en producción y sacar el primer comercio. Arquitectura y mo
   las purgas de la clave de Datadog en `.env.test` (sin efecto en ejecución).
 - **Configuración de Vipps en producción, hoy** (comprobado sin imprimir valores):
 
-| Variable | shopcart | api | orders | users | Lo que debe ser |
+**Estado tras el 22/10** (comprobado dentro de los pods, sin imprimir valores):
+
+| Variable | shopcart | api | orders | users | payment-processors / base-api |
 |---|---|---|---|---|---|
-| `VIPPS_API_URL` | `apitest.vipps.no` | igual | igual | igual | `https://api.vipps.no` |
-| `VIPPS_PARTNER_CLIENT_ID` / `_SECRET` / `_SUBSCRIPTION_KEY` | no | no | no | no | las partner keys de producción |
-| `VIPPS_PARTNER_WEBHOOK_SECRET` | no | — | — | — | el del registro del webhook de partner |
-| `VIPPS_CLIENT_*` (plataforma) | sí | sí | sí | sí | decisión 2 |
-| `EMAIL_DELIVERY` | no (kernel 1.0.267) | no | no | no | `on` |
+| `VIPPS_API_URL` | `api.vipps.no` | `api.vipps.no` | `apitest` | `apitest` | `apitest` (ver abajo) |
+| `VIPPS_PARTNER_CLIENT_ID` / `_SECRET` / `_SUBSCRIPTION_KEY` | **sí** | **sí** | no | no | no |
+| `VIPPS_PARTNER_WEBHOOK_SECRET` | **sí** | — | — | — | — |
+| `VIPPS_CLIENT_*` (plataforma, de test) | sí | sí | sí | sí | sí |
+| `EMAIL_DELIVERY` | — | **quitada** | **quitada** | **quitada** | — |
+
+`orders` y `users` se quedan en `apitest` porque no llaman a Vipps por ahí. **`api` en realidad no
+lee `VIPPS_API_URL` del entorno** (usa `VIPPS_PRODUCTION` fijo en `vipps-management.ts`): está puesta
+por coherencia. **`payment-processors` y `base-api` sí la leen y siguen en test**, con rutas vivas de
+capture/cancel y `POST /vipps/payment`; sin tráfico observado. Decisión pendiente de Angelo
+([journal del 22/10](../../journal/2026-10/2026-10-22-vipps-fase3-prod.md)).
 
 Quién lee de verdad las variables de Vipps (comprobado en `develop` el 16/10):
 
@@ -75,7 +83,7 @@ Quién lee de verdad las variables de Vipps (comprobado en `develop` el 16/10):
 ## Fase 0 — Dos riesgos vivos, independientes de Vipps (hacer ya)
 
 > **21/10, Angelo: «los mails siempre apagados»**, también en producción. El punto 1 de abajo queda
-> al revés: hay que **quitar** `EMAIL_DELIVERY=on` de orders, users y api en producción (se puso el
+> **HECHO el 22/10:** quitada `EMAIL_DELIVERY=on` de orders, users y api en producción (se puso el
 > 16/10). Es un cambio de Miguel en los Secrets y el blob.
 
 1. **Los correos de producción están apagados desde el 12/10 13:18 UTC.** orders, users y api corren
@@ -173,6 +181,14 @@ del `:latest` del registro. Ninguna migración.
    `VIPPS_PARTNER_SUBSCRIPTION_KEY`.
 3. `VIPPS_CLIENT_*` según la decisión 2.
 4. Secret + blob, recrear pods, comprobar que el `.env` montado tiene las líneas (contar, no imprimir).
+**Fase 3 ejecutada el 22/10** (pasos 0–5): claves probadas antes de cargarlas, cargadas en
+`shopcart` y `api` (Secret `env-sc-<servicio>` + blob por servicio), `VIPPS_API_URL` a producción,
+pods recreados y verificados por dentro, y webhook de partner registrado
+(`e1de7656-76e2-4871-b23b-2c54119bc7b3`, `replaced: 0`, un solo registro en
+`api-ecom.vio.live/api/shopcart/checkout/vipps/webhook`). El secreto está en shopcart y verificado
+byte a byte. Detalle y verificaciones: [journal del
+22/10](../../journal/2026-10/2026-10-22-vipps-fase3-prod.md).
+
 5. **Registrar el webhook de partner** (cubre todas las unidades bajo el partner):
    port-forward al shopcart de producción (`deploy/shopcart`, la app escucha en el **8000**) y,
    tras inventariar, `POST /checkout/register/webhook/vipps` con
