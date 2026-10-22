@@ -296,6 +296,34 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
   Criterio: `shipping_country` de Careless con la tarifa acordada en NOK y el metodo correcto con
   `default = 1`. Mientras no este, **el checkout cobra 10 NOK de envio**.
 
+- [ ] **E1c. Ordenes de Careless con el metodo de envio que reconoce su almacen** — *BLOQUEANTE*
+  > [claude, 2026-10-22] Careless no usa tarifas de Shopify: el envio lo calcula **Packrooster** y
+  > despacha **360 Logistics**. Sus ordenes llevan una linea de envio con `source=Packrooster` y
+  > `code` tipo `helthjem|2|#13435`; la orden que crea Vio llevaba solo `title` + `price` (custom),
+  > que Packrooster no reconoce: **la orden quedaria sin transportista y sin despachar.** Angelo
+  > (22/10) eligio los dos metodos simples, «Leveringstid 1-5 dager»:
+  > «Helthjem - til postkasse/dørmatte» **59 NOK** y «Bring - Pakke i postkasse» **79 NOK** (precios
+  > de su web; alli Helthjem es gratis desde ~1.500 NOK, que el modelo de Vio no soporta).
+  - [ ] Merge de [extensions#33](https://github.com/vio-live/vio-extensions-microservice/pull/33)
+    a `develop` y release a `master` — *Angelo*. Mete `code`/`source` en la linea y el telefono en
+    la direccion de envio.
+  - [ ] `SHOPIFY_SHIPPING_LINES` en el Secret `env-sc-extensions` (y el blob) + reciclar pods —
+    *Miguel*. Valor (no es secreto):
+    `{"dignitycollect.myshopify.com":{"Helthjem - til postkasse/dørmatte":{"code":"helthjem|2|#13435","source":"Packrooster"},"Bring - Pakke i postkasse":{"code":"bring|3584|#13452","source":"Packrooster"}}}`.
+    Criterio: al arrancar, `extensions` loguea `líneas de envío configuradas: dignitycollect.myshopify.com (2)`.
+  - [ ] Los metodos de Careless en Vio (cierra E1b) **con esos nombres exactos**, NO, NOK, 59 y 79,
+    descripcion «Leveringstid 1-5 dager», Helthjem con `default = 1`, y los productos colgando de
+    los dos — *Angelo/Miguel*. La equivalencia se busca por nombre.
+  - [ ] **Orden de prueba de punta a punta en prod, coordinada con Careless** — *Angelo*. Criterio:
+    en su Shopify la orden trae la linea con `source=Packrooster`, el metafield
+    `packrooster.shipping-service` y las etiquetas del transportista, y 360 Logistics la despacha.
+    Sin confirmar todavia: que Shopify acepte `source`/`code` al crear por REST y que Packrooster
+    actue sobre una orden creada por API. **Red de seguridad:** Packrooster deja cambiar el metodo a
+    mano en cada orden; avisarle a Careless que revise las de Vio hasta tener la prueba.
+  - Despues (no para el lunes): tarifas dinamicas por direccion desde Shopify
+    (`draftOrderAvailableDeliveryOptions`) en el callback de Vipps Express —
+    [product/shopify-tarifas-de-envio-dinamicas](../product/shopify-tarifas-de-envio-dinamicas.md).
+
 - [ ] **E2. Deriva de version del SDK** (0.27.0 vs 0.26.1). Lo cierra B6. Que **nadie** lo toque en
   paralelo o acabamos con dos versiones en produccion el dia del lanzamiento.
 - [ ] **E3. QA apagado todo el fin de semana.** Lo que haya que probar en staging va el **viernes**.

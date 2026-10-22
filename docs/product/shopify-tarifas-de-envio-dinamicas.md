@@ -11,6 +11,17 @@ status: aparcado
 > del 26/10 con Careless: es una función nueva dentro del checkout y el envío fijo de Vio ya
 > funciona. Nada construido.
 
+## Actualización 2026-10-22 (noche): lo urgente ya no está aparcado
+
+Mirando sus órdenes salió que Careless despacha con **Packrooster + 360 Logistics** y que la orden de
+Vio llegaría sin servicio. El arreglo simple para el go-live está en el checklist
+([E1c](../handoff/2026-10-22-checklist-go-live.md)) y en
+[extensions#33](https://github.com/vio-live/vio-extensions-microservice/pull/33). Lo dinámico sigue
+aparcado; la vía más directa es `draftOrderAvailableDeliveryOptions` (Admin GraphQL desde 2025-07,
+permiso `read_draft_orders`), que devuelve por dirección cada opción con `title`, `code`, `source`
+y `price`, para responder con eso en el callback de envío de Vipps Express
+(`shippingOptionsFor` en `shopcart`). Sin verificar: que incluya las tarifas de Packrooster.
+
 ## La pregunta
 
 Angelo (22/10): ¿podemos sacar del Shopify de Careless las tarifas de envío dinámicas, en vez del
