@@ -156,11 +156,21 @@ eventos. Cuatro cosas que lo explican, por orden de impacto:
 
 **Propuesta, en tres pasos independientes:**
 
-1. **Identidad (barato, sin dato personal nuevo).** Mandar `$device_id` = `anon_id` y `$user_id` =
-   `external_user_id` solo cuando el host identificó al usuario, y dejar de fijar `distinct_id` a
-   mano. Y marcar los eventos de servidor (`is_server: true`) para poder sacarlos de los análisis de
-   usuario. Esto arregla (2) y (3) y es lo que hace que una cohorte tipo «entró por el newsletter y
-   compró» sea clicable.
+1. **Identidad (barato, sin dato personal nuevo). HECHO** —
+   [vio-analytics#30](https://github.com/vio-live/vio-analytics/pull/30), `main` `c2fc161`.
+   `is_server: true` en todo evento de servidor, siempre (es una marca, no un cambio de identidad).
+   Y `$device_id` (el anónimo) + `$user_id` (el identificado, solo si el host identificó) **detrás de
+   la bandera `MIXPANEL_IDENTITY`, `off` por defecto**: con `off` el comportamiento es el de hoy.
+   Un evento de servidor nunca lleva identidad, ni con la bandera encendida.
+
+   **Por qué una bandera y no el comportamiento nuevo**: `$device_id`/`$user_id` solo hacen algo si el
+   proyecto usa el **Simplified ID Merge** (por defecto en orgs creadas desde abril de 2024; con el
+   merge original se ignoran y haría falta `$identify`). Y en un proyecto **con datos previos**, el
+   `distinct_id` canónico de un anónimo pasa a ser `$device:<anon>`, así que la historia de ese
+   navegador **se parte** en el momento del deploy. Se decide mirando el proyecto, y para eso hace
+   falta el MCP. A favor de encenderla pronto: en prod no hay ni un evento, así que allí no hay
+   historia que partir. Cuando se decida, es una variable de entorno (`MIXPANEL_IDENTITY=simplified`)
+   y no otro PR.
 2. **Perfiles (necesita decisión de Angelo).** Llamar a `/engage` con `$set_once` para «primera vez
    vista» y la fuente de entrada original, y `$set` para propiedades gruesas: país, idioma,
    dispositivo, última surface. **Sin datos personales** — analytics no los tiene. Pero crear perfiles
