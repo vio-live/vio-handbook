@@ -360,7 +360,8 @@ Los cuatro se miran con el guion de C3 (menos D3, que es el portal de Vipps y so
   > que Packrooster no reconoce: **la orden quedaria sin transportista y sin despachar.** Angelo
   > (22/10) eligio los dos metodos simples, «Leveringstid 1-5 dager»:
   > «Helthjem - til postkasse/dørmatte» **59 NOK** y «Bring - Pakke i postkasse» **79 NOK** (precios
-  > de su web; alli Helthjem es gratis desde ~1.500 NOK, que el modelo de Vio no soporta).
+  > de su web; alli Helthjem es gratis desde ~1.500 NOK — umbral **descartado para este go-live**
+  > por Angelo el 22/10, el modelo de Vio no lo soporta).
   - [x] [extensions#33](https://github.com/vio-live/vio-extensions-microservice/pull/33) mergeado en
     `develop` (`118f2ca`, 22/10 19:23 UTC); QA desplegada, pod 2/2 con el codigo nuevo y 0 errores.
     Mete `code`/`source` en la linea y el telefono en la direccion de envio.
@@ -417,8 +418,12 @@ Los cuatro se miran con el guion de C3 (menos D3, que es el portal de Vipps y so
     > - Respaldo de las 42 filas previas: `prod-backup/backup-shipping-1327-20261022.json` en el
     >   workspace de Miguel (no va al repo). Para deshacer: restaurar esas filas y borrar
     >   `f831b031-...` (su `shipping_country` y sus 40 `product_shipping` caen por `ON DELETE CASCADE`).
-    > - **Lo que sigue siendo de Careless:** en su web Helthjem es gratis desde ~1.500 NOK y el
-    >   modelo de Vio no soporta umbrales. Si lo quieren, es trabajo de producto, no configuracion.
+    > - **Envio gratis sobre ~1.500 NOK: DESCARTADO para este go-live** (Angelo, 22/10 22:04:
+    >   «envio gratis sobre 1500, eso no lo soportamos esta vez»). El modelo de Vio no tiene
+    >   umbrales por importe. Careless cobra 59/79 NOK siempre en las ordenes que vienen de Vio,
+    >   tambien por encima de 1.500. **No es un pendiente de configuracion ni se reabre el lunes**:
+    >   si lo quieren, es trabajo de producto posterior. Avisar a Careless de la diferencia con su
+    >   web, para que no lo lean como un fallo del checkout.
     - `shipping` `60af8d5a-...` (1327, `default = 1`): `name` = `Helthjem - til postkasse/dørmatte`,
       `description` = `Leveringstid 1-5 dager`, `amount` = **59.00** NOK; su `shipping_country` (NO) = 59.00 NOK.
     - `shipping` nuevo de 1327: `name` = `Bring - Pakke i postkasse`, `description` =
@@ -429,7 +434,8 @@ Los cuatro se miran con el guion de C3 (menos D3, que es el portal de Vipps y so
       (`sharedShippingClasses`), asi que sin esto Bring no aparece.
     - Verifica claude despues: el dashboard las muestra en kr y los dos nombres, leidos tal como
       quedaron, dan su `code` con la funcion de `extensions` dentro del pod de prod.
-  - [ ] **Orden de prueba de punta a punta en prod, coordinada con Careless** — *Angelo, viernes 23/10 (antes de la congelacion)*. Criterio:
+  - [ ] **Orden de prueba de punta a punta en prod, coordinada con Careless** — *Angelo, viernes 23/10
+    (antes de la congelacion). Confirmado por Angelo el 22/10 22:04: «la orden la probamos manana».* Criterio:
     en su Shopify la orden trae la linea con `source=Packrooster`, el metafield
     `packrooster.shipping-service` y las etiquetas del transportista, y 360 Logistics la despacha.
     Sin confirmar todavia: que Shopify acepte `source`/`code` al crear por REST y que Packrooster
