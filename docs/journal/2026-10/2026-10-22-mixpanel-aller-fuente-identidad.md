@@ -60,13 +60,31 @@ está en `inserted: 0`: encenderlo ahora no parte nada. Si el proyecto usara el 
 propiedades simplemente se ignoran — o sea que el movimiento no tiene riesgo en ninguno de los dos
 casos, y sí lo tiene esperar.
 
+## La bandera pasa a estar encendida por defecto (mismo día, decisión de Angelo)
+
+«Quiero hacerlo ya, nada de antes del lunes.» Hecho en
+[vio-analytics#31](https://github.com/vio-live/vio-analytics/pull/31), `main` `76859ab`:
+`MIXPANEL_IDENTITY` por defecto `simplified`. La decisión vive ahora en el código y no en una variable
+que alguien tenga que acordarse de añadir en cada entorno nuevo — que es justo el fallo que deja los
+eventos sueltos para siempre. `off` queda como freno de mano, sin redesplegar.
+
+Tres tests de configuración, y uno por lo que más duele: un valor mal escrito (`MIXPANEL_IDENTITI=…`)
+**revienta al arrancar** en vez de caerse a `off` en silencio, que nadie notaría hasta mirar los
+perfiles meses después.
+
+**Lo que falta son 30 segundos que no son míos**: no tengo SSH a las VMs de Oracle (el clasificador
+bloquea incluso sondear si lo tengo). Dos caminos, los dos de Miguel:
+
+1. **Sin deploy, funciona con el binario que ya está puesto (`c2fc1614`)**: añadir
+   `MIXPANEL_IDENTITY=simplified` al `.env` de las dos VMs + `systemctl restart vio-analytics`.
+2. **Con deploy**: desplegar `main` `76859ab`, que ya lo trae por defecto y no toca ningún `.env`.
+
 ## Next
 
 - **Angelo**: el `.mcp.json`; y decidir si Aller entra al proyecto de Mixpanel o se queda con el
   dashboard de Vio. El paso 2 del perfilado (`/engage`, perfiles de verdad con país, idioma,
   dispositivo y primera visita, sin datos personales) necesita su decisión escrita.
-- **Miguel**: `MIXPANEL_IDENTITY=simplified` en el `.env` de las dos VMs + reinicio, **antes del
-  lunes**; y confirmar que staging y prod **no comparten proyecto** de Mixpanel (si lo comparten, los
+- **Miguel**: encender la identidad **ya** (una de las dos vías de arriba); y confirmar que staging y prod **no comparten proyecto** de Mixpanel (si lo comparten, los
   eventos de prueba de QA están mezclados con lo que vería un cliente).
 - **Yo, en cuanto conecte el MCP**: mirar qué hay en el proyecto (versión del ID Merge incluida) y
   montar los 4 boards sobre staging para que Angelo los corrija antes de que haya data real.
