@@ -95,11 +95,24 @@ una base propia del colector.
 
 ## 3. Servicio
 
-Igual que en staging: clonar en `/opt/vio-analytics`, `pnpm install --prod=false`,
-`pnpm build`, y una unit `vio-analytics.service` con `Restart=always`,
+En `/opt/vio-analytics`, con `pnpm install --prod=false`, `pnpm build`, y una unit
+`vio-analytics.service` con `Restart=always`,
 `EnvironmentFile=/opt/vio-analytics/.env`, `ExecStart=/usr/bin/node dist/index.js`.
 El colector crea las columnas que falten al arrancar (`ADD COLUMN IF NOT EXISTS`),
 así que no hay migración manual.
+
+> ⚠️ **No hay clon de git en las VMs** (corregido 2026-10-22, Miguel). No existe
+> `/opt/vio-analytics/.git`: un `git pull` allí da `fatal: not a git repository`.
+> El despliegue **siempre** se hizo por tarball, y en el home de cada máquina
+> quedan los de las veces anteriores (`vio-analytics-<commit>.tar.gz`). La receta
+> real para actualizar es:
+>
+> 1. `git archive` del commit en local → `vio-analytics-<commit>.tar.gz`
+> 2. copiarlo a la VM, **respaldar** lo que hay, extraer sobre `/opt/vio-analytics`
+> 3. `pnpm install --prod=false && pnpm build && systemctl restart vio-analytics`
+>
+> El `.env` vive en la VM y no viaja en el tarball: comprobar su md5 antes y
+> después para asegurarse de que no se tocó.
 
 ## 4. nginx: reemplazar el 503
 
@@ -124,6 +137,22 @@ curl -s https://api.vio.live/health             # 200 — el backend no se tocó
 Y con el token nuevo, que el puente del dashboard responda:
 `curl -H "authorization: <ID token Firebase de prod>" https://api-ecom.vio.live/api/stats/overview`
 → 200 (con ceros, hasta que haya tráfico).
+
+## 5.1 Qué prueba de verdad que la versión nueva corre (2026-10-22)
+
+`status: ok` **no** lo prueba: lo dice igual un proceso viejo. Lo que lo prueba:
+
+- `uptime_s` bajo (reinició de verdad), y
+- en staging, **un evento real entrando y saliendo**: `clickhouse.inserted` y
+  `sinks.mixpanel.forwarded` subiendo juntos con `lastError: null`.
+- `/health` **no expone versión ni commit**, así que «qué está desplegado» solo se
+  infiere del uptime. Mientras siga así, la garantía para prod es que el bundle
+  compilado sea **idéntico** al que se acaba de ver funcionando en staging
+  (comparar md5 de `dist/index.js` en las dos VMs).
+
+**En prod no se inyecta un evento de prueba.** Prod está en `inserted: 0` por falta
+de tráfico, y ese cero es justamente la señal que se vigila («el día que deje de ser
+0 es que llegó tráfico real»). Un evento de prueba la ensucia.
 
 ## 6. Qué esperar después
 
