@@ -214,6 +214,17 @@ la configuración con el MSN desde nuestro lado. Asignar la unidad por port-forw
 > Dato: QA arranca a las 06:30 UTC (`job-qa-sc-aks-start`, RG `rg-vio-qa-sc`; MySQL a las 06:25), no a
 > las 06:00 como dice `infrastructure/qa-aks-scheduler.md`.
 
+> [claude, 2026-10-22 08:35 UTC] **Reporte 4 cerrado en QA.** Mergeé
+> [vio-orders-microservice#40](https://github.com/vio-live/vio-orders-microservice/pull/40) con el OK de
+> Angelo (08:26). El deploy salió en verde (run 39747788529) y el pod nuevo arrancó limpio con
+> `markLinesRefundedInShop` y la salvedad de `isVoidLine` al guardar el envío.
+>
+> Le avisé a Alan en HPKysebB que repita con una orden nueva: 2 productos, devolver 1 entero en Shopify,
+> y hacer fulfill del otro. Hay dos casos extra: devolver los dos en devoluciones separadas, y devolver 1
+> de 2 unidades del mismo producto.
+>
+> Falta su prueba de punta a punta. Cuando la haga, lo verifico en la base de QA en solo lectura.
+
 ## Next session
 
 - Con OK de Angelo: rol 1 a su cuenta de QA y prueba de punta a punta en staging (set up de una
