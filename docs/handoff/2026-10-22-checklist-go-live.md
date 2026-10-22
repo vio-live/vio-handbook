@@ -337,7 +337,7 @@ Los cuatro se miran con el guion de C3 (menos D3, que es el portal de Vipps y so
   **Pendiente de Careless, y es suyo:** 10 NOK es ~1 EUR, un placeholder. Tienen que decidir su
   tarifa real (49/79 NOK, o gratis sobre X). Preguntalo en la misma conversacion que la lista de
   productos.
-- [ ] **E1b. Tarifas de envio reales de Careless** — *decide Careless, lo carga Miguel/Angelo*
+- [x] **E1b. Tarifas de envio reales de Careless — CERRADO 22/10 21:58 por Miguel (ver E1c)** — *decide Careless, lo carga Miguel/Angelo*
   Hoy tienen **un** envio, «Default Shipping» **10,00 NOK** (`default = 1`), que es el que crea el
   alta. 10 NOK es ~1 EUR: **es un placeholder, no una tarifa**. Los 40 productos cuelgan de el.
   **Ojo con el nombre: las tablas `flat_rate` y `flat_rate_country` estan VACIAS en prod y en QA**, y
@@ -379,13 +379,37 @@ Los cuatro se miran con el guion de C3 (menos D3, que es el portal de Vipps y so
     opcional en el codigo, no puede tumbar el arranque. Valor (no es secreto):
     `{"dignitycollect.myshopify.com":{"Helthjem - til postkasse/dørmatte":{"code":"helthjem|2|#13435","source":"Packrooster"},"Bring - Pakke i postkasse":{"code":"bring|3584|#13452","source":"Packrooster"}}}`.
     Criterio: al arrancar, `extensions` loguea `líneas de envío configuradas: dignitycollect.myshopify.com (2)`.
-  - [ ] Los metodos de Careless en Vio (cierra E1b) — ***Miguel, por base* (como E1)**. La
+  - [x] **Los metodos de Careless en Vio — HECHO 22/10 21:58 (Miguel, por base). Cierra E1b.** La
     equivalencia se busca por nombre: copiar los nombres tal cual (la «ø» es U+00F8).
     > [claude, 2026-10-22 ~20:00] **No se puede desde el dashboard:** la cuenta 1327 tiene
     > `settings.currency` **EUR** y el dashboard guarda las clases en la moneda de la cuenta (avisa
     > «saving switches it to EUR»); quedarian en EUR y desharia E1. Cambiar la cuenta a NOK no es
     > inocuo (`products` la usa al convertir precios, tambien `api` y `orders`): no antes del lunes.
     > El canal no necesita nada mas: `channelService` lee el envio por `product_shipping` → `shipping`.
+    > [miguel, 2026-10-22 21:58] **Aplicado en prod y verificado.** Una transaccion con
+    > precondiciones (1 metodo vivo, los 40 `product_shipping`) y aserciones de relectura antes del
+    > commit; ensayado primero con rollback. Resultado:
+    > - `60af8d5a-...` pasa a «Helthjem - til postkasse/dørmatte» / «Leveringstid 1-5 dager»,
+    >   **59,00 NOK**, `default = 1`, `custom_price_enabled = 0`; su `shipping_country` NO a 59,00 NOK.
+    > - nuevo `f831b031-d557-471b-a401-32376a8fcc73` «Bring - Pakke i postkasse», **79,00 NOK**,
+    >   `default = 0`; `shipping_country` NO a 79,00 NOK.
+    > - `product_shipping`: **40 filas nuevas**, una por producto, al metodo nuevo. Quedan 40 y 40,
+    >   que es lo que `sharedShippingClasses` necesita (interseca por producto; leido en
+    >   `shopcart/dist/modules/cart/providers/shared-shipping.js`, el flag `default` no interviene).
+    > - **Los nombres no se transcribieron a mano**: se sacaron del propio `SHOPIFY_SHIPPING_LINES`
+    >   del Secret vivo. La columna es `latin1` y la conexion `utf8mb4`: la «ø» vuelve de la base
+    >   como `c3b8`, byte a byte igual que la clave del mapa.
+    > - Verificado con la **funcion real** de `extensions` dentro del pod de prod
+    >   (`parseShippingLines`/`shippingLineFor` sobre los nombres **leidos de la base**):
+    >   Helthjem → `helthjem|2|#13435`, Bring → `bring|3584|#13452`, las dos `source Packrooster`.
+    >   Control negativo: «Default Shipping» → `null` (la prueba no pasa sola).
+    > - **Sin caches que invalidar**: ni `api` ni `shopcart` cachean respuestas en ese camino
+    >   (`CACHE_ENABLED=true` es para otras cosas); la siguiente lectura del carrito va a la base.
+    > - Respaldo de las 42 filas previas: `prod-backup/backup-shipping-1327-20261022.json` en el
+    >   workspace de Miguel (no va al repo). Para deshacer: restaurar esas filas y borrar
+    >   `f831b031-...` (su `shipping_country` y sus 40 `product_shipping` caen por `ON DELETE CASCADE`).
+    > - **Lo que sigue siendo de Careless:** en su web Helthjem es gratis desde ~1.500 NOK y el
+    >   modelo de Vio no soporta umbrales. Si lo quieren, es trabajo de producto, no configuracion.
     - `shipping` `60af8d5a-...` (1327, `default = 1`): `name` = `Helthjem - til postkasse/dørmatte`,
       `description` = `Leveringstid 1-5 dager`, `amount` = **59.00** NOK; su `shipping_country` (NO) = 59.00 NOK.
     - `shipping` nuevo de 1327: `name` = `Bring - Pakke i postkasse`, `description` =
