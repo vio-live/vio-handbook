@@ -317,6 +317,9 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
   y `default`, y **ninguna** columna de umbral; una busqueda por `%threshold%`, `%free_ship%`,
   `%min_order%`, `%min_amount%` y `%free_from%` en **toda** la base devuelve `[]`. Si Careless lo
   quiere, es trabajo de producto (columna + logica de carrito), no un ajuste del lunes.
+  **Medido en su tienda (miguel, 22/10 22:55):** dos ordenes reales de hoy, `#554329CL` por
+  2.059,50 NOK y `#554327CL` por 3.903,00 NOK, las dos con linea de envio a **0,00**. O sea que su
+  umbral esta activo y la diferencia se va a ver en cuanto entre una orden grande por Vio.
 
 ---
 
@@ -452,6 +455,31 @@ Los cuatro se miran con el guion de C3 (menos D3, que es el portal de Vipps y so
     Sin confirmar todavia: que Shopify acepte `source`/`code` al crear por REST y que Packrooster
     actue sobre una orden creada por API. **Red de seguridad:** Packrooster deja cambiar el metodo a
     mano en cada orden; avisarle a Careless que revise las de Vio hasta tener la prueba.
+    > [miguel, 2026-10-22 22:55] **Preparada la verificacion, y medido el lado de Careless en vivo.**
+    > Guion de solo lectura: `docs/playbooks/scripts/verificar-orden-careless.sh` (sin argumento,
+    > las 3 ultimas ordenes; o `'#554326CL'` / el id de Shopify). Saca el `access_token` vivo de
+    > `shopify_connection` (conexion **541**, `dignitycollect`, 1327, NOK, token rotado hoy 20:10)
+    > desde el pod de `users` y consulta la Admin API **2024-04**. No escribe nada, ni en la base ni
+    > en Shopify, y borra su temporal del pod al salir. Imprime `source_name`, etiquetas,
+    > `shipping_lines` (title/code/source/price), metafields, fulfillments, si la orden la creo Vio
+    > (`source_name channel:*` o `vio_order_id` en `note_attributes`) y un veredicto por criterio.
+    > Lo que se midio con el, contra ordenes **reales** de su tienda de hoy:
+    > - **Los dos `code` que cargue son exactamente los que Packrooster pone en sus ordenes nativas.**
+    >   `#554326CL` (22:09) trae `bring|3584|#13452` y `#554329CL` (22:12) trae `helthjem|2|#13435`,
+    >   las dos `source=Packrooster`. Esto ya no depende de mi funcion de mapeo: coincide con lo que
+    >   su almacen recibe a diario.
+    > - **Packrooster tarda ~8-20 s** en escribir `packrooster.shipping-service` (orden 22:09:42 →
+    >   metafield 22:09:50). Manana, no juzgar la orden en el primer segundo.
+    > - **Linea base de una orden recien puesta:** `financial_status = authorized` (no `paid`) y
+    >   `fulfillment_status` vacio, con `fulfillments: []`. El despacho de 360 Logistics es posterior,
+    >   asi que `despachada=NO` al minuto **no es un fallo**; es el unico criterio que hay que volver
+    >   a mirar mas tarde.
+    > - **Variante que Vio no puede expresar:** Packrooster usa tambien puntos de recogida
+    >   (`helthjem|86|<idPunto>|#13940`, p. ej. «Helthjem AS, Joker Vats»). Vio solo tiene las dos
+    >   clases fijas, asi que **las ordenes de Vio van siempre a entrega a domicilio/buzon**. No es un
+    >   problema para el lunes, pero si alguien pregunta por que no hay pickup, es esto.
+    > - **El umbral de C5, medido en su web:** `#554329CL` 2.059,50 NOK y `#554327CL` 3.903,00 NOK,
+    >   las dos con envio **0,00**. Confirma con numeros que la diferencia se va a ver.
   - Despues (no para el lunes): tarifas dinamicas por direccion desde Shopify
     (`draftOrderAvailableDeliveryOptions`) en el callback de Vipps Express —
     [product/shopify-tarifas-de-envio-dinamicas](../product/shopify-tarifas-de-envio-dinamicas.md).
