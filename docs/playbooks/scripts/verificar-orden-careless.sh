@@ -38,11 +38,18 @@ const g=async(u)=>{const res=await fetch(u,{headers:{'X-Shopify-Access-Token':to
 const verShopify=async(o,vio)=>{
   const mf=(await g(`https://${SHOP}/admin/api/${V}/orders/${o.id}/metafields.json`)).metafields||[];
   const ff=(await g(`https://${SHOP}/admin/api/${V}/orders/${o.id}/fulfillments.json`)).fulfillments||[];
+  const fo=(await g(`https://${SHOP}/admin/api/${V}/orders/${o.id}/fulfillment_orders.json`)).fulfillment_orders||[];
   console.log(`  shopify ${o.name} id=${o.id} ${o.created_at} total=${o.total_price} ${o.currency}`);
   console.log(`   source_name=${o.source_name}  financial=${o.financial_status} fulfillment=${o.fulfillment_status||'unfulfilled'}`);
   console.log('   shipping_lines:', JSON.stringify((o.shipping_lines||[]).map(s=>({title:s.title,code:s.code,source:s.source,price:s.price}))));
   console.log('   metafields:', JSON.stringify(mf.map(m=>`${m.namespace}.${m.key}`)));
   console.log('   fulfillments:', JSON.stringify(ff.map(f=>({status:f.status,company:f.tracking_company,n:f.tracking_number}))));
+  const TPL=67699867900; // 360 Logistics (Drobak) — el 3PL de Careless
+  const locs=fo.map(f=>Number(f.assigned_location_id));
+  console.log('   fulfillment_orders:', JSON.stringify(fo.map(f=>({status:f.status,req:f.request_status,loc:f.assigned_location_id}))));
+  const al3pl=locs.length>0&&locs.every(l=>l===TPL);
+  console.log(`   asignada_al_3PL=${locs.length===0?'sin fulfillment_order':(al3pl?'OK (360 Logistics)':'NO -> '+locs.join(','))}`);
+  if(locs.length&&!al3pl) console.log('    OJO: el fulfillment_order NO esta en 360 Logistics, asi que el 3PL no la ve. Suele ser stock de esa variante fuera del almacen.');
   const sl=(o.shipping_lines||[])[0];
   const esVio=/vio_order_id/.test(JSON.stringify(o.note_attributes||[]))||/^(channel:|outshifter)/.test(o.source_name||'');
   const ok1=!!sl, ok2=!!(sl&&sl.source==='Packrooster'), ok3=mf.some(m=>m.namespace==='packrooster'), ok4=ff.length>0;
