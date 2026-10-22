@@ -1,6 +1,6 @@
 ---
 title: "Cómo desplegar — Vio Commerce (microservicios + base-api + graph-ql)"
-last-updated: 2026-09-18
+last-updated: 2026-10-22
 owner: miguel
 status: live
 ---
@@ -66,7 +66,7 @@ Comprobación tras el deploy: `kubectl --context kubernetesqa-sc exec deploy/<sv
 
 | Variable | Dónde | Qué hace |
 |---|---|---|
-| `EMAIL_DELIVERY` | orders-ms, users-ms, api-ms (vía `@vio-/service`, kernel ≥ 1.0.268) | `off` (por defecto, también si falta): no sale ni se escribe nada en Mailjet, una línea `[mailService] … skipped` por llamada. `sandbox`: Mailjet valida sin entregar. `on`: entrega real, contactos y listas incluidos. **Apagado en todos los entornos, prod incluido** (Angelo, 2026-10-21: «los mails siempre apagados»; reemplaza el «prod debe llevar `on`» del 06/10). Prod lo tenía `on` en orders, users y api desde el release del 16/10: hay que quitarlo. |
+| `EMAIL_DELIVERY` | orders-ms, users-ms, api-ms (vía `@vio-/service`, kernel ≥ 1.0.268) | `off` (por defecto, también si falta): no sale ni se escribe nada en Mailjet, una línea `[mailService] … skipped` por llamada. `sandbox`: Mailjet valida sin entregar. `on`: entrega real, contactos y listas incluidos. **Apagado en todos los entornos, prod incluido** (Angelo, 2026-10-21: «los mails siempre apagados»; reemplaza el «prod debe llevar `on`» del 06/10). Prod lo tuvo `on` en orders, users y api entre el release del 16/10 y el **22/10**, cuando se quitó del Secret `env-sc-<servicio>` y del blob por servicio, y se recrearon los pods ([journal](../journal/2026-10/2026-10-22-prod-correos-apagados.md)). Hoy **ningún entorno la tiene**. |
 
 ## Kernel compartido (`@vio-/*`) — no se "despliega", se publica
 
