@@ -1,6 +1,6 @@
 ---
 title: Registro de pendientes diferidos (retomar cuando haya recursos)
-last-updated: 2026-10-19
+last-updated: 2026-10-22
 owner: miguel
 ---
 
@@ -129,6 +129,34 @@ Estos no tienen excusa económica. Cuando haya un rato, se hacen.
    conviene mirar si hay que acotarlo por ruta.
 
 ---
+
+## F. Limpieza del canal WordPress (Angelo, 22/10: «apúntalo y lo tomamos pronto»)
+
+Angelo descartó el canal WordPress el 22/10. No hay urgencia: en producción tiene **0 instalaciones**
+y no hay órdenes por ningún canal (medido ese día desde un pod de `users`). Lo que queda por hacer,
+cuando se tome:
+
+1. **`channel.enabled = 0` para `Wordpress` (id 7)** en la base de producción, y en QA. Es un
+   `UPDATE` de una fila. Mientras esté a `1`, un vendedor lo ve ofertable en el dashboard aunque
+   nadie lo pueda usar. Es cambio de producto, no de infraestructura: lo decide Angelo.
+2. **Retirar la rama `wordpress` de `orders`** (`order.service.ts:2857`), la que cancela el pago
+   delegando en `payment-processors` (`/klarna|/stripe|/vipps cancelPayment`).
+3. **Y entonces, las rutas Vipps legacy de `payment-processors`** (`/vipps/capturePayment`,
+   `/captureFullPayment`, `/cancelPayment`) y el conector Vipps de `base-api`
+   (`src/connectors/vippsConnector.ts`, `POST /vipps/payment`): esa rama era su **único consumidor
+   conocido**, así que al retirarla quedan sin ninguno. Tráfico observado: cero, por dos vías
+   independientes.
+
+**Ojo con el nombre:** esto **no** toca el plugin `vio-sync-for-woocommerce`, publicado en
+WordPress.org y **en uso** — sus webhooks entran por `wooController/receiveWebhook` de `base-api` y
+el 22/10 había tráfico real de `qkoreancosmetics.no`. Son dos cosas distintas con nombre parecido;
+confundirlas aquí rompería un comercio vivo.
+
+Orden importante: primero el `enabled = 0` (reversible, inmediato), y el código después. Al revés se
+quedaría un canal ofertable cuyo handler ya no existe.
+
+Detalle y mediciones: [journal del
+22/10](../journal/2026-10/2026-10-22-canal-wordpress-descartado.md).
 
 ## D. En manos de otro
 
