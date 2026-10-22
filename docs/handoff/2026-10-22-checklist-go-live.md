@@ -39,6 +39,13 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
    **tarifas reales**: hoy cobra 10 NOK, que es un placeholder (E1, E1b).
 7. **Colector de analytics en c2fc1614** en staging y prod, con `MIXPANEL_IDENTITY` en `off`.
    Las VMs **no tienen clon de git**: se despliega por tarball, no con `git pull`.
+8. **Al cierre del 22/10 hay TRES cuentas de Aller y la collection del pilot apunta a la borrada.**
+   `1329` borrada a las 18:46, `1330` y `1331` vivas y las dos Publisher. La collection
+   `eOy5cc5g4` "Careless - mote-livsstil (pilot)" (de Careless, creada 18:35) se compartio con
+   **1329**. Asi, Aller entra y **no ve nada**. Es lo primero que hay que resolver: **B1b**.
+   Esto deja desactualizado el punto 2 de este delta (donde dice "Aller es el 1330").
+9. **Hay un guion que verifica todo esto de una pasada**: `../playbooks/scripts/verificacion-golive-lunes.sh`
+   (solo lectura, probado contra prod el 22/10). Correr **eso** el lunes, no comandos a mano.
 
 ---
 
@@ -107,6 +114,20 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
   (`channels:manage`, `surfaces:manage`, `campaigns:manage`). Sin re-login: se lee de la base en
   cada peticion. Detalle en
   [`../journal/2026-10/2026-10-22-aller-1329-publisher.md`](../journal/2026-10/2026-10-22-aller-1329-publisher.md).
+
+- [ ] **B1b. Decidir cual es LA cuenta de Aller y mover la collection compartida** — *decide Angelo, lo ejecuta Miguel*
+  Medido el 22/10 19:25 con el guion de C3:
+  - `1329 allermedia` ("Aller media"): **borrada** (`deleted_at` 18:46:12).
+  - `1330 aller` ("Aller"): viva, **Publisher** (`user_role` 709).
+  - `1331 allermedia` ("Aller Media"): viva, **Publisher** (`user_role` 710).
+  - `collection_shared` **604**: la collection `eOy5cc5g4` "Careless - mote-livsstil (pilot)", de
+    Careless (1327), esta compartida con **1329** — la borrada.
+  **Mientras siga asi, Aller entra y no ve la collection**, y se parece al falso diagnostico de
+  permisos del 19/10. Dos preguntas, las dos de Angelo: con que credencial va a entrar Aller
+  (eso decide si la buena es 1330 o 1331), y que se hace con la sobrante.
+  Criterio de hecho: `collection_shared` viva apuntando a la cuenta elegida, la otra cuenta
+  desactivada, y el guion de C3 sin la linea `<- OJO: esa cuenta esta BORRADA`.
+  Detalle en [`../journal/2026-10/2026-10-22.md`](../journal/2026-10/2026-10-22.md).
 
 - [ ] **B2. Los 5 productos del articulo, en prod** — *Careless, desde su Shopify*
   «10 nyheter vi onsker oss na»: Cassia jakke, Hennie cardigan, Vilde genser, Sofie genser,
@@ -248,8 +269,22 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
   haya 4 replicas (medido). Si hay que tocar algo: `rollout restart`, no el pipeline.
   Ya confirmado por la sesion de `vio`: sin trabajo en curso que toque prod.
 
-- [ ] **C3. Guion de verificacion del lunes, escrito y probado** — *Miguel*
-  Los comandos exactos de la primera hora, listos para pegar, no improvisados.
+- [x] **C3. Guion de verificacion del lunes, escrito y probado** — *Miguel, 22/10 19:30*
+  [`../playbooks/scripts/verificacion-golive-lunes.sh`](../playbooks/scripts/verificacion-golive-lunes.sh).
+  **Solo lectura.** Cubre D1-D4 y el estado de la cadena del pago en una pasada:
+
+  ```bash
+  ANALYTICS_READ_TOKEN=<token de solo lectura del colector de prod, en TOOLS.md de Miguel> \
+    ~/vio-handbook/docs/playbooks/scripts/verificacion-golive-lunes.sh --con-db
+  ```
+
+  Sale `OK` / `OJO` / `MAL` por linea y devuelve codigo 1 si hay algun `MAL`. Sin `--con-db` no
+  toca la base (solo cluster + HTTP). Corrido contra prod el 22/10: **4 OK, 4 OJO, 0 MAL**, y los
+  cuatro `OJO` son los esperados sin trafico (sin eventos de Vipps, `inserted=0`, el placeholder
+  de envio, un reinicio viejo de `users`). En su primer uso encontro **B1b** solo.
+  Lo que aprendio y no hay que redescubrir: `api-ecom.vio.live` **no tiene `/health`** (se mira
+  `/` a 200 y `/api/users` a **401**), y las rutas del colector son anidadas
+  (`/v1/commerce-stats/overview?sponsor_id=`).
 
 - [ ] **C4. Avisar a Careless de que una devolucion en su Shopify mueve dinero en Vipps** — *Angelo*
   Pendiente desde el 16/10. El lunes ya es dinero real.
@@ -257,6 +292,8 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
 ---
 
 ## D. Vigilancia del lunes, primera hora
+
+Los cuatro se miran con el guion de C3 (menos D3, que es el portal de Vipps y solo lo ve Angelo).
 
 - [ ] **D1.** Log de shopcart sin `[vippsEvent] ... refused: signature mismatch`
 - [ ] **D2.** El `inserted` del colector dejando de ser 0
