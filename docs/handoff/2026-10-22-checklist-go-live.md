@@ -285,6 +285,9 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
   > Test»), y faltaba `VIO_CAMPAIGNS_V2` en Vercel Production (Miguel, 22:12). Al crear la campana
   > como Aller: sponsor Careless, channel **480**. La surface se asigna sola en la misma transaccion.
   > Criterio: nace `surface_channel (1, 480)` y la campana.
+  > [claude, 2026-10-22 22:36 UTC] **Verificado en la base de prod, solo lectura:** la campana **1**
+  > «Careless Aller (test)» se creo a las 22:17 UTC y `surface_channel (1, 480)` existe. Falta que
+  > Miguel la marque `[x]` si da por bueno el criterio.
 
 - [ ] **B6. Replit de Aller en prod, con el SDK** — *Angelo*
   El `www.moteoglivsstil.no` publicado hoy **no tiene ni una referencia al SDK de Vio**.
