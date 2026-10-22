@@ -324,6 +324,15 @@ la configuración con el MSN desde nuestro lado. Asignar la unidad por port-forw
 > - El arreglo es del Replit (es de Angelo, B6). Le pasé a Angelo un prompt para el agente de Replit.
 >   Alan, mientras tanto, borra los datos del sitio o usa una ventana privada.
 
+> [claude, 2026-10-22 20:37 UTC] **Alan 20:27:**
+> - Observación, no bloqueante: en el móvil queda una pestaña en «Åpner Vipps …» por compra y la
+>   confirmación sale en otra. Es lo esperado en iOS con la app de Vipps: `payment-redirect.ts` navega
+>   en la misma pestaña, la app se abre antes de que la página salga y la vuelta llega en pestaña nueva.
+>   Mejora para después del lunes: quitar el overlay al volver a la pestaña (`visibilitychange`).
+> - Pregunta: ¿puede reinstalar el plugin de Woo? Sí: el bucle está arreglado (products #29). Le
+>   avisé que desconecte antes, para no duplicar la conexión, y que la moneda vacía sigue pendiente
+>   para después del lunes.
+
 ## Next session
 
 - Con OK de Angelo: rol 1 a su cuenta de QA y prueba de punta a punta en staging (set up de una
