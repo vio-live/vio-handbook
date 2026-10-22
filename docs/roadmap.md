@@ -25,6 +25,8 @@ status: draft
 
 ## Later
 
+- **Tarifas de envío dinámicas desde el Shopify de la marca** (aparcado 2026-10-22) — hoy el envío es un precio fijo por país cargado en Vio; Shopify permite calcular las tarifas reales por carrito. Opciones y requisitos en [product/shopify-tarifas-de-envio-dinamicas.md](./product/shopify-tarifas-de-envio-dinamicas.md).
+
 - **Multi-node WS + Redis cluster** — production scaling beyond single-node. Path verified locally; needs production rehearsal.
 - **Rate limiting on TV cart-intent endpoint** before partner onboarding.
 - **Commerce webhook receiver** — `cart_intents.fulfilled_at` updates from commerce. Blocked on commerce-side spec.
