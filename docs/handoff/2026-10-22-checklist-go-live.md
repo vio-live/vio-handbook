@@ -104,8 +104,20 @@ Convencion: `[x]` hecho y verificado · `[~]` hecho pero sin verificar de punta 
   Hoy en prod solo hay **3 `channel_user`**, todos de cuentas de prueba (1295 y 1300) y todos de
   tipo `GraphQl`. El de Aller hay que crearlo. Careless **no** tiene channel y es correcto: el
   channel es del publisher, no de la marca.
-  **Tipo: `Sdk` (channel_id 10), NO `GraphQl` (12).** En QA los 10 channels con los que se probo el
-  flujo son todos `Sdk` y todos con `vipps = 1`; los `GraphQl` tienen `vipps = 0`.
+  **CORREGIDO 17:10 (Angelo lo cuestiono, con razon): `Sdk` (10) y `GraphQl` (12) son
+  equivalentes.** Lo que escribi antes — «tiene que ser Sdk, no GraphQl» — era una inferencia de los
+  datos de QA, no un requisito del codigo. En `graph-ql`, `getAuthChannel` /`channelIdByAuthInfo`
+  tratan **9 (Api), 10 (Sdk) y 12 (GraphQl) exactamente igual**: son los tres exentos del filtrado
+  por canal y toman channel + channel_user directo del login de la api key. Cualquier otro tipo
+  (Shopify, Woo, Vev...) cae por la otra rama. Hay incluso un comentario en el codigo sobre el bug
+  que lanzaba *"The user does not have an assigned channel"* para todo lo que no fuera 9/10/12.
+  Aguas abajo, `channelService.getAllItems` hace `AND channel.id = :channel_id` con el tipo que
+  viene de la key: es autoconsistente, asi que 10 y 12 dan el mismo resultado.
+  **El transporte siempre es GraphQL** — el SDK llama al servicio `graph-ql`. `channel_id` no es el
+  transporte, es *el tipo de channel* del publisher.
+  Lo que SI importa: que sea uno de **9/10/12** y que **`channel_user_settings.vipps = 1`** (B3b).
+  En QA los 10 channels con los que se probo el flujo son `Sdk` con `vipps = 1`; conviene usar el
+  mismo tipo solo para que prod y el entorno ya probado sean identicos, no porque el otro falle.
   Crearlo **desde el dashboard**, no a mano: el alta genera la api key (`user_channel_api_key`) y la
   fila de `channel_user_settings` que hace falta para B3b.
 
