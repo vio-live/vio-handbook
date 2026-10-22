@@ -228,6 +228,15 @@ el bloqueo y la espera de tarifas, y desmontarlo cuando se activa `shippingBlock
   (runs `prepublishOnly` → build) → in the demo `npm i @vio-live/web-sdk@<v>` + rebuild + redeploy.
   *Always validate by installing the tarball/version in the demo and rendering it BEFORE
   publishing — that's how the two build bugs were caught on 0.1.0.*
+- **Changelog (22/10):** `CHANGELOG.md` in the repo (from 0.18.0, shipped in the npm package)
+  says per version what is new and, in **⚠️ Upgrade notes**, what a host (Vev, Replit) has
+  to do or watch. Every PR that changes behaviour adds its line under `Unreleased`; the
+  release PR moves it under the version together with the bump (`package.json` +
+  `src/core/version.ts`). Rule in the repo's `CONTRIBUTING.md` → *Changelog* and
+  `AGENTS.md` #5 ([vio-web-sdk#93](https://github.com/vio-live/vio-web-sdk/pull/93)).
+- **Tests need Node ≤ 24.** On Node 25+ Node's own global `localStorage` (empty without
+  `--localstorage-file`) shadows jsdom's: 16 cart/Klarna tests fail with
+  `Cannot read properties of undefined (reading 'clear')`. Same suite on Node 22: green.
 
 ## Status
 
