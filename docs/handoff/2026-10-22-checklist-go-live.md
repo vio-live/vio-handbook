@@ -362,10 +362,14 @@ Los cuatro se miran con el guion de C3 (menos D3, que es el portal de Vipps y so
   - [x] [extensions#33](https://github.com/vio-live/vio-extensions-microservice/pull/33) mergeado en
     `develop` (`118f2ca`, 22/10 19:23 UTC); QA desplegada, pod 2/2 con el codigo nuevo y 0 errores.
     Mete `code`/`source` en la linea y el telefono en la direccion de envio.
-  - [ ] A prod va el **hotfix [extensions#34](https://github.com/vio-live/vio-extensions-microservice/pull/34)**:
-    solo ese commit sobre `master`, **sin el kernel 1.0.282** (B7b) ni #32 — *merge Angelo* (al
-    agente le bloquean el merge a `master`). El deploy corta `extensions` ~1 min (R5). Sin la
-    variable de abajo el cambio no hace nada.
+  - [x] **Hotfix [extensions#34](https://github.com/vio-live/vio-extensions-microservice/pull/34) en prod**:
+    solo ese commit sobre `master`, **sin el kernel 1.0.282** (B7b) ni #32. Merge Angelo 19:34 UTC
+    (`84f1873`), deploy verde. Verificado (claude, 19:41): pods nuevos 2/2 desde las 19:40, kernel
+    **1.0.280**, codigo nuevo dentro del contenedor, 0 errores, y al arrancar
+    `líneas de envío configuradas: dignitycollect.myshopify.com (2)` (tomo la variable de Miguel).
+    El mapa leido en el pod da `helthjem|2|#13435` y `bring|3584|#13452` (`Packrooster`);
+    «Default Shipping» → nada. Los 4 pushes de token de las 19:40:03-09 dieron 417: el corte del
+    deploy (R5).
   - [x] `SHOPIFY_SHIPPING_LINES` en el Secret `env-sc-extensions` **y en el blob** —
     *Miguel, 22/10 19:35*. Los dos lados byte a byte iguales (249 lineas, antes 248), generado
     desde el Secret vivo. Respaldos: `backup-secret-env-sc-extensions-20261022.yaml` y el blob
