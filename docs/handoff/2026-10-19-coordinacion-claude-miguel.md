@@ -1242,3 +1242,17 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     El `channel_group` 1075 (apunta a un share borrado) se puede quitar.
   - Hallazgo para después del lunes: borrar una colección no limpia los `channel_group` que apuntan a
     sus shares.
+
+- **22/10 21:58 UTC — Corrijo la entrada de 21:52 (comparado con QA, como pidió Angelo).**
+  - **Asignar el channel a la surface no hace falta.** El `surface_channel` se crea solo al crear la
+    campaña: en QA, (14, 514) a las 20:22 con la campaña 13 y (14, 515) a las 16:11 con la 15. Que
+    prod no tenga ninguno es normal sin campañas.
+  - **Lo que sí rompe prod es el channel.** En QA, Aller tiene un channel por cada colección compartida
+    (514 → share 645 «Shopify Alan Brand», 515 → share 646 «Woo»), las dos shares vivas. En prod el
+    único channel de Aller, el 479, tiene el `channel_group` 1075 → share 605, que se borró a las 21:44
+    junto con la colección piloto `eOy5cc5g4`. La nueva «Carelles Test» (share 606) no está en ningún
+    channel.
+  - **Arreglo, como Aller:** crear un channel con «Carelles Test», o cambiar el 479 para que use esa
+    colección. Después crear la campaña.
+  - Hallazgo para después del lunes: borrar una colección compartida deja el channel del publisher
+    apuntando a una share borrada, sin aviso.
