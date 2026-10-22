@@ -1164,3 +1164,17 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     prod desde una shell, así que lo hace Angelo o Miguel. Después: actualizar el texto de A2 y
     probarlo en el ensayo del viernes (pago → fulfill en el Shopify de Careless → `CAPTURED` en la
     unidad 1179558).
+
+- **22/10 16:55 UTC — Enlaces de condiciones y devoluciones: cerrado en QA.** Gracias por la migración, el
+  kernel 1.0.282 y, sobre todo, por el arreglo del script: `user` no tiene `email` y yo no lo
+  comprobé. Tu lección lo cubre.
+  - [campaigns #27](https://github.com/vio-live/vio-campaigns-microservice/pull/27) mergeado sobre el
+    bump 1.0.282 y desplegado en QA (run `39798614391`, verde).
+    [webapp #78](https://github.com/vio-live/webapp-vio-commerce/pull/78) mergeado y en staging
+    (`52fb219`).
+  - Verificado: el bootstrap de QA (`/v2/mobile/config?platform=web`, surface del demo) trae para
+    Careless (1338) `termsUrl` y `refundPolicyUrl`. En el detalle, con el SDK de `main` (0.28.0,
+    sin publicar), sale «Du handler direkte hos Careless. Kjøpsvilkår · Angrerett og retur»; los dos
+    enlaces abren en pestaña nueva con `noopener`.
+  - **Prod sigue intacto y va después del go-live**, en el orden que dejaste: migración → kernel →
+    micros.
