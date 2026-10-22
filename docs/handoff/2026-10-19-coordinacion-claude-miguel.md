@@ -1312,3 +1312,55 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   - Aviso de contexto por si te cruzas con datos raros: el channel **479 esta borrado** (y con el su
     `channel_group` 1075 -> share 605). El **481** tambien: era un duplicado mio, lo cree y lo borre
     en el acto. **El unico vivo es el 480**, con `channel_group` 1076 -> share **606**.
+
+- **22/10 23:25 UTC — Plan del viernes 23/10: todo develop a prod, servicio por servicio, con OK de
+  Angelo.** Angelo, 22:30 UTC: «el lunes vamos live, todo lo tenemos que arreglar hoy y mañana»;
+  eligió «todo develop a prod» antes de la congelación del viernes por la tarde. A las 23:20 añadió:
+  «coordinas con Miguel y tienes permiso para mergear todo». Esto **sustituye** su «a prod después
+  del go-live» de las 13:50 para los enlaces de condiciones y devoluciones.
+  1. **06:30 UTC, QA despierta (yo).** Mergeo a develop y verifico en QA:
+     - [webapp #79](https://github.com/vio-live/webapp-vio-commerce/pull/79): el dashboard muestra el
+       rechazo al borrar una colección en uso.
+     - [users #28](https://github.com/vio-live/vio-users-microservice/pull/28): moneda de Woo al
+       reconectar, y fuera los secretos de Woo de los logs.
+     - [extensions #35](https://github.com/vio-live/vio-extensions-microservice/pull/35):
+       `PUT /woo/config` sin conexión.
+     - Collection #16 ya está en QA, desplegado a las 22:49.
+  2. **ANTES de cualquier micro en prod (tú, Miguel): la migración de prod de `brand_profile`.**
+     - Script:
+       [`m-brand-policy-urls-prod.js`](assets/2026-10-22-brand-policy-urls/m-brand-policy-urls-prod.js),
+       desde el pod de users de prod; pega aquí la salida.
+     - Es obligatoria: **el kernel 1.0.282 ya mapea `brand_profile.terms_url` y `refund_policy_url`**
+       (`entity/modules/surface/BrandProfile`, migración `1792500000000`). Todos los micros de
+       develop van con el bump a 1.0.282, y uno que cargue `BrandProfile` en prod sin esas columnas
+       falla con `Unknown column`.
+     - Si en prod falta alguna otra migración de un kernel anterior a 1.0.282, avísame.
+  3. **Releases a prod (yo, en este orden, uno a la vez, verificando cada deploy):**
+
+     | Servicio | Rama de prod | Qué lleva |
+     |---|---|---|
+     | products | master | #29, el bucle de reintentos de Woo, que sigue en prod |
+     | extensions | master | #32 courier, #33 envío Shopify, #35 |
+     | users | master | #28 |
+     | orders, api, payment-processors | master | solo kernel |
+     | shopcart, middleware, tracking | main | solo kernel |
+     | collection | main | #16 |
+     | campaigns | main | #27, páginas de condiciones y devoluciones de la brand |
+     | webapp | master → Vercel Production | #78 y #79 |
+
+     - base-api y graphql no llevan nada (0 commits por delante).
+     - El webapp en Production compila con las variables de Production: solo cambia el código, no
+       `ACCOUNT_PAYMENTS`.
+  4. **Lo que te pido, además de (2):**
+     - dime si alguno de estos deploys de prod te toca a ti (Helm o variables) o si vas a hacer algo
+       en el clúster de prod a esa hora, para no pisarnos;
+     - si prod está parado (`vio-commerce-prod-sc` suele estar en Stopped), dime cuándo lo arrancas.
+  5. **Ojo, secretos en los logs:** hasta users #28, `saveWooConnection` escribía la `consumerKey` y la
+     `consumerSecret` de cada tienda Woo en los logs: info, debug y dentro de los errores de axios y
+     TypeORM. Está también en los logs de prod (Datadog). Rotar alguna clave de un seller lo decide
+     Angelo.
+  6. **Visto en prod esta noche, solo leyendo:** el artículo del Replit
+     `mote-livsstil-hub-vio.replit.app/mote/annet/10-nyheter-vi-onsker-oss-na` arranca contra
+     `api.vio.live` y `graph-ql.vio.live`, con la campaña 1 «Careless Aller (test)», el sponsor 1327,
+     el channel 480 y Vipps como único método. Pinta los 5 productos de la colección. Los únicos 404
+     de la consola son 9 imágenes editoriales del propio Replit. No se compró nada (A3 es de Angelo).
