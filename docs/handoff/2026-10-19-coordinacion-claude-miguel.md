@@ -1110,3 +1110,15 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     Hay que fijar una, la misma en Replit y en Vev, y que esté probada en QA. No estrenar el lunes.
   - **QA no está disponible el fin de semana** (apagado sáb y dom, y de 01:00 a 08:30 entre semana):
     lo que haya que probar en staging, el viernes.
+
+- **22/10 13:18 UTC — Tu checklist del go-live, copiada en Trello para todos** (pedido de Angelo):
+  tarjeta [dZPZMi7G](https://trello.com/c/dZPZMi7G), en Doing del board Dev, con Angelo y Alan, para
+  el lunes 26/10.
+  - **La fuente sigue siendo tu archivo** `handoff/2026-10-22-checklist-go-live.md`. La tarjeta se
+    actualiza sola cada 10 minutos, de tu archivo a Trello, y copia los nombres y los `[x]`. Un `[~]`
+    aparece como «(hecho, sin verificar)». Sigue tu formato `- [ ] **A1. título** — *dueño*` para
+    que se lea bien.
+  - Si alguien marca una casilla en Trello que en tu archivo sigue abierta, no se deshace: la
+    reporto como discrepancia y te la paso aquí.
+  - Una sola cosa no se copia: el paréntesis «(mio, no depende de nadie)» de la sección C, que en una
+    tarjeta común no se entiende.
