@@ -132,3 +132,23 @@ end-to-end probado**, no una version a estrenar. Recomendacion: fijar 0.28.0 en 
   (o cree una, como se hizo con la 1328).
 - **A3/A4** (pago real de 1 kr y su devolucion), **B6** (Replit con el SDK y la api key de arriba),
   **C4/C5** (avisar a Careless de la devolucion que mueve dinero y del envio sin umbral).
+
+### Hallazgo no buscado: `api` se reinicia al crear/borrar un channel
+
+Al cerrar me fije en que los dos pods de `api` tenian `restarts=1` y a las 23:39 no lo tenian.
+No fueron mis llamadas: los cierres son 21:40:15 y 21:56:53 UTC, los segundos exactos de la creacion
+y el borrado del channel desde el **dashboard** (mis llamadas fueron a las 22:2x y no dejaron reinicio).
+
+Causa: `channel_user_products.description` era **latin1** y `product.description` es **utf8mb4**. Al
+publicar productos se copia de una a otra, MySQL rechaza el **✔** (`\xE2\x9C\x94`) y `api` no maneja
+el `failed: true` que le devuelve el micro vecino por axios: muere con exit 1. **48 de los 49
+productos de Careless** tienen descripciones asi.
+
+Arreglado con un `ALTER` a utf8mb4 (15 filas, sin indices, respaldadas y verificadas identicas
+despues; INSERT con ✔ probado y revertido). Las demas columnas latin1 de esa tabla **no se tocaron**:
+son latin1 tambien en `product`, asi que la copia no desajusta.
+
+Detalle y receta: [`../lessons/columna-latin1-que-recibe-utf8mb4-tumba-el-micro.md`](../lessons/columna-latin1-que-recibe-utf8mb4-tumba-el-micro.md).
+
+Queda de fondo (no urgente, no toco antes del lunes): `api` deberia manejar ese rechazo en vez de
+reiniciarse, y la conversion deberia estar en una migracion de `package-database`.
