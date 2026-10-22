@@ -108,3 +108,67 @@ sirven para las APIs de ingesta/query, no para el MCP.
 
 Con el MCP conectado los boards se pueden **crear** desde aquí: el servidor oficial trae
 `Create-Dashboard` / `Update-Dashboard` además de las herramientas de consulta.
+
+## Fuente del tráfico: ya estaba casi todo, faltaba Mixpanel
+
+Angelo preguntó si se trackea de dónde viene el tráfico, porque Aller va a empujar tráfico al
+artículo. Está hecho de punta a punta, y mejor de lo que esperaba:
+
+- **El SDK se acuerda del aterrizaje** (`src/core/analytics/client-context.ts`): la primera página de
+  la sesión guarda en `sessionStorage` su `document.referrer` y los `utm_*`, y las páginas siguientes
+  los leen de vuelta, así que un evento en la página tres sigue diciendo que la visita vino del
+  newsletter. El **auto-referral se descarta** (que `kk.no` te mande a `kk.no` no dice nada), y una
+  url con `utm_*` nuevos cuenta como aterrizaje nuevo salvo que venga de un enlace interno.
+- **Contrato**: `client.referrer` (origen + path; la query se corta, que es donde viven los tokens) y
+  los cinco `utm_*`. **ClickHouse**: columnas, con `utm_source`/`utm_medium` como `LowCardinality`.
+- **Lecturas**: `/v1/stats/surface/entry` y `/v1/stats/campaigns/:id/entry` clasifican
+  `utm > referrer > directo` (ADR-0035 §4.3). **Dashboard**: `views/dashboard/entry.jsx`, sesiones
+  por fuente y además el artículo de aterrizaje con órdenes e ingresos.
+- **En `minimal`** todo esto se descarta en la ingesta.
+
+Lo único que faltaba: **Mixpanel no recibía el bloque `client`**, así que allí el embudo no se podía
+partir por origen. Arreglado en [vio-analytics#29](https://github.com/vio-live/vio-analytics/pull/29):
+viaja `$referring_domain` (nombre propio de Mixpanel) y los `utm_*`; del referrer **solo el host** (la
+url entera se queda en ClickHouse); un referrer del propio sitio no cuenta como fuente, igual que en
+la lectura. Surte efecto cuando se despliegue el colector.
+
+## Perfilar usuarios en Mixpanel: hoy no hay perfiles, y por qué los eventos salen sueltos
+
+El sink llama **solo a `/import`** (eventos). **Nunca a `/engage`**, que es la API de perfiles. O sea
+que en Mixpanel no hay perfiles: la vista de Users no tiene propiedades, solo ids deducidos de los
+eventos. Cuatro cosas que lo explican, por orden de impacto:
+
+1. **No hay perfiles** (lo anterior): nada que segmentar — ni país, ni idioma, ni «primera vez que se
+   vio», ni fuente de entrada a nivel de persona.
+2. **No hay unión de identidades.** `distinct_id` = `external_user_id` si el host identificó al
+   usuario, si no `anon_id` (ver `toMixpanelRow`). La misma persona antes y después de loguearse son
+   **dos ids distintos** y Mixpanel nunca se entera de que son la misma. La forma correcta es
+   `$device_id` (el anónimo) + `$user_id` (el identificado) y deja que el ID Merge de Mixpanel los
+   una.
+3. **Hay un usuario falso por surface.** Los eventos de servidor (`order_paid`, compensaciones,
+   `ad_activation`, `cart_intent`) salen con `distinct_id = server:<client_app_id>`: todos los de una
+   surface son «un usuario». Distorsiona cualquier cuenta de usuarios y aparece como un súper-usuario
+   raro.
+4. **Sin consentimiento el `anon_id` vive en memoria** (`canPersist` en `analytics-manager.ts`): si el
+   host arranca con `requireConsent: true` y no hay consentimiento, cada carga de página es un
+   anónimo nuevo. Es una decisión de privacidad, no un fallo — pero hay que saberlo antes de prometer
+   continuidad entre visitas.
+
+**Propuesta, en tres pasos independientes:**
+
+1. **Identidad (barato, sin dato personal nuevo).** Mandar `$device_id` = `anon_id` y `$user_id` =
+   `external_user_id` solo cuando el host identificó al usuario, y dejar de fijar `distinct_id` a
+   mano. Y marcar los eventos de servidor (`is_server: true`) para poder sacarlos de los análisis de
+   usuario. Esto arregla (2) y (3) y es lo que hace que una cohorte tipo «entró por el newsletter y
+   compró» sea clicable.
+2. **Perfiles (necesita decisión de Angelo).** Llamar a `/engage` con `$set_once` para «primera vez
+   vista» y la fuente de entrada original, y `$set` para propiedades gruesas: país, idioma,
+   dispositivo, última surface. **Sin datos personales** — analytics no los tiene. Pero crear perfiles
+   de personas en un tercero es una decisión, no un detalle técnico, y con Aller de por medio
+   (publisher noruego) conviene decidirlo explícitamente.
+3. **Identidad del publisher (solo si la piden).** Que Aller llame a `identify(externalUserId)` con su
+   propio id de usuario. Hoy el SDK lo soporta (`identify`), pero nadie lo llama; y en `minimal` el
+   `external_user_id` se descarta en la ingesta.
+
+**Lo que NO propongo:** usar el `buyer_ref` (el HMAC del email) como id de usuario en Mixpanel. Es
+pseudónimo, no anónimo, y mandarlo a un tercero cambia la naturaleza de lo que se comparte.
