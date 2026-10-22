@@ -35,10 +35,10 @@ pegado al código: `docs/CUSTOM-APP.md` en la rama `custom/client-app` de
 
 | Cliente | Tienda | App Shopify (id / client id) | Config (rama) | Vercel | Estado (último dato) |
 |---|---|---|---|---|---|
-| Villoid | `villoid.myshopify.com` | `425118728193` / `bd36f14691ec80081374e40f71ad9d72` | `shopify.app.vio-client.toml` | `vio-sync-client` → `https://vio-sync-client.vercel.app` | Verificada (healthz 200, Redis, API 2026-04). **Link mandado el 2026-09-22** con el mensaje en noruego y el video; vence el 2026-09-25 13:42. **Al 2026-10-12 sigue en 0 installs** (Dev Dashboard) y el link venció el 25/09: Angelo decidió esperar antes de mandar uno nuevo |
-| Gladkokken | `wxuxre-tf.myshopify.com` (`shop.gladkokken.no`) | `426105274369` / `a372fcbd6348fc847e4f6a547518350b` | `shopify.app.vio-client-gladkokken.toml` | `vio-sync-gladkokken` → `https://vio-sync-gladkokken.vercel.app` | Verificada el 2026-09-22 (healthz 200, secret, Redis compartido, API 2026-04; config `vio-client-gladkokken-1`). **Link mandado el 2026-09-22**; vence el 2026-09-28 13:35 |
+| Villoid | `villoid.myshopify.com` | **`438624845825` / `3ced68df11709eceb7ecb322fa7f0e99`** (desde 2026-10-22). La primera, `425118728193` / `bd36f14691ec80081374e40f71ad9d72`, queda **retirada**: su link venció sin usarse y no se puede regenerar | `shopify.app.vio-client-villoid.toml` ([#128](https://github.com/vio-live/vio-shopify-sync/pull/128)); la vieja, `shopify.app.vio-client.toml`, no se despliega más | `vio-sync-client` → `https://vio-sync-client.vercel.app` (el mismo deploy para las dos apps) | App nueva creada y verificada el 2026-10-22 (config `vio-client-villoid-1`, secret comprobado con webhook firmado, 409 `no_session` desde `extensions`). **Link mandado el 2026-10-22**, con la key de la cuenta Vio **1323** (variante con key); vence el **2026-10-29 13:18** Oslo |
+| Gladkokken | `wxuxre-tf.myshopify.com` (`shop.gladkokken.no`) | `426105274369` / `a372fcbd6348fc847e4f6a547518350b` | `shopify.app.vio-client-gladkokken.toml` | `vio-sync-gladkokken` → `https://vio-sync-gladkokken.vercel.app` | Verificada el 2026-09-22 (config `vio-client-gladkokken-1`). Instalada y exportando: cuenta Vio **1324**; `/internal/token` 200 y pushes de token sin errores al 2026-10-22 |
 | Makeup Mekka | `makeup-mekka.myshopify.com` (`makeupmekka.com`) | `426736517121` / `5287ee98f0381e1200754c5f16c9c914` | `shopify.app.vio-client-makeupmekka.toml` | `vio-sync-makeupmekka` → `https://vio-sync-makeupmekka.vercel.app` | Verificada el 2026-09-22 (healthz 200, secret, Redis compartido, API 2026-04; config `vio-client-makeupmekka-1`). **Instalaron el 2026-09-24 13:10 Oslo** (usuario Vio 1325, conexión Shopify 540) y conectaron a los 2 minutos; sus dos calendarios de adviento entraron a Vio sin pasar por "Export selected" (casi seguro publicándolos al canal desde el admin de Shopify) |
-| Careless | `dignitycollect.myshopify.com` (`careless.no`) | `434547228673` / `dd30cfd709d3f09dbdec6c81674f350c` | `shopify.app.vio-client-careless.toml` | `vio-sync-careless` → `https://vio-sync-careless.vercel.app` | Creada el 2026-10-12 (config `vio-client-careless-1`, cuenta Vio **1327** con suscripción activa, en `VIO_CUSTOM_APPS`). Link generado el 12/10, **vence el 2026-10-19 17:12**; a la espera de que Angelo lo mande |
+| Careless | `dignitycollect.myshopify.com` (`careless.no`) | `434547228673` / `dd30cfd709d3f09dbdec6c81674f350c` | `shopify.app.vio-client-careless.toml` | `vio-sync-careless` → `https://vio-sync-careless.vercel.app` | Creada el 2026-10-12 (config `vio-client-careless-1`, cuenta Vio **1327**). **Instalada el 2026-10-16 10:49, conectada 13:58** (Oslo), 20/20 productos SUCCESS; exportando al 2026-10-22 |
 | (demo) | `vio-demo.myshopify.com` (dev store de Vio, datos de prueba) | `426319511553` / `2f1d046a49f1322e4b0990e47da955a1` | `shopify.app.vio-client-demo.toml` | `vio-sync-demo` → `https://vio-sync-demo.vercel.app` | Para grabar el proceso de instalación (video de Angelo, 2026-09-22). Primera prueba de punta a punta contra prod. Link vence el 2026-09-29 |
 | (gemela QA) | dev store de Alan | `426102554625` / `31f8416cbe5ec1d605c8dc29618636f1` | `shopify.app.vio-client-dev.toml` | — (corre local con `shopify app dev`) | Prueba de Alan OK contra staging (Trello [phMU2DP0](https://trello.com/c/phMU2DP0), Done el 2026-09-22) |
 
@@ -100,14 +100,14 @@ Todas en el Dev Dashboard de la organización de Vio (`222998427`; Partner org
    (ver Gotchas).
 10. **Mandar el link** (Partner Dashboard → la app → Distribution) al dueño de la tienda o
    a un staff con el permiso **Applications**, con el mensaje de abajo y el video de la
-   demo. El link **vence a los 7 días** de generado. En la app conectan con **su API key
+   demo. El link **vence a los 7 días** de generado y **no se puede regenerar**: generarlo el mismo día que el cliente va a instalar (si vence, ver «Si el link vence sin instalar»). En la app conectan con **su API key
    de Vio** (si no tienen cuenta en Vio, crearla antes; si la crea Angelo, la key va en el
    mensaje — usar la variante de abajo). A ese cliente se le factura por
    fuera.
 
 ## Mensaje para el cliente (noruego)
 
-El que se le mandó a Villoid el 2026-09-22, con el paso 4 reforzado después de Makeup
+El que se le mandó a Villoid el 2026-09-22 (y de nuevo el 2026-10-22, en la variante con la key), con el paso 4 reforzado después de Makeup
 Mekka (tildaron sin apretar el botón). **Si la cuenta de Vio la creó Angelo**, el primer
 punto de "Før dere starter" se reemplaza por: «API-nøkkelen til Vio-kontoen deres er:
 [API-NØKKEL] — den limer dere inn i appen etter installasjonen (se punkt 3).» La key la
@@ -287,9 +287,13 @@ enlazado a `vio-sync`, la app pública.
 - **Un despliegue por app**: el servidor arranca con el client id, el secret y la URL de
   una sola app, así que dos apps no pueden compartir un proyecto de Vercel sin cambiar la
   autenticación.
-- **Los links de instalación vencen a los 7 días**
-  ([doc de Shopify](https://shopify.dev/docs/apps/launch/distribution/select-distribution-method)).
-  El de Villoid, generado el 2026-09-18, vence el 2026-09-25.
+- **Los links de instalación vencen a los 7 días y no se regeneran**
+  ([ayuda de Shopify](https://help.shopify.com/en/manual/apps/install-setup-apps)). Partners
+  (Distribution) sigue mostrando el link vencido con un botón de copiar y nada más; el Dev
+  Dashboard no tiene página de distribución propia y el CLI no tiene comando. Abrir el link
+  vencido no lo aclara: Shopify primero pide la tienda y valida la organización
+  (`invalid_link_organization` con una tienda ajena). Comprobado el 2026-10-22 con el de
+  Villoid (generado el 2026-09-18, vencido el 2026-09-25). Salida: la sección siguiente.
 - Con más de **1.000 listings** en la cuenta de Vio, "Connection & log" no muestra los
   logs: `listings` pide `size=1000` (`app/lib/vioEndpoints.ts`). Observación de Alan,
   2026-09-21.
@@ -323,6 +327,37 @@ enlazado a `vio-sync`, la app pública.
   `POST /me/<id>/sales-channel/create 417 30000ms`. Medir el backlog con
   `num_undelivered_messages` (receta en el journal de Miguel del 12/10). No mandar links ni
   hacer onboardings hasta que los push vuelvan a responder 200 en pocos segundos.
+
+## Si el link vence sin instalar (Villoid, 2026-10-22)
+
+App nueva para la misma tienda **reusando el deploy de Vercel**: misma URL, Redis y
+`CRON_SECRET`, así que la entrada de `VIO_CUSTOM_APPS` en `extensions` no cambia y no hace
+falta Miguel. Unos 30-40 minutos:
+
+1. Dev Dashboard → Create app → Create app manually → «Vio Sync», App URL y redirect del
+   deploy existente → Create app → Release. Client id en Overview → Credentials.
+2. Partners → la app nueva → Distribution → **Custom distribution** → la misma tienda,
+   multi-store marcado → **Generate link** (irreversible; el link corre desde ahora).
+3. Toml nuevo `shopify.app.vio-client-<cliente>.toml` con el client id nuevo (copia del
+   anterior; el viejo se marca como retirado en el comentario). Comprobar el id con
+   `shopify app versions list --config <nuevo>` (tiene que listar `vio-sync-1`) y publicar:
+   `shopify app deploy --config <nuevo> --allow-updates --no-build --version <nuevo>-1`.
+   Comparar con `shopify app config pull` (solo cambia el formato; restaurar el archivo).
+4. **Humano**: en el proyecto de Vercel, `SHOPIFY_API_KEY` y `SHOPIFY_API_SECRET` de la
+   app nueva, y Redeploy de producción. (El clasificador bloquea al agente escribir y leer
+   esas variables, y `vercel env pull` falla con *Production Project Environment Variable
+   not found* en estos proyectos.)
+5. Verificar sin ver ningún secreto:
+   - client id: `curl -sI https://<app>/auth/login?shop=<tienda>` redirige a
+     `admin.shopify.com/store/<tienda>/oauth/install?client_id=<nuevo>`;
+   - secret: `shopify app webhook trigger --config <nuevo> --topic customers/data_request
+     --api-version 2026-10 --delivery-method http --address https://<app>/webhooks/customers/data_request`
+     y mirar `vercel logs <app> --scope tipio-2` (empezar a mirar antes de disparar): **200
+     «Received»** = la firma valida con el secret; 401 = no coincide. Esa ruta solo valida y
+     responde, no toca datos;
+   - `extensions`: el chequeo de `/internal/token` del paso 8 sigue en 409 `no_session`.
+6. Decodificar el link (JSON en base64 antes del `--`): `permanent_domain`, `client_id`
+   nuevo y `expires_at`. Mandarlo ese mismo día.
 
 ## Cuando aprueben la app pública
 

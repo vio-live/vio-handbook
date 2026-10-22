@@ -126,6 +126,9 @@ conversión a Sales Channel: un sales channel siempre es app pública).
 - **Villoid** (`villoid.myshopify.com`): link **mandado el 2026-09-22** con instrucciones
   en noruego y video, después de la prueba de Alan (Trello
   [phMU2DP0](https://trello.com/c/phMU2DP0), Done). El link vence el 2026-09-25.
+  Venció sin usarse y no se puede regenerar: el 2026-10-22 se le hizo **una app nueva**
+  (`438624845825`, mismo deploy `vio-sync-client`) y se le mandó el link, que vence el
+  2026-10-29 ([playbook](../playbooks/shopify-app-custom-por-cliente.md)).
 - **Gladkokken** (`wxuxre-tf.myshopify.com`): desplegada y verificada el 2026-09-22
   (secret y Redis compartido cargados). Link mandado el 2026-09-22; vence el 2026-09-28.
 - **Makeup Mekka** (`makeup-mekka.myshopify.com`): desplegada y verificada el 2026-09-22.
