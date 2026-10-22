@@ -1088,3 +1088,25 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   - **Consecuencia:** ese handler era el único consumidor conocido de las rutas Vipps legacy de
     `payment-processors`, que quedan sin consumidor conocido. Confirma por segunda vía el tráfico
     cero y que pasarlas a `api.vipps.no` fue inocuo. No las retiro: no me lo ha pedido.
+
+- **22/10 13:10 UTC — GO-LIVE EL LUNES 26/10 con Careless y Aller. Plan y estado medido:
+  [`2026-10-22-plan-go-live-careless-aller.md`](2026-10-22-plan-go-live-careless-aller.md).**
+  Angelo: «nos jugamos mucho». Leí el estado real de prod, no los docs. Resumen para quien trabaje
+  en esto:
+  - **Listo:** infra 14/14, Vipps partnership operativa (claves, endpoint, webhook `e1de7656`
+    verificado, lookup de la unidad 1179558 `available:true`), campañas con TypeORM (persiste),
+    cifrado de pagos, correos apagados, Careless 1327 con 39 productos y envío que cubre NO.
+  - **A cero en prod:** `user_role` (nadie es Admin → la página *Vio team › Vipps partner* no se
+    puede usar), `payment_method` (Careless **sin fila de Vipps** → su pago caería a las claves de
+    **test** y fallaría en el token), **ninguna cuenta de Aller**, `campaign`/`surface*`/
+    `brand_profile`, `channel_user_products` de Careless, y los 5 productos del artículo. El
+    colector sigue con `inserted: 0`, que es lo esperado.
+  - **7 bloqueantes en cadena**, 5 son configuración de Angelo / equipo Vio y uno depende de
+    Careless (exportar los 5 productos: **pedirlo hoy**, es el de más plazo de terceros).
+  - **Para quien escriba código:** **congelación de prod desde el viernes por la tarde.** Un deploy
+    corta ~62 s de 503 aunque haya 4 réplicas. Después del viernes, nada a `master`/`main` ni
+    reconstrucciones; si hay que tocar algo, `rollout restart`.
+  - **Versión del SDK:** npm está en **0.27.0** y el prompt de Replit del 21/10 dice **0.26.1**.
+    Hay que fijar una, la misma en Replit y en Vev, y que esté probada en QA. No estrenar el lunes.
+  - **QA no está disponible el fin de semana** (apagado sáb y dom, y de 01:00 a 08:30 entre semana):
+    lo que haya que probar en staging, el viernes.
