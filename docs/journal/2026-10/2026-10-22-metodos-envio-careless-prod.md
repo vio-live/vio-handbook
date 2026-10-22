@@ -66,3 +66,30 @@ no se toca antes del lunes.
   sigue abierta en E1c y es de Angelo con Careless.
 - Respaldo de las 42 filas previas: `prod-backup/backup-shipping-1327-20261022.json` en el workspace
   de Miguel. Deshacer = restaurar esas filas y borrar `f831b031-...` (lo demas cae por cascada).
+
+## Verificacion de la orden de prueba preparada, y los codes confirmados contra ordenes reales — miguel
+
+- Quien: miguel (a raiz de Angelo, 22/10 22:08: «lo importante es que la orden se ponga y se envie»).
+- Donde: prod. Lectura del pod `users-86b6d95f5b-hwfqw` + Admin API 2024-04 de
+  `dignitycollect.myshopify.com`. Ninguna escritura, ni en la base ni en Shopify.
+- Cuando: 2026-10-22 22:40-22:55 Oslo.
+- Contexto: manana viernes se corre la orden de prueba de punta a punta. Lo que hacia falta era
+  poder mirar la orden sin depender del panel de Careless, y saber con que comparar.
+- Hecho:
+  - Guion nuevo `docs/playbooks/scripts/verificar-orden-careless.sh` (solo lectura). Saca el
+    `access_token` vivo de `shopify_connection` (conexion **541**: `dignitycollect`, supplier 1327,
+    NOK, token rotado hoy 20:10) y consulta la orden: `source_name`, etiquetas, `shipping_lines`
+    (title/code/source/price), metafields, fulfillments, si la creo Vio y un veredicto por criterio.
+    Borra su temporal del pod al salir. Probado con las 3 ultimas ordenes y por nombre (`#554326CL`).
+  - **Confirmado que los dos `code` que cargue el 21:58 son los que Packrooster pone en sus ordenes
+    nativas**: `#554326CL` (22:09) → `bring|3584|#13452`; `#554329CL` (22:12) → `helthjem|2|#13435`,
+    las dos `source=Packrooster`. Deja de depender de mi funcion de mapeo.
+  - Medido ademas: Packrooster escribe `packrooster.shipping-service` ~8-20 s despues del alta;
+    una orden recien puesta esta `authorized` + sin fulfillments (el despacho es posterior, asi que
+    `despachada=NO` al minuto no es fallo); y existen variantes de punto de recogida
+    (`helthjem|86|<idPunto>|#13940`) que Vio no puede expresar — las ordenes de Vio iran siempre a
+    domicilio/buzon.
+  - El umbral de envio gratis de su web, con numeros: 2.059,50 NOK y 3.903,00 NOK con envio 0,00.
+    Refuerza el aviso C5 de la checklist.
+- Pendiente: la orden de prueba en si (Angelo + Careless, viernes). El unico criterio que no se
+  resuelve en el minuto es el despacho de 360 Logistics.
