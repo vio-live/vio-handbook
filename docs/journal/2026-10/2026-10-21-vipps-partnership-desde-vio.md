@@ -237,6 +237,22 @@ la configuración con el MSN desde nuestro lado. Asignar la unidad por port-forw
 >
 > A Alan se lo dije en la tarjeta de prod (djzHxncE).
 
+> [claude, 2026-10-22 15:18 UTC] **Reporte 5 de Alan (HPKysebB, 15:02).**
+> - ✅ Confirma de punta a punta en QA todos los casos de Shopify: cancelar, devolver todo, fulfill
+>   de todo, devolver 1 o N productos y hacer fulfill del resto. Cada producto y la orden quedan con
+>   su estado correcto. Con eso quedan validados orders #40 y extensions #30 (ya en prod).
+> - ⚠️ Un fulfill con tracking (órdenes 4609–4612: UPS, FedEx, USPS, DHL) mostraba «Courier —».
+>   - Causa: en la base, `order_tracking` tenía número y link pero `slug` null. `handleSaveTrackingNumber`
+>     no mandaba el `tracking_company` de Shopify.
+>   - Arreglo:
+>     [vio-extensions-microservice#32](https://github.com/vio-live/vio-extensions-microservice/pull/32)
+>     (`shopifyTrackingSlug`). Los couriers del dashboard van con su slug; los demás, con su nombre en
+>     minúsculas.
+>   - Mergeado, desplegado en QA (15:17) y verificado en el pod. A Alan le pedí repetirlo con una orden
+>     nueva.
+> - **No está en prod.** El cambio es de presentación (el courier del detalle de la orden), así que no
+>   bloquea el go-live. Si se quiere en prod, tiene que entrar antes de la congelación del viernes.
+
 ## Next session
 
 - Con OK de Angelo: rol 1 a su cuenta de QA y prueba de punta a punta en staging (set up de una
