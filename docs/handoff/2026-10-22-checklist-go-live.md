@@ -72,7 +72,17 @@ Convencion: `[x]` hecho y verificado · `[~]` hecho pero sin verificar de punta 
 - [ ] **B2. Los 5 productos del articulo, en prod** — *Careless, desde su Shopify*
   «10 nyheter vi onsker oss na»: Cassia jakke, Hennie cardigan, Vilde genser, Sofie genser,
   Active pile fleece half-zip. Hoy solo esta la linea «Active».
-  **Nadie de nuestro lado puede hacerlo.** Es el item con mas plazo de terceros: **pedirlo hoy**.
+  **CORREGIDO 22/10 16:55 (Angelo aviso de que la app de Shopify esta instalada): NO es un
+  bloqueante de terceros.** La conexion esta viva (`shopify_connection` 541,
+  `dignitycollect.myshopify.com`, NOK, token refrescado hoy) y su Shopify tiene **1.729 productos**.
+  Los 5 del articulo **ya estan alli**, `ACTIVE`, publicados y con stock. En Vio solo hay **40**,
+  todos importados el 16/10 y todos de la linea «Active»: la primera pagina alfabetica. Lo que falta
+  es **importarlos de nuestro lado** (`POST /product/shopify/import` del micro `products`), no
+  pedirle nada a Careless.
+  **Espera OK de Angelo**: escribe en la base de prod. Recomendado importar solo los del articulo y
+  sus colores con stock, no los 1.729. Excluir `Sofie genser - Lilla` y los dos Hennie sin publicar
+  (stock 0). Detalle en
+  [`../journal/2026-10/2026-10-22-careless-productos-no-es-bloqueante-de-terceros.md`](../journal/2026-10/2026-10-22-careless-productos-no-es-bloqueante-de-terceros.md).
   Criterio: los 5 con `active=1` en prod.
 
 - [ ] **B3. Conexion Careless <-> Aller aceptada y channel creado** — *Angelo / equipo Vio, tras B1*
