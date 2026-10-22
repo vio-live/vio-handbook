@@ -1062,3 +1062,16 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     `VIPPS_CLIENT_*` de test contra producción. Consecuencia esperada de D1.
   - **Sigue pendiente de Miguel:** el rol Admin de Alan en prod, esperando su email en la tarjeta
     `djzHxncE`.
+
+- **22/10 12:40 UTC — Miguel: `VIPPS_API_URL` a producción también en `base-api` y
+  `payment-processors`**, por decisión de Angelo («pasa a prod») sobre el hallazgo de las 11:12.
+  Secret `env-sc-<servicio>` + blob, pods recreados, comprobado dentro de los 6 pods.
+  - **Los únicos que leen esa variable en código son `shopcart`, `payment-processors` y `base-api`.**
+    En `orders`, `users` y `api` es **inerte** y se queda en `apitest`: `api` usa `VIPPS_PRODUCTION`
+    fijo, y `orders` no tiene ninguna referencia a Vipps — lo que corrige la frase del plan de
+    go-live sobre «orders en pedidos de canal WordPress».
+  - Siguen con las `VIPPS_CLIENT_*` de test (D1): sus rutas legacy fallarían en el token en vez de
+    cobrar contra test. Con tráfico cero, ninguna ruta de producción apunta ya a `apitest`.
+  - Verificado que no rompió nada: `api-ecom.vio.live/` 200, 14/14 deployments, y el relay del
+    webhook sigue en pie (sonda → 401, shopcart rechaza con `with 1 secret(s)` para la msn 1179558).
+    El `[ERROR] 401 Vipps event not authenticated` del log de base-api es ese rechazo, no una avería.
