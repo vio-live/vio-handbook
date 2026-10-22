@@ -55,16 +55,18 @@ para encender Vipps en producción y sacar el primer comercio. Arquitectura y mo
 
 | Variable | shopcart | api | orders | users | payment-processors / base-api |
 |---|---|---|---|---|---|
-| `VIPPS_API_URL` | `api.vipps.no` | `api.vipps.no` | `apitest` | `apitest` | `apitest` (ver abajo) |
+| `VIPPS_API_URL` | `api.vipps.no` | `api.vipps.no` | `apitest` (inerte) | `apitest` (inerte) | **`api.vipps.no`** |
 | `VIPPS_PARTNER_CLIENT_ID` / `_SECRET` / `_SUBSCRIPTION_KEY` | **sí** | **sí** | no | no | no |
 | `VIPPS_PARTNER_WEBHOOK_SECRET` | **sí** | — | — | — | — |
 | `VIPPS_CLIENT_*` (plataforma, de test) | sí | sí | sí | sí | sí |
 | `EMAIL_DELIVERY` | — | **quitada** | **quitada** | **quitada** | — |
 
-`orders` y `users` se quedan en `apitest` porque no llaman a Vipps por ahí. **`api` en realidad no
-lee `VIPPS_API_URL` del entorno** (usa `VIPPS_PRODUCTION` fijo en `vipps-management.ts`): está puesta
-por coherencia. **`payment-processors` y `base-api` sí la leen y siguen en test**, con rutas vivas de
-capture/cancel y `POST /vipps/payment`; sin tráfico observado. Decisión pendiente de Angelo
+Los **únicos** que leen `VIPPS_API_URL` en código son `shopcart`, `payment-processors` y `base-api`.
+En `orders`, `users` y `api` la variable es **inerte** y se queda en `apitest`: `api` usa
+`VIPPS_PRODUCTION` fijo en `vipps-management.ts`, y `orders` no tiene ninguna referencia a Vipps.
+`payment-processors` y `base-api` pasaron a producción el 22/10 por decisión de Angelo; siguen con
+las `VIPPS_CLIENT_*` de test (D1), así que sus rutas legacy (`POST /vipps/payment`, capture, cancel)
+fallarían en el token en vez de cobrar contra test. Tráfico observado: cero
 ([journal del 22/10](../../journal/2026-10/2026-10-22-vipps-fase3-prod.md)).
 
 Quién lee de verdad las variables de Vipps (comprobado en `develop` el 16/10):

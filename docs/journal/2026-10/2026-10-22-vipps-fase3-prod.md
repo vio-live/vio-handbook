@@ -85,6 +85,29 @@ webhooks de WooCommerce de `qkoreancosmetics.no` donde el método de pago es `Di
 cosa. Si algo llamara a esas rutas para un pago real, iría al entorno de test y fallaría en el token;
 no mueve dinero a nadie. **No las toqué**: Angelo pidió shopcart y api, y esto es decisión suya.
 
+## Cierre del hallazgo: payment-processors y base-api también a producción (Angelo, 22/10 12:34)
+
+Angelo: «pasa a prod». Hecho a las 12:36–12:40 UTC.
+
+- `VIPPS_API_URL` cambiada de `apitest.vipps.no` a `https://api.vipps.no` en **`base-api`** y
+  **`payment-processors`**: Secret `env-sc-<servicio>` (generado del Secret **vivo**, no de las
+  copias de la pasada anterior) y blob por servicio. Pods recreados y comprobado dentro de **los 6**
+  (base-api tiene 4 réplicas). Respaldos:
+  `backup-secret-env-sc-<servicio>-20261022-vippsurl.yaml` y
+  `<servicio>/.env.backup-pre-vippsurl-20261022`.
+- **`orders`, `users` y `api` NO se tocan, y la variable que tienen es inerte.** Comprobado en el
+  código de toda la org: los únicos que leen `VIPPS_API_URL` son `shopcart`, `payment-processors` y
+  `base-api`. `api` usa `VIPPS_PRODUCTION` fijo. La frase del plan de go-live sobre «orders en
+  pedidos de canal WordPress» no se sostiene hoy: `orders` no tiene una sola referencia a Vipps en
+  código.
+- **Nada roto:** `api-ecom.vio.live/` 200, 14/14 deployments sanos, y el **relay del webhook sigue
+  en pie** — una sonda al endpoint público vuelve a dar 401 y shopcart la rechaza con
+  `with 1 secret(s)` para la msn 1179558. El `[ERROR] ... 401(Unauthorized) ... Vipps event not
+  authenticated` que aparece en el log de base-api es ese rechazo, no una avería.
+- Los dos conectores legacy siguen usando las `VIPPS_CLIENT_*` de test (D1), así que ahora sus
+  rutas fallarían en el token en vez de cobrar contra el entorno de test. Con tráfico cero, eso es
+  lo que se quería: ninguna ruta de producción apunta a `apitest`.
+
 ## Confirmado: el scope platform ya no autentica
 
 `GET /checkout/webhook/vipps?scope=platform` da **417 «Vipps 400»**: el scope `platform` usa las
