@@ -260,6 +260,11 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
 
 - [ ] **B5. Surface de Mote & Livsstil + campana con Careless de sponsor** — *tras B4*
   `surface`, `campaign` y `brand_profile` estan a **0** en prod. Comision por defecto 15 %.
+  > [claude, 2026-10-22 22:20 UTC] Desbloqueado. El 400 `SPONSOR_NOT_ON_SURFACE` tenia dos causas:
+  > el channel 479 apuntaba a la share 605, borrada a las 21:44 (Angelo creo el **480** con «Carelles
+  > Test»), y faltaba `VIO_CAMPAIGNS_V2` en Vercel Production (Miguel, 22:12). Al crear la campana
+  > como Aller: sponsor Careless, channel **480**. La surface se asigna sola en la misma transaccion.
+  > Criterio: nace `surface_channel (1, 480)` y la campana.
 
 - [ ] **B6. Replit de Aller en prod, con el SDK** — *Angelo*
   El `www.moteoglivsstil.no` publicado hoy **no tiene ni una referencia al SDK de Vio**.
@@ -267,6 +272,18 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
   La misma en Replit y en Vev, y una ya probada en QA — no estrenar version el lunes.
   Criterio: `Vio.analytics.start` con consentimiento y el colector dejando de estar a 0.
 
+
+- [ ] **B6b. El Replit de Aller se queda bloqueado al volver de Vipps** — *Angelo (agente de Replit)*
+  > [claude, 2026-10-22] Lo encontro Alan en el Replit de staging, en Safari movil y ventana normal.
+  > Despues de pagar con Vipps, la vuelta mostraba «Handlekurven tilhorer en annen Vio-surface.
+  > Fullfor eller tom handlekurven forst», tambien al recargar. El pago entra: ordenes 4621–4624 en
+  > `SUCCESS`. El mensaje es de una **guarda de surfaces del propio Replit**, no del SDK. Al cargar,
+  > si la cesta guardada es de otra surface, no deja arrancar `Vio.init`. La cesta pagada solo se
+  > vacia cuando el SDK procesa la vuelta, asi que queda en bucle. Arreglo: con `vio_payment` en la
+  > URL, saltarse la guarda e iniciar con la surface de la cesta. El prompt para el agente de Replit
+  > ya lo tiene Angelo.
+  > Criterio: compra con Vipps en Safari movil, ventana normal, y la confirmacion aparece al volver.
+  > Mientras no este, un comprador del lunes que vuelva de Vipps ve un error en vez de la confirmacion.
 
 - [x] **B7. Migracion `BrandProfilePolicyUrls1792500000000` en QA** — *Miguel, 22/10 15:40*
   Dos columnas nuevas en `brand_profile` (`terms_url`, `refund_policy_url`), aditivas y NULL, para
@@ -364,6 +381,9 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
 
 - [ ] **C4. Avisar a Careless de que una devolucion en su Shopify mueve dinero en Vipps** — *Angelo*
   Pendiente desde el 16/10. El lunes ya es dinero real.
+  > [claude, 2026-10-22] Con `captureMode shipment` (A2), el aviso tiene que incluir dos cosas mas: a
+  > Careless se le cobra **cuando marca la orden como enviada en Shopify** (fulfill), y **no debe
+  > capturar a mano desde el portal de Vipps** las ordenes de Vio.
 
 - [ ] **C5. Avisar a Careless de que en Vio el envio NO es gratis sobre ~1.500 NOK** — *Angelo*
   Sale de la decision de E1c del 22/10 22:04. En su web Helthjem es gratis desde ~1.500 NOK; en las
@@ -590,6 +610,16 @@ Los cuatro se miran con el guion de C3 (menos D3, que es el portal de Vipps y so
   paralelo o acabamos con dos versiones en produccion el dia del lanzamiento.
 - [ ] **E3. QA apagado todo el fin de semana.** Lo que haya que probar en staging va el **viernes**.
 - [ ] **E4. Prod sin apagar el fin de semana.** Ahorrar ~46 USD no compensa un arranque malo el lunes.
+- [ ] **E5. Bucle sin fin de reintentos de Woo, todavia en prod** — *decide Angelo antes de C2*
+  > [claude, 2026-10-22] [products#29](https://github.com/vio-live/vio-products-microservice/pull/29)
+  > solo esta en QA. En prod, si la API de una tienda Woo falla, el consumidor de productos la
+  > reintenta sin fin y sin pausa (en QA fueron ~20k lineas/min). Careless no usa Woo; afecta a las
+  > tiendas Woo reales (`qkoreancosmetics.no`). Opciones: llevarlo antes de la congelacion
+  > (1 servicio, products) o dejarlo para despues del lunes.
+- [ ] **E6. «Courier —» en el detalle de las ordenes enviadas desde Shopify** — *cosmetico, despues del lunes*
+  > [claude, 2026-10-22] [extensions#32](https://github.com/vio-live/vio-extensions-microservice/pull/32)
+  > solo esta en QA (el hotfix #34 de prod no lo lleva). En prod, el envio de Careless se guarda con
+  > numero y link pero sin transportista. No afecta a la captura ni al dinero.
 
 ---
 
