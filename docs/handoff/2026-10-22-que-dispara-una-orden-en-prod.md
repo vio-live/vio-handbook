@@ -120,3 +120,46 @@ internet. No es de ahora y no toca antes del lunes, pero que quede escrito.
 - Webhooks de Careless: el guion `docs/playbooks/scripts/verificar-orden-careless.sh` no los mira;
   se consultan con el token vivo de `shopify_connection` (conexion 541) por REST y GraphQL.
 - Captura: en el log de shopcart, `[vippsOrderShipped]` dice el modo y si habia algo que capturar.
+
+## «Si nuestras ordenes pasan al 3PL, no podemos hacer lo mismo?» (Angelo, 22/10 22:58)
+
+Si, el mecanismo es el mismo —detectar el envio y capturar— pero **no por webhooks**, y ahora se
+sabe exactamente por que.
+
+**La causa raiz: la app custom no tiene el permiso.** Leidos los scopes de la instalacion en
+Careless (`currentAppInstallation.accessScopes`, app **«Vio Sync»**, apiKey `dd30cfd7…`): 15 scopes
+y **`write_webhooks` NO esta**. Por eso las cuatro tiendas tienen 0 webhooks: no es que nadie los
+registrara, es que **con este token no se pueden registrar**. Anadir el scope obliga a cambiar la
+app en Vercel y a que el comercio **vuelva a aprobar** la app: eso no entra antes del lunes.
+
+**Lo que si tenemos:** `read_orders` y los siete scopes de fulfillment
+(`read_fulfillments`, `read_*_fulfillment_orders`, `write_*_fulfillment_orders`). O sea: **podemos
+leer el envio, solo no podemos pedir que nos avisen.** Entonces se pregunta en vez de esperar.
+
+**Plan posible sin deploy ni cambio de codigo** (mismo patron que los dos CronJobs que ya corren
+en prod, `orders-reconcile` y `shopcart-reconcile`):
+
+1. Sacar de nuestra base los ids de Shopify de las ordenes de Vio para Careless
+   (`order_item.supplier_shopify_order_id`, supplier 1327). No hay que adivinar nada.
+2. Preguntar a Shopify si esas ordenes ya estan `fulfilled`.
+3. Cuando lo esten, disparar la cadena que **ya existe**, por una de dos vias:
+   - **(min)** `POST /checkout/payment/vipps/order/<orderId>/shipped` en `shopcart`. Es
+     `vippsOrderShipped`: comprueba el modo, calcula lo que queda por capturar, descuenta lo que la
+     tienda ya devolvio y usa clave de idempotencia. **Capturar dos veces no es posible.**
+   - **(completa)** replicar el cuerpo de `orders/fulfilled` contra
+     `extensions /shopify/receiveWebhook`. Ademas de capturar, **guarda el tracking en Vio**, con lo
+     que el comprador lo ve y la orden pasa a completada. Es mas fiel y reutiliza mas camino.
+     Viable porque `receiveWebhook` no verifica HMAC (ver la nota de seguridad de arriba).
+
+Recomendacion: **la via completa**, y que el CronJob reuse una imagen que ya esta en el registry
+(la de `users`, que trae node + mysql2 + el `.env` montado) para **no** instalar nada en runtime —
+ese fue justo el fallo del CronJob de backup (ver
+`docs/lessons/cronjob-de-backup-roto-instala-paquetes-en-runtime.md`).
+
+Secuencia que propongo: construirlo y dejarlo en vacio (hoy no hay ninguna orden de Vio, asi que
+no puede hacer dano), y que **la orden de prueba del viernes sea su primera prueba real**. Si
+funciona, el lunes `shipment` se queda como esta y nadie captura a mano. Si no, se cambia el modo a
+`payment` con un campo.
+
+**Pendiente de decision de Angelo**: toca dinero en prod en ventana de congelacion, asi que no lo
+monto sin su OK.
