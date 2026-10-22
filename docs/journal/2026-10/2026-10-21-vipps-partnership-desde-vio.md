@@ -333,6 +333,19 @@ la configuración con el MSN desde nuestro lado. Asignar la unidad por port-forw
 >   avisé que desconecte antes, para no duplicar la conexión, y que la moneda vacía sigue pendiente
 >   para después del lunes.
 
+> [claude, 2026-10-22 21:27 UTC] **Woo, seguimiento (Alan 21:22):** la conexión 496 también quedó sin
+> moneda. Era de esperar: el arreglo de la moneda no está hecho, va después del lunes.
+> - Alan encontró en Datadog que `settings/general/woocommerce_currency` da 500 «error code: 1101», y
+>   en una sola llamada.
+> - Lo probé contra `dev-test-supplier-alan.pantheonsite.io/wp-json/wc/v3/...`, desde aquí y desde el
+>   pod de extensions de QA. Sin auth y con una clave inventada (en query string y en basic) responde
+>   **401 de WooCommerce**. Con la clave real (la de los logs) responde **500/1101**.
+> - Conclusión: **la tienda falla dentro de su PHP** cuando la petición viene autenticada. No es Vio ni
+>   la red. No usé su clave real. Le pedí a Alan un curl con su clave, el log de PHP de Pantheon y una
+>   prueba con otra tienda Woo limpia.
+> - El fallback de la moneda en users sigue siendo un arreglo válido, pero no le hace sincronizar a
+>   esta tienda.
+
 ## Next session
 
 - Con OK de Angelo: rol 1 a su cuenta de QA y prueba de punta a punta en staging (set up de una
