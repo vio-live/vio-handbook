@@ -148,7 +148,16 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
   **Abierto:** la cuenta **1331** (`allermedia`, Publisher) sigue viva y es un duplicado de la 1330.
   Decide Angelo si se desactiva.
 
-- [ ] **B2. Los 5 productos del articulo, en prod** — *Careless, desde su Shopify*
+- [x] **B2. Los 9 productos del articulo, importados en prod** — *Miguel, 22/10 23:4x (OK de Angelo: «lo que haya que hacer lo hacemos ahora»)*
+  Importados por `POST /shopify/import` del micro `products`, ids de Vio **421318-421326**, los 5 estilos
+  del articulo con sus colores publicados y con stock. Excluidos los de stock 0 y `Vilde bukse`.
+  **El import solo engancha el envio POR DEFECTO**: nacieron con 1 `product_shipping` en vez de 2;
+  anadidas las 9 que faltaban (Bring), total de 1327 = 98 = 49x2. Repetir esto en cada import.
+  Anadidos a la collection compartida `NnRsYSAaJ` sin borrar los 5 «Active» de Careless (14 items).
+  Detalle: [`../journal/2026-10/2026-10-22-noche-go-live-b2-b3-b7b.md`](../journal/2026-10/2026-10-22-noche-go-live-b2-b3-b7b.md).
+
+<!-- texto original de B2, conservado -->
+- [x] ~~B2 (version original)~~ — *Careless, desde su Shopify*
   «10 nyheter vi onsker oss na»: Cassia jakke, Hennie cardigan, Vilde genser, Sofie genser,
   Active pile fleece half-zip. Hoy solo esta la linea «Active».
   **CORREGIDO 22/10 16:55 (Angelo aviso de que la app de Shopify esta instalada): NO es un
@@ -182,7 +191,15 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
   (espera OK de Angelo) y **despues rehacer los items** de la collection. La share a Aller (1330) ya
   esta puesta, asi que lo que se cambie en la collection le llega sin volver a compartir.
 
-- [ ] **B3. Conexion Careless <-> Aller aceptada y channel creado** — *Angelo / equipo Vio, tras B1*
+- [x] **B3. Channel de Aller creado** — *Angelo desde el dashboard, 22/10 ~23:56*
+  `channel_user` **480**, user 1330, `channel_id 10` (Sdk), activo, api key
+  **`DWWWP0S-8KA4WGZ-M9ABEGN-XZE3G4Y`** (es la que va en el Replit, B6), con `channel_group` 1076
+  -> share 606 -> collection `NnRsYSAaJ` (14 items).
+  Hubo dos channels mas en el camino: el 479 (borrado 21:55 UTC, su grupo apuntaba a la share muerta
+  605) y el 481 (duplicado mio, borrado por mi al ver que el 480 ya servia). **Solo el 480 esta vivo.**
+
+<!-- texto original de B3, conservado -->
+- [x] ~~B3 (version original)~~ — *Angelo / equipo Vio, tras B1*
   Hoy en prod solo hay **3 `channel_user`**, todos de cuentas de prueba (1295 y 1300) y todos de
   tipo `GraphQl`. El de Aller hay que crearlo. Careless **no** tiene channel y es correcto: el
   channel es del publisher, no de la marca.
@@ -203,7 +220,17 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
   Crearlo **desde el dashboard**, no a mano: el alta genera la api key (`user_channel_api_key`) y la
   fila de `channel_user_settings` que hace falta para B3b.
 
-- [ ] **B3b. Encender el interruptor `vipps` del channel de Aller** — *equipo Vio, al crear B3*
+- [x] **B3b. Vipps se ofrece en el channel de Aller — VERIFICADO** — *Miguel, 23/10 00:2x*
+  `GET /channel/available-payment-methods/480` -> **`200 ["Vipps"]`**. `vipps = 1` y
+  `markets ["NO","GB","NL"]` (cubre NO; GB/NL no tienen envio de Careless, no estorban).
+  **CORRECCION IMPORTANTE de como estaba escrito este punto: el interruptor NO basta.** El brand del
+  channel se resuelve por los DUENOS DE LOS PRODUCTOS publicados (`CHANNEL_PRODUCT_OWNERS_SQL` sobre
+  `channel_group` / `channel_user_products`). Con el channel vacio el brand cae en el propio owner
+  (Aller, que no tiene `payment_method`) y el endpoint devuelve `[]` **aunque `vipps=1`** — medido en
+  vivo contra el channel 479. Lo que abre el boton es **enganchar la collection compartida (B4)**.
+
+<!-- texto original de B3b, conservado -->
+- [x] ~~B3b (version original)~~ — *equipo Vio, al crear B3*
   **Esto no estaba escrito en ningun sitio y se pasa por alto.** El checkout ofrece un metodo solo
   si coinciden **dos** cosas (`getAvailablePaymentMethods` -> `offeredPaymentMethods`): el switch de
   la **marca** (ya en `true`, A2) **y** la visibilidad del **channel**
@@ -215,7 +242,17 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
   Criterio: `GET /channel/available-payment-methods/<channelUserId>` del channel de Aller devuelve
   Vipps en la lista. Si no sale, el boton no aparece y no hay compra, aunque el pago este perfecto.
 
-- [ ] **B4. Productos publicados en el channel de Aller** — *equipo Vio, tras B2 y B3*
+- [x] **B4. Productos publicados en el channel de Aller** — *22/10 ~23:56 (Angelo) + verificado por Miguel*
+  Via `channel_group` 1076 -> `collection_shared` 606 -> collection `NnRsYSAaJ` con **14 items**
+  (los 9 del articulo + 5 «Active»). `channel_user_products` sigue a 0 y **da igual**: la SQL de
+  dueños tambien cuenta la rama de `collection_shared`, que es la que resuelve el brand a Careless
+  (1327) y es lo que hace aparecer Vipps.
+  **Gotcha del payload:** en `POST /channel/group`, el campo `collection_shared_id` espera el **id de
+  la COLLECTION** (`NnRsYSAaJ`), no el de la fila de share (606). Con el 606 da
+  `404 COLLECTION_NOT_SHARED_WITH_SELLER`, que parece un problema de permisos y no lo es.
+
+<!-- texto original de B4, conservado -->
+- [x] ~~B4 (version original)~~ — *equipo Vio, tras B2 y B3*
   `channel_user_products` de Careless esta a **0**: aunque el pago funcione, el lunes **no aparece
   nada en catalogo**. Hacen falta las filas + `product.active=1` (ya) + envio que cubra el pais (ya)
   + `channel_group` para que campanas y dashboard vean la marca.
@@ -251,7 +288,13 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
   **Produccion sin tocar** (sigue en `master`, columnas 0/2). Detalle en
   [`../journal/2026-10/2026-10-22-kernel-1-0-282-brand-policy-urls.md`](../journal/2026-10/2026-10-22-kernel-1-0-282-brand-policy-urls.md).
 
-- [ ] **B7b. Orden obligatorio en prod: migracion ANTES del kernel** — *quien suba el release*
+- [x] **B7b. Migracion corrida en prod: el riesgo de orden YA NO EXISTE** — *Miguel, 22/10 23:4x*
+  `BrandProfilePolicyUrls1792500000000` aplicada en prod (columnas 9 y 10, identicas a QA; fila de
+  `migrations` insertada; 2a pasada no repite). El kernel 1.0.282 **ya se puede desplegar en
+  cualquier orden**. El codigo viejo no se entera: `Unknown column` = 0, `api-ecom` 200, 14/14.
+
+<!-- texto original de B7b, conservado -->
+- [x] ~~B7b (version original)~~ — *quien suba el release*
   **Esto puede tumbar la pagina de Vipps de prod.** La entidad lleva las dos columnas como
   `@Column` normal (sin `select: false`), asi que en cuanto un servicio de prod suba al kernel con
   #25, **cualquier lectura de `brand_profile` pide las columnas nuevas**. Si la base de prod no esta
@@ -285,7 +328,13 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
 
 ## C. Red de seguridad (mio, no depende de nadie)
 
-- [ ] **C1. Dump a mano de la base de prod, el viernes al cerrar** — *Miguel*
+- [x] **C1. Dump a mano de la base de prod — HECHO 23/10 00:0x, con adelanto** — *Miguel*
+  `prod-dump-golive-20261023.sql.gz` en `containerproductionsc/db-backups/`, 14.782.944 bytes,
+  `gzip -t` OK, **128/128 tablas**, MD5 del blob == local (`hPeSGjoe8RS3rmSwAu9ctw==`). Incluye la
+  migracion y el import de esta noche. Se puede repetir el viernes al cerrar si hay mas cambios.
+
+<!-- texto original de C1, conservado -->
+- [x] ~~C1 (version original)~~ — *Miguel*
   Con el estado bueno ya configurado. El CronJob `mysql-prod-offsite-backup` sigue roto por diseno
   (instala paquetes en runtime y el sidecar de Istio le corta la salida), asi que **esto es la unica
   red** si hay que volver atras.
