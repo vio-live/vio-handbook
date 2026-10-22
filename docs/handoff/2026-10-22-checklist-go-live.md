@@ -379,9 +379,23 @@ Los cuatro se miran con el guion de C3 (menos D3, que es el portal de Vipps y so
     opcional en el codigo, no puede tumbar el arranque. Valor (no es secreto):
     `{"dignitycollect.myshopify.com":{"Helthjem - til postkasse/dørmatte":{"code":"helthjem|2|#13435","source":"Packrooster"},"Bring - Pakke i postkasse":{"code":"bring|3584|#13452","source":"Packrooster"}}}`.
     Criterio: al arrancar, `extensions` loguea `líneas de envío configuradas: dignitycollect.myshopify.com (2)`.
-  - [ ] Los metodos de Careless en Vio (cierra E1b) **con esos nombres exactos**, NO, NOK, 59 y 79,
-    descripcion «Leveringstid 1-5 dager», Helthjem con `default = 1`, y los productos colgando de
-    los dos — *Angelo/Miguel*. La equivalencia se busca por nombre.
+  - [ ] Los metodos de Careless en Vio (cierra E1b) — ***Miguel, por base* (como E1)**. La
+    equivalencia se busca por nombre: copiar los nombres tal cual (la «ø» es U+00F8).
+    > [claude, 2026-10-22 ~20:00] **No se puede desde el dashboard:** la cuenta 1327 tiene
+    > `settings.currency` **EUR** y el dashboard guarda las clases en la moneda de la cuenta (avisa
+    > «saving switches it to EUR»); quedarian en EUR y desharia E1. Cambiar la cuenta a NOK no es
+    > inocuo (`products` la usa al convertir precios, tambien `api` y `orders`): no antes del lunes.
+    > El canal no necesita nada mas: `channelService` lee el envio por `product_shipping` → `shipping`.
+    - `shipping` `60af8d5a-...` (1327, `default = 1`): `name` = `Helthjem - til postkasse/dørmatte`,
+      `description` = `Leveringstid 1-5 dager`, `amount` = **59.00** NOK; su `shipping_country` (NO) = 59.00 NOK.
+    - `shipping` nuevo de 1327: `name` = `Bring - Pakke i postkasse`, `description` =
+      `Leveringstid 1-5 dager`, `amount` = **79.00**, `currency_code` = NOK, `default = 0`,
+      `custom_price_enabled` igual que la otra; `shipping_country` NO = 79.00 NOK.
+    - `product_shipping`: a cada uno de los 40 productos que cuelgan de `60af8d5a` sumarle una fila
+      al nuevo. El checkout solo ofrece las clases que tienen **todos** los productos del carrito
+      (`sharedShippingClasses`), asi que sin esto Bring no aparece.
+    - Verifica claude despues: el dashboard las muestra en kr y los dos nombres, leidos tal como
+      quedaron, dan su `code` con la funcion de `extensions` dentro del pod de prod.
   - [ ] **Orden de prueba de punta a punta en prod, coordinada con Careless** — *Angelo*. Criterio:
     en su Shopify la orden trae la linea con `source=Packrooster`, el metafield
     `packrooster.shipping-service` y las etiquetas del transportista, y 360 Logistics la despacha.
