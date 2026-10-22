@@ -195,6 +195,25 @@ la configuración con el MSN desde nuestro lado. Asignar la unidad por port-forw
 > Gotcha de tests en orders: correr `yarn test:unit` (`jest.unit.json`), no `npx jest`. La config por
 > defecto pide la base y no mapea `@typespec`.
 
+> [claude, 2026-10-22 06:50 UTC] **Seguimiento del reporte 4.** Alan mergeó él mismo
+> [vio-extensions-microservice#30](https://github.com/vio-live/vio-extensions-microservice/pull/30)
+> (21/10 22:43). Se desplegó en QA y verifiqué el pod: arrancó bien y lleva `shopifyRefundedLines`.
+> [vio-orders-microservice#40](https://github.com/vio-live/vio-orders-microservice/pull/40) **sigue sin
+> mergear**.
+>
+> A las 23:30 Alan repitió la prueba (órdenes 4601 y 4602) y reportó que «sigue el error». En la base de
+> QA (solo lectura):
+> - shopcart apuntó las dos devoluciones antes de la captura (`SHOP_REFUND_BEFORE_CAPTURE` 10000 y
+>   24500);
+> - los items siguen en `PROCESSING`, porque orders aún ignora `lines`.
+>
+> Se lo expliqué en la tarjeta. Las dos órdenes quedan así: no se puede reproducir su devolución sin el
+> `refundId` de Shopify, porque los logs se perdieron al dormir QA y sin ese id la compensación de
+> analytics saldría doble. Cuando #40 esté en QA, Alan repite con una orden nueva.
+>
+> Dato: QA arranca a las 06:30 UTC (`job-qa-sc-aks-start`, RG `rg-vio-qa-sc`; MySQL a las 06:25), no a
+> las 06:00 como dice `infrastructure/qa-aks-scheduler.md`.
+
 ## Next session
 
 - Con OK de Angelo: rol 1 a su cuenta de QA y prueba de punta a punta en staging (set up de una
