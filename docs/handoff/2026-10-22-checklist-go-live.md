@@ -242,7 +242,27 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
   Criterio: `GET /channel/available-payment-methods/<channelUserId>` del channel de Aller devuelve
   Vipps en la lista. Si no sale, el boton no aparece y no hay compra, aunque el pago este perfecto.
 
-- [x] **B4. Productos publicados en el channel de Aller** — *22/10 ~23:56 (Angelo) + verificado por Miguel*
+- [x] **B4. Catalogo del channel de Aller: 14 productos, VERIFICADO por el camino del SDK** — *Miguel, 23/10 00:4x*
+  **CORRIJO lo que escribi hace una hora**, que estaba mal y era bloqueante: dije que
+  «`channel_user_products` sigue a 0 y da igual». **Es falso.** El catalogo del SDK sale **solo** de
+  `channel_user_products`; `channel_group`/`collection_shared` sirve para resolver la **marca**
+  (pagos, campanas, dashboard). Por eso Vipps aparecia y el catalogo estaba **vacio**. El B4
+  original tenia razon y yo lo contradije.
+  **Causa:** el hook que materializa el catalogo solo lo llama `POST /channel/multi-group/v2`;
+  `POST /channel/group` (el camino por el que se monto el 480) **no lo llama**, y no deja ni un
+  error en el log.
+  **Arreglado** con `POST /channel-process/collections/update {"collectionsId":["NnRsYSAaJ"]}` en el
+  micro `products` (idempotente): el 480 paso de **0 a 14** filas.
+  **Cadena verificada de punta a punta con la api key del channel**, en `graph-ql.vio.live`:
+  catalogo **14 productos** (los 9 del articulo + 5 «Active»), todos con **7 tallas** y **los dos
+  metodos de envio**; carrito con una Cassia -> `subtotal 1499 NOK`, `available_shipping_countries
+  ["NO"]`; checkout **ACTIVE** con `available_payment_methods ["Vipps"]` y
+  `totals {total 1499, taxes 299.8}`. Carrito y checkout de prueba **borrados** despues.
+  Lecciones: [`../lessons/el-catalogo-del-sdk-sale-de-channel-user-products.md`](../lessons/el-catalogo-del-sdk-sale-de-channel-user-products.md)
+  y [`../lessons/el-precio-del-sdk-viene-sin-iva.md`](../lessons/el-precio-del-sdk-viene-sin-iva.md).
+
+<!-- version anterior de B4 (con el error corregido arriba) -->
+- [x] ~~B4 (22/10 23:56)~~ — *verificado por Miguel*
   Via `channel_group` 1076 -> `collection_shared` 606 -> collection `NnRsYSAaJ` con **14 items**
   (los 9 del articulo + 5 «Active»). `channel_user_products` sigue a 0 y **da igual**: la SQL de
   dueños tambien cuenta la rama de `collection_shared`, que es la que resuelve el brand a Careless
