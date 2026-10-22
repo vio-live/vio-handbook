@@ -290,6 +290,24 @@ la configuración con el MSN desde nuestro lado. Asignar la unidad por port-forw
 > concurrencia y reintentos con espera en el consumidor de productos de Woo. Pendiente de que Angelo
 > decida el cuándo. Aparte: los logs de extensions imprimen las claves de la tienda (tarjeta J7E6j9dM).
 
+> [claude, 2026-10-22 18:27 UTC] **La ráfaga de Woo no se agotaba: era un bucle sin fin, y está
+> arreglado.**
+> - Causa: el consumidor de productos (`product.busConsumer.service.ts`) volvía a encolar los productos
+>   que habían fallado tal como habían llegado. El `retry` incrementado se quedaba en `refData`, así que
+>   en cada pasada contaba `retry: 1` y el «se rinde a los 10» de `callSave` nunca saltaba. En los logs
+>   todos los mensajes llevaban `"retry":1`.
+> - Arreglo:
+>   [vio-products-microservice#29](https://github.com/vio-live/vio-products-microservice/pull/29)
+>   (`wooProductsToRetry`): reencola con `retry + 1`.
+> - Mergeado y desplegado en QA (18:25). Verificado: el contador sube de 1 a 11 y se para. Las llamadas
+>   a la tienda de Alan bajaron de 20.802 líneas/min (18:24) a 1.222 (18:26) y después a 0.
+> - **Prod tiene el mismo bucle** y no está arreglado ahí: una tienda Woo real con la API caída se
+>   reintentaría sin fin. Llevarlo a prod antes de la congelación del viernes lo decide Angelo.
+> - Fuera de alcance: un producto que se rinde se sigue reportando `SUCCESS` al socket, y la ruta SQS
+>   (`product.sqsConsumer`, no la de Azure) no tiene límite.
+> - El tracker de Alan contaba la ráfaga como trabajo suyo (llevaba su `user 1331`). Ahora excluye esas
+>   líneas, y las filas de 17:45–18:06 quedaron como `noise:woo-retry`.
+
 ## Next session
 
 - Con OK de Angelo: rol 1 a su cuenta de QA y prueba de punta a punta en staging (set up de una
