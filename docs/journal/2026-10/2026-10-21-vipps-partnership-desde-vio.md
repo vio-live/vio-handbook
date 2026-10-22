@@ -258,6 +258,16 @@ la configuración con el MSN desde nuestro lado. Asignar la unidad por port-forw
 > 15:30–15:31). Alan marcó completa la parte 1 de su tarjeta del go-live (0bh9T1z6): Shopify de la A
 > a la Z, 8/8.
 
+> [claude, 2026-10-22 16:57 UTC] **Pregunta de Alan (0bh9T1z6, 16:53):** «¿no se pueden dos sponsors en
+> Vev? no deja mezclar productos».
+> - Respuesta, verificada en el código: la campaña se elige **por página**. `vio-config.tsx` tiene
+>   `campaignId` por página (ADR-0034, enmienda 3), así que un artículo no mezcla sponsors. La prueba va
+>   con dos páginas, cada una con su campaña.
+> - Su surface 14 («Vev Alan», publisher 1312 Aller) está bien. Tiene dos campañas activas: la 13
+>   (sponsor 1340, por defecto, channel 514) y la 15 (sponsor 1331, creada a las 16:11, channel 515).
+>   Casi todos los slots de sus páginas están en la 15 «From page».
+> - Le pasé los pasos.
+
 ## Next session
 
 - Con OK de Angelo: rol 1 a su cuenta de QA y prueba de punta a punta en staging (set up de una
