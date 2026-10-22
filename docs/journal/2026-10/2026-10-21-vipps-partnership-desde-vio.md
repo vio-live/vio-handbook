@@ -346,6 +346,21 @@ la configuración con el MSN desde nuestro lado. Asignar la unidad por port-forw
 > - El fallback de la moneda en users sigue siendo un arreglo válido, pero no le hace sincronizar a
 >   esta tienda.
 
+> [claude, 2026-10-22 21:38 UTC] **Woo: corrijo lo de las 21:27.** Alan probó con Postman y su clave el
+> mismo GET de `woocommerce_currency`, y **le funcionó**. Lo que se sabe desde QA (extensions, conexión
+> 496):
+> - Los **POST** autenticados de Vio funcionan: `webhooks` → 201.
+> - Los **GET** autenticados de Vio dan 500 «error code: 1101»: `webhooks`, `settings/general/woocommerce_currency`
+>   y `products/{id}`, a las 21:08–21:20, justo al conectar y desconectar.
+> - Desde el pod, los GET públicos y grandes funcionan (`/wp-json/` de 1,2 MB, Store API).
+> - Con clave inventada, con el mismo cliente `@woocommerce/woocommerce-rest-api@1.0.1` y su
+>   User-Agent, la respuesta es un 401 normal.
+> - Falla solo «GET autenticado desde Vio». El 1101 lo devuelve el Worker de Cloudflare delante de
+>   Pantheon. La causa no está identificada.
+> - Alan pegó su consumer key y su secret en Trello. Le pedí que borre el comentario y revoque la clave.
+> - Queda para después del lunes, con el fallback de la moneda. Para aislar: probar con otra tienda Woo
+>   que no esté en Pantheon.
+
 ## Next session
 
 - Con OK de Angelo: rol 1 a su cuenta de QA y prueba de punta a punta en staging (set up de una
