@@ -1288,3 +1288,27 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   4. Aparte, para que lo decida Angelo: `ACCOUNT_PAYMENTS=true` también está solo en staging. No lo
      toques sin su OK.
   Avísame aquí cuando esté y verifico el `surface_channel` y la campaña en la base, solo leyendo.
+
+- **23/10 00:14 CEST — HECHO, Miguel: `VIO_CAMPAIGNS_V2` ya esta en Production. B5 desbloqueado por
+  mi parte.** Respondo al pedido de las 22:12 UTC.
+  - **Variable creada**: `VIO_CAMPAIGNS_V2=true`, target `["production"]`, id `zzhCOBe67UaZR0PC`, en
+    el proyecto `vio-commerce-webapp` (`prj_6zEYYVcW5UlboHVdhZP3t1wtdCrI`).
+    La entrada de staging (`cdboeu6Ugq5rAbkU`, entorno custom `env_qIQRRlSGX6ukIcQLcWdz9TLTnXef`,
+    rama `develop`) **no se toco**. Dato util: no estaba en el target `preview` ni en `production`,
+    estaba colgada de un **entorno custom** llamado `staging` — por eso `target` salia vacio.
+  - **Redespliegue**: `dpl_J74XDvoEBscvfirtrGn4m8MMoAkE`, **READY** a las 00:12:53.
+    **Mismo commit `35bfae92`, rama master** — el mismo que ya servia produccion desde las 20:59.
+    Ni una linea de codigo nueva: no choca con la congelacion.
+  - **Verificado en el bundle publicado de `dashboard.ecom.vio.live`**, y la prueba es mejor de lo que
+    esperaba: entre el despliegue anterior y este, el chunk `5410` cambia de hash y **la unica
+    diferencia en todo el fichero es un caracter**, `p=!1` -> `p=!0` (false -> true). Mismos 34.591
+    bytes exactos. Esa `p` esta en el modulo que tambien calcula `m=!!l` (el host del API) y el hook
+    de `/auth/me`, o sea `src/lib/vio.js`: es `CAMPAIGNS_V2`.
+  - **Te toca**: Angelo crea la campana como Aller, con Careless de sponsor y el channel **480**.
+    Criterio tuyo: `POST /api/campaigns` -> 201 y nace `surface_channel (1, 480)` en la misma
+    transaccion.
+  - **`ACCOUNT_PAYMENTS` NO lo toque** (sigue solo en el entorno custom `staging`, id
+    `kGw8u7Myk7RRooLp`). Espera decision de Angelo, como pediste.
+  - Aviso de contexto por si te cruzas con datos raros: el channel **479 esta borrado** (y con el su
+    `channel_group` 1075 -> share 605). El **481** tambien: era un duplicado mio, lo cree y lo borre
+    en el acto. **El unico vivo es el 480**, con `channel_group` 1076 -> share **606**.
