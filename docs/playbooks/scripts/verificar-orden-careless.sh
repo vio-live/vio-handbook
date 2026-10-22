@@ -55,6 +55,24 @@ const verShopify=async(o,vio)=>{
   const ok1=!!sl, ok2=!!(sl&&sl.source==='Packrooster'), ok3=mf.some(m=>m.namespace==='packrooster'), ok4=ff.length>0;
   console.log(`   creada_por_vio=${esVio?'SI':'no (orden nativa de su web)'}`);
   console.log(`   VEREDICTO: linea_envio=${ok1?'OK':'FALTA'} source_Packrooster=${ok2?'OK':'NO'} metafield_packrooster=${ok3?'OK':'NO'} despachada=${ok4?'OK':'NO'}`);
+  // --- CADENA DE LA CAPTURA DE VIPPS (captureMode=shipment) ---
+  // El aviso de envio llega por webhook declarado por el app (Pub/Sub, topic vio-sync) y
+  // extensions.receiveOrderFulfilled tiene que poder volver de la orden de Shopify a la de Vio.
+  // Para eso exige DOS cosas en la orden (getOrderIdFromShopifyOrder): `note` no vacio Y el
+  // metafield <SHOPIFY_NAMESPACE>.outshifter-order-id. Ese metafield lo pone un PUT POSTERIOR
+  // al alta: si ese PUT fallo, la orden existe, se despacha... y la reserva de Vipps no se
+  // captura nunca, en silencio. Esto es lo que hay que mirar.
+  const NS='outshifter-qa'; // SHOPIFY_NAMESPACE del .env de extensions en prod
+  const mfOrderId=mf.find(m=>m.namespace===NS&&m.key==='outshifter-order-id');
+  const okNote=!!(o.note&&o.note.trim());
+  const enlace=okNote&&!!mfOrderId;
+  console.log(`   CAPTURA: note=${okNote?'OK':'VACIO'} metafield_order_id=${mfOrderId?('OK -> vio '+mfOrderId.value):'FALTA'} enlace_shopify->vio=${enlace?'OK':'ROTO'}`);
+  if(!enlace&&esVio)
+    console.log('    OJO: sin enlace, el orders/fulfilled NO encuentra la orden de Vio y la reserva de Vipps no se captura. Capturar a mano: POST /checkout/payment/vipps/order/<vioOrderId>/shipped (idempotente).');
+  if(vio){
+    const [tr]=await c.query('select slug,tracking_number,created_at from order_tracking where order_id=? and deleted_at is null order by id desc limit 1',[vio.vio_id]);
+    console.log(`   tracking_en_vio=${tr.length?`OK (${tr[0].slug||'sin slug'} ${tr[0].tracking_number})`:'todavia no'}  <- cuando aparece, ya corrio saveTrackingNumber y con el la captura`);
+  }
   const edad=Math.round((Date.now()-new Date(o.created_at).getTime())/1000);
   if(!ok3&&edad<60) console.log(`    (metafield: la orden tiene ${edad}s y Packrooster tarda 8-20s en ponerlo — volve a correr el guion, no es fallo)`);
   if(!ok4) console.log('    (despachada=NO con la orden recien creada es LO ESPERADO: nace authorized y sin fulfillments. Solo es fallo si sigue asi horas despues)');

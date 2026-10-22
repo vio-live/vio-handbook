@@ -7,6 +7,90 @@ owner: miguel
 Pregunta de Angelo (22/10 22:35): «las ordenes llegaran bien y dispararan lo que hay que disparar?».
 Esto es la cadena medida en produccion, no leida de la documentacion. Todo lectura.
 
+---
+
+## CORRECCION (22/10 23:55) — lo de abajo sobre la captura ESTA MAL
+
+Este doc concluia que «la Shopify de Careless tiene 0 webhooks, nadie le va a decir a Vio que la
+orden se envio» y de ahi recomendaba cambiar a `payment` o montar un CronJob que pregunte. **Las dos
+cosas sobran: la cadena de aviso de envio ya existe, esta viva en produccion y no necesita ningun
+permiso nuevo.**
+
+El error fue medir los webhooks con el sitio equivocado. `GET /admin/api/.../webhooks.json` y
+`webhookSubscriptions` **solo listan los que se crean por la Admin API**. Esta familia de apps no
+usa esos: los **declara el propio app** en `shopify.app.vio-sync.toml` y los entrega **por Pub/Sub**,
+y eso no sale en esa consulta. Por eso `shopify.service.ts:2270` dice literalmente «app custom, lo
+declara el app» — no era una carencia, era el diseno.
+
+**Y `write_webhooks` no hace falta para nada**: un webhook declarado en la config del app lo registra
+Shopify al desplegar la config, no se pide por API. Tampoco hay que volver a aprobar la app.
+
+### La cadena, medida (22/10 23:30-23:50, todo lectura)
+
+    Shopify (webhook declarado en el toml del app «Vio Sync»)
+      -> Pub/Sub  topic tipio-staging-development:vio-sync
+      -> extensions de PROD, suscripcion vio-sync-sub   [PubSubService.subscribeToSupplierTopic]
+      -> MessageDistributorService -> shopifyService.receiveExportWebhook(shop, topic, body)
+      -> topic 'orders/fulfilled'  -> receiveOrderFulfilled
+      -> handleSaveTrackingNumber  -> orders POST /:id/saveTrackingNumber
+      -> orders.tellShopcartAboutVipps(order,'shipped')
+      -> shopcart.vippsOrderShipped -> captura en Vipps
+
+Pruebas de que corre, no de que deberia correr:
+
+1. **El toml de prod declara los topics que hacen falta.** `shopify.app.vio-sync.toml`, bloque
+   `[[webhooks.subscriptions]]`: `orders/fulfilled`, `fulfillments/update`, `orders/cancelled`,
+   `refunds/create`, `products/update`, `products/delete`, `app/uninstalled`, todos a
+   `uri = "pubsub://tipio-staging-development:vio-sync"`.
+2. **Prod consume esa suscripcion ahora mismo.** En el log de `extensions` de prod,
+   `[PubSubService.subscribeToSupplierTopic] Received message ...` + `send to receiveExportWebhook`,
+   **393 mensajes en 3 h**. El `.env` del pod: `SHOPIFY_GCP_PUBSUB_SUPPLIER_SUBSCRIPTION_TOPIC="vio-sync-sub"`.
+3. **Careless es una de las tiendas que estan entregando.** De 4 ids de producto sacados al azar de
+   esos mensajes, **2 son de `dignitycollect.myshopify.com`** (200 con su token; 404 en las otras
+   tres tiendas). O sea: el app de Careless **si** tiene sus webhooks declarados registrados. Y
+   `orders/fulfilled` esta en el **mismo** bloque de suscripcion que el `products/update` que llega,
+   asi que esta registrado igual.
+4. **No hay competencia con staging.** Staging usa otra suscripcion y otro topic
+   (`vio-sync-staging-sub` / `vio-sync-staging`, mismo proyecto GCP). Si compartieran suscripcion,
+   Pub/Sub repartiria los mensajes y la mitad de los envios se perderian en staging. No es el caso.
+5. **El enlace de vuelta Shopify -> Vio existe en la orden que crea Vio.** `createOrder` hace un
+   **PUT posterior al alta** que escribe el metafield `<SHOPIFY_NAMESPACE>.outshifter-order-id` con
+   el id de la orden de Vio (`shopify.service.ts:3907`), y `findOrderById` pide los metafields junto
+   a la orden, que es de donde los lee `getOrderIdFromShopifyOrder`. En prod
+   `SHOPIFY_NAMESPACE="outshifter-qa"` (nombre raro, valor correcto: escribe y lee el mismo).
+
+### Entonces, la decision
+
+**`captureMode: shipment` se queda como esta.** Es el modo con el que opera Careless y es el que la
+plomeria soporta. No se cambia a `payment`, no se pide `write_webhooks`, no se monta CronJob.
+
+### Lo que SI sigue sin probar (y es lo unico que hay que mirar)
+
+La cadena **nunca ha corrido en prod** porque nunca ha habido una orden de Vio. Dos eslabones son
+los que pueden romperla en silencio, y los dos se ven en el guion:
+
+- **El metafield del enlace.** Lo pone un PUT *despues* del alta. Si ese PUT falla, la orden existe,
+  se despacha igual... y `orders/fulfilled` no encuentra la orden de Vio, asi que la reserva de
+  Vipps **no se captura nunca** y nadie se entera. Ademas `getOrderIdFromShopifyOrder` exige que
+  `note` no este vacio.
+- **Que el aviso llegue a tiempo.** Careless despacha en lotes a mediodia, ~36-39 h despues de la
+  compra; la reserva de Vipps tiene que seguir viva (en prod no hemos medido todavia su caducidad).
+
+`verificar-orden-careless.sh` ya imprime las dos cosas:
+`CAPTURA: note=... metafield_order_id=... enlace_shopify->vio=OK|ROTO` y `tracking_en_vio=...`
+(cuando aparece tracking en Vio, ya corrio `saveTrackingNumber` y con el la captura).
+
+**Plan B si el enlace sale ROTO** (manual, sin plomeria nueva, idempotente):
+`POST /checkout/payment/vipps/order/<vioOrderId>/shipped` en `shopcart`. Calcula lo que queda por
+capturar, descuenta lo que la tienda ya devolvio y usa clave de idempotencia — capturar dos veces
+no es posible.
+
+Lo que de este doc **sigue valido**: todo el apartado del 3PL, el de como cobra Careless hoy
+(Qliro, captura 1-2 s despues del fulfillment, lotes de mediodia), y la nota de seguridad del HMAC.
+Lo que **no**: «0 webhooks», «nadie va a avisar», y las tres opciones (a)/(b)/(c) de la captura.
+
+---
+
 ## Lo que SI dispara
 
 1. **La orden llega a la Shopify de Careless con su linea de envio.**

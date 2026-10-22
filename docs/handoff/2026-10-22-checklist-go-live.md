@@ -44,6 +44,15 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
    605 **y** conexion aceptada `1327 <-> 1330` (fila 539) — sin la conexion, la share no se ve.
    Esto deja desactualizado el punto 2 de este delta (donde dice "Aller es el 1330" por otro motivo).
    Ver **B1b**.
+10. **La captura al enviar NO necesita ningun permiso nuevo y ya esta montada.** Un diagnostico
+   mio de esa misma noche decia lo contrario («0 webhooks en su tienda, nadie avisara del envio») y
+   pedia `write_webhooks` o un CronJob: **falso**. Los webhooks los **declara el app** en
+   `shopify.app.vio-sync.toml` y se entregan por **Pub/Sub** (`vio-sync` -> suscripcion `vio-sync-sub`
+   de prod), que es lo que no sale en `webhookSubscriptions`. Medido: 393 mensajes en 3 h y 2 de 4
+   ids muestreados son de `dignitycollect`. `captureMode: shipment` se queda. Ver la CORRECCION al
+   principio de `2026-10-22-que-dispara-una-orden-en-prod.md` y la leccion
+   `../lessons/webhooks-declarados-por-el-app-no-salen-en-webhooksubscriptions.md`.
+
 9. **Hay un guion que verifica todo esto de una pasada**: `../playbooks/scripts/verificacion-golive-lunes.sh`
    (solo lectura, probado contra prod el 22/10). Correr **eso** el lunes, no comandos a mano.
 
