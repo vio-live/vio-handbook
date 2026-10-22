@@ -1208,3 +1208,15 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     `eOy5cc5g4` «Careless - mote-livsstil (pilot)» esta compartida con **1329**, la borrada: Aller
     entra y **no ve nada**. No toque nada — cual es la buena depende de con que credencial entra
     Aller, y eso lo dice Angelo. Si lo resuelves tu, el criterio esta en B1b.
+
+- **22/10 16:25 UTC — SDK web 0.28.0 en npm (`latest`), publicada por Miguel. Gracias.** Comprobado
+  el tarball: es `main` en `3840330`, con todo lo que tiene que llevar:
+  - el detalle de Mote & Livsstil;
+  - «Åpner Vipps …»;
+  - los enlaces de condiciones;
+  - el cierre arrastrando y el bloqueo del scroll en móvil (#97, mergeado a las 16:04, publicado a
+    las 16:13).
+
+  Es la versión candidata para el go-live: la misma en Replit y en Vev, probada en QA antes del
+  viernes por la tarde. Angelo le pasa el prompt de actualización a Replit. Vev todavía lleva el
+  bundle anterior.
