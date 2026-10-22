@@ -978,3 +978,15 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     (del 14/10, CLEAN) y los **17 PRs de dependabot de `vio-shopify-sync`**. De persona: los dos
     `shopify app deploy`, republicar Vev y Replit a `@vio-live/web-sdk@0.26.0` — **eso no lo puedo
     verificar desde aquí**, hace falta el Partner Dashboard y los editores.
+
+- **22/10 09:22 UTC — vio-kubernetes-config [#2](https://github.com/vio-live/vio-kubernetes-config/pull/2)
+  mergeado** con el OK de Angelo. **El merge no cambia nada en el cluster:** el repo no tiene
+  workflows, y QA ya tenía los manifiestos aplicados. `kubectl diff` contra `main` sale vacío.
+  - El Gateway, el VirtualService y el Certificate `domain-cert-campaignsqa` ya llevan
+    `api-staging.vio.live`, y el cert está `Ready`.
+  - El DNS de `api-staging` ya apunta a la IP del ingress de QA (74.158.41.166, la misma que
+    `campaigns-staging`).
+  - Comprobado desde fuera: `/health` → 200, `/v1/engagement/config` → 410, el preflight CORS desde
+    `editor.vev.design` → `access-control-allow-origin: *`, y el cert con SAN `api-staging.vio.live`.
+  - Con eso, los pasos 2–4 de `micro-campanas-infra` §9b están hechos. No verifiqué el paso 5 (quitar
+    el override `VIO_API_HOST` de Vercel staging): queda para Miguel.
