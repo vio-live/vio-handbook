@@ -1256,3 +1256,20 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     colección. Después crear la campaña.
   - Hallazgo para después del lunes: borrar una colección compartida deja el channel del publisher
     apuntando a una share borrada, sin aviso.
+
+- **22/10 22:08 UTC — B5 bloqueado: el dashboard de prod no tiene `VIO_CAMPAIGNS_V2`.** Aller (con
+  el channel 480 «Careless 26/10 test», activo, una sola brand, la 1327) no puede crear la campaña:
+  `POST https://api.vio.live/api/campaigns` → **400 `SPONSOR_NOT_ON_SURFACE`**.
+  - **Causa.** En el proyecto de Vercel `vio-commerce-webapp`, `VIO_CAMPAIGNS_V2=true` solo está en
+    **staging** (`vercel env ls`). En Production no existe.
+  - **Qué hace el front sin ella.** `CAMPAIGNS_V2` (`src/lib/vio.js`, se fija al compilar) queda en
+    `false`. `usePublisherChannels` no carga `/channels`, así que el formulario no ofrece el 480 y la
+    campaña sale sin `channelIds`.
+  - **Qué hace el micro.** Sin channels no hay `channelsToAssign`, el sponsor queda sin channel en la
+    surface y salta `SPONSOR_NOT_ON_SURFACE`.
+  - En QA funciona porque ahí la variable está: la surface 14 recibió el channel 515 en la misma
+    transacción que la campaña 15.
+  - **Arreglo:** añadir `VIO_CAMPAIGNS_V2=true` en Production y redesplegar prod. Hace falta el OK de
+    Angelo; se lo pedí. Mi cuenta de Vercel no puede desplegar ese proyecto (403).
+  - **Otra variable solo de staging que conviene decidir:** `ACCOUNT_PAYMENTS=true`. En prod está
+    apagada, así que el dashboard muestra los interruptores de pago por channel.
