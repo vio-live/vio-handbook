@@ -515,6 +515,15 @@ Los cuatro se miran con el guion de C3 (menos D3, que es el portal de Vipps y so
     > `logger.info('Creating order ' + JSON.stringify(body))` (`shopify.service.js:2464`), o sea
     > email, telefono y direccion del comprador en claro en el log de prod. Mismo patron que los
     > tokens de Shopify en logs. Es cambio de codigo: **no se toca antes del lunes**, queda anotado.
+    > [miguel, 2026-10-22 23:20] **Cobertura de envio verificada para carritos chicos.** Angelo acota
+    > «no mas de dos productos». Medido en prod: Careless tiene **40** productos (39 activos) y
+    > **los dos metodos cuelgan de los 40**, sin un solo hueco. O sea que **cualquier** carrito —de 1,
+    > de 2 o de 40 productos— ofrece Helthjem y Bring. La interseccion de `sharedShippingClasses` no
+    > puede morder aqui. Y si un carrito mezclara Careless con otra marca, no es un problema de
+    > envio: `handleOrderPaid` agrupa por `itemsBySupplier` y crea **una orden de Shopify por
+    > proveedor**, cada una con el envio de su marca.
+    > Dato colateral: **1 de los 40 productos esta `active = 0`** — no se puede comprar. Irrelevante
+    > si el piloto lleva dos productos elegidos, pero conviene saberlo antes de publicar catalogo.
   - Despues (no para el lunes): tarifas dinamicas por direccion desde Shopify
     (`draftOrderAvailableDeliveryOptions`) en el callback de Vipps Express —
     [product/shopify-tarifas-de-envio-dinamicas](../product/shopify-tarifas-de-envio-dinamicas.md).
