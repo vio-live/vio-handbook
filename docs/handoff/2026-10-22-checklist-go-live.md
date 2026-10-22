@@ -16,6 +16,32 @@ Convencion: `[x]` hecho y verificado · `[~]` hecho pero sin verificar de punta 
 
 ---
 
+## Delta del 22/10 al cierre (lo que cambio hoy y afecta a lo que estes haciendo)
+
+Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba escrito**:
+
+1. **El dashboard de prod no preguntaba los permisos a nadie.** Faltaba `VIO_API_HOST` en el
+   proyecto de Vercel: el bundle salia con el host vacio y la llamada a `/auth/me` **no se hacia
+   nunca**, asi que la nav se renderizaba sin Surfaces ni Campaigns para **todas** las cuentas.
+   Arreglado (B8). **Esto deja sin efecto el diagnostico del 19/10** de que "nadie puede crear
+   campanas en prod por permisos": no era `user_role`, era el front.
+2. **Aller es el `user` 1330, no el 1329.** La 1329 se borro y se recreo por el camino de publisher.
+   Channel, `collection_shared` y el interruptor `vipps` van **contra 1330** (B1).
+3. **Un "no veo la seccion X" en el dashboard no prueba nada sobre la cuenta.** Con el usuario sin
+   cargar, la nav se ve igual que una cuenta brand. Antes de tocar una cuenta: pedir un ID token real
+   y llamar al endpoint. Leccion: `../lessons/sesion-caida-se-ve-igual-que-cuenta-brand.md`.
+4. **Careless NO tiene que exportar productos.** Su Shopify tiene 1.729 y los 5 del articulo ya
+   estan alli, activos y con stock. Lo que falta de ellos es **la lista** de la collection, y el
+   import lo hacemos nosotros (B2).
+5. **Kernel 1.0.282** en QA con las columnas de policy urls. En **prod**: la migracion va **antes**
+   del kernel (B7b), o cualquier lectura de `brand_profile` revienta.
+6. **Envio de Careless pasado a NOK** (era EUR por el defecto del alta). Siguen faltando sus
+   **tarifas reales**: hoy cobra 10 NOK, que es un placeholder (E1, E1b).
+7. **Colector de analytics en c2fc1614** en staging y prod, con `MIXPANEL_IDENTITY` en `off`.
+   Las VMs **no tienen clon de git**: se despliega por tarball, no con `git pull`.
+
+---
+
 ## A. Cadena critica del pago (en este orden, no se puede saltar)
 
 - [x] **A1. Admin de equipo Vio en prod** — *Miguel*
