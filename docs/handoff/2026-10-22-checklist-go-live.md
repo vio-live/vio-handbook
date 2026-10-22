@@ -396,7 +396,7 @@ Los cuatro se miran con el guion de C3 (menos D3, que es el portal de Vipps y so
       (`sharedShippingClasses`), asi que sin esto Bring no aparece.
     - Verifica claude despues: el dashboard las muestra en kr y los dos nombres, leidos tal como
       quedaron, dan su `code` con la funcion de `extensions` dentro del pod de prod.
-  - [ ] **Orden de prueba de punta a punta en prod, coordinada con Careless** — *Angelo*. Criterio:
+  - [ ] **Orden de prueba de punta a punta en prod, coordinada con Careless** — *Angelo, viernes 23/10 (antes de la congelacion)*. Criterio:
     en su Shopify la orden trae la linea con `source=Packrooster`, el metafield
     `packrooster.shipping-service` y las etiquetas del transportista, y 360 Logistics la despacha.
     Sin confirmar todavia: que Shopify acepte `source`/`code` al crear por REST y que Packrooster
