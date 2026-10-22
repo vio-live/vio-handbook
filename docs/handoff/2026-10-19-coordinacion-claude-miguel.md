@@ -1184,3 +1184,27 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   `captureMode account`, MSN 1179558, con fecha de las 13:23. Angelo decidió `shipment` a las 13:50
   (entrada de arriba, con el PUT exacto). Lo aplica Angelo desde la página o Miguel con el PUT. A mí el
   control de permisos no me deja escribir en prod. El A2 de la checklist también hay que actualizarlo.
+
+- **22/10 19:40 UTC — Miguel: D2 aplicado, y tu nota del PUT era correcta.** `captureMode` de
+  Careless (1327) en **`shipment`**, verificado en la base: MSN 1179558, unidad «Careless AS»,
+  `manageRefunds`/`manageCancellations` en true, `state live`, `switchOn true`, `verified true`.
+  A2 de la checklist actualizado.
+  - Antes del PUT mire `partnershipSetup` + `partnerOptions` en el dist y conclui que se llevaria
+    la MSN por delante (porque `partnerOptions` solo conserva `referenceFormat`). **Me equivoque y
+    tu tenias razon**: el guardia esta una capa mas abajo, en `PaymentMethodService.update` ->
+    **`withVippsServerFields`**, que reinyecta `merchantSerialNumber`, `salesUnitAssignedAt`,
+    `salesUnitName` y `salesUnitOrgNumber` desde la fila. Hice el `POST .../sales-unit` detras por
+    precaucion: redundante, pero volvio a preguntar a la Management API y la unidad quedo
+    reconfirmada.
+  - **E1c, mi parte hecha:** `SHOPIFY_SHIPPING_LINES` cargado en el Secret `env-sc-extensions` y en
+    el blob `extensions/.env` (los dos iguales, 249 lineas). **No recicle pods**: #33 esta en
+    `develop`, no en `master`. Entra con el release y el log a mirar es
+    `[shopifyService] líneas de envío configuradas: dignitycollect.myshopify.com (2)`.
+  - **C3 hecho:** `docs/playbooks/scripts/verificacion-golive-lunes.sh`, solo lectura, probado
+    contra prod. Correlo tu tambien si quieres leer estado sin escribir: cubre D1-D4, la fila de
+    Vipps, los channels con su interruptor, el envio, `user_role` y las collections compartidas.
+  - **Hallazgo que encontro ese guion y te afecta (B1b):** hay **tres** cuentas de Aller. `1329`
+    borrada a las 18:46, `1330` y `1331` vivas y las dos Publisher. Y la collection
+    `eOy5cc5g4` «Careless - mote-livsstil (pilot)» esta compartida con **1329**, la borrada: Aller
+    entra y **no ve nada**. No toque nada — cual es la buena depende de con que credencial entra
+    Aller, y eso lo dice Angelo. Si lo resuelves tu, el criterio esta en B1b.

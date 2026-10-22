@@ -76,12 +76,20 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
   - `state: "live"`, `switchOn: true` (el assign enciende el switch de Vipps de la marca) y
     `useVioAccount: false` (ya **no** cae a la unidad de Vio).
   - `organization_number` de Careless, que estaba **null**, quedo en `928540650`.
-  Eleccion de **`captureMode: account`** (Careless captura desde su propio portal de Vipps, como
-  con sus ventas de siempre; decision de Angelo del 24/09) en vez del defecto de la pagina
-  (`shipment`). Motivo: `shipment` captura cuando llega un **numero de seguimiento** a Vio
-  (`orders` -> `saveTrackingNumber` -> `tellShopcartAboutVipps(..., 'shipped')`). Esa cadena
-  existe en el codigo pero **no esta probada con Careless**, y si el tracking no llega el dinero
-  se queda reservado sin cobrar. Se cambia con un `PUT` cuando se quiera automatizar.
+  **Captura: `shipment` (al enviar) — CAMBIADO el 22/10 a las 19:26.** Lo deje en `account` a las
+  13:23 porque la cadena de captura al enviar no esta probada con la tienda de Careless (captura
+  cuando llega tracking: `orders` -> `saveTrackingNumber` -> `tellShopcartAboutVipps(..., 'shipped')`,
+  y si no llega, el dinero se queda reservado). **Angelo decidio `shipment` a las 13:50** y tiene
+  mejor motivo: con `account`, si Careless captura el total desde su portal, una devolucion parcial
+  hecha en Shopify **antes** de capturar no se descuenta — `captureLessWhatTheShopRefunded` solo
+  corre en las capturas que dispara Vio.
+  Aplicado con `PUT .../accounts/1327` `{"data":{"captureMode":"shipment"}}` y verificado **en la
+  base**: `captureMode "shipment"`, MSN y unidad intactas, `manageRefunds`/`manageCancellations`
+  en true; por el endpoint, `state live`, `switchOn true`, `verified true`.
+  **Dato util para quien repita esto:** el PUT **solo cambia lo que le mandas** —
+  `PaymentMethodService.update` -> `withVippsServerFields` reinyecta MSN y unidad desde la fila
+  guardada. No hace falta re-asignar la unidad despues (yo lo hice y fue redundante).
+  Lo cierra el ensayo del viernes: pago -> fulfill en el Shopify de Careless -> `CAPTURED` en 1179558.
   Lo que esto **no** prueba: que un comprador real pague. Eso es A3.
 
 - [ ] **A3. Pago real de prueba en prod, importe minimo** — *Angelo, tras A2*
@@ -344,8 +352,13 @@ Los cuatro se miran con el guion de C3 (menos D3, que es el portal de Vipps y so
   - [ ] Merge de [extensions#33](https://github.com/vio-live/vio-extensions-microservice/pull/33)
     a `develop` y release a `master` — *Angelo*. Mete `code`/`source` en la linea y el telefono en
     la direccion de envio.
-  - [ ] `SHOPIFY_SHIPPING_LINES` en el Secret `env-sc-extensions` (y el blob) + reciclar pods —
-    *Miguel*. Valor (no es secreto):
+  - [x] `SHOPIFY_SHIPPING_LINES` en el Secret `env-sc-extensions` **y en el blob** —
+    *Miguel, 22/10 19:35*. Los dos lados byte a byte iguales (249 lineas, antes 248), generado
+    desde el Secret vivo. Respaldos: `backup-secret-env-sc-extensions-20261022.yaml` y el blob
+    `extensions/.env.snapshot-pre-shippinglines-20261022`.
+    **Pods sin reciclar a proposito:** #33 esta en `develop`, no en `master`, asi que en prod ese
+    codigo no existe y la variable es inerte; entra sola con el release, que recrea los pods. Es
+    opcional en el codigo, no puede tumbar el arranque. Valor (no es secreto):
     `{"dignitycollect.myshopify.com":{"Helthjem - til postkasse/dørmatte":{"code":"helthjem|2|#13435","source":"Packrooster"},"Bring - Pakke i postkasse":{"code":"bring|3584|#13452","source":"Packrooster"}}}`.
     Criterio: al arrancar, `extensions` loguea `líneas de envío configuradas: dignitycollect.myshopify.com (2)`.
   - [ ] Los metodos de Careless en Vio (cierra E1b) **con esos nombres exactos**, NO, NOK, 59 y 79,
