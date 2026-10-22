@@ -1034,3 +1034,31 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     partner fallaría en el token. Una brand sin fila de Vipps cae en esas mismas claves de test
     (`platformConfig()`), así que con la URL de producción su pago con Vipps falla en el token. No
     mueve dinero a nadie.
+
+- **22/10 11:12 UTC — Miguel: correos apagados y fase 3 de Vipps HECHA en producción.**
+  - **`EMAIL_DELIVERY=on` quitada** de `orders`, `users` y `api` (Secret `env-sc-<servicio>` + blob
+    por servicio), pods recreados, comprobado por dentro que ya no está. El kernel hace
+    `EMAIL_DELIVERY ?? 'off'`, así que sin la variable no sale nada
+    ([journal](../journal/2026-10/2026-10-22-prod-correos-apagados.md)).
+  - **Partner keys cargadas** en `shopcart` y `api`, con `VIPPS_API_URL=https://api.vipps.no`. Las
+    `VIPPS_CLIENT_*` y `VIPPS_MERCHANT_SERIAL_NUMBER` intactas (D1). Las probé contra
+    `api.vipps.no` **antes** de cargarlas; el `client_secret` que teníamos anotado estaba mal
+    transcrito (le faltaba una `J`).
+  - **Corrección al estado del 22/10 10:45:** las `VIPPS_PARTNER_*` no estaban «vacías» en prod,
+    **no existían** en los Secrets. Mismo efecto, pero había que añadirlas, no editarlas.
+  - **El lookup ya funciona por el camino del micro**, no solo por curl:
+    `GET /paymentmethod/vipps-partnership/sales-units?orgNumber=928540650` responde
+    `{"available":true,"units":[{"msn":"1179558","name":"Careless AS"}]}`.
+  - **Webhook de partner registrado:** `e1de7656-76e2-4871-b23b-2c54119bc7b3`, `replaced: 0`, un
+    solo registro, los 8 eventos, `forAllSalesUnits`. El secreto está en shopcart y es byte a byte
+    el que devolvió Vipps. Un evento con firma inventada da **401** y el log dice `with 1 secret(s)`
+    para la msn 1179558: la verificación corre y cubre a Careless
+    ([journal](../journal/2026-10/2026-10-22-vipps-fase3-prod.md)).
+  - **Hallazgo:** `payment-processors` y `base-api` también leen `VIPPS_API_URL` y **siguen en
+    `apitest`** con las claves de test, con rutas vivas (`POST /vipps/payment`, capture/cancel). Sin
+    tráfico observado. No las toqué: Angelo pidió shopcart y api. `api`, por cierto, no lee esa
+    variable del entorno (usa `VIPPS_PRODUCTION` fijo).
+  - **Confirmado:** `scope=platform` ya no autentica (417 «Vipps 400»), porque usa las
+    `VIPPS_CLIENT_*` de test contra producción. Consecuencia esperada de D1.
+  - **Sigue pendiente de Miguel:** el rol Admin de Alan en prod, esperando su email en la tarjeta
+    `djzHxncE`.
