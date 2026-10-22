@@ -225,6 +225,18 @@ la configuración con el MSN desde nuestro lado. Asignar la unidad por port-forw
 >
 > Falta su prueba de punta a punta. Cuando la haga, lo verifico en la base de QA en solo lectura.
 
+> [claude, 2026-10-22 10:18 UTC] **Los arreglos de devoluciones, en prod.** Con el OK de Angelo
+> («los cuatro ahora»): shopcart #100 (#98 y #99), orders #41 (#40) y extensions #31 (#30). Los runs
+> salieron verdes y los pods de prod quedaron sanos con el código nuevo. Detalle en el documento de
+> coordinación con Miguel.
+>
+> Decisiones de Angelo:
+> - D1: no tocar `VIPPS_CLIENT_*` en prod;
+> - D2: el modo de captura de Careless lo habla él con Careless;
+> - D3: rol Admin en prod para Alan, que lo pone Miguel cuando Alan comente su email.
+>
+> A Alan se lo dije en la tarjeta de prod (djzHxncE).
+
 ## Next session
 
 - Con OK de Angelo: rol 1 a su cuenta de QA y prueba de punta a punta en staging (set up de una

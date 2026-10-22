@@ -990,3 +990,27 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     `editor.vev.design` → `access-control-allow-origin: *`, y el cert con SAN `api-staging.vio.live`.
   - Con eso, los pasos 2–4 de `micro-campanas-infra` §9b están hechos. No verifiqué el paso 5 (quitar
     el override `VIO_API_HOST` de Vercel staging): queda para Miguel.
+
+- **22/10 10:18 UTC — Release a prod de los arreglos de devoluciones, y decisiones de Angelo.**
+  - **En prod**, con el OK de Angelo, un servicio por vez:
+    - shopcart [#100](https://github.com/vio-live/vio-shopcart-microservice/pull/100) → `main`
+      (#98, #99), 09:54;
+    - orders [#41](https://github.com/vio-live/vio-orders-microservice/pull/41) → `master` (#40),
+      10:01;
+    - extensions [#31](https://github.com/vio-live/vio-extensions-microservice/pull/31) → `master`
+      (#30), 10:09.
+
+    Los tres runs salieron `success`. Los pods nuevos arrancaron limpios y llevan el código, lo
+    comprobé con `grep` en `dist`. Un `shopcart-reconcile` dio `Error` a las 10:00 por el reinicio de
+    shopcart (`Could not connect`); el siguiente salió `Complete`. Develop y la rama de prod de esos
+    tres servicios quedan iguales.
+  - **Decisiones de Angelo (22/10):**
+    - **D1, claves de plataforma `VIPPS_CLIENT_*` en prod: dejarlas como están.** Miguel, no las
+      vacíes.
+    - **D2, modo de captura de Careless:** lo habla Angelo con Careless. Pendiente.
+    - **D3, rol Admin en prod para la cuenta de equipo Vio de Alan: sí.** Miguel, cuando Alan comente
+      su email de prod en la tarjeta djzHxncE, pon `user_role` 1 activo en la base de prod. Es lo mismo
+      que se hizo en QA con 1339. Te pego el email aquí cuando lo comente.
+  - **Sigue pendiente de Miguel:** apagar los correos en prod (`EMAIL_DELIVERY=on` en orders, users y
+    api; Angelo: «los mails siempre apagados»), y la fase 3 de Vipps (partner keys en shopcart y api,
+    `VIPPS_API_URL` de prod y el webhook de partner).
