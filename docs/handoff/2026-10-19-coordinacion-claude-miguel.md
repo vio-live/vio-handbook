@@ -1014,3 +1014,23 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   - **Sigue pendiente de Miguel:** apagar los correos en prod (`EMAIL_DELIVERY=on` en orders, users y
     api; Angelo: «los mails siempre apagados»), y la fase 3 de Vipps (partner keys en shopcart y api,
     `VIPPS_API_URL` de prod y el webhook de partner).
+
+- **22/10 10:45 UTC — Fase 3 de Vipps en prod: qué hay que cargar exactamente.** Angelo lo precisa:
+  solo van **nuestras claves (las partner keys) y el endpoint**. El MSN de cada comercio, Careless
+  1179558 el primero, **no va en env**: se asigna desde el dashboard (página Vipps partner del equipo
+  Vio → *Set up* → *Find its sales units* → asignar).
+  - **Estado de prod hoy** (comprobado en los pods, sin leer valores): en shopcart y en api,
+    `VIPPS_PARTNER_CLIENT_ID`, `_CLIENT_SECRET`, `_SUBSCRIPTION_KEY` y `_WEBHOOK_SECRET` están
+    **vacías**, y `VIPPS_API_URL` = `https://apitest.vipps.no`. Las `VIPPS_CLIENT_*` y
+    `VIPPS_MERCHANT_SERIAL_NUMBER` sí están cargadas (la unidad de test 225388).
+  - **Qué cargar, en shopcart y api:**
+    - `VIPPS_PARTNER_CLIENT_ID`, `VIPPS_PARTNER_CLIENT_SECRET` y `VIPPS_PARTNER_SUBSCRIPTION_KEY`, con
+      las partner keys de producción;
+    - `VIPPS_API_URL=https://api.vipps.no`;
+    - después de registrar el webhook de partner, `VIPPS_PARTNER_WEBHOOK_SECRET` (solo shopcart).
+  - **Las `VIPPS_CLIENT_*` no se tocan** (D1 de Angelo). Ojo: van a parte, no en `VIPPS_CLIENT_*`.
+    shopcart usa las `VIPPS_CLIENT_*` como partner keys si las `VIPPS_PARTNER_*` están vacías
+    (`partnerKeys()` en `vippsConnector.service.ts`). Con las de test contra `api.vipps.no`, el pago de
+    partner fallaría en el token. Una brand sin fila de Vipps cae en esas mismas claves de test
+    (`platformConfig()`), así que con la URL de producción su pago con Vipps falla en el token. No
+    mueve dinero a nadie.
