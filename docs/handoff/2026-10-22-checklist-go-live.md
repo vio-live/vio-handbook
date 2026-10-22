@@ -27,14 +27,29 @@ Convencion: `[x]` hecho y verificado · `[~]` hecho pero sin verificar de punta 
   Criterio: 1328 ve *Vio team* con `channels:manage`, `surfaces:manage`, `campaigns:manage`.
   Pendiente menor: **una segunda cuenta Admin** para no depender de una sola persona el lunes.
 
-- [ ] **A2. Careless en modo partnership + MSN 1179558** — *equipo Vio por el dashboard, tras A1*
-  *Vio team > Vipps partner*: Express, envio, captura, nº de organizacion, asignar la unidad y
-  encender Vipps.
-  Criterio: nace **1 fila en `payment_method`** (hoy 0) y el log de shopcart dice `mode:partner`.
-  Gotcha: Careless tiene `organization_number` **null** en la base. Si la pagina lo exige, se
-  rellena con **928540650** (el que devuelve Vipps para la unidad 1179558). Un UPDATE, lo hago yo.
-  **No se puede insertar la fila a mano**: nace en `platform`, el checkout usa claves de test
-  contra `api.vipps.no` y da 417.
+- [x] **A2. Careless en modo partnership + MSN 1179558** — *Miguel, 22/10 15:23*
+  Hecho por los endpoints internos del micro `api` (los mismos que usa la pagina *Vio team > Vipps
+  partner* a traves de base-api), no a mano en la base:
+  `PUT /paymentmethod/vipps-partnership/accounts/1327` con `organizationNumber 928540650`,
+  `express true`, `shippingMode fixed`, `captureMode account`; despues
+  `POST /paymentmethod/vipps-partnership/accounts/1327/sales-unit` con `1179558`.
+  Verificado:
+  - `payment_method` tiene **1 fila** (antes 0): `cb45e3e9-f81b-4d22-8899-f2955af84f3e`,
+    `user_id 1327`, `active 1`, `options.mode = "partner"`, `merchantSerialNumber 1179558`,
+    `salesUnitName "Careless AS"`, `salesUnitOrgNumber 928540650`.
+  - La respuesta del assign trae `verified: true`: el micro pregunto a la **Management API de
+    produccion** y comprobo que la unidad existe bajo el partnership de Vio y que su numero de
+    organizacion coincide con el de la marca (`salesUnitBelongs`). No es un dato tecleado.
+  - `state: "live"`, `switchOn: true` (el assign enciende el switch de Vipps de la marca) y
+    `useVioAccount: false` (ya **no** cae a la unidad de Vio).
+  - `organization_number` de Careless, que estaba **null**, quedo en `928540650`.
+  Eleccion de **`captureMode: account`** (Careless captura desde su propio portal de Vipps, como
+  con sus ventas de siempre; decision de Angelo del 24/09) en vez del defecto de la pagina
+  (`shipment`). Motivo: `shipment` captura cuando llega un **numero de seguimiento** a Vio
+  (`orders` -> `saveTrackingNumber` -> `tellShopcartAboutVipps(..., 'shipped')`). Esa cadena
+  existe en el codigo pero **no esta probada con Careless**, y si el tracking no llega el dinero
+  se queda reservado sin cobrar. Se cambia con un `PUT` cuando se quiera automatizar.
+  Lo que esto **no** prueba: que un comprador real pague. Eso es A3.
 
 - [ ] **A3. Pago real de prueba en prod, importe minimo** — *Angelo, tras A2*
   Criterio: el cobro aparece en el portal de Vipps en la unidad **1179558** (NO en la de Vio), y el
@@ -61,6 +76,21 @@ Convencion: `[x]` hecho y verificado · `[~]` hecho pero sin verificar de punta 
   Criterio: los 5 con `active=1` en prod.
 
 - [ ] **B3. Conexion Careless <-> Aller aceptada y channel creado** — *Angelo / equipo Vio, tras B1*
+  Hoy en prod solo hay **3 `channel_user`**, todos de cuentas de prueba (1295 y 1300). El de Aller
+  hay que crearlo. Careless **no** tiene channel y es correcto: el channel es del publisher, no de
+  la marca.
+
+- [ ] **B3b. Encender el interruptor `vipps` del channel de Aller** — *equipo Vio, al crear B3*
+  **Esto no estaba escrito en ningun sitio y se pasa por alto.** El checkout ofrece un metodo solo
+  si coinciden **dos** cosas (`getAvailablePaymentMethods` -> `offeredPaymentMethods`): el switch de
+  la **marca** (ya en `true`, A2) **y** la visibilidad del **channel**
+  (`channel_user_settings.vipps = 1`). Hoy **ningun channel de prod** tiene `vipps = 1`, y la
+  comprobacion de madurez del propio micro lo avisa: *"No channel offers Vipps yet. Turn it on in
+  the channel's payment settings, or these keys stay unused."*
+  Mirar tambien `channel_user_settings.markets`: tiene que cubrir Noruega (si esta vacio, no
+  restringe).
+  Criterio: `GET /channel/available-payment-methods/<channelUserId>` del channel de Aller devuelve
+  Vipps en la lista. Si no sale, el boton no aparece y no hay compra, aunque el pago este perfecto.
 
 - [ ] **B4. Productos publicados en el channel de Aller** — *equipo Vio, tras B2 y B3*
   `channel_user_products` de Careless esta a **0**: aunque el pago funcione, el lunes **no aparece
