@@ -56,3 +56,18 @@ riesgo de que algo falle. Recomendaciones. Mejoras».
 - Admin en prod en cuanto Angelo pase el email (1 minuto).
 - Dump del viernes, verificación de que la fila de Vipps nace en modo `partner` y no `platform`, y la
   vigilancia de la primera hora del lunes.
+
+## Coordinación con el agente `vio` (22/10, posterior)
+
+- `vio` confirmó la **congelación de prod desde el viernes** y que no tiene trabajo en curso que toque
+  prod ni el SDK web. Fichó los 7 bloqueantes y los presentará a Angelo en orden de cadena.
+- Reparto aclarado, para que no quede ambiguo:
+  - **Mío:** Admin en prod (en cuanto llegue el email), la fila de Vipps de Careless *por la página de
+    partnership* (no a mano: insertada a mano nace en modo `platform` y el checkout cae a las claves
+    de test contra `api.vipps.no` — el mismo 417 de hoy), dump a mano del viernes y vigilancia de la
+    primera hora del lunes.
+  - **No mío:** la cuenta de Aller (no existe ninguna en prod) y el pin de versión del SDK.
+  - **De producto, no de infra:** `channel_user_products` de Careless a 0 — aunque el pago funcione,
+    el lunes no aparece nada en catálogo si los 39 productos no se publican en un channel.
+- Punto que le subrayé a `vio` para cuando hable con Angelo: lo que se pierde si el email del Admin
+  llega el viernes tarde **no es una tarea, es el ensayo completo** con pago real.
