@@ -163,3 +163,40 @@ funciona, el lunes `shipment` se queda como esta y nadie captura a mano. Si no, 
 
 **Pendiente de decision de Angelo**: toca dinero en prod en ventana de congelacion, asi que no lo
 monto sin su OK.
+
+## «Las ordenes llegaran para ser enviadas al 3PL?» (Angelo, 22/10 23:09)
+
+**Si.** Medido en prod y en su Shopify, cuatro cosas, que son las cuatro que pueden hacer que una
+orden llegue pero no se pueda despachar:
+
+1. **Las lineas llevan variantes reales, no lineas sueltas.** Careless tiene 40 productos en Vio y
+   **252 variantes, todas con su `origin_id` de Shopify** (`sum(origin_id is null) = 0`). Importa
+   porque una linea sin `variant_id` entra en Shopify como item personalizado y **un 3PL no la puede
+   despachar**. 36 de los 40 productos tienen tallas y resuelven la variante **por titulo** en el
+   momento del alta (`variantRepository.findOneOrFail` por `product` + `title`,
+   `shopify.service.js:2407`): si un titulo no casara, el alta **falla entera** y no queda una orden
+   a medias — y `supplier_shopify_order_id` se queda en null, que es lo que reporta el guion.
+2. **El reparto va al 3PL, y no por configuracion nuestra.** Careless tiene **13 ubicaciones**:
+   «360 Logistics» (id `67699867900`, Drøbak), seis tiendas propias y varias muertas. Sus ordenes de
+   web **no fijan `location_id`**: Shopify asigna el `fulfillment_order` por inventario. Verificado
+   en sus tres ultimas ordenes → `assigned_location_id = 67699867900`, `status open`,
+   `request_status unsubmitted`. Y el inventario no deja margen de duda: de 256 variantes, **200
+   tienen stock y las 200 lo tienen en 360 Logistics**; **ninguna** tiene stock solo en una tienda.
+   La orden de Vio tampoco fija `location_id` (la conexion 541 tiene `location_id`, `fulfillment_id`
+   y `carrier_id` en null), asi que sigue las mismas reglas y acaba en el mismo sitio.
+3. **La linea de envio ya esta validada** contra sus propias ordenes: `helthjem|2|#13435` y
+   `bring|3584|#13452`, las dos con `source=Packrooster`.
+4. **No se puede vender lo que no hay.** Los 40 productos tienen
+   `allow_purchase_out_of_stock = 0`, asi que nadie puede comprar una talla que el 3PL no podria
+   enviar. Los 5 productos de la coleccion del pilot tienen stock en **las siete tallas**
+   (p. ej. «Active melert tights - Grå»: XS 35, S 24, M 99, L 112, XL 113, XXL 59, 3XL 62).
+
+**Resumen:** la orden entra pagada y sin despachar, Shopify le abre el `fulfillment_order` en 360
+Logistics y ellos la despachan **igual que las suyas**. Lo que **no** pasa solo es el cobro — eso es
+el apartado de la captura, mas arriba.
+
+**Lo unico que hay que mirar en la orden del viernes**, por orden de probabilidad: (a) que el alta
+en Shopify no haya fallado por el titulo de la talla —se ve en `supplier_shopify_order_id`—; (b) que
+el `fulfillment_order` salga asignado a `67699867900` y no a una tienda; (c) que Packrooster ponga
+su metafield. Las tres las imprime el guion menos la (b), que es
+`GET /orders/<id>/fulfillment_orders.json`.
