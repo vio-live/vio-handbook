@@ -268,6 +268,28 @@ la configuración con el MSN desde nuestro lado. Asignar la unidad por port-forw
 >   Casi todos los slots de sus páginas están en la 15 «From page».
 > - Le pasé los pasos.
 
+> [claude, 2026-10-22 17:52 UTC] **Reporte 6 de Alan (0bh9T1z6, 17:44): el plugin Vio Sync for
+> WooCommerce, instalado de nuevo desde cero (Staging, NOK).** `woo_connection` 494 quedó con
+> `currency` vacío y no sincroniza. Dos causas, verificadas en código, datos y logs de QA:
+> 1. **Orden de los pasos.** `connect()` del plugin (`class-ajax.php` → `Store_Status::save_options`)
+>    hace `PUT /woo/config` **antes** del OAuth de WooCommerce. `updateConfig` (extensions) escribe en
+>    la conexión más reciente del usuario, que era la vieja 492 (NOK). Después, el callback del OAuth
+>    crea la 494 (users `saveWooConnection`) y lee la moneda de la tienda (`getSettingCurrency`). Esa
+>    lectura falló y la moneda quedó `""`. En una primera instalación sin conexión previa,
+>    `updateConfig` hace `woo.currency` sobre `null` y la moneda solo depende de esa lectura. Los logs
+>    de users de las 17:35 se perdieron: el pod se reinició a las 17:38.
+> 2. **Ráfaga contra la tienda.** El consumidor de productos (`product.busConsumer` / `sqsConsumer`)
+>    pide `woo/findProductById` producto por producto, en paralelo y con hasta 10 reintentos. A las
+>    17:49–17:50 fueron ~14k y ~23k líneas de log por minuto contra `dev-test-supplier-alan.pantheonsite.io`.
+>    La tienda (Pantheon detrás de Cloudflare) respondió 500 «error code: 1101». Sin credenciales
+>    responde 401 desde QA y desde fuera, así que la tienda es alcanzable: lo que falla es la ráfaga.
+>
+> No está en el camino del lunes (Careless es Shopify). El plugin sí está en uso en prod: Miguel vio
+> webhooks de `qkoreancosmetics.no`. Arreglos posibles: (a) users hereda la moneda de la conexión
+> anterior de la misma tienda, o el plugin manda la moneda otra vez al volver del OAuth; (b) límite de
+> concurrencia y reintentos con espera en el consumidor de productos de Woo. Pendiente de que Angelo
+> decida el cuándo. Aparte: los logs de extensions imprimen las claves de la tienda (tarjeta J7E6j9dM).
+
 ## Next session
 
 - Con OK de Angelo: rol 1 a su cuenta de QA y prueba de punta a punta en staging (set up de una
