@@ -63,11 +63,16 @@ Convencion: `[x]` hecho y verificado · `[~]` hecho pero sin verificar de punta 
 
 ## B. Cadena del contenido y la atribucion
 
-- [ ] **B1. Cuenta de Aller Media en prod** — *Angelo*
-  Hoy **no existe ninguna** (busque por username, name y brand_name en todo el rango).
-  Alta + suscripcion con cupo + **rol Publisher** (fila `user_role` role 3; `users` solo mira la
-  base, el micro de campanas acepta tambien el claim `channel` — por eso conviene la fila).
-  Criterio: la cuenta entra al dashboard y puede crear channel.
+- [x] **B1. Cuenta de Aller Media en prod** — *Angelo la creo 22/10 14:53Z; el rol lo puso Miguel 17:00*
+  `user` **1329** `allermedia`, brand_name «Aller media», NO, activa. **Suscripcion ya resuelta**:
+  `subscription` 631 `active` plan 1 — nacio con ella, no hace falta el rescate de
+  `POST /api/users/create/subscription`.
+  Le faltaba el **rol Publisher**: con `is_business = 1` y sin fila de rol resolvia a `brand`, **sin
+  `channels:manage`**, o sea no podia crear su channel. Insertada `user_role` **708** (role 3).
+  Verificado reproduciendo la consulta exacta del servicio: 1329 -> accountType **publisher**
+  (`channels:manage`, `surfaces:manage`, `campaigns:manage`). Sin re-login: se lee de la base en
+  cada peticion. Detalle en
+  [`../journal/2026-10/2026-10-22-aller-1329-publisher.md`](../journal/2026-10/2026-10-22-aller-1329-publisher.md).
 
 - [ ] **B2. Los 5 productos del articulo, en prod** — *Careless, desde su Shopify*
   «10 nyheter vi onsker oss na»: Cassia jakke, Hennie cardigan, Vilde genser, Sofie genser,
@@ -86,9 +91,13 @@ Convencion: `[x]` hecho y verificado · `[~]` hecho pero sin verificar de punta 
   Criterio: los 5 con `active=1` en prod.
 
 - [ ] **B3. Conexion Careless <-> Aller aceptada y channel creado** — *Angelo / equipo Vio, tras B1*
-  Hoy en prod solo hay **3 `channel_user`**, todos de cuentas de prueba (1295 y 1300). El de Aller
-  hay que crearlo. Careless **no** tiene channel y es correcto: el channel es del publisher, no de
-  la marca.
+  Hoy en prod solo hay **3 `channel_user`**, todos de cuentas de prueba (1295 y 1300) y todos de
+  tipo `GraphQl`. El de Aller hay que crearlo. Careless **no** tiene channel y es correcto: el
+  channel es del publisher, no de la marca.
+  **Tipo: `Sdk` (channel_id 10), NO `GraphQl` (12).** En QA los 10 channels con los que se probo el
+  flujo son todos `Sdk` y todos con `vipps = 1`; los `GraphQl` tienen `vipps = 0`.
+  Crearlo **desde el dashboard**, no a mano: el alta genera la api key (`user_channel_api_key`) y la
+  fila de `channel_user_settings` que hace falta para B3b.
 
 - [ ] **B3b. Encender el interruptor `vipps` del channel de Aller** — *equipo Vio, al crear B3*
   **Esto no estaba escrito en ningun sitio y se pasa por alto.** El checkout ofrece un metodo solo
