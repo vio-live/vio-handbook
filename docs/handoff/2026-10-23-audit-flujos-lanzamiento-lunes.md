@@ -228,15 +228,24 @@ objetivo del piloto con Aller.
 
 | # | Accion | Riesgo de hacerlo | Cuando |
 |---|---|---|---|
-| G1 | `istio-ingressgateway` a 2 replicas + PDB `minAvailable: 1` | muy bajo, es un valor | **antes del lunes** |
-| G2 | requests/limits a `graph-ql` | bajo, pero **recrea sus pods** | **antes del lunes**, con margen |
+| G1 | `istio-ingressgateway` a 2 replicas + PDB `minAvailable: 1` | **HECHO 23/10 00:57** — 2 pods en 2 nodos, verificado | hecho |
+| G2 | requests/limits a `graph-ql` | **HECHO 23/10 01:00** — ya es Burstable, SDK verificado despues | hecho |
 | T2 | que el colector no degrade a `minimal` una surface ya resuelta | bajo, toca la ruta de atribucion | hoy viernes |
-| A | anadir al guion las 4 afirmaciones positivas de arriba | ninguno, es solo lectura | hoy viernes |
+| A | anadir al guion las afirmaciones positivas | **HECHO 23/10 01:01** — seccion E2E, 9 OK / 0 MAL | hecho |
 | G3 | HPA + PDB en los servicios de aplicacion | medio, cambia charts | despues del lunes |
 | G4 | imagenes por version/digest en vez de `:latest` | medio, toca CI de 13 repos | despues del lunes |
 | G5 | HA en la base | coste | cuando haya caja |
 | G6 | separar ClickHouse de prod y staging | medio | despues del lunes |
 
-G1 y G2 son los dos unicos que de verdad cambian la probabilidad de que el lunes salga bien. Los dos
-tocan el cluster, que **ahora esta apagado**: entran cuando se encienda, y G2 conviene con margen
-porque recrea los pods de `graph-ql`.
+**G1, G2 y A quedaron hechos la misma noche** (prod no se apaga; el que se apaga es staging).
+Detalle en [`../journal/2026-10/2026-10-23-infra-g1-g2-aplicadas.md`](../journal/2026-10/2026-10-23-infra-g1-g2-aplicadas.md).
+Los dos se hicieron **por Helm**, no con `kubectl patch`, para que el cambio no lo revierta el
+siguiente `helm upgrade`.
+
+**Hallazgo colateral:** `affinity` esta vacio en los 14 servicios. Hoy ninguno tiene todas sus
+replicas en un nodo, pero es suerte del planificador, no diseno. Antiafinidad -> despues del lunes.
+
+**Y la atribucion ya corrio de verdad:** con la surface de pruebas conectada, el colector paso de 0
+a **24 eventos**, 24 reenviados a Mixpanel, 0 descartes, todos con `sponsor_id 1327` y
+`campaign_id 1`. Los 24 con `screen_w` y `tz`, o sea **en `standard`**: la degradacion a `minimal`
+que temia no se dio.

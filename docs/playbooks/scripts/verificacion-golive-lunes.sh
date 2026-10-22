@@ -213,6 +213,100 @@ JS
   fi
 fi
 
+# ------------------------------------------- E2E. Afirmaciones positivas
+# Esto es lo que distingue "funciona" de "no hay errores en los logs". Mide el
+# camino real del escaparate, con la api key del channel, igual que el SDK.
+# Requiere CHANNEL_API_KEY (la del channel de Aller; vive en TOOLS.md, no aqui).
+sec "E2E. El camino del escaparate, de punta a punta"
+if [[ -z "${CHANNEL_API_KEY:-}" ]]; then
+  flag "sin CHANNEL_API_KEY: me salto catalogo, pago y precio (la clave esta en TOOLS.md)"
+else
+  GQL=https://graph-ql.vio.live/graphql
+  # OJO: la credencial va en `authorization` EN CRUDO, sin Bearer. `x-api-key` es
+  # la clave de la surface (atribucion), no autentica.
+  cat_json=$(curl -s --max-time 60 -X POST "$GQL" -H 'Content-Type: application/json' \
+    -H "Authorization: $CHANNEL_API_KEY" \
+    -d '{"query":"{Channel{GetProducts(currency:\"NOK\",shipping_country_code:\"NO\",useCache:false){id title price{amount_incl_taxes} variants{id} product_shipping{id}}}}"}' 2>/dev/null)
+  n=$(printf '%s' "$cat_json" | python3 -c 'import json,sys
+try:
+  d=json.load(sys.stdin)
+  print(-1 if "errors" in d else len(d["data"]["Channel"]["GetProducts"]))
+except Exception: print(-2)' 2>/dev/null)
+  if [[ "$n" == "-1" || "$n" == "-2" ]]; then
+    fail "el catalogo no responde por graph-ql (si da UNAUTHENTICATED, la clave va sin 'Bearer')"
+  elif [[ "$n" == "0" ]]; then
+    fail "catalogo VACIO. Casi siempre es channel_user_products sin materializar: POST /channel-process/collections/update {\"collectionsId\":[\"<coll>\"]} en un pod de products"
+  else
+    pass "el escaparate ve $n productos"
+    # Sin envio o sin tallas = no se puede comprar aunque aparezca
+    printf '%s' "$cat_json" | python3 -c 'import json,sys
+d=json.load(sys.stdin)["data"]["Channel"]["GetProducts"]
+sinenv=[p["id"] for p in d if not (p.get("product_shipping") or [])]
+sinvar=[p["id"] for p in d if not (p.get("variants") or [])]
+if sinenv: print("       OJO: sin metodo de envio:", sinenv)
+if sinvar: print("       OJO: sin variantes (no se puede elegir talla):", sinvar)' 2>/dev/null
+    # El precio tiene que ser el de estanteria, no el neto
+    printf '%s' "$cat_json" | python3 -c 'import json,sys
+d=json.load(sys.stdin)["data"]["Channel"]["GetProducts"]
+c=[p for p in d if "Cassia jakke - Brun" in (p.get("title") or "")]
+if c:
+    v=(c[0].get("price") or {}).get("amount_incl_taxes")
+    print("       precio con IVA de Cassia jakke - Brun:", v, "(tiene que ser 1499; si el escaparate pinta price.amount vera 1199,20)")' 2>/dev/null
+  fi
+
+  pm=$(curl -s --max-time 40 -X POST "$GQL" -H 'Content-Type: application/json' \
+    -H "Authorization: $CHANNEL_API_KEY" \
+    -d '{"query":"{Payment{GetAvailablePaymentMethods{name}}}"}' 2>/dev/null)
+  if printf '%s' "$pm" | grep -q '"Vipps"'; then
+    pass "el escaparate ofrece Vipps"
+  else
+    fail "el escaparate NO ofrece Vipps. Mira channel_group del channel (sin productos publicados el brand resuelve al publisher y la lista sale vacia aunque vipps=1)"
+  fi
+fi
+
+# El webhook de Vipps: SOLO se ve sin la cabecera Merchant-Serial-Number
+if [[ -z "${VIPPS_CLIENT_ID:-}" || -z "${VIPPS_CLIENT_SECRET:-}" || -z "${VIPPS_SUBSCRIPTION_KEY:-}" ]]; then
+  flag "sin credenciales de Vipps: me salto el registro del webhook (estan en TOOLS.md)"
+else
+  tok=$(curl -s --max-time 30 -X POST https://api.vipps.no/accesstoken/get \
+    -H "client_id: $VIPPS_CLIENT_ID" -H "client_secret: $VIPPS_CLIENT_SECRET" \
+    -H "Ocp-Apim-Subscription-Key: $VIPPS_SUBSCRIPTION_KEY" -H "Merchant-Serial-Number: $MSN" \
+    | python3 -c 'import json,sys; print(json.load(sys.stdin).get("access_token",""))' 2>/dev/null)
+  if [[ -z "$tok" ]]; then
+    fail "no autentica contra Vipps produccion (revisa client_secret en TOOLS.md)"
+  else
+    # NOTA: con la cabecera Merchant-Serial-Number esto devuelve [] aunque el webhook
+    # exista, porque el registro es de ambito partner. No la pongas.
+    wh=$(curl -s --max-time 30 https://api.vipps.no/webhooks/v1/webhooks \
+      -H "Authorization: Bearer $tok" -H "Ocp-Apim-Subscription-Key: $VIPPS_SUBSCRIPTION_KEY" 2>/dev/null)
+    if printf '%s' "$wh" | grep -q 'api-ecom.vio.live/api/shopcart/checkout/vipps/webhook'; then
+      pass "el webhook de Vipps sigue registrado y apunta a shopcart de prod"
+    else
+      fail "el webhook de Vipps NO aparece: sin el, un pago no se captura nunca"
+    fi
+    su=$(curl -s --max-time 30 "https://api.vipps.no/management/v1/sales-units/$MSN" \
+      -H "Authorization: Bearer $tok" -H "Ocp-Apim-Subscription-Key: $VIPPS_SUBSCRIPTION_KEY" 2>/dev/null)
+    printf '%s' "$su" | python3 -c 'import json,sys
+d=json.load(sys.stdin); cf=d.get("configuration") or {}
+print("       unidad", d.get("msn"), d.get("name"), "| paymentAllowed:", cf.get("paymentAllowed"), "| captureType:", cf.get("captureType"))' 2>/dev/null
+  fi
+fi
+
+# La puerta de entrada: si vuelve a 1 replica, todo depende de un pod
+sec "Infra: redundancia de la puerta de entrada"
+igw=$(kubectl --context "$CTX" get pods -n istio-system -l app=istio-ingressgateway \
+  --field-selector=status.phase=Running --no-headers 2>/dev/null | wc -l | tr -d ' ')
+nodos=$(kubectl --context "$CTX" get pods -n istio-system -l app=istio-ingressgateway \
+  -o jsonpath='{range .items[*]}{.spec.nodeName}{"\n"}{end}' 2>/dev/null | sort -u | wc -l | tr -d ' ')
+if [[ "${igw:-0}" -ge 2 && "${nodos:-0}" -ge 2 ]]; then
+  pass "istio-ingressgateway: $igw pods en $nodos nodos"
+elif [[ "${igw:-0}" -ge 2 ]]; then
+  flag "istio-ingressgateway: $igw pods pero todos en el mismo nodo (no hay antiafinidad configurada)"
+else
+  fail "istio-ingressgateway con $igw pod(s): los 4 dominios dependen de uno solo. Subir autoscaling.minReplicas a 2"
+fi
+
+
 sec "Resumen"
 printf '  %s OK · %s OJO · %s MAL\n' "$ok" "$warn" "$bad"
 echo "  D3 (el cobro visible en la unidad $MSN del portal de Vipps) solo lo puede ver Angelo."
