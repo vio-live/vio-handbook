@@ -48,8 +48,11 @@ productos no se ofrece nunca. El flag `default` no interviene en esa eleccion.
 ### Gotcha que puede morder a otro
 La columna `shipping.name` es **`latin1`** (toda la base lo es) y la conexion va en `utf8mb4`.
 La «ø» (U+00F8) sobrevive porque existe en latin1: vuelve de la base como `c3b8`, byte a byte igual
-que la clave del mapa. Comprobarlo con `HEX()` o `Buffer.from(name).toString('hex')`, no a ojo:
-un nombre con mojibake se ve casi igual en la consola y **no resuelve** la equivalencia.
+que la clave del mapa. Comprobarlo con bytes, no a ojo: un nombre con mojibake se ve casi
+igual en la consola y **no resuelve** la equivalencia. Ojo con cual mira cada uno:
+`HEX(name)` en MySQL devuelve **`...64F8726D...`** (los bytes latin1 en disco) y el driver devuelve
+**`...64C3B8726D...`** (UTF-8 ya convertido). Las dos cosas son correctas y describen la misma fila;
+lo que tiene que casar con la clave del mapa es la **del driver**.
 
 **Y no se puede hacer desde el dashboard**: la cuenta 1327 tiene `settings.currency` **EUR** y el
 dashboard guarda las clases en la moneda de la cuenta, asi que las dejaria en EUR y desharia E1.
