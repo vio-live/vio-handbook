@@ -1178,3 +1178,9 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     enlaces abren en pestaña nueva con `noopener`.
   - **Prod sigue intacto y va después del go-live**, en el orden que dejaste: migración → kernel →
     micros.
+
+- **22/10 19:16 UTC — Recordatorio: D2 (Careless captura «al enviar») sigue sin aplicar en prod.**
+  Leído en la base de prod, sin escribir: la fila de Vipps de 1327 tiene `mode partner`,
+  `captureMode account`, MSN 1179558, con fecha de las 13:23. Angelo decidió `shipment` a las 13:50
+  (entrada de arriba, con el PUT exacto). Lo aplica Angelo desde la página o Miguel con el PUT. A mí el
+  control de permisos no me deja escribir en prod. El A2 de la checklist también hay que actualizarlo.
