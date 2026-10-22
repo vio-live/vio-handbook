@@ -480,6 +480,41 @@ Los cuatro se miran con el guion de C3 (menos D3, que es el portal de Vipps y so
     >   problema para el lunes, pero si alguien pregunta por que no hay pickup, es esto.
     > - **El umbral de C5, medido en su web:** `#554329CL` 2.059,50 NOK y `#554327CL` 3.903,00 NOK,
     >   las dos con envio **0,00**. Confirma con numeros que la diferencia se va a ver.
+    > [miguel, 2026-10-22 23:05] **Angelo cierra el alcance: solo entrega a casa, y las ordenes van
+    > a ser espontaneas.** Dos consecuencias medidas, y el guion reescrito por la segunda.
+    > - **Solo-casa coincide con lo que de verdad compran.** De las **250** ultimas ordenes de su web,
+    >   **189 (76%)** usan exactamente los dos metodos que cargue: 141 «Helthjem - til
+    >   postkasse/dørmatte» y 48 «Bring - Pakke i postkasse». Los puntos de recogida son una cola
+    >   larga de 1-2 ordenes cada uno (~60 variantes distintas). Renunciar al pickup no deja fuera un
+    >   caso mayoritario; deja fuera una cola de casos raros.
+    > - **El modo «ultimas N ordenes de la tienda» NO sirve para una orden espontanea.** Medido:
+    >   Careless hace **~58 ordenes/hora** en su web (250 en 4h19m, **todas** `source_name=web`).
+    >   Una orden de Vio queda sepultada en minutos, y con ordenes espontaneas no sabemos el numero
+    >   de antemano.
+    > **Guion reescrito** (mismo path, sigue siendo solo lectura). El modo por defecto ya no mira la
+    > tienda: ancla en la base de Vio, que es determinista —
+    > `order_item.supplier_shopify_order_id` guarda el id que devolvio el alta y **solo se escribe si
+    > el alta funciono** (`shopify.service.js:2322`). Sin argumento lista las ordenes de Vio para el
+    > supplier **1327** con el envio que mando Vio, el estado de cada item y la verificacion en
+    > Shopify de cada una. `'#554326CL'` / id siguen funcionando, y el viejo comportamiento queda en
+    > `--web [N]`, etiquetado como ruido. Probados los tres modos contra prod.
+    > - **Si Shopify rechaza el alta, se ve desde Vio**: `supplier_shopify_order_id` en null. El guion
+    >   lo dice con esas palabras y da el `grep` del log de `extensions`. Importa porque
+    >   `applyCreateShopifyOrder` corre en un `Promise.all` **sin try/catch propio**
+    >   (`shopify.service.js:2317`): el fallo queda en el log, no en la base.
+    > - **Si la base de Vio esta vacia, el problema esta antes de Shopify** (checkout o pago), no en
+    >   el envio. El guion lo dice explicitamente para no mandar a nadie a mirar Packrooster en vano.
+    > - **`source_name` de una orden de Vio sera `outshifter`**, no `channel:<handle>`:
+    >   `shopify_connection.channel_handle` de Careless es **NULL** (`shopify.service.js:2400`).
+    >   Como sus 250 ordenes son `web`, eso lo distingue a simple vista.
+    > - **Anadido un control de precio de envio.** Si la orden de Vio y la tienda estan en la misma
+    >   moneda, compara `shipping_price` con lo que llego a Shopify y avisa si no cuadra. Si no
+    >   coinciden, `createOrder` **convierte** el importe (`shopify.service.js:2446`) y el guion pide
+    >   revisarlo a mano: la tienda es **NOK** y una orden en otra moneda pasaria por ese cambio.
+    > **Hallazgo aparte, diferido por la congelacion:** `createOrder` loguea el cuerpo entero con
+    > `logger.info('Creating order ' + JSON.stringify(body))` (`shopify.service.js:2464`), o sea
+    > email, telefono y direccion del comprador en claro en el log de prod. Mismo patron que los
+    > tokens de Shopify en logs. Es cambio de codigo: **no se toca antes del lunes**, queda anotado.
   - Despues (no para el lunes): tarifas dinamicas por direccion desde Shopify
     (`draftOrderAvailableDeliveryOptions`) en el callback de Vipps Express —
     [product/shopify-tarifas-de-envio-dinamicas](../product/shopify-tarifas-de-envio-dinamicas.md).
