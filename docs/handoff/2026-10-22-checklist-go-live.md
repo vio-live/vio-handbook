@@ -192,6 +192,23 @@ Convencion: `[x]` hecho y verificado · `[~]` hecho pero sin verificar de punta 
 
 ---
 
+- [x] **B8. El dashboard de prod no preguntaba los permisos: faltaba `VIO_API_HOST`** — *Miguel, 22/10 20:59*
+  **Bloqueante oculto, afectaba a TODAS las cuentas de prod, no solo a Aller.** `src/lib/vio.js` del
+  webapp deriva el host del API de Vio del proyecto de Firebase, y el mapa solo tiene `reachu-qa`;
+  produccion esta fuera **a proposito** (comentario del propio archivo: habia que enlazar sponsors
+  antes). Sin host, el bundle de prod salia con `let l=""`, la clave de SWR quedaba `null`, la llamada
+  a `/auth/me` **no se hacia nunca**, el usuario quedaba `undefined` y la nav caia en la rama que deja
+  fuera **Surfaces y Campaigns**. Se ve identico a una cuenta brand — y por eso borrar y recrear la
+  cuenta de Aller no arreglo nada.
+  La precaucion del comentario **ya no aplica**: las nueve tablas de surfaces/sponsors estan a 0 en
+  prod, no hay nada que duplicar. Puesta `VIO_API_HOST=https://api.vio.live` (production) y
+  redespliegue del **mismo commit 35bfae92**: ni una linea de codigo nueva, no choca con la
+  congelacion. Bundle servido verificado (`let l="https://api.vio.live"...`) y el endpoint
+  pre-verificado con un ID token real (200, `accountType publisher`). Detalle en
+  [`../journal/2026-10/2026-10-22-prod-sin-surfaces-vio-api-host.md`](../journal/2026-10/2026-10-22-prod-sin-surfaces-vio-api-host.md).
+
+---
+
 ## C. Red de seguridad (mio, no depende de nadie)
 
 - [ ] **C1. Dump a mano de la base de prod, el viernes al cerrar** — *Miguel*

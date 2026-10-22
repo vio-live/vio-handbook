@@ -61,3 +61,35 @@ Comprobado antes de recomendarlo:
 Esperando el OK de Angelo: es una variable de entorno de producción + redeploy, y enciende la
 sección Vio/Campaigns para **todas** las cuentas de prod, no solo Aller. Reversible quitando la
 variable y redesplegando.
+
+---
+
+## Arreglado 20:59 Oslo
+
+Angelo confirmó el síntoma en incógnito y en las dos cuentas — que es justo lo que predice este
+diagnóstico: en incógnito no se arregla, porque el host no está en el código. Lo apliqué.
+
+1. **Variable nueva** en el proyecto Vercel `vio-commerce-webapp`:
+   `VIO_API_HOST = https://api.vio.live`, target **production**, tipo plain (id `TOl14rhofr5VoKJ0`).
+2. **Redeploy del MISMO deployment de producción**, `dpl_Fp8vk2…` → `dpl_D2p9HtxPLg1Ab7rJahKrNMLAmGoY`,
+   commit **35bfae92** (el mismo que ya estaba en prod desde el 21/10). Es una reconstrucción con la
+   variable nueva: **no entró ni una línea de código nueva en producción**, así que no choca con la
+   congelación del viernes. READY, con el alias `dashboard.ecom.vio.live`.
+
+### Verificado en el bundle servido, no en la consola de Vercel
+
+Antes:  `let l="".replace(/\/+$/,"")`
+Ahora: `let l="https://api.vio.live".replace(/\/+$/,"")`
+
+Y los hosts del bundle pasan de uno (`api-ecom.vio.live`) a **dos**, con `api.vio.live` presente.
+Con eso la clave de SWR deja de ser `null` y la llamada se hace.
+
+Pre-verificado antes de tocar nada, con un ID token real de Aller (1330):
+`GET https://api.vio.live/api/auth/me` → **200**, `accountType publisher`, features con
+`surfaces:manage`; `/api/channels` y `/api/campaigns` → 200. Preflight CORS desde
+`dashboard.ecom.vio.live` → 204.
+
+### Cómo se revierte
+
+Borrar la variable `VIO_API_HOST` (id `TOl14rhofr5VoKJ0`) del proyecto y redesplegar producción. El
+bundle vuelve a salir con `l=""` y el dashboard queda como estaba.
