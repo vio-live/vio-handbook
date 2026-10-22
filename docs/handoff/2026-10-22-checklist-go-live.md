@@ -349,9 +349,13 @@ Los cuatro se miran con el guion de C3 (menos D3, que es el portal de Vipps y so
   > (22/10) eligio los dos metodos simples, «Leveringstid 1-5 dager»:
   > «Helthjem - til postkasse/dørmatte» **59 NOK** y «Bring - Pakke i postkasse» **79 NOK** (precios
   > de su web; alli Helthjem es gratis desde ~1.500 NOK, que el modelo de Vio no soporta).
-  - [ ] Merge de [extensions#33](https://github.com/vio-live/vio-extensions-microservice/pull/33)
-    a `develop` y release a `master` — *Angelo*. Mete `code`/`source` en la linea y el telefono en
-    la direccion de envio.
+  - [x] [extensions#33](https://github.com/vio-live/vio-extensions-microservice/pull/33) mergeado en
+    `develop` (`118f2ca`, 22/10 19:23 UTC); QA desplegada, pod 2/2 con el codigo nuevo y 0 errores.
+    Mete `code`/`source` en la linea y el telefono en la direccion de envio.
+  - [ ] A prod va el **hotfix [extensions#34](https://github.com/vio-live/vio-extensions-microservice/pull/34)**:
+    solo ese commit sobre `master`, **sin el kernel 1.0.282** (B7b) ni #32 — *merge Angelo* (al
+    agente le bloquean el merge a `master`). El deploy corta `extensions` ~1 min (R5). Sin la
+    variable de abajo el cambio no hace nada.
   - [x] `SHOPIFY_SHIPPING_LINES` en el Secret `env-sc-extensions` **y en el blob** —
     *Miguel, 22/10 19:35*. Los dos lados byte a byte iguales (249 lineas, antes 248), generado
     desde el Secret vivo. Respaldos: `backup-secret-env-sc-extensions-20261022.yaml` y el blob
