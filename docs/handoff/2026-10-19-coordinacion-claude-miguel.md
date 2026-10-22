@@ -1220,3 +1220,25 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   Es la versión candidata para el go-live: la misma en Replit y en Vev, probada en QA antes del
   viernes por la tarde. Angelo le pasa el prompt de actualización a Replit. Vev todavía lleva el
   bundle anterior.
+
+- **22/10 21:52 UTC — Prod: Aller no puede crear una campaña con Careless.** El aviso es «la colección
+  no tiene productos». Lo leí en la base de prod, sin escribir nada:
+  - A las 21:44 se borró (soft delete) la colección vieja «Careless - mote-livsstil (pilot)»
+    `eOy5cc5g4`, con sus 9 items y sus shares 604 (→1329) y 605 (→1330). A la misma hora se creó
+    «Carelles Test» `NnRsYSAaJ`, con 5 items activos y share **606 → 1330**.
+  - El channel de Aller (`channel_user` 479, `user` 1330, channel 10) solo tiene el `channel_group`
+    **1075 → `collection_shared_id` 605**, el borrado. La share 606 no está en ningún `channel_group`.
+  - La surface de Aller (`surface` 1 «Mote Livsstil Hub») **no tiene ningún `surface_channel`**, y no
+    hay campañas.
+  - El micro de campañas saca la marca de cada channel de los `channel_group` vivos
+    (`typeorm-channel-directory.brandsOf`, `shared.deletedAt IS NULL`), así que el 479 queda sin
+    marca. Y sin `surface_channel`, Careless no tiene channel en la surface
+    (`SPONSOR_NOT_ON_SURFACE`).
+  - **Arreglo, desde el dashboard y como Aller:**
+    1. en su channel, añadir la colección compartida «Carelles Test»;
+    2. asignar ese channel a la surface «Mote Livsstil Hub»;
+    3. crear la campaña.
+
+    El `channel_group` 1075 (apunta a un share borrado) se puede quitar.
+  - Hallazgo para después del lunes: borrar una colección no limpia los `channel_group` que apuntan a
+    sus shares.
