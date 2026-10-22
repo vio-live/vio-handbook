@@ -231,6 +231,20 @@ Convencion: `[x]` hecho y verificado · `[~]` hecho pero sin verificar de punta 
   **Pendiente de Careless, y es suyo:** 10 NOK es ~1 EUR, un placeholder. Tienen que decidir su
   tarifa real (49/79 NOK, o gratis sobre X). Preguntalo en la misma conversacion que la lista de
   productos.
+- [ ] **E1b. Tarifas de envio reales de Careless** — *decide Careless, lo carga Miguel/Angelo*
+  Hoy tienen **un** envio, «Default Shipping» **10,00 NOK** (`default = 1`), que es el que crea el
+  alta. 10 NOK es ~1 EUR: **es un placeholder, no una tarifa**. Los 40 productos cuelgan de el.
+  **Ojo con el nombre: las tablas `flat_rate` y `flat_rate_country` estan VACIAS en prod y en QA**, y
+  ningun servicio las usa (solo quedan la entidad, el repositorio, el schema inicial y un campo del
+  DTO de alta de usuario). Lo que el checkout lee de verdad es **`shipping` + `shipping_country`**
+  (18 filas en prod): importe + moneda por metodo, y una fila por pais, con `custom_price_enabled` y
+  bandera `default`. Si alguien va a buscar "flat rates" en la base, no va a encontrar nada: hay que
+  tocar `shipping`.
+  Lo que hace falta de Careless: **el importe por pais** (p. ej. 49 o 79 NOK a NO, y si hay envio
+  gratis sobre cierto importe), y si quieren mas de un metodo (estandar / express).
+  Criterio: `shipping_country` de Careless con la tarifa acordada en NOK y el metodo correcto con
+  `default = 1`. Mientras no este, **el checkout cobra 10 NOK de envio**.
+
 - [ ] **E2. Deriva de version del SDK** (0.27.0 vs 0.26.1). Lo cierra B6. Que **nadie** lo toque en
   paralelo o acabamos con dos versiones en produccion el dia del lanzamiento.
 - [ ] **E3. QA apagado todo el fin de semana.** Lo que haya que probar en staging va el **viernes**.
