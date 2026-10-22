@@ -88,6 +88,16 @@ Convencion: `[x]` hecho y verificado · `[~]` hecho pero sin verificar de punta 
   sus colores con stock, no los 1.729. Excluir `Sofie genser - Lilla` y los dos Hennie sin publicar
   (stock 0). Detalle en
   [`../journal/2026-10/2026-10-22-careless-productos-no-es-bloqueante-de-terceros.md`](../journal/2026-10/2026-10-22-careless-productos-no-es-bloqueante-de-terceros.md).
+  **Precision de Angelo (16:54): lo que falta de Careless es LA LISTA** de productos que van en la
+  collection que se comparte con Aller, no un export. Es una decision suya, de cinco minutos.
+  **Trampa de orden:** si Careless va a elegir los productos en SU dashboard de Vio, el import tiene
+  que ir **antes**, o solo vera la linea «Active» (los 40 importados el 16/10) y creera que el resto
+  no existe.
+  Mecanismo medido en prod: `collection` (del brand) + `collection_item` (product_id) +
+  `collection_shared` (collection_id -> user_id del publisher). Careless (1327) **no tiene ninguna
+  collection**; las 3 que hay son de cuentas de prueba (1295, 1300).
+  Cadena completa: lista de Careless -> import de esos productos a Vio -> collection + compartir con
+  Aller (1329) -> Aller los publica en su channel `Sdk` (B4).
   Criterio: los 5 con `active=1` en prod.
 
 - [ ] **B3. Conexion Careless <-> Aller aceptada y channel creado** — *Angelo / equipo Vio, tras B1*
