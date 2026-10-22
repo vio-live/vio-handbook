@@ -47,6 +47,12 @@ todo está 100% listo para que nada falle?».
   tumba un pod de users 3 minutos después. El camino de Shopify (`saveShopifyExportConnection`)
   no emite nada parecido. Quedó como tarea aparte para arreglarlo por PR.
 
+- **extensions #26 (limitador de Shopify por tienda) ya está en prod**: llegó a `master` con el
+  release del 21/10 ([#28](https://github.com/vio-live/vio-extensions-microservice/pull/28),
+  10:15 Oslo) y corre en los dos pods (`dist/utils/per-shop-client.js`, usado por
+  `shopify.service.js`). Durante la sesión dije que faltaba: leí al revés el `compare` de
+  GitHub (`master...<commit>` = `behind` significa que el commit **ya está** en master).
+
 ## Decisions
 
 - **Villoid va con una app nueva** en vez de esperar a Partner Support: el cliente quería
@@ -69,5 +75,3 @@ todo está 100% listo para que nada falle?».
   (que la conexión quede en la cuenta **1323**) y la primera exportación.
 - Merge de vio-shopify-sync#128 (humano).
 - Arreglo del crash de `users` por la notificación Woo (tarea aparte, PR a `develop`).
-- extensions #26 (limitador por tienda) sigue sin `develop → master`; sin urgencia mientras
-  prod siga encendido.
