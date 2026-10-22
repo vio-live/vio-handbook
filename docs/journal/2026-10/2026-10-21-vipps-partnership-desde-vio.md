@@ -308,6 +308,22 @@ la configuración con el MSN desde nuestro lado. Asignar la unidad por port-forw
 > - El tracker de Alan contaba la ráfaga como trabajo suyo (llevaba su `user 1331`). Ahora excluye esas
 >   líneas, y las filas de 17:45–18:06 quedaron como `noise:woo-retry`.
 
+> [claude, 2026-10-22 20:09 UTC] **Reporte 7 de Alan (0bh9T1z6, 20:02), en el camino del lunes:** Replit
+> de Aller en staging (`mote-livsstil-hub-vio.replit.app`), Safari móvil, ventana normal. Después de
+> pagar con Vipps, la vuelta mostraba «Handlekurven tilhører en annen Vio-surface. Fullfør eller tøm
+> handlekurven først», también al recargar. En incógnito salía la confirmación.
+> - **El pago funciona:** las órdenes 4621–4624 están en la surface 13 «Mote Livestill Hub», campaña 12,
+>   seller 1338, Vipps, checkout `SUCCESS`.
+> - **El mensaje es del código del propio Replit**, no del SDK ni del backend: está en su bundle
+>   `index-*.js` y no en ningún repo nuestro. La app trabaja con varias surfaces (Aller en QA tiene la
+>   3, la 13, la 14 y la 15). En una carga nueva lee la surface guardada en `localStorage`, y si no es
+>   la de la página y la cesta tiene items, bloquea `Vio.init`. Al volver de Vipps la cesta todavía
+>   tiene items, porque el SDK la vacía al procesar la vuelta. La guarda no deja arrancar el SDK y
+>   queda en bucle. El SDK vuelve a la misma URL con `vio_payment`, `vio_method`, `vio_sponsor` y
+>   `checkout_id` (`resolveHttpsReturnUrl`).
+> - El arreglo es del Replit (es de Angelo, B6). Le pasé a Angelo un prompt para el agente de Replit.
+>   Alan, mientras tanto, borra los datos del sitio o usa una ventana privada.
+
 ## Next session
 
 - Con OK de Angelo: rol 1 a su cuenta de QA y prueba de punta a punta en staging (set up de una
