@@ -127,7 +127,7 @@ artículo. Está hecho de punta a punta, y mejor de lo que esperaba:
 - **En `minimal`** todo esto se descarta en la ingesta.
 
 Lo único que faltaba: **Mixpanel no recibía el bloque `client`**, así que allí el embudo no se podía
-partir por origen. Arreglado en [vio-analytics#29](https://github.com/vio-live/vio-analytics/pull/29):
+partir por origen. Arreglado en [vio-analytics#29](https://github.com/vio-live/vio-analytics/pull/29) (**mergeado**, `main` `3ac4dc7`):
 viaja `$referring_domain` (nombre propio de Mixpanel) y los `utm_*`; del referrer **solo el host** (la
 url entera se queda en ClickHouse); un referrer del propio sitio no cuenta como fuente, igual que en
 la lectura. Surte efecto cuando se despliegue el colector.
