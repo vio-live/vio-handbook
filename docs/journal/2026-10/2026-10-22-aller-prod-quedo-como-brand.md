@@ -84,3 +84,40 @@ es sobre **`uid`**, no sobre `username`. `allermedia` se puede reusar.
 
 Pendiente mío cuando exista la cuenta nueva: borrar la `user_role` 708 (queda huérfana) y poner la
 fila Publisher en el id nuevo, y volver a verificar `accountType` contra el endpoint.
+
+---
+
+## Borrado y alta nueva: Aller es ahora el user 1330 — Miguel
+
+20:45 Oslo, Angelo: «borrámelo tú, cierro sesión ya para usar el mismo mail».
+
+**Borrado** con el endpoint del propio servicio, `DELETE /me/1329` (200), no por SQL. Hizo las tres
+cosas: soft-delete de la fila (18:46:12Z), **borró el usuario de Firebase** (`auth/user-not-found`
+por el uid viejo) y **canceló la suscripción en Stripe** — comprobado en Stripe, no en nuestra
+tabla: `sub_1UTNMgECwcLH8wcPXdtrrS37` quedó `canceled` a las 18:46:13Z. (La fila 631 de
+`subscription` sigue diciendo `status: active` pero está soft-deleted: el campo queda rancio, no
+significa que la suscripción viva.)
+
+**Angelo se registró de nuevo 15 segundos después** y la cuenta nueva **nació bien**:
+
+- `user` **1330**, uid `GIOvge22NOYQnYjLFb2nVGQ3W9z2`, username `aller`, `brand_name` «Aller»,
+  **`is_business = 0`**, país NO, activa (18:46:27Z).
+- Claims de Firebase: `{"brand_name":"Aller","channel":true}` — **el camino de publisher**, sin
+  `business`. Esta vez no hubo que tocar nada.
+- `user_role` **709** (Publisher, activa) **la creó el propio alta**, no yo.
+- `GET /1330` → `accountType publisher` con `commerce:read`, `channels:manage`, `surfaces:manage`,
+  `campaigns:manage`, `analytics:surfaces`.
+- Suscripción **632** activa, plan 1.
+
+**Lo que sí heredó, como avisé: el customer de Stripe.** `cus_VUM4CdnWJfQuZW` se reutilizó por email
+(`manageCustomerStripe` busca por email y reutiliza). Con la cuenta nueva ya creada **ya no se puede
+borrar**: su suscripción viva 632 cuelga de él. Lo que hice es dejar de mentir en los datos:
+`metadata` del customer pasó de `{"id":"1329","uid":"Y2FVBHEE…"}` a
+`{"id":"1330","uid":"GIOvge22…"}`. En el customer queda el historial de la suscripción cancelada,
+que es inocuo. Un solo customer para ese email, en modo live.
+
+**Limpieza:** borrada la fila `user_role` **708**, huérfana (apuntaba al 1329 ya borrado). Quedan
+dos: 707 Admin (1328 `vio`) y 709 Publisher (1330 `aller`).
+
+**Ojo con el id: en todo lo que queda del go-live, Aller es 1330, no 1329.** El channel, el
+`collection_shared` y el interruptor `channel_user_settings.vipps` van contra 1330.

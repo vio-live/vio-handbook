@@ -64,7 +64,15 @@ Convencion: `[x]` hecho y verificado · `[~]` hecho pero sin verificar de punta 
 ## B. Cadena del contenido y la atribucion
 
 - [x] **B1. Cuenta de Aller Media en prod** — *Angelo la creo 22/10 14:53Z; el rol lo puso Miguel 17:00*
-  `user` **1329** `allermedia`, brand_name «Aller media», NO, activa. **Suscripcion ya resuelta**:
+  **OJO, el id cambio: Aller es ahora `user` 1330 `aller`.** La 1329 la borro Angelo (`DELETE /me/1329`,
+  22/10 18:46Z) para que no heredara nada del alta por el flujo de marca, y la creo de nuevo por el
+  camino de publisher: nacio con `is_business = 0`, claims `{"brand_name":"Aller","channel":true}` y
+  su propia fila `user_role` 709 (Publisher) — esta vez sin tocar nada a mano. `GET /1330` da
+  `accountType publisher`. Borrada la 708, huerfana. Lo unico que heredo es el customer de Stripe
+  `cus_VUM4CdnWJfQuZW` (se reutiliza por email); le corregi la `metadata` al id nuevo.
+  **Todo lo que queda del go-live va contra 1330**: el channel, el `collection_shared` y el
+  interruptor `vipps`.
+  (Historico) `user` **1329** `allermedia`, brand_name «Aller media», NO, activa. **Suscripcion ya resuelta**:
   `subscription` 631 `active` plan 1 — nacio con ella, no hace falta el rescate de
   `POST /api/users/create/subscription`.
   Le faltaba el **rol Publisher**: con `is_business = 1` y sin fila de rol resolvia a `brand`, **sin
