@@ -107,6 +107,30 @@ Convencion: `[x]` hecho y verificado · `[~]` hecho pero sin verificar de punta 
   La misma en Replit y en Vev, y una ya probada en QA — no estrenar version el lunes.
   Criterio: `Vio.analytics.start` con consentimiento y el colector dejando de estar a 0.
 
+
+- [x] **B7. Migracion `BrandProfilePolicyUrls1792500000000` en QA** — *Miguel, 22/10 15:40*
+  Dos columnas nuevas en `brand_profile` (`terms_url`, `refund_policy_url`), aditivas y NULL, para
+  que la ficha del producto enlace condiciones y devoluciones de la marca. `ALTER` byte a byte igual
+  al de package-database #25, fila de `migrations` insertada, y los enlaces de Careless (**1338** en
+  QA, `@careless`, org 928540650) cargados con `COALESCE` (no pisa lo que ponga la marca).
+  Verificado: columnas 9 y 10 justo detras de `secondary_color`, `varchar(2048)` nullable
+  `utf8mb4_unicode_ci`; 2a pasada no repite nada; las otras 3 filas de `brand_profile` sin tocar.
+  **Prod: NO corrida (decision de Angelo, va despues del go-live).** Salida completa y detalle en
+  [`../journal/2026-10/2026-10-22-migracion-brand-policy-urls-qa.md`](../journal/2026-10/2026-10-22-migracion-brand-policy-urls-qa.md).
+
+- [ ] **B7b. Orden obligatorio en prod: migracion ANTES del kernel** — *quien suba el release*
+  **Esto puede tumbar la pagina de Vipps de prod.** La entidad lleva las dos columnas como
+  `@Column` normal (sin `select: false`), asi que en cuanto un servicio de prod suba al kernel con
+  #25, **cualquier lectura de `brand_profile` pide las columnas nuevas**. Si la base de prod no esta
+  migrada: `Unknown column 'bp.terms_url'`. Lo leen tres servicios, y uno es el de A2:
+  `api` (`vipps-partnership.service.ts`, `brandLooksOf` -> `getMany()` sin lista de campos, o sea
+  todas las columnas), `campaigns` (`typeorm-brand-profile-repo`, bloque de sponsor del bootstrap) y
+  `collection` (`brand-of-collection`).
+  Mergear #25 y desplegar **QA** no tiene riesgo: QA ya esta migrada.
+  Criterio: en prod se corre `m-brand-policy-urls-prod.js` **antes** de que `api`, `campaigns` o
+  `collection` arranquen con el kernel nuevo. Con la congelacion del viernes esto no se cruza con el
+  lunes, pero el orden hay que respetarlo cuando se levante.
+
 ---
 
 ## C. Red de seguridad (mio, no depende de nadie)

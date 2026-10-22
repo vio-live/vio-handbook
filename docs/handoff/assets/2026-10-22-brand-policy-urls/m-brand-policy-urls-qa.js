@@ -25,9 +25,9 @@ const COLS = "SELECT COLUMN_NAME c, COLUMN_TYPE t FROM information_schema.column
   // Careless (1338): enlaces de su tienda. Upsert como el del micro: crea el perfil si no existe y
   // nunca pisa un enlace que la marca ya haya puesto (COALESCE).
   const BRAND = 1338;
-  const [[u]] = await c.query('SELECT id, email FROM `user` WHERE id = ?', [BRAND]);
+  const [[u]] = await c.query('SELECT id, username, brand_name, organization_number FROM `user` WHERE id = ?', [BRAND]);
   if (!u) throw new Error(`no existe el user ${BRAND}: revisar el id de Careless antes de seguir`);
-  console.log(`brand ${BRAND}: cuenta @${String(u.email || '').split('@')[1] || '?'}`);
+  console.log(`brand ${BRAND}: @${u.username} | brand_name ${u.brand_name} | org ${u.organization_number}`);
   await c.query(
     "INSERT INTO brand_profile (brand_user_id, terms_url, refund_policy_url) VALUES (?, 'https://careless.no/policies/terms-of-service', 'https://careless.no/policies/refund-policy') " +
       'ON DUPLICATE KEY UPDATE terms_url = COALESCE(terms_url, VALUES(terms_url)), refund_policy_url = COALESCE(refund_policy_url, VALUES(refund_policy_url))',
