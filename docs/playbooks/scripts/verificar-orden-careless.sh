@@ -49,6 +49,9 @@ for(const o of orders){
   const ok1=!!sl, ok2=!!(sl&&sl.source==='Packrooster'), ok3=mf.some(m=>m.namespace==='packrooster'), ok4=ff.length>0;
   console.log(` creada_por_vio=${esVio?'SI':'no (orden nativa de su web)'}`);
   console.log(` VEREDICTO: linea_envio=${ok1?'OK':'FALTA'} source_Packrooster=${ok2?'OK':'NO'} metafield_packrooster=${ok3?'OK':'NO'} despachada=${ok4?'OK':'NO'}`);
+  const edad=Math.round((Date.now()-new Date(o.created_at).getTime())/1000);
+  if(!ok3&&edad<60) console.log(`   (metafield: la orden tiene ${edad}s y Packrooster tarda 8-20s en ponerlo — volve a correr el guion, no es fallo)`);
+  if(!ok4) console.log('   (despachada=NO con la orden recien creada es LO ESPERADO: nace authorized y sin fulfillments. Solo es fallo si sigue asi horas despues)');
 }
 })().catch(e=>{console.error('ERR',e.message);process.exit(1)});
 EOF
