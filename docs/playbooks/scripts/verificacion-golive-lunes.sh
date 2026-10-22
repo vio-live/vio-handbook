@@ -175,8 +175,19 @@ if(!ur.some(r=>r.role_id_role===1&&r.active_user_role===1)) console.log('  OJO: 
 const cs=await q("select cs.id,cs.collection_id,cs.user_id,c.title,c.user_id as dueno,u.username,u.deleted_at "+
   "from collection_shared cs left join collection c on c.id=cs.collection_id left join user u on u.id=cs.user_id "+
   "where cs.deleted_at is null order by cs.created_at desc limit 5");
-for(const r of cs) console.log('collection_shared '+r.id+' "'+r.title+'" de '+r.dueno+' compartida con '+
-  r.user_id+' ('+r.username+')'+(r.deleted_at?'  <- OJO: esa cuenta esta BORRADA, el publisher no la ve':''));
+// Una share cuyo usuario esta borrado es residuo, no averia: lo que importa es que la collection
+// tenga al menos una share VIVA. Las de usuarios borrados no se pueden quitar por el endpoint
+// (el lookup excluye usuarios con deleted_at), y la app tampoco las ve.
+const vivas=new Map();
+for(const r of cs) if(!r.deleted_at) vivas.set(r.collection_id,(vivas.get(r.collection_id)||0)+1);
+for(const r of cs){
+  const nota = r.deleted_at
+    ? '  (residuo: esa cuenta esta borrada; esta collection tiene '+(vivas.get(r.collection_id)||0)+' share(s) viva(s))'
+    : '';
+  console.log('collection_shared '+r.id+' "'+r.title+'" de '+r.dueno+' compartida con '+
+    r.user_id+' ('+r.username+')'+nota);
+  if(r.deleted_at && !(vivas.get(r.collection_id)>0))
+    console.log('  OJO: la unica share de esta collection apunta a una cuenta BORRADA: el publisher no la ve');}
 await c.end()})().catch(e=>{console.error('ERROR',e.message);process.exit(1)});
 JS
     kubectl --context "$CTX" cp /tmp/golive-check.js "$NS/$P:/usr/src/app/golive-check.js" -c users >/dev/null 2>&1

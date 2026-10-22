@@ -39,11 +39,11 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
    **tarifas reales**: hoy cobra 10 NOK, que es un placeholder (E1, E1b).
 7. **Colector de analytics en c2fc1614** en staging y prod, con `MIXPANEL_IDENTITY` en `off`.
    Las VMs **no tienen clon de git**: se despliega por tarball, no con `git pull`.
-8. **Al cierre del 22/10 hay TRES cuentas de Aller y la collection del pilot apunta a la borrada.**
-   `1329` borrada a las 18:46, `1330` y `1331` vivas y las dos Publisher. La collection
-   `eOy5cc5g4` "Careless - mote-livsstil (pilot)" (de Careless, creada 18:35) se compartio con
-   **1329**. Asi, Aller entra y **no ve nada**. Es lo primero que hay que resolver: **B1b**.
-   Esto deja desactualizado el punto 2 de este delta (donde dice "Aller es el 1330").
+8. **La cuenta de Aller es la 1330** (Angelo, 22/10 por la noche). La 1329 esta borrada y la
+   **1331 sigue viva como duplicado**. El pilot ya esta contra la 1330: share `collection_shared`
+   605 **y** conexion aceptada `1327 <-> 1330` (fila 539) — sin la conexion, la share no se ve.
+   Esto deja desactualizado el punto 2 de este delta (donde dice "Aller es el 1330" por otro motivo).
+   Ver **B1b**.
 9. **Hay un guion que verifica todo esto de una pasada**: `../playbooks/scripts/verificacion-golive-lunes.sh`
    (solo lectura, probado contra prod el 22/10). Correr **eso** el lunes, no comandos a mano.
 
@@ -123,19 +123,21 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
   cada peticion. Detalle en
   [`../journal/2026-10/2026-10-22-aller-1329-publisher.md`](../journal/2026-10/2026-10-22-aller-1329-publisher.md).
 
-- [ ] **B1b. Decidir cual es LA cuenta de Aller y mover la collection compartida** — *decide Angelo, lo ejecuta Miguel*
-  Medido el 22/10 19:25 con el guion de C3:
-  - `1329 allermedia` ("Aller media"): **borrada** (`deleted_at` 18:46:12).
-  - `1330 aller` ("Aller"): viva, **Publisher** (`user_role` 709).
-  - `1331 allermedia` ("Aller Media"): viva, **Publisher** (`user_role` 710).
-  - `collection_shared` **604**: la collection `eOy5cc5g4` "Careless - mote-livsstil (pilot)", de
-    Careless (1327), esta compartida con **1329** — la borrada.
-  **Mientras siga asi, Aller entra y no ve la collection**, y se parece al falso diagnostico de
-  permisos del 19/10. Dos preguntas, las dos de Angelo: con que credencial va a entrar Aller
-  (eso decide si la buena es 1330 o 1331), y que se hace con la sobrante.
-  Criterio de hecho: `collection_shared` viva apuntando a la cuenta elegida, la otra cuenta
-  desactivada, y el guion de C3 sin la linea `<- OJO: esa cuenta esta BORRADA`.
-  Detalle en [`../journal/2026-10/2026-10-22.md`](../journal/2026-10/2026-10-22.md).
+- [x] **B1b. La cuenta de Aller es la 1330 y el pilot ya esta contra ella** — *Angelo decidio, Miguel ejecuto 22/10 19:37*
+  Angelo: «uso la cuenta 1330». Hecho por los endpoints internos, no a mano en la base:
+  - `POST /collectionShared/join` `{collection_id:"eOy5cc5g4", user_id:1330}` -> `collection_shared`
+    **605**. Copio ademas los 5 productos de la collection al publisher (`addCustomProduct`).
+  - **Y la conexion, que era el paso que faltaba:** `GET /collectionShared/joined/1330` devolvia `[]`
+    porque ese endpoint cruza las shares con las **conexiones**, y la aceptada era `1327 <-> 1329`.
+    Creada `1327 <-> 1330` con `POST /connection/` `{state:"Accepted",userId1:1327,userId2:1330}`
+    -> fila **539**. Reversible con `DELETE /connection/`.
+  - Criterio cumplido: `GET /collectionShared/joined/1330` devuelve
+    «Careless - mote-livsstil (pilot)» con sus 5 items.
+  Residuos de la 1329 (`collection_shared` 604, `connection` 538): **no se pueden borrar por los
+  endpoints** (los lookups excluyen usuarios con `deleted_at`) y la app no los ve. El guion de C3
+  los marca como residuo, no como fallo.
+  **Abierto:** la cuenta **1331** (`allermedia`, Publisher) sigue viva y es un duplicado de la 1330.
+  Decide Angelo si se desactiva.
 
 - [ ] **B2. Los 5 productos del articulo, en prod** — *Careless, desde su Shopify*
   «10 nyheter vi onsker oss na»: Cassia jakke, Hennie cardigan, Vilde genser, Sofie genser,
@@ -162,6 +164,14 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
   Cadena completa: lista de Careless -> import de esos productos a Vio -> collection + compartir con
   Aller (1329) -> Aller los publica en su channel `Sdk` (B4).
   Criterio: los 5 con `active=1` en prod.
+  **MEDIDO 22/10 19:40, y confirma la trampa de orden:** la collection del pilot `eOy5cc5g4`
+  («Careless - mote-livsstil (pilot)», creada por Careless a las 18:35) ya tiene **5 items**, pero
+  **no son los del articulo**: son «Active melert tights - Grå / - Lilla», «Active melert half-zip
+  dame - Grå», «Active melert shorts - Grå» y «Active Man Running Shorts - Black». O sea, se eligio
+  de los **40** productos que Careless tiene en Vio (todos de la linea «Active», importados el
+  16/10), que es lo unico que se veia. Para que el pilot lleve los del articulo: **importar primero**
+  (espera OK de Angelo) y **despues rehacer los items** de la collection. La share a Aller (1330) ya
+  esta puesta, asi que lo que se cambie en la collection le llega sin volver a compartir.
 
 - [ ] **B3. Conexion Careless <-> Aller aceptada y channel creado** — *Angelo / equipo Vio, tras B1*
   Hoy en prod solo hay **3 `channel_user`**, todos de cuentas de prueba (1295 y 1300) y todos de
