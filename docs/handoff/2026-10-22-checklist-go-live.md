@@ -351,7 +351,9 @@ Los cuatro se miran con el guion de C3 (menos D3, que es el portal de Vipps y so
   Criterio: `shipping_country` de Careless con la tarifa acordada en NOK y el metodo correcto con
   `default = 1`. Mientras no este, **el checkout cobra 10 NOK de envio**.
 
-- [ ] **E1c. Ordenes de Careless con el metodo de envio que reconoce su almacen** — *BLOQUEANTE*
+- [ ] **E1c. Ordenes de Careless con el metodo de envio que reconoce su almacen** — *configuracion
+  CERRADA 22/10; ya NO es bloqueante de config. Solo queda la orden de prueba de punta a punta, que
+  es de Angelo (ultimo sub-punto).*
   > [claude, 2026-10-22] Careless no usa tarifas de Shopify: el envio lo calcula **Packrooster** y
   > despacha **360 Logistics**. Sus ordenes llevan una linea de envio con `source=Packrooster` y
   > `code` tipo `helthjem|2|#13435`; la orden que crea Vio llevaba solo `title` + `price` (custom),
@@ -374,8 +376,15 @@ Los cuatro se miran con el guion de C3 (menos D3, que es el portal de Vipps y so
     *Miguel, 22/10 19:35*. Los dos lados byte a byte iguales (249 lineas, antes 248), generado
     desde el Secret vivo. Respaldos: `backup-secret-env-sc-extensions-20261022.yaml` y el blob
     `extensions/.env.snapshot-pre-shippinglines-20261022`.
-    **Pods sin reciclar a proposito:** #33 esta en `develop`, no en `master`, asi que en prod ese
-    codigo no existe y la variable es inerte; entra sola con el release, que recrea los pods. Es
+    ~~**Pods sin reciclar a proposito:** #33 esta en `develop`, no en `master`, asi que en prod ese
+    codigo no existe y la variable es inerte; entra sola con el release, que recrea los pods.~~
+    **CORRECCION (miguel, 22/10 22:30):** eso lo escribi antes del hotfix #34 y ya no es cierto —
+    quedo contradicho por el punto de arriba. Medido ahora en los dos pods
+    (`extensions-66f78585b4-5b9zw` y `-nhlrk`, arrancados 19:40): la var esta en
+    `/usr/src/app/.env`, el `dist` que corre llama a `parseShippingLines` en
+    `modules/shopify/providers/shopify.service.js:332`, y **los dos loguearon al arrancar**
+    `líneas de envío configuradas: dignitycollect.myshopify.com (2)`. El criterio de abajo ya esta
+    cumplido: **no hace falta release ni reciclar pods.** Es
     opcional en el codigo, no puede tumbar el arranque. Valor (no es secreto):
     `{"dignitycollect.myshopify.com":{"Helthjem - til postkasse/dørmatte":{"code":"helthjem|2|#13435","source":"Packrooster"},"Bring - Pakke i postkasse":{"code":"bring|3584|#13452","source":"Packrooster"}}}`.
     Criterio: al arrancar, `extensions` loguea `líneas de envío configuradas: dignitycollect.myshopify.com (2)`.
