@@ -1075,3 +1075,16 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   - Verificado que no rompió nada: `api-ecom.vio.live/` 200, 14/14 deployments, y el relay del
     webhook sigue en pie (sonda → 401, shopcart rechaza con `with 1 secret(s)` para la msn 1179558).
     El `[ERROR] 401 Vipps event not authenticated` del log de base-api es ese rechazo, no una avería.
+
+- **22/10 12:50 UTC — Angelo: «wordpress como canal no vamos a usar».** Es el tipo de canal
+  `Wordpress` (id 7) y su rama en `orders` (`order.service.ts:2857`), la que cancela pagos delegando
+  en `payment-processors`. **No es** el plugin `vio-sync-for-woocommerce`, que sí está en uso (vi
+  webhooks reales de `qkoreancosmetics.no` por `wooController/receiveWebhook` de `base-api` ese mismo
+  día); no confundirlos al retirar nada.
+  - **Medido en prod:** `Wordpress` está `enabled=1` pero con **0 instalaciones** en `channel_user`.
+    Las únicas **3 instalaciones** de producción son del canal **`GraphQl`** (id 12); los demás a 0,
+    `Woocommerce` y `Shopify` incluidos. **0 órdenes** por cualquier canal. La decisión **no pide
+    ninguna acción**.
+  - **Consecuencia:** ese handler era el único consumidor conocido de las rutas Vipps legacy de
+    `payment-processors`, que quedan sin consumidor conocido. Confirma por segunda vía el tráfico
+    cero y que pasarlas a `api.vipps.no` fue inocuo. No las retiro: no me lo ha pedido.

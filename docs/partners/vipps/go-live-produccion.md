@@ -63,7 +63,10 @@ para encender Vipps en producción y sacar el primer comercio. Arquitectura y mo
 
 Los **únicos** que leen `VIPPS_API_URL` en código son `shopcart`, `payment-processors` y `base-api`.
 En `orders`, `users` y `api` la variable es **inerte** y se queda en `apitest`: `api` usa
-`VIPPS_PRODUCTION` fijo en `vipps-management.ts`, y `orders` no tiene ninguna referencia a Vipps.
+`VIPPS_PRODUCTION` fijo en `vipps-management.ts`, y `orders` no tiene ninguna referencia a Vipps — su única relación con Vipps era la rama del canal
+WordPress, que **delega en `payment-processors`** y que Angelo descartó el 22/10 (0 instalaciones en
+prod; [journal](../../journal/2026-10/2026-10-22-canal-wordpress-descartado.md)). Con eso, las rutas
+Vipps legacy de `payment-processors` quedan **sin consumidor conocido**.
 `payment-processors` y `base-api` pasaron a producción el 22/10 por decisión de Angelo; siguen con
 las `VIPPS_CLIENT_*` de test (D1), así que sus rutas legacy (`POST /vipps/payment`, capture, cancel)
 fallarían en el token en vez de cobrar contra test. Tráfico observado: cero
