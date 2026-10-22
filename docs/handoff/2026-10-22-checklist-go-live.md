@@ -216,9 +216,21 @@ Convencion: `[x]` hecho y verificado · `[~]` hecho pero sin verificar de punta 
 
 ## E. Riesgos con accion, no solo anotados
 
-- [ ] **E1. Envio de Careless en EUR con los productos en NOK.** Puede ser conversion correcta, pero
-  **solo lo destapa un pago real** (A3), no un repaso visual. Si el cobro sale con el importe
-  equivocado, es esto.
+- [x] **E1. Envio de Careless en EUR con los productos en NOK — PASADO A NOK 22/10 19:20** (Angelo:
+  "conviertelos en nok por ahora"). **No era una conversion: era el defecto del alta.** El unico
+  envio de Careless (`shipping` `60af8d5a-...`, «Default Shipping», `default = 1`, creado el 16/10 al
+  conectar) tenia `amount 10.00` y `currency_code EUR`, y su `shipping_country` (NO) lo mismo. Los 40
+  productos cuelgan de el y **los 40 estan en NOK**. Todos los demas comercios tienen exactamente
+  «Default Shipping 10.00 NOK»: los 10.00 EUR nunca fueron un precio pensado, solo el defecto del
+  defecto (1298, 1304 y 1327 nacieron en EUR; el resto en NOK).
+  Cambiado `currency_code` a `NOK` en las **2 filas** (`shipping` y `shipping_country`), **sin tocar
+  el importe**: 1 fila afectada en cada una, 0 filas en EUR de 1327 despues. El catalogo y el
+  checkout leen justo esas dos (`shipping.currencyCode` y `shippingCountry.currencyCode` en
+  `channelService`, tambien por el camino `productCollectionSharedShipping`): no hay una tercera
+  copia que corregir.
+  **Pendiente de Careless, y es suyo:** 10 NOK es ~1 EUR, un placeholder. Tienen que decidir su
+  tarifa real (49/79 NOK, o gratis sobre X). Preguntalo en la misma conversacion que la lista de
+  productos.
 - [ ] **E2. Deriva de version del SDK** (0.27.0 vs 0.26.1). Lo cierra B6. Que **nadie** lo toque en
   paralelo o acabamos con dos versiones en produccion el dia del lanzamiento.
 - [ ] **E3. QA apagado todo el fin de semana.** Lo que haya que probar en staging va el **viernes**.

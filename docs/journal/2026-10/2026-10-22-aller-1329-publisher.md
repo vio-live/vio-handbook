@@ -52,3 +52,31 @@ Conviene crearlo **desde el dashboard**, no a mano: la alta genera también la a
 (`user_channel_api_key`) y la fila de `channel_user_settings`. En cuanto exista, B3b es encender
 `vipps = 1` en esa fila de settings y comprobarlo con
 `GET /channel/available-payment-methods/<channelUserId>`.
+
+---
+
+## E1: el envío de Careless pasado a NOK — Miguel
+
+- Quién: Miguel, por orden de Angelo ("conviértelos en nok por ahora", 22/10 19:11 Oslo).
+- Dónde: base de **producción**, tablas `shipping` y `shipping_country`.
+- Cuándo: 22/10/2026 ~19:20 Oslo.
+
+**No era una conversión de divisa.** Careless tiene **un solo** envío, `60af8d5a-9b2a-4daf-91f3-28a7aa6e6f75`,
+«Default Shipping», `default = 1`, creado el 16/10 en el mismo segundo que la conexión de Shopify:
+`amount 10.00`, `currency_code EUR`. Su única fila de `shipping_country` (país `NO`) igual. Los 40
+productos de 1327 cuelgan de ese envío y **los 40 tienen `price_currency_code = NOK`**.
+
+El dato que decide cómo arreglarlo: **todos los demás comercios tienen exactamente «Default Shipping
+10.00 NOK»**. Los 10,00 EUR no eran un precio pensado para Noruega, eran el defecto del alta — de los
+18 envíos de prod, solo tres están en EUR (1298, 1304 y 1327). Así que lo correcto era **cambiar la
+moneda y dejar el importe**, no convertir 10 EUR a ~118 NOK.
+
+Hecho: `UPDATE ... SET currency_code='NOK'` en las dos filas, con `AND currency_code='EUR'` para que
+fuera idempotente. **1 fila afectada en cada tabla**; después, 0 filas en EUR para 1327.
+
+Verificado que no hay una tercera copia: el catálogo y el checkout leen `shipping.currencyCode` y
+`shippingCountry.currencyCode` en `channelService` del micro `api` (y por el camino
+`productCollectionSharedShipping`, el de las collections compartidas, las mismas dos tablas).
+
+**Queda para Careless, y es decisión suya:** 10 NOK es ~1 EUR, un placeholder. Su tarifa real
+(49/79 NOK, o gratis sobre X) la tienen que fijar ellos.
