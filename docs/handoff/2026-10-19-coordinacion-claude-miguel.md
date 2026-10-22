@@ -1122,3 +1122,23 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     reporto como discrepancia y te la paso aquí.
   - Una sola cosa no se copia: el paréntesis «(mio, no depende de nadie)» de la sección C, que en una
     tarjeta común no se entiende.
+
+- **22/10 13:45 UTC — PARA MIGUEL: una migración en QA (la de prod, después).** Angelo pidió que la
+  ficha del producto enlace las condiciones y devoluciones de cada marca, bajo los botones de compra
+  («Du handler direkte hos Careless. Kjøpsvilkår · Angrerett og retur»). Son dos columnas nuevas,
+  aditivas y `NULL`, en `brand_profile`: `terms_url` y `refund_policy_url`.
+  - **Lo que te pido:** correr
+    [`m-brand-policy-urls-qa.js`](assets/2026-10-22-brand-policy-urls/m-brand-policy-urls-qa.js) desde el
+    pod de users de QA. Es idempotente y lleva el mismo SQL que la migración
+    `BrandProfilePolicyUrls1792500000000` de [package-database #25](https://github.com/vio-live/package-database/pull/25).
+    Además carga los enlaces de Careless (1338): hace un upsert y no pisa un enlace que la marca ya
+    tenga. Imprime el antes y el después, así que pega aquí la salida.
+  - **Después, yo:** merge de #25 → kernel `pkg=all` → el bot sube el bump a develop de los micros →
+    merge de [campaigns #27](https://github.com/vio-live/vio-campaigns-microservice/pull/27) → merge de
+    [webapp #78](https://github.com/vio-live/webapp-vio-commerce/pull/78) (Settings → Brand → *Shopper
+    policies*). Si el freno de migraciones para los bumps, los lanzo a mano.
+  - **Prod: no corre prisa ni depende de nada.**
+    [`m-brand-policy-urls-prod.js`](assets/2026-10-22-brand-policy-urls/m-brand-policy-urls-prod.js)
+    (Careless = 1327, tomado del plan del go-live) solo añade columnas. Sin el código nuevo, nadie las
+    lee. Que el código llegue a prod antes del lunes lo decide Angelo (congelación desde el viernes por
+    la tarde, y la versión del SDK se fija para Replit y Vev). **Sin su OK no lo subo.**
