@@ -1,6 +1,6 @@
 ---
 title: Checklist de go-live Careless x Aller (lunes 26/10)
-last-updated: 2026-10-22
+last-updated: 2026-10-23
 owner: Miguel
 status: en curso
 ---
@@ -401,6 +401,12 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
   Lo que aprendio y no hay que redescubrir: `api-ecom.vio.live` **no tiene `/health`** (se mira
   `/` a 200 y `/api/users` a **401**), y las rutas del colector son anidadas
   (`/v1/commerce-stats/overview?sponsor_id=`).
+  **Ampliado el 23/10 (Miguel): ahora cuenta el catalogo del SDK.** El 22/10 por la noche este
+  guion dio **0 MAL con el channel 480 a 0 productos** — declaraba el go-live sano mientras no
+  habia nada que comprar (ver B4). Anadido un bloque que cuenta las filas vivas de
+  `channel_user_products` del channel del publisher y, si da 0, imprime el arreglo idempotente.
+  Re-corrido contra prod: `channel 480 (Aller): 14 producto(s)`, **4 OK / 4 OJO / 0 MAL**.
+  Detalle: [`../journal/2026-10/2026-10-23-guion-golive-cubre-el-catalogo.md`](../journal/2026-10/2026-10-23-guion-golive-cubre-el-catalogo.md).
 
 - [ ] **C4. Avisar a Careless de que una devolucion en su Shopify mueve dinero en Vipps** — *Angelo*
   Pendiente desde el 16/10. El lunes ya es dinero real.

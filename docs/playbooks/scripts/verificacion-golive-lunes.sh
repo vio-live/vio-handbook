@@ -153,6 +153,22 @@ for(const r of ch) console.log('channel_user '+r.id+' user='+r.user_id+' channel
   ' "'+(r.custom_name||'')+'" active='+r.active+' vipps='+r.vipps+' klarna='+r.klarna+' adyen='+r.adyen+
   (r.user_id===ALLER&&r.vipps!=1?'  <- OJO: es el de Aller y vipps NO esta en 1 (B3b): sin boton de Vipps':''));
 
+// B4: el catalogo que sirve el SDK sale SOLO de channel_user_products. channel_group /
+// collection_shared resuelve la MARCA (pagos, campanas, dashboard); NO materializa el catalogo.
+// Medido el 23/10: el channel 480 tenia vipps=1, la share puesta y 0 productos -> el boton de
+// Vipps aparecia y no habia nada que comprar. `POST /channel/group` no llama al hook que
+// materializa; `POST /channel/multi-group/v2` si. Esta comprobacion es el agujero que tenia
+// este guion: daba 0 MAL con el catalogo vacio.
+const cup=await q("select channel_user_id, count(*) n from channel_user_products where deleted_at is null group by channel_user_id");
+const cupMap=new Map(cup.map(r=>[r.channel_user_id,Number(r.n)]));
+for(const r of ch){
+  if(r.user_id!==ALLER) continue;
+  const n=cupMap.get(r.id)||0;
+  console.log('channel_user_products del channel '+r.id+' (Aller): '+n+' producto(s) en el catalogo del SDK');
+  if(n===0) console.log('  OJO: catalogo VACIO -> el SDK no muestra nada aunque Vipps si aparezca. '+
+    'Arreglo (idempotente, micro products): POST /channel-process/collections/update {"collectionsId":["<idDeLaCollection>"]}');
+}
+
 // E1b: lo que el checkout le cobra de envio al comprador de Careless
 const sh=await q("select s.id,s.name,s.amount,s.currency_code,s.`default`,sc.country,sc.amount as camount,sc.currency_code as ccur "+
   "from shipping s left join shipping_country sc on sc.shipping_id=s.id and sc.deleted_at is null "+
