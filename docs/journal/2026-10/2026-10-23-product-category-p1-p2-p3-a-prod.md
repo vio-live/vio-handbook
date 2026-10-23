@@ -130,3 +130,43 @@ Lo que había dejado «para el lunes» fue también a prod el viernes, cada piez
   pero el loader de envíos tarda 15 s (join envío × país con IN de 1.000 ids): se corrige en tres consultas sin join antes
   de ir a prod. En 348/262 difiere solo el `channelOrigin` (y las `variants`) de productos presentes en varios grupos del
   channel: carrera preexistente entre los `getInfo` concurrentes, confirmada con dos llamadas seguidas del mismo código.
+
+## La tercera pieza: imágenes, opciones y envíos fuera del join
+
+- **[#67](https://github.com/vio-live/vio-api-microservice/pull/67) + [#69](https://github.com/vio-live/vio-api-microservice/pull/69)
+  → [#68](https://github.com/vio-live/vio-api-microservice/pull/68) (master, 20:37 UTC).** Las cuatro rutas de hidratación
+  dejan de unir `images`, `options` y `productShipping → shipping → shippingCountry`; se cargan aparte, una consulta por
+  relación en lotes de 1.000 productos, con el patrón de P3. En la ruta compartida, exactamente el mismo subconjunto de 21
+  campos que seleccionaba el join. Orden explícito (`order, id` / `id`); antes era el implícito de MySQL.
+- **La primera versión (#67) tardaba 15 s en los envíos** del channel 442: unía envío × país con IN de 1.000 ids. #69 los
+  carga en tres consultas sin join y copia el envío por fila, porque `formatPricesAndTax` muta los países de la página en
+  sitio y una instancia compartida habría aplicado el impuesto dos veces.
+- **QA, channel 442 (7.540 productos), misma página de 50:**
+
+| | antes de hoy | con P3 (#61) | con #67 | con #67 + #69 |
+|---|---|---|---|---|
+| `VmHWM` tras una llamada | +255 MB | +255 MB | +142 MB | **+63 MB** |
+| tiempo | 11,0 s | 11,0 s | 19,4 s | **5,0 s** |
+| respuesta normalizada | — | referencia | idéntica | idéntica |
+
+  Para los channels 485, 348 y 262 (rutas collection, product y collectionShared) la respuesta es idéntica salvo el
+  `channelOrigin` de los productos presentes en varios grupos: una carrera preexistente entre los `getInfo` concurrentes
+  (dos llamadas seguidas del mismo código también difieren). La ruta `variant` no tiene datos en QA: la cubren los 143
+  tests unitarios del módulo.
+- **Prod, 20:44 UTC, con las dos réplicas nuevas (0 reinicios):**
+
+| Channel de Careless | 18:26 (antes de todo) | tras P3 (19:36) | tras #68 (20:44) |
+|---|---|---|---|
+| 482: `VmHWM` tras una llamada | +172 MB | +0 | **+0** |
+| 482: tiempo | 2.412 ms | 336 ms | **159 ms** |
+| 480: tiempo | ~1.700 ms (Miguel) | — | **78 ms** |
+
+  Los 14 productos salen con imágenes, envío y categoría. Las cargas aparte cuestan 3–27 ms cada una.
+
+## Lo que queda, y no es para hoy
+
+- La carrera del `channelOrigin` (y de las `variants`) en productos presentes en varios grupos del mismo channel: hacer
+  determinista el `Delete duplicate products` (1 s en el 442) eligiendo la copia por una regla, no por quién termina antes.
+- P4: los filtros, ordenaciones y paginación siguen en memoria sobre todo el catálogo; el 442 sigue costando 5 s y +63 MB.
+- products [#33](https://github.com/vio-live/vio-products-microservice/pull/33) (Miguel): solo tests y harness; a su criterio.
+- Los otros 12 servicios con 512Mi y heap por defecto; `collection` (colecciones compartidas) es el siguiente que hidrata catálogo.

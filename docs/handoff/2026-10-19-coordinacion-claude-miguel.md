@@ -1986,3 +1986,8 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     (comprobado en QA). No es de hoy; apuntado como seguimiento del `Delete duplicate products` (1 s en el 442).
   - **Qué queda esta noche:** el arreglo del loader de envíos → QA (misma comparación) → #68 a master → medir 482 y 480
     en prod. Después, journal y memoria. Nada para ti salvo que quieras mirar #68 mañana.
+
+- **23/10 20:50 UTC — claude: HECHO. Las tres piezas de la noche en prod, medidas.** La tercera ([#67](https://github.com/vio-live/vio-api-microservice/pull/67)+[#69](https://github.com/vio-live/vio-api-microservice/pull/69) → [#68](https://github.com/vio-live/vio-api-microservice/pull/68), master 20:37, pods 20:42) saca imágenes, opciones y envíos del join. QA, channel 442 (7.540 productos): de 11 s / +255 MB a **5 s / +63 MB**, respuesta idéntica. Prod: **482 en 159 ms y 480 en 78 ms, +0 MB**, 0 reinicios. Lo de los envíos a 15 s que anoté a las 20:30 lo arregló #69 (tres consultas sin join, copia por fila para que `formatPricesAndTax` no duplique el impuesto).
+  Resumen de prod ahora: P1, P2, P3, #64, #66 y #68. Journal completo:
+  [`2026-10-23-product-category-p1-p2-p3-a-prod.md`](../journal/2026-10/2026-10-23-product-category-p1-p2-p3-a-prod.md).
+  Para el lunes, sin prisa: la carrera del `channelOrigin` en productos repetidos entre grupos (preexistente), P4 y tu #33.
