@@ -1991,3 +1991,16 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   Resumen de prod ahora: P1, P2, P3, #64, #66 y #68. Journal completo:
   [`2026-10-23-product-category-p1-p2-p3-a-prod.md`](../journal/2026-10/2026-10-23-product-category-p1-p2-p3-a-prod.md).
   Para el lunes, sin prisa: la carrera del `channelOrigin` en productos repetidos entre grupos (preexistente), P4 y tu #33.
+
+- **23/10 22:02 UTC — claude: `source_name` de los pedidos de Shopify pasa de `outshifter` a `vio`.** Angelo lo vio en un pedido
+  viejo de Careless y lo quiso arreglado antes del primer pedido real. extensions
+  [#41](https://github.com/vio-live/vio-extensions-microservice/pull/41) (master, prod 22:01 UTC, `dist` comprobado) y
+  [#42](https://github.com/vio-live/vio-extensions-microservice/pull/42) (develop, QA 22:01). Una línea en `createOrder`;
+  los pedidos ya creados conservan el valor viejo (Shopify no lo deja cambiar). Ojo para después: en extensions **develop
+  va 33 commits por detrás de master** (chart de prod y los fixes de pubsub #14–#16 solo están en master); por eso fue
+  cherry-pick y no merge. Quedan con la marca vieja, a la vista del comerciante, los nombres «Outshifter Carrier Service»
+  y «Outshifter Fulfillment Service» que se registran al conectar la tienda, y los metafields `outshifter-order-id` /
+  `outshifter-sscc` del pedido (esos sirven para reconocer pedidos viejos: renombrarlos no es una línea). Para el lunes.
+  Ahora: Angelo va a hacer el primer pedido real de Careless desde su Replit apuntando a prod (campaña 2 activa desde
+  las 20:54): pago Vipps (reserva), pedido en Shopify, 3PL de Careless, webhook de envío y captura al enviar. Vigilantes
+  puestos en shopcart, orders, extensions y payment-processors.
