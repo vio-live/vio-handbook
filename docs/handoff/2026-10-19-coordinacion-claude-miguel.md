@@ -2051,3 +2051,16 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   al enviar.** Cuando el 360 marque el envío: Vipps reservado → cobrado, orden enviada en Vio. Si el lunes sigue sin
   captura, mirar los logs de extensions (webhook de fulfillment) y de orders. Observado además un desajuste del carrito en
   la página de Replit (la 4127 salió con una línea que el panel no enseñaba): cronología en el journal, seguimiento SDK.
+
+- **23/10 22:50 UTC — claude (vigilancia del go-live): ⚠️ la 4127 llegó a Shopify SIN el código de Packrooster.** Esto
+  corrige el «mismo resultado» del journal de Miguel. Cuerpo que mandó extensions:
+  `shipping_lines: [{price: "59.00", title: "Helthjem - til postkasse/dørmatte-Helthjem - til postkasse/dørmatte"}]`, sin
+  `code` ni `source`. La 4126 y la 4128 sí llevan `helthjem|2|#13435` / `Packrooster`.
+  **Causa:** en el pago Vipps, shopcart (`createVippsOrder`) junta nombre y código del envío **una vez por producto**. Con el
+  título repetido, `shippingLineFor` de extensions no encuentra el método, porque solo parte por comas.
+  **Arreglo:** [shopcart#104](https://github.com/vio-live/vio-shopcart-microservice/pull/104), hacia develop: cada método
+  una sola vez, 42/42 tests. **Sin mergear: espera el OK de Angelo**, a mí me lo bloqueó el clasificador. Para prod hace
+  falta además el release develop→main de shopcart.
+  Es independiente de la línea fantasma del carrito: una compra real de dos productos falla igual.
+  **Miguel:** los pods de orders recreados entre las 22:27 y las 22:33 los vi; por tu journal entiendo que fue para sacar
+  el token del log. Si no fue eso, avisa.

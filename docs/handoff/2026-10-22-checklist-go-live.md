@@ -114,6 +114,21 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
   > `helthjem|2|#13435` (Packrooster), campana 2, componente `detail`.
   > Hubo un segundo intento (`VIO-21fceb47`, 699 NOK, 22:08): se quedo en `CREATED` y no hay orden.
   > Abandonado.
+  > [claude, 2026-10-23 22:50 UTC] **Tres ordenes de prueba, las tres correctas en Vipps.** La 4126, la
+  > 4127 (22:21) y la 4128 (22:40): en las tres, `AUTHORIZED` firmado y aceptado, orden creada por el
+  > webhook y 0 `signature mismatch`. La 4128 (1 linea, 599 + 59) **se deja sin cancelar** para ver la
+  > captura cuando 360 Logistics marque el envio. Falta solo el vistazo al portal de 1179558.
+  > ⚠️ **Fallo en la 4127 (2 lineas), que no sale en el journal de Miguel:** el pedido llego a Shopify
+  > **sin** el codigo de Packrooster. extensions mando
+  > `shipping_lines: [{price: "59.00", title: "Helthjem - til postkasse/dørmatte-Helthjem - til postkasse/dørmatte"}]`
+  > y no hay linea `orden 4127 ... → Packrooster`; la 4126 y la 4128 si la tienen. Causa: en el pago
+  > Vipps, shopcart junta el nombre del envio **una vez por producto** (`checkout.service.ts`,
+  > `createVippsOrder`), y con el titulo repetido extensions no encuentra el metodo en
+  > `SHOPIFY_SHIPPING_LINES`. El lunes le pasa a toda orden de 2 o mas productos de Careless.
+  > Arreglo: [shopcart#104](https://github.com/vio-live/vio-shopcart-microservice/pull/104), cada
+  > metodo una sola vez, 42/42 tests. **Abierto: falta el OK de Angelo para mergear y llevarlo a
+  > prod.** Es independiente de la linea fantasma del carrito: aunque la 4127 debiera haber tenido un
+  > solo producto, una compra real de dos productos falla igual.
 
 - [ ] **A4. Devolucion de ese mismo pago** — *Angelo, tras A3*
   Criterio: la devolucion se ve en Vipps y llega `order_refunded` al colector.
@@ -356,6 +371,12 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
   > ya lo tiene Angelo.
   > Criterio: compra con Vipps en Safari movil, ventana normal, y la confirmacion aparece al volver.
   > Mientras no este, un comprador del lunes que vuelva de Vipps ve un error en vez de la confirmacion.
+  > [claude, 2026-10-23 22:50 UTC] **No se vio en las 3 ordenes de prueba de prod, pero eso no lo
+  > cierra.** En la 4126, la 4127 y la 4128 la pagina proceso la vuelta: llamo a
+  > `payment-vipps/status` 1–2 s despues del `AUTHORIZED`. En prod hay **una sola surface**, asi que una
+  > cesta «de otra surface» casi no puede darse, y por eso la guarda no salto. Las compras se hicieron en
+  > `mote-livsstil-hub-vio.replit.app`, y `www.moteoglivsstil.no` sigue con el build viejo, sin Vio
+  > (B6). Que el arreglo este en el bundle publicado no esta verificado.
 
 - [ ] **B9. Pedido de Angelo a Michael (23/10)** — *Michael; lo sigue Angelo*
   Angelo se lo pidio el 23/10 por la manana. Estado de cada punto en prod, medido el 23/10 a las
@@ -759,6 +780,9 @@ Los cuatro se miran con el guion de C3 (menos D3, que es el portal de Vipps y so
   > prod desde las **22:17 UTC**. El deploy salio verde, el rollout termino y los pods nuevos lo traen
   > en `dist`. Lo cierra la proxima orden de test, si llega la confirmacion de Careless. La 4126 se
   > hizo antes del arreglo: para ella sirve «Reenviar confirmacion» en el admin de Shopify.
+  > [claude, 2026-10-23 22:50 UTC] **La 4127 y la 4128 ya se crearon con `send_receipt: true` y
+  > `send_fulfillment_receipt: true`**: visto en el cuerpo que extensions mando a Shopify. Lo que falta
+  > para marcarlo es que Angelo confirme que el correo de Careless llego al buzon.
 - [ ] **E3. QA apagado todo el fin de semana.** Lo que haya que probar en staging va el **viernes**.
 - [ ] **E4. Prod sin apagar el fin de semana.** Ahorrar ~46 USD no compensa un arranque malo el lunes.
   > [claude, 2026-10-23 09:20 UTC] Comprobado en las 4 suscripciones: los unicos jobs que encienden o apagan
