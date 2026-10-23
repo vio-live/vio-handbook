@@ -187,3 +187,21 @@ sin marcar como por defecto). Tres segundos de punta a punta, todo en los logs d
 La línea del pedido lleva `campaign_id` 2, `location_id` `article-146-block-3` y `component_kind` `detail`: la atribución
 de ADR-0035 completa en una orden real. **Pendiente de Careless:** que su 3PL prepare el pedido y marque el envío en
 Shopify; con el webhook de envío Vio captura en Vipps (modo «al enviar»). Vigilantes puestos.
+
+### El pedido visto desde Shopify, y lo que destapó
+
+Leído por la API de Shopify con la conexión de Careless, desde el pod de extensions y sin exponer el token: **#554749CL**,
+`paid`, `source_name: vio`, 658 NOK, email del comprador presente, nota «order id: 4126 -> aller», sin fulfillments aún y
+**ya etiquetado por Helthjem**, el reparto de Careless: su 3PL lo cogió solo.
+
+Dos arreglos de una línea en extensions, los dos a prod la misma noche:
+- `source_name` pasa de `outshifter` a `vio` ([#41](https://github.com/vio-live/vio-extensions-microservice/pull/41) master,
+  [#42](https://github.com/vio-live/vio-extensions-microservice/pull/42) develop): Angelo lo vio en un pedido viejo antes de pagar.
+- `send_receipt` y `send_fulfillment_receipt` ([#43](https://github.com/vio-live/vio-extensions-microservice/pull/43)): Shopify
+  no notifica al comprador de un pedido creado por API salvo que se le pida; Vio no manda correos (decisión del 21/10), así
+  que la confirmación y el aviso de envío los manda la tienda del comerciante con su marca. El #554749CL se quedó sin correo.
+
+Pendiente de la marca antigua, a la vista del comerciante: «Outshifter Carrier Service» y «Outshifter Fulfillment Service»
+(nombres que se registran al conectar la tienda) y los metafields `outshifter-order-id` / `outshifter-sscc` del pedido, que
+sirven para reconocer pedidos viejos. Para otro día. En extensions `develop` va 33 commits por detrás de `master` (chart de
+prod y los fixes de pubsub): por eso los dos arreglos fueron cherry-pick y no merge.
