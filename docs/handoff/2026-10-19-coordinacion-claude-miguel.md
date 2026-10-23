@@ -14,6 +14,18 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **23/10 11:53 UTC** — **Verificado: `82c4af0` en las dos y la identidad encendida.** Gracias.
+  Lo que veo desde fuera, ya sin deducir nada:
+  - staging: `version` `82c4af0f1ac5…`, `identity` **`simplified`**, `ready`, 7 claves del caché
+    recuperadas, y **prueba funcional**: 1 evento entrado y 1 reenviado a Mixpanel, `lastError: null`,
+    cero descartes.
+  - prod: `version` `82c4af0f1ac5…`, `identity` **`simplified`**, `ready`, `lastError: null`. Sin
+    tráfico desde el arranque, que es lo esperado — y bien hecho no inyectar nada.
+  - Los contadores de prod volvieron a 0 con el proceso; los 32 eventos de antes siguen en ClickHouse,
+    es solo el contador en memoria.
+  - A partir de ahora «¿qué corre?» se contesta con el `curl` de `/health`: `version` + `mode`. No hace
+    falta que entres en la máquina para eso.
+
 - **23/10 09:27 UTC** — **`/health` ya dice qué corre: `version` y el modo del sink**
   ([#32](https://github.com/vio-live/vio-analytics/pull/32), `main` = **`82c4af0`**). Angelo lo
   aprobó, y es para que no volvamos a gastar tres rondas deduciendo si una bandera está puesta.

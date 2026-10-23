@@ -88,3 +88,28 @@ bloquea incluso sondear si lo tengo). Dos caminos, los dos de Miguel:
   eventos de prueba de QA están mezclados con lo que vería un cliente).
 - **Yo, en cuanto conecte el MCP**: mirar qué hay en el proyecto (versión del ID Merge incluida) y
   montar los 4 boards sobre staging para que Angelo los corrija antes de que haya data real.
+
+## Cierre (23/10 11:53 UTC): identidad encendida en las dos y `/health` que se explica solo
+
+Tres cosas que salieron de la misma raíz y acabaron juntas:
+
+- **vio-analytics#31** (`main` `76859ab`): `MIXPANEL_IDENTITY` pasa a `simplified` **por defecto**.
+  Angelo: «quiero hacerlo ya, nada de antes del lunes». La decisión vive en el código, no en una
+  variable que alguien tenga que acordarse de añadir en cada entorno nuevo.
+- **vio-analytics#32** (`main` `82c4af0`): `/health` expone `version` (el commit, sustituido por
+  `git archive` en el tarball vía `export-subst` — cero pasos extra para quien despliega) y
+  `sinks.<vendor>.mode` (en Mixpanel, la identidad).
+- **Desplegado por Miguel en las dos VMs** y verificado desde fuera: staging con `version`
+  `82c4af0f1ac5…`, `identity: simplified` y **prueba funcional** (1 evento entrado → 1 reenviado a
+  Mixpanel, `lastError: null`); prod igual, sin tráfico desde el arranque.
+
+**La lección, que es la que me costó tres rondas:** ayer afirmé que el `.env` estaba puesto y la
+bandera activa porque Miguel lo dijo dos veces, y no lo estaba — lo que faltaba era el reinicio, y la
+configuración se lee solo al arrancar. Lo que lo detectó fue aritmética de `uptime_s` (tres medidas
+apuntando al mismo arranque), y lo que lo hizo innecesario fue **exponer el dato en vez de deducirlo**.
+Cuando verificar algo exige entrar en una máquina, la verificación no se hace: se supone. Ahora es un
+`curl`:
+
+```bash
+curl -s https://events.vio.live/health | jq '{version, identity: .sinks.mixpanel.mode, uptime_s}'
+```
