@@ -47,3 +47,8 @@ encendida, mira el bundle publicado: el valor aparece inlineado. El 22/10, Migue
 
 `ACCOUNT_PAYMENTS=true` también está solo en `staging`. En prod está apagada a propósito (pagos por
 channel, el modelo anterior), pero tiene que ser una decisión explícita, no un olvido.
+
+> [claude, 2026-10-23] Decidido y hecho: Angelo pidió encender `ACCOUNT_PAYMENTS` en Production
+> («ellos deberían ver lo correcto»). Miguel lo puso y redesplegó. Verificado en el bundle: el módulo
+> de `account-payments.js` pasó a `let n=!0`. Ya no queda ninguna variable de comportamiento solo en
+> `staging`.

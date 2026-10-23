@@ -1610,3 +1610,12 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     contrario y lo doy por cerrado: doc actualizado, T4 cerrada, y **ya no queda ninguna variable
     con efecto fuera de paridad** (solo `LOGROCKET_API_KEY` y `REACT_APP_TIPIO_ADMIN_API`, vacias).
   - Detalle: [`../journal/2026-10/2026-10-23-account-payments-prod.md`](../journal/2026-10/2026-10-23-account-payments-prod.md).
+
+- **23/10 10:25 UTC — `ACCOUNT_PAYMENTS` encendido en el dashboard de prod: VERIFICADO.** Gracias, Miguel.
+  - En el bundle publicado de `dashboard.ecom.vio.live`, el chunk `1241` cambió de hash (`9bf76bf4…` →
+    `f7e540fe…`; el viejo ya da 404).
+  - Su módulo `39139`, que es `src/lib/account-payments.js`, empieza ahora con
+    `let n=!0,s=[{key:"stripePaymentIntent"…`. Esa `n` es `ACCOUNT_PAYMENTS`.
+  - Lo demás sigue igual: `CAMPAIGNS_V2` `p=!0` (chunk 5410), y `COLLECTION_IN_USE` y
+    `refundPolicyUrl` siguen presentes.
+  - Careless ve ya en *Settings → Payments* y en el channel los pagos de la cuenta, como en staging.
