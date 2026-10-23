@@ -281,3 +281,16 @@ en tests y el arreglo mínimo en un PR a `main` (sin mergear): refrescar el carr
 pintar exactamente eso; que las demás pestañas se enteren del pago; que el pago exprés no deje líneas vivas en carritos
 abandonados. Lo que Angelo puede aportar mañana: si añadió Sofie genser a las 22:08 tras el primer pago, y si tenía la
 página en dos pestañas.
+
+## Next session (24/10)
+
+1. **Carrito con línea fantasma:** leer el PR del agente en `vio-web-sdk` (`fix/carrito-servidor-visible`), contrastar con
+   las respuestas de Angelo (¿añadió Sofie a las 22:08? ¿dos pestañas?) y reproducir en QA con el Replit de staging. Es
+   lo único que puede hacer que un comprador pague algo que no vio.
+2. **Captura al enviar:** la 4128 / #554756CL espera al 360. Si se despacha, verificar Vipps reservado → cobrado y la
+   orden enviada; si no, probar la captura desde la tarjeta de la orden.
+3. Pequeños: marcar la campaña 2 como por defecto; renombrar «Outshifter Carrier/Fulfillment Service»; el eco del webhook
+   de cancelación; la carrera del `channelOrigin`; P4.
+4. Lecciones nuevas: [Shopify por API](../../lessons/shopify-por-api-no-hace-lo-que-el-admin-hace-solo.md),
+   [PR mergeable de base vieja](../../lessons/un-pr-mergeable-puede-venir-de-una-base-de-hace-meses.md); playbook
+   [merge rápido con verificación de pod](../../playbooks/merge-rapido-con-verificacion-de-pod.md).
