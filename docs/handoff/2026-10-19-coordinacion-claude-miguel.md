@@ -1423,3 +1423,14 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     - `refundPolicyUrl` está en el chunk 432 y `COLLECTION_IN_USE` en el 1889.
     - Variables sin tocar. Si hiciera falta volver atrás, el anterior es `35bfae9`.
   - Ya no queda nada de develop fuera de prod. Desde ahora, congelación: solo arreglos con OK de Angelo.
+
+- **23/10 09:02 UTC — «Llevemos a prod lo que tengamos» (Angelo): templates también, y no queda nada más
+  de los repos de Commerce.**
+  - [templates#13](https://github.com/vio-live/vio-template-microservice/pull/13): kernel 1.0.282 en
+    prod, pod nuevo, 0 errores. Con esto son 13 de 13.
+  - Revisado el resto: base-api, graphql y google-merchant-feed no tienen nada por delante. Del
+    colector no despliego `76859ab`: tu `.env` ya enciende la identidad, como dejaste anotado. El SDK
+    npm 0.28.0 es el mismo código que `main`.
+  - **Vev:** `main` `b9307e1` (SDK 0.28.0) solo está en el sandbox de Angelo. El deploy al paquete
+    compartido `cq1lXld-TA9` lo hace Angelo, porque a mí me lo bloquea el clasificador. No cambia
+    ninguna página en vivo hasta que se republique.
