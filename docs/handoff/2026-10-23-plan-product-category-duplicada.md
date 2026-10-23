@@ -7,10 +7,14 @@ status: abierto
 
 # El problema, medido
 
-`product_category` tiene **268.590 filas vivas** (ninguna borrada lógicamente) para **5.871 pares
-reales** `(product_id, category_id)`. **262.719 filas sobran: el 98 % de la tabla.** Sólo **188**
-combinaciones están duplicadas, así que un puñado de productos acumula decenas de miles de filas:
-el peor de Careless tiene **132 filas para 1 sola categoría**.
+`product_category` tiene **268.748 filas vivas** (ninguna borrada lógicamente) para **5.871 pares
+reales** `(product_id, category_id)`. **262.877 filas sobran: el 98 % de la tabla.** Sólo **188**
+combinaciones están duplicadas, así que la masa está concentradísima: el peor par
+`(product_id, category_id)` tiene **13.671 filas para una sola categoría**.
+
+> Corrección (23/10, 22:05): una versión anterior de este plan decía «132 filas para 1 sola
+> categoría». Está mal — medido de nuevo en prod, el peor par son **13.671 filas**. Las cifras de
+> esta sección son de las 22:05 y suben ~10k/día, así que vuelve a medir antes de citarlas.
 
 **Y crece ~10.000 filas al día**: 9.467 el 23/10, 11.448 el 22, 10.326 el 21, 11.899 el 20,
 13.496 el 19.
@@ -93,6 +97,34 @@ por él. El patrón ya existe en `linkFeedCategory`; lo suyo es extraerlo y reut
 
 Una migración que (a) borre duplicados conservando el `id` más bajo por `(product_id, category_id)`
 y (b) cree `UNIQUE (product_id, category_id)`.
+
+### La forma del índice: decidida (23/10, 22:05)
+
+Va **`UNIQUE (product_id, category_id)` plano**, sin `deleted_at`. La alternativa de meter
+`deleted_at` en el índice —para no romper el re-añadido de una categoría quitada— **no sirve**:
+en MySQL dos NULL no se consideran iguales dentro de un índice único, y `deleted_at` es
+`datetime(6)` NULLABLE, así que las filas vivas (hoy el 100 %) podrían seguir duplicándose sin
+violar el índice. Sería limpiar la tabla y dejar el bug abierto.
+
+Esquema real medido en prod: `id` int PK, `created_at`/`updated_at` NOT NULL, `deleted_at`
+datetime(6) NULL, `product_id` int NULL, `category_id` int NULL. Índices: sólo `PRIMARY` y los dos
+de FK. **0 filas con `deleted_at` no nulo, 0 con `product_id` o `category_id` en NULL**, así que
+el índice plano cubre el 100 % de la tabla y la limpieza es segura hoy.
+
+El borrado lógico **se queda** — no hay cambio de comportamiento. La condición se traslada a P1:
+al re-vincular una categoría quitada antes, el código tiene que **recuperar la fila existente
+aunque esté soft-deleted y hacer `restore()`** (o `INSERT ... ON DUPLICATE KEY UPDATE
+deleted_at = NULL`), nunca un `insert` a ciegas. Si P1 inserta sin más, el índice le rompe la
+importación en cuanto exista una fila soft-deleted.
+
+Dos detalles que la migración no puede pasar por alto:
+
+- el dedupe tiene que mirar **todas** las filas, soft-deleted incluidas (el índice único las
+  cuenta igual: una que sobreviva impide crear el índice);
+- al elegir cuál se conserva, **preferir una fila viva** (menor `id` con `deleted_at IS NULL`) y
+  caer al menor `id` global sólo si no hay ninguna viva. En prod hoy da lo mismo (0 soft-deleted,
+  0 pares mixtos), pero en QA no está medido. Conservar la soft-deleted y borrar la viva haría
+  desaparecer la categoría del producto en silencio.
 
 - El índice es lo que hace el arreglo **permanente**: aunque alguien escriba mal en el futuro, la
   base no lo admite.
