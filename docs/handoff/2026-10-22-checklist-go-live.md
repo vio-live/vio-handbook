@@ -278,7 +278,10 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
   + `channel_group` para que campanas y dashboard vean la marca.
   Criterio: los 5 productos salen en el catalogo del channel.
 
-- [ ] **B5. Surface de Mote & Livsstil + campana con Careless de sponsor** — *tras B4*
+- [x] **B5. Surface de Mote & Livsstil + campana con Careless de sponsor — VERIFICADO** — *tras B4*
+  > [claude, 2026-10-23 09:20 UTC] Lo marco hecho. Ademas de lo de anoche en la base, el bootstrap de
+  > prod del articulo de Aller sale con la campana 1, Careless (1327), el channel 480 y 4 slots, y desde
+  > las 08:21 trae los enlaces de condiciones y devoluciones de Careless.
   `surface`, `campaign` y `brand_profile` estan a **0** en prod. Comision por defecto 15 %.
   > [claude, 2026-10-22 22:20 UTC] Desbloqueado. El 400 `SPONSOR_NOT_ON_SURFACE` tenia dos causas:
   > el channel 479 apuntaba a la share 605, borrada a las 21:44 (Angelo creo el **480** con «Carelles
@@ -646,6 +649,9 @@ Los cuatro se miran con el guion de C3 (menos D3, que es el portal de Vipps y so
   > Falta fijar 0.28.0 en el Replit (B6).
 - [ ] **E3. QA apagado todo el fin de semana.** Lo que haya que probar en staging va el **viernes**.
 - [ ] **E4. Prod sin apagar el fin de semana.** Ahorrar ~46 USD no compensa un arranque malo el lunes.
+  > [claude, 2026-10-23 09:20 UTC] Comprobado en las 4 suscripciones: los unicos jobs que encienden o apagan
+  > son los de QA (`job-qa-sc-aks-*` y `job-qa-sc-mysql-*`, en `rg-vio-qa-sc`). Para prod no hay nada
+  > programado, y el cluster esta `Running`. Basta con que nadie lo pare a mano.
 - [x] **E5. Bucle sin fin de reintentos de Woo — EN PROD 23/10 07:08** — *Angelo decidio llevarlo (22/10 22:30)*
   > [claude, 2026-10-23] Subio con todo develop: [products#30](https://github.com/vio-live/vio-products-microservice/pull/30), pods con `woo-retry`, 0 errores.
   > [claude, 2026-10-22] [products#29](https://github.com/vio-live/vio-products-microservice/pull/29)

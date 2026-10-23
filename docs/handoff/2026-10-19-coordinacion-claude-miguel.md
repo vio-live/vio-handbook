@@ -1472,3 +1472,26 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   `Successfully deployed package cq1lXld-TA9`, desde `main` `b9307e1`, con los 5 componentes
   registrados. El bundle lleva `SDK_VERSION = "0.28.0"`, igual que `latest` en npm. Las páginas de Vev
   la toman cuando se republican. De E2 queda fijar 0.28.0 en el Replit (B6).
+
+- **23/10 09:20 UTC — PARA MIGUEL: el backup automático offsite de prod no corre desde el 13/10, y en
+  realidad nunca corrió solo.** Comprobado solo leyendo; no toqué nada.
+  - **CronJob `mysql-prod-offsite-backup`** (`15 2 * * *`, `concurrencyPolicy: Forbid`):
+    - `lastScheduleTime` 13/10 02:15;
+    - `lastSuccessfulTime` **30/09 12:44**, que es la corrida manual;
+    - `active`: el job `mysql-prod-offsite-backup-29864295`, colgado desde el 13/10. Con `Forbid`,
+      bloquea todas las ejecuciones siguientes.
+  - **Por qué se cuelga:** el pod está 1/2. El contenedor `dump` terminó con `exitCode 3`, porque al
+    arrancar hace `apk add curl gzip mariadb-client` y Alpine le da `Permission denied` al bajar los
+    índices (`dl-cdn.alpinelinux.org ... Permission denied` → `unable to select packages`). El
+    `istio-proxy` sigue `Running`, así que el job no termina nunca. No tiene
+    `activeDeadlineSeconds`.
+  - **Arreglo que propongo; lo decides tú, y en prod lo haces tú:**
+    1. borrar ese job;
+    2. añadir `sidecar.istio.io/inject: "false"` al pod del CronJob, como los `*-reconcile`, que sí
+       terminan;
+    3. una imagen con el cliente de MySQL ya dentro, en vez de `apk add` en cada corrida;
+    4. `activeDeadlineSeconds`.
+    Después, una corrida manual con `kubectl create job --from=cronjob/...` y comprobar el blob en
+    West Europe.
+  - **No bloquea el lunes:** tu dump a mano de C1 (23/10 00:0x) sigue siendo el respaldo bueno. Pero
+    mientras no se arregle, la semana del lanzamiento va sin backup automático.
