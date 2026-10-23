@@ -53,6 +53,19 @@ Detalle por servicio, con las comprobaciones de cada pod, en el
     `Postman-Token`).
   - La moneda de su conexión nueva se arregla volviendo a guardar los ajustes del plugin.
 
+- **Nombres de envio en Vipps Express (Angelo vio «Mailbox» en las dos opciones):** no es un fallo,
+  es el diseno de Vipps.
+  - Segun la captura anotada de la guia oficial (*ePayment → Express*, «logistics properties»), el
+    titulo de cada tarjeta sale del `type` del grupo (`MAILBOX` → «Mailbox», «Postkasse» en noruego),
+    el logo sale del `brand` y debajo del titulo va `estimatedDelivery`.
+  - El `name` y el `meta` de la opcion solo se ven dentro de la tarjeta seleccionada. No hay campo
+    para un titulo propio.
+  - Shopcart (`vipps-payload.ts`) manda el nombre de la clase como `name` y su descripcion como `meta`.
+    Por eso sale «Helthjem - til postkasse/dørmatte · Leveringstid 1-5 dager» al seleccionarla.
+  - `type: OTHER` no lo arregla: el titulo seria «Other».
+  - Mejora posible, que no hace falta: el plazo en `estimatedDelivery` para que se vea tambien con la
+    tarjeta cerrada. Es codigo en shopcart, asi que con la congelacion solo va con OK de Angelo.
+
 ## Decisions
 
 - Angelo: todo develop a prod hoy, enlaces de condiciones y devoluciones incluidos; Claude mergea y
