@@ -39,20 +39,40 @@ WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'product_category';
 
 # Cómo se arregla
 
-El índice va **plano**, sobre las columnas que de verdad definen la unicidad:
+**La buena, y la que acabó en producción el 23/10:** una columna generada que vale 1 en las filas
+vivas y NULL en las borradas, y el único sobre ella. Así el índice restringe **solo** las filas
+vivas, y las borradas quedan exentas porque dos NULL nunca son iguales — exactamente la propiedad
+que arruina el `UNIQUE (a, b, deleted_at)` se usa aquí a favor:
 
 ```sql
-ALTER TABLE product_category ADD UNIQUE (product_id, category_id);
+ALTER TABLE product_category
+  ADD COLUMN live tinyint GENERATED ALWAYS AS (IF(deleted_at IS NULL, 1, NULL)) VIRTUAL;
+ALTER TABLE product_category
+  ADD UNIQUE INDEX UQ_product_category_live (product_id, category_id, live);
 ```
 
-Eso traslada el problema al código de escritura, y ahí es donde hay que resolverlo: al re-vincular
-algo que se quitó antes, **no se inserta** — se recupera la fila existente (aunque esté
-soft-deleted) y se hace `restore()`, o `INSERT ... ON DUPLICATE KEY UPDATE deleted_at = NULL`.
+Lo que lo hace mejor que el único plano no es el SQL, es que **no exige tocar el código de
+escritura**: re-vincular algo que se quitó antes sigue siendo un `INSERT` normal y no choca con la
+fila borrada. Un `UNIQUE (product_id, category_id)` plano sí obliga a cambiar el camino de
+escritura — `restore()` de la fila existente o `INSERT ... ON DUPLICATE KEY UPDATE
+deleted_at = NULL`, nunca un insert a ciegas — y si ese cambio no está desplegado **antes** de que
+corra la migración, el re-vinculado falla en silencio: la excepción se la traga el `catch` de turno
+y el dato simplemente no aparece. Esa versión plana se escribió (PR #26 de `package-database`) y se
+descartó por eso.
+
+En sqlite el equivalente exacto es un índice parcial con el mismo predicado, útil para escribir el
+test de esto sin MySQL:
+
+```sql
+CREATE UNIQUE INDEX UQ_product_category_live
+  ON product_category (product_id, category_id) WHERE deleted_at IS NULL;
+```
 
 Dos cosas más que se pasan por alto al limpiar la tabla antes de crear el índice:
 
-- el dedupe tiene que mirar **todas** las filas, soft-deleted incluidas (`withDeleted`). El índice
-  único las cuenta igual: una sola que sobreviva impide crearlo;
+- con el único plano, el dedupe tiene que mirar **todas** las filas, soft-deleted incluidas: el
+  índice las cuenta igual y una sola que sobreviva impide crearlo. Con la columna generada basta
+  deduplicar las vivas, que es lo que hizo la migración que corrió;
 - al elegir qué fila se conserva, **preferir una viva** (menor `id` con `deleted_at IS NULL`) y
   caer al menor `id` global sólo si no hay ninguna. Conservar la soft-deleted y borrar la viva hace
   desaparecer el dato de la aplicación en silencio, sin error en ninguna parte.
