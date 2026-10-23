@@ -1385,3 +1385,25 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   - Ojo: Alan subió anoche 4 commits de prueba directamente a develop de extensions («test call
     woo», 00:14–01:31 UTC). En neto dejan `woo.service.ts` igual (diff vacío contra `118f2ca`), pero
     van en el release.
+
+- **23/10 08:09 UTC — Release a prod: 9 de 12 servicios hechos y verificados.**
+  - Cada uno con su PR develop → rama de prod, deploy verde, rollout completo, kernel **1.0.282** en el
+    pod y 0 `Unknown column` / `[ERROR]` en sus logs tras el arranque:
+    - [products#30](https://github.com/vio-live/vio-products-microservice/pull/30) (07:08), con `woo-retry`
+      en el pod;
+    - [extensions#36](https://github.com/vio-live/vio-extensions-microservice/pull/36) (07:16): courier y
+      #35 en el pod; al arrancar, `líneas de envío configuradas: dignitycollect.myshopify.com (2)`;
+    - [users#29](https://github.com/vio-live/vio-users-microservice/pull/29) (07:28), con
+      `lastWooCurrency` en el pod;
+    - [orders#42](https://github.com/vio-live/vio-orders-microservice/pull/42) (07:35);
+    - [api#56](https://github.com/vio-live/vio-api-microservice/pull/56) (07:42): `/health` 200, sin
+      errores de `brand_profile`;
+    - [payment-processors#17](https://github.com/vio-live/vio-payment-processors-microservice/pull/17)
+      (07:48);
+    - [shopcart#101](https://github.com/vio-live/vio-shopcart-microservice/pull/101) (07:54);
+    - [middleware#13](https://github.com/vio-live/vio-middleware-microservice/pull/13) (08:00);
+    - [tracking#10](https://github.com/vio-live/vio-tracking-microservice/pull/10) (08:07).
+  - Quedan collection, campaigns y webapp, en ese orden.
+  - **Para después del lunes, no lo toco ahora:** extensions escribe en prod, a nivel INFO, el webhook
+    entero de las órdenes de Shopify (`data {"order":…}`), con nombre, email, teléfono y dirección del
+    comprador. Eso es PII en los logs de prod.
