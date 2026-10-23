@@ -1,6 +1,6 @@
 ---
 title: Eliminar redirects mejora la conversión — Benchmarks
-last-updated: 2026-05-31
+last-updated: 2026-10-23
 owner: angelo
 status: live
 ---
@@ -139,6 +139,45 @@ Los redirects añaden latencia. La latencia mata conversión.
 El SDK de Vio mantiene al usuario dentro de la app donde está consumiendo contenido (TV2, Viaplay, VG). El tap en "Comprar" abre el checkout nativo — sin abrir Safari, sin WebView externa, sin perder el contexto de lo que estaba viendo.
 
 Esto replica exactamente el patrón que explica los resultados de Shop Pay, Stripe Link y Amazon 1-Click: **el usuario no sale, no espera, no pierde confianza**. La compra sucede donde estaba.
+
+---
+
+## Embudo de un artículo: link de afiliado vs. compra en el artículo (2026-10-23)
+
+Pregunta de Angelo para el go-live con Careless y Aller: qué conversión es buena, si hoy los medios
+venden con links de referido (afiliado) a la web de la marca.
+
+**No hay un benchmark público fiable** de «artículo → clic → compra» para Noruega. Casi todo son
+blogs de proveedores con definiciones distintas (clics, sesiones, impresiones) y cifras que se
+contradicen. Rangos razonables:
+
+| Paso | Link de afiliado | Compra dentro del artículo (Vio) | Fiabilidad |
+|---|---|---|---|
+| Lector → clic en un producto | 1–4% en links dentro del texto; 6–10% muy bueno | parecido (mismo lector, mismo contenido) | baja |
+| Clic → compra | 0,5–1% (redes de afiliados; moda ~0,6–0,7%) | ~1–3% (sin redirect: +15% a +50%, ver arriba) | media-baja |
+| Referencia: visita → compra en tienda de moda | mediana 1,1%, top 20% 2,0%, top 10% 2,6% (Littledata, 71 tiendas Shopify, 20/07–17/10/2026) | — | la más sólida |
+| Compras por 10.000 lectores | ~1–8 | ~3–12 | estimación propia |
+
+**Qué es «buena» para Vio:** clic → compra **≥ 2%** (supera al afiliado y a la mediana de una tienda
+de moda; por debajo del 1% es peor que el link de afiliado) y **≥ 5 compras por 10.000 lecturas**.
+
+**La comparación que vale sale de sus datos, no del mercado:**
+1. Aller: estadísticas de afiliado de sus links a Careless en artículos anteriores (clics, ventas,
+   % por artículo) en su red (Adtraction o la que usen).
+2. Careless: su conversión web en Shopify Analytics. Con el permiso de la app vemos órdenes
+   (~310/día entre el 24/08 y el 22/10/2026), no visitas.
+3. Vio: el colector de analytics mide el mismo embudo (vista → producto → carrito → compra).
+
+Fuentes de esta sección: [Littledata, moda](https://www.littledata.io/benchmarks/fashion) ·
+[Littledata, e-commerce](https://www.littledata.io/ecommerce-conversion-rate) ·
+[Impact.com, Affiliate Benchmark 2025](https://impact.com/affiliate/affiliate-marketing-benchmark/) ·
+[Opensend](https://www.opensend.com/post/affiliate-conversion-rate-statistics-ecommerce) ·
+[Skailama](https://www.skailama.com/blog/ecommerce-conversion-rate-by-industry) ·
+[LinkGaze](https://linkgaze.io/blog/affiliate-link-click-through-rate-benchmarks) ·
+[WeCanTrack](https://wecantrack.com/insights/affiliate-click-through-rate-statistics/) ·
+[Floating CTA](https://floatingcta.com/insights/affiliate-marketing-conversion-rate/) ·
+[Awin](https://www.awin.com/us/how-to-use-awin/how-to-use-affiliate-marketing-to-drive-low-cost-conversions-for-your-brand) ·
+[MikMak](https://www.mikmak.com/shoppable-media).
 
 ---
 
