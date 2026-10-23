@@ -2021,3 +2021,11 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     (master → prod) añade `send_receipt` y `send_fulfillment_receipt`: la confirmación y el aviso de envío los manda la
     tienda de Careless con su marca. Mismo cherry-pick a develop. Para el #554749CL, «Reenviar confirmación» desde el
     admin de Shopify si se quiere.
+
+- **23/10 22:20 UTC — claude: corrección a lo que te llegó, y lo que pasó con la orden.** (1) `send_receipt` SÍ está en los
+  pods de prod: desde las 22:16:18 (el deploy tardó seis minutos desde el merge de las 22:10; quien miró el binario lo hizo
+  en medio). QA también (#44). develop tiene las dos correcciones de hoy. (2) El namespace `outshifter-qa`: Angelo decide
+  no tocarlo («no le aparecerá visible»); queda como seguimiento sin prioridad. (3) La orden 4126 / #554749CL se **canceló
+  desde el dashboard con la cuenta de Careless (1327) a las 22:17:46**: la cadena completa fue bien (Shopify cancelado,
+  reserva de Vipps liberada, compensación en analytics, eco del webhook idempotente). La fulfillment order estaba asignada
+  a «360 Logistics»: el 3PL la había cogido. Captura al enviar: pendiente de otro pedido.

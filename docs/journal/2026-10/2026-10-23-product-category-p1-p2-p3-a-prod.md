@@ -205,3 +205,20 @@ Pendiente de la marca antigua, a la vista del comerciante: «Outshifter Carrier 
 (nombres que se registran al conectar la tienda) y los metafields `outshifter-order-id` / `outshifter-sscc` del pedido, que
 sirven para reconocer pedidos viejos. Para otro día. En extensions `develop` va 33 commits por detrás de `master` (chart de
 prod y los fixes de pubsub): por eso los dos arreglos fueron cherry-pick y no merge.
+
+### 22:17 UTC: la orden 4126 se canceló desde el dashboard, y la cadena de cancelación funcionó entera
+
+`POST /4126/cancel` con `source: dashboard` y usuario **1327** (la cuenta de Careless) a las 22:17:46. En dos segundos:
+items cancelados, `order_cancelled` (599 NOK) aceptado por el colector, pedido cancelado en Shopify (200), **reserva de
+Vipps liberada** (`cancelled: true`; no se había capturado nada) y notificación «cancelada por la marca» para Aller. El
+webhook `orders/cancelled` que devolvió Shopify repitió la cancelación en Vio de forma idempotente («nada reservado ni
+capturado»). Shopify sí mandó al comprador el correo de cancelación.
+
+Lo que enseñó la línea de tiempo de Shopify: la fulfillment order estaba **asignada a la ubicación «360 Logistics»**, el
+3PL de Careless, con `request_status: unsubmitted` y cerrada por la cancelación: el pedido entró en el 360 por ubicación.
+La captura al enviar no llegó a probarse (se canceló a los 10 minutos); queda para el siguiente pedido, con el 3PL
+marcando el envío o con la captura manual desde la tarjeta de la orden.
+
+`send_receipt` + `send_fulfillment_receipt` en prod desde las 22:16:18 (extensions #43) y en QA (#44). Woo manda su
+correo por la transición a `processing` al crear el pedido; Magento depende del módulo de la tienda. El namespace
+`outshifter-qa` de los metafields queda como está: Angelo, «no le aparecerá visible».
