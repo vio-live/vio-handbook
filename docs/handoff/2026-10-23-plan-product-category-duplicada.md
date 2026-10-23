@@ -2,7 +2,7 @@
 title: Plan — `product_category` duplicada 46x, el coste del endpoint de channel, y cómo lo arreglamos con código
 last-updated: 2026-10-23
 owner: Miguel (coordina) · ejecutan varios agentes
-status: cerrado — en producción el 23/10; sólo queda api#63 para el lunes
+status: cerrado — en producción el 23/10; abierto products#33 (P1b) para revisar el lunes
 ---
 
 # El problema, medido
@@ -170,21 +170,37 @@ ordenaciones). Con P3 deja de ser urgente. No se toca en la semana del lanzamien
 | Coordinación y Trello | — | **vio** |
 | Orden, ventanas, verificación en prod | — | **Miguel** |
 
-**Historia del reparto.** Angelo dijo a las 20:40 del 23/10 que las tres las llevara `claude`,
-cuando yo ya las había repartido entre `jhondev` (P1, P2) y `juan` (P3). Esa reasignación llegó
-**por encima de trabajo ya hecho** (ver la corrección de abajo), así que la tabla refleja a los
-dueños reales del trabajo que está sobre la mesa: `jhondev` P1+P2 y `juan` P3. Las tarjetas de
-Trello con ese reparto están propuestas en #dev **esperando el ✅ de Angelo**; si él prefiere
-volver a concentrarlo en `claude`, manda su decisión y se corrige aquí.
+**Historia del reparto.** Angelo dijo a las 20:42 (Oslo) del 23/10 que las tres las llevara
+`claude`, cuando yo ya las había repartido entre `jhondev` (P1, P2) y `juan` (P3). Los PR de los
+dos aparecieron **tres y cuatro minutos después** de esa decisión: se cruzaron en el aire. La tabla
+refleja a los dueños del trabajo que de verdad se mergeó: `jhondev` P1 y `juan` P3; `claude` hizo
+P2 y el endurecimiento de P1.
 
-> Corrección (23/10, noche): escribí que a jhondev y juan «los desconvoqué antes de que abrieran
-> nada». **Es falso y lo señalaron ellos, no yo**: el PR de P1
-> ([vio-products-microservice#31](https://github.com/vio-live/vio-products-microservice/pull/31))
-> se abrió a las **18:45 UTC**, hora y media ANTES de las 20:40, y jhondev además lo verificó
-> contra datos reales de QA; juan abrió el de P3
-> ([vio-api-microservice#61](https://github.com/vio-live/vio-api-microservice/pull/61)). Lo que
-> hubo fue una reasignación por encima de trabajo ya hecho, no un desconvoque a tiempo. El trabajo
-> de los dos es el que está sobre la mesa y es el que hay que revisar.
+> Corrección de la corrección (23/10, 22:00). Mi corrección anterior decía que el PR #31 se abrió
+> «**hora y media ANTES** de las 20:40» y que hubo «una reasignación por encima de trabajo ya
+> hecho». **Está mal y el error es mío: mezclé husos.** Las «20:40» eran hora de Oslo
+> (commit `e941cd0`, 20:42:58 +0200 = **18:42 UTC**) y las «18:45» eran UTC. Secuencia real, toda
+> en Oslo:
+>
+> | hora (Oslo) | qué |
+> |---|---|
+> | 20:31 | plan escrito y repartido (`jhondev` P1+P2, `juan` P3) |
+> | 20:42 | Angelo reasigna las tres a `claude` |
+> | 20:45 | aparece [products#31](https://github.com/vio-live/vio-products-microservice/pull/31) (P1, jhondev) |
+> | 20:46 | aparece [api#61](https://github.com/vio-live/vio-api-microservice/pull/61) (P3, juan) |
+>
+> Así que «los desconvoqué antes de que abrieran nada» era **literalmente cierto por tres minutos**,
+> y mi «hora y media antes» era falso. Lo honesto es que ninguna de las dos frases describe bien lo
+> que pasó: la decisión de Angelo llegó mientras los dos estaban *terminando* — el trabajo ya
+> existía, el PR aún no. No hubo pisotón a trabajo publicado, pero tampoco se desconvocó a nadie a
+> tiempo. **Lo que decide la autoría es lo que se mergeó, y eso no admite discusión: el helper de
+> P1 en producción es el de jhondev (#31 → #32) y el P3 en producción es el de juan (#61 → #62).**
+> `claude` llevó P2 ([package-database#28](https://github.com/vio-live/package-database/pull/28))
+> y el commit `3f8396e` que endurece P1 contra la carrera.
+>
+> Lección para mí: **no comparar horas sin normalizar el huso.** GitHub habla UTC, el handbook y
+> los commits hablan Oslo (+02:00), y entre las dos hay exactamente las dos horas que convirtieron
+> «tres minutos después» en «hora y media antes».
 
 > Nota de reparto: P2 se mandó primero a `maxi` y lo devolvió — ese agente es **Lovisa**, perfil
 > legal y contable (`maxi` es sólo su id técnico). Comprobar el perfil antes de asignar.
@@ -214,11 +230,42 @@ volver a concentrarlo en `claude`, manda su decisión y se corrige aquí.
 > `max(id)` vivo (269.754) simplemente porque borrar no lo baja: **no** es señal de inserciones
 > rechazadas.
 >
-> **Lo único abierto:** api [#63](https://github.com/vio-live/vio-api-microservice/pull/63), para
-> revisar el lunes. Y la verificación que sigue faltando de P1 es **la de verdad**: importar dos
-> veces el mismo producto de Shopify contra el servicio desplegado y contar. Lo que hay es la
-> lógica SQL del helper simulada a mano contra datos de QA — útil, pero no es el camino de
-> escritura real (misma trampa que `docs/lessons/` ya recoge para los helpers simulados).
+> **Abierto (actualizado 22:00):** api #63 y #64 ya están mergeados — lo único abierto es
+> products [#33](https://github.com/vio-live/vio-products-microservice/pull/33) (P1b), para revisar
+> el lunes.
+>
+> **P1b no es un bloqueante, y conviene decir por qué**, porque su descripción dice lo contrario.
+> #33 parte de que el índice de P2 iba a ser el `UNIQUE (product_id, category_id)` plano de
+> [package-database#26](https://github.com/vio-live/package-database/pull/26) — y **#26 está
+> cerrado por superado**. Lo que corre en producción, leído de la base esta noche, es:
+>
+> ```sql
+> `live` tinyint GENERATED ALWAYS AS (if((`deleted_at` is null),1,NULL)) VIRTUAL,
+> UNIQUE KEY `UQ_product_category_live` (`product_id`,`category_id`,`live`)
+> ```
+>
+> Una fila con borrado lógico tiene `live = NULL`, y en MySQL dos NULL no chocan dentro de un
+> índice único. O sea: reenlazar una categoría quitada **inserta una fila viva nueva sin violar
+> nada**. No hay `ER_DUP_ENTRY`, no hay categoría que desaparezca en silencio. El síntoma que
+> describe #33 no puede darse con el índice que entró.
+>
+> Lo que #33 sí aporta, y por eso no se cierra: (a) reutiliza la fila vieja en vez de dejar un
+> huérfano con borrado lógico por cada ciclo quitar/poner, (b) conserva el `id` original, y
+> (c) **arregla cuatro cosas que impedían correr la suite del repo** — entre ellas que
+> `.env.test` tenga `DATADOG_API_KEY=   # comentario`, que dotenv 10 no recorta, así que el valor
+> pasaba a ser el texto del comentario y `@vio-/logger` mataba la suite entera antes del primer
+> test. Eso es lo más valioso del PR y es independiente de P1b.
+>
+> **La verificación que sigue faltando de P1 es la de verdad**: importar dos veces el mismo
+> producto de Shopify contra el servicio desplegado y contar. Lo que hay es la lógica SQL del
+> helper simulada a mano contra datos de QA — útil, y hecha contra una pareja ya duplicada y otra
+> nueva, pero no es el camino de escritura real (misma trampa que `docs/lessons/` ya recoge para
+> los helpers simulados).
+>
+> **Hallazgo aparte, para después del go-live:** con el kernel `@vio-/database@1.0.282` el arnés de
+> tests en sqlite ya no levanta el esquema — `json` en `Checkout.attribution`, cinco columnas
+> `enum` de surface y 20 `collation: utf8mb4_*`. Se arregla en `package-database` haciendo el tipo
+> condicional al motor, y toca publicar kernel. **No se toca en la semana del lanzamiento.**
 
 **Nada de esto entra en producción antes del lunes salvo que Angelo lo pida**: P0 ya cubre el
 go-live. El valor de P1-P3 es que el problema no vuelva y que se pueda crecer el catálogo.
