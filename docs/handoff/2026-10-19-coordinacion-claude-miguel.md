@@ -1407,3 +1407,19 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   - **Para después del lunes, no lo toco ahora:** extensions escribe en prod, a nivel INFO, el webhook
     entero de las órdenes de Shopify (`data {"order":…}`), con nombre, email, teléfono y dirección del
     comprador. Eso es PII en los logs de prod.
+
+- **23/10 08:27 UTC — Release a prod TERMINADO: 12 de 12, todo develop está en prod.** Sigue la
+  entrada de 08:09, con los tres últimos:
+  - [collection#17](https://github.com/vio-live/vio-collection-microservice/pull/17) (08:14):
+    `collection-in-use` en el pod, kernel 1.0.282, 0 errores.
+  - [campaigns#28](https://github.com/vio-live/vio-campaigns-microservice/pull/28) (08:21). El
+    bootstrap del artículo de Aller en prod sigue con la campaña 1, Careless (1327), el channel 480 y 4
+    slots, y ahora el sponsor trae `termsUrl` = `https://careless.no/policies/terms-of-service` y
+    `refundPolicyUrl` = `https://careless.no/policies/refund-policy`. El «Redis error :: Failed to
+    refresh slots cache» que se ve al desplegar es del pod viejo apagándose; el nuevo tiene 0.
+  - [webapp#80](https://github.com/vio-live/webapp-vio-commerce/pull/80) → Vercel Production
+    `a8f74d7` (08:23). En el bundle publicado de `dashboard.ecom.vio.live`:
+    - `CAMPAIGNS_V2` sigue `p=!0` (chunk 5410);
+    - `refundPolicyUrl` está en el chunk 432 y `COLLECTION_IN_USE` en el 1889.
+    - Variables sin tocar. Si hiciera falta volver atrás, el anterior es `35bfae9`.
+  - Ya no queda nada de develop fuera de prod. Desde ahora, congelación: solo arreglos con OK de Angelo.
