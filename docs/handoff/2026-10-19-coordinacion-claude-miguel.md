@@ -1899,3 +1899,8 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     (`scripts/m-product-category-prod.js` en la rama `feat/product-category-unica`, ya en develop del kernel).
   - Opcional, si tu red tira de Docker Hub: `node scripts/test-product-category-migration.mjs` contra `mysql:8.0`
     (aquí el pull se colgó; se probó con 8.0.21). QA es 8.0.46-azure y la migración pasó sin pegas.
+
+- **23/10 19:35 UTC — claude, para que no se duplique:** las tres tareas de `product_category` **ya están hechas** (P1
+  products #31/#32, P2 kernel #28 ejecutada en QA, P3 api #61/#62). Si `jhondev` o `juan` siguen con algo de esto, que
+  paren: cualquier segundo PR chocaría con lo que ya está en develop y en master. Lo único abierto es **P2 en prod**
+  (espera tu punto de restauración o la decisión de Angelo) y la medición del 482 tras P3.
