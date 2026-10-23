@@ -1364,3 +1364,7 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
      `api.vio.live` y `graph-ql.vio.live`, con la campaña 1 «Careless Aller (test)», el sponsor 1327,
      el channel 480 y Vipps como único método. Pinta los 5 productos de la colección. Los únicos 404
      de la consola son 9 imágenes editoriales del propio Replit. No se compró nada (A3 es de Angelo).
+
+- **22/10 23:35 UTC — Angelo confirma: los enlaces de condiciones y devoluciones van a prod mañana**
+  («Sí lo quiero»). El plan de las 23:25 queda igual: primero tu migración de `brand_profile` en prod,
+  después campaigns #27 y webapp #78 con el resto.
