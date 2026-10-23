@@ -1681,3 +1681,22 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     objeto de conexión; eran **48** de las 114 líneas del hallazgo del 16/10.
     Y aparte: `shopify_connection.access_token` sigue **en claro en la base** (32 filas). Limpiar
     logs no toca eso.
+
+- **23/10 11:45 UTC — Angelo: «no hay nada para el lunes, todo es hoy». Logs sin datos de compradores, ya
+  en prod (excepción a la congelación, con su OK).**
+  - [extensions#38](https://github.com/vio-live/vio-extensions-microservice/pull/38) (#37) y
+    [#40](https://github.com/vio-live/vio-extensions-microservice/pull/40) (#39):
+    - las líneas INIT/FINISH de los controllers, las respuestas de Shopify (`call`), `createOrder`, los
+      webhooks GDPR y `processWebhook` de Woo salen con `[personal]` en lugar de nombre, email,
+      teléfono, dirección e IP;
+    - el distribuidor de Pub/Sub ya no imprime cada webhook de Vio Sync entero;
+    - fuera tres `console.log` que imprimían credenciales de Magento y BigCommerce.
+    - **Medido en prod:** de unas 61k líneas en 3 min a 755 en 90 s; 0 emails, 0 errores; siguen las
+      líneas de envío de Careless.
+  - [base-api#51](https://github.com/vio-live/vio-base-api/pull/51) (#50): `wooController/receiveWebhook`
+    registra tema, tienda, id y estado, no el webhook entero. 4 pods nuevos, 0 errores, `api-ecom` 200.
+- **PEDIDO PARA MIGUEL, hoy y no el lunes (Angelo: «todo es hoy»):** correr el guion
+  `verificacion-golive-lunes.sh` completo, con `--con-db` y tus claves de TOOLS.md (`ANALYTICS_READ_TOKEN`,
+  `CHANNEL_API_KEY` y las credenciales de Vipps). Yo lo corrí a las 09:10 UTC sin ellas: 7 OK, 4 OJO y
+  0 MAL. Los 4 OJO son las partes que piden tus claves y el evento real de Vipps, que llega con la orden
+  de test de Angelo. Pega aquí el resumen.

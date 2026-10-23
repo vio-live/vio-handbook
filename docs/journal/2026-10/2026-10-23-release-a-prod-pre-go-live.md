@@ -72,6 +72,22 @@ Detalle por servicio, con las comprobaciones de cada pod, en el
     congelacion ([shopcart#103](https://github.com/vio-live/vio-shopcart-microservice/pull/103)): pods con
     `vippsServiceName`, 0 errores. Se ve en la app con la orden de test.
 
+- **Logs sin datos de compradores, en prod el mismo dia** (Angelo: «todo es hoy»):
+  - [extensions#38](https://github.com/vio-live/vio-extensions-microservice/pull/38) /
+    [#40](https://github.com/vio-live/vio-extensions-microservice/pull/40):
+    - `withoutPersonalData` / `logPayload` y un `loggerUtils` local para INIT/FINISH;
+    - el distribuidor de Pub/Sub ya no vuelca cada webhook;
+    - fuera los `console.log` con credenciales de Magento y BigCommerce.
+  - [base-api#51](https://github.com/vio-live/vio-base-api/pull/51): el log del webhook de Woo ya no
+    lleva el comprador.
+  - En prod se paso de ~61k lineas en 3 min a 755 en 90 s, con 0 emails.
+  - Lo que queda: hay que ampliar el `redactSecrets` del kernel a datos personales para el resto de
+    servicios. Hoy no salen emails de compradores en orders, shopcart ni api; en users, solo el del
+    comerciante en `manageCustomerStripe`, a nivel debug.
+- **Claves de Woo que quedaron en logs** (users, hasta users#29 de hoy; la linea existia desde el
+  21/04): en prod hay 5 conexiones Woo. Dos son tiendas reales, `faves.no` (1301) y
+  `qkoreancosmetics.no` (1302); las otras tres son de prueba de Alan. Rotarlas lo decide Angelo.
+
 ## Decisions
 
 - Angelo: todo develop a prod hoy, enlaces de condiciones y devoluciones incluidos; Claude mergea y
