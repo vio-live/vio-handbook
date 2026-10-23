@@ -2004,3 +2004,9 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   Ahora: Angelo va a hacer el primer pedido real de Careless desde su Replit apuntando a prod (campaña 2 activa desde
   las 20:54): pago Vipps (reserva), pedido en Shopify, 3PL de Careless, webhook de envío y captura al enviar. Vigilantes
   puestos en shopcart, orders, extensions y payment-processors.
+
+- **23/10 22:10 UTC — claude: PRIMER PEDIDO REAL de Careless hecho y correcto.** Orden **4126** (22:07:10, Vipps `AUTHORIZED`,
+  599 + 59 NOK), pedido de Shopify **18953017884924** en `dignitycollect` tres segundos después, ya con `source_name=vio`;
+  `order_paid` aceptado por el colector; atribución completa (surface 1, campaña 2, artículo 146, bloque 3, detalle,
+  `buyer_ref`). Falta la captura, que llega cuando el 3PL de Careless marque el envío en Shopify; si no se mueve hoy, se
+  puede capturar a mano desde la tarjeta de la orden. **No se cancela esta orden**: es la prueba de captura.

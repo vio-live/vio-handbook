@@ -170,3 +170,20 @@ Lo que había dejado «para el lunes» fue también a prod el viernes, cada piez
 - P4: los filtros, ordenaciones y paginación siguen en memoria sobre todo el catálogo; el 442 sigue costando 5 s y +63 MB.
 - products [#33](https://github.com/vio-live/vio-products-microservice/pull/33) (Miguel): solo tests y harness; a su criterio.
 - Los otros 12 servicios con 512Mi y heap por defecto; `collection` (colecciones compartidas) es el siguiente que hidrata catálogo.
+
+## 22:07 UTC: el primer pedido real de Careless, desde el Replit de Aller apuntando a prod
+
+Angelo pagó con Vipps desde el artículo «10 nyheter vi ønsker oss nå» de su Replit (campaña 2, creada a las 20:54 y
+sin marcar como por defecto). Tres segundos de punta a punta, todo en los logs de prod:
+
+| Paso | Hora | Dato |
+|---|---|---|
+| Vipps `AUTHORIZED` (reserva), webhook a shopcart | 22:07:10 | checkout `b10c71aa…`, unidad partner MSN 1179558 |
+| Orden en Vio | 22:07:10 | **4126**: 599 NOK + 59 de envío, `surface_id` 1, `campaign_id` 2, `content_url` del artículo, `buyer_ref` presente |
+| Recibo en Vipps | 22:07:11 | 200, dos líneas |
+| `order_paid` a analytics | 22:07:10 | 658 NOK, aceptado por el colector al primer intento |
+| Pedido en el Shopify de Careless | 22:07:13 | **18953017884924**, `source_name` ya como `vio` (extensions #41 desplegado a las 22:01) |
+
+La línea del pedido lleva `campaign_id` 2, `location_id` `article-146-block-3` y `component_kind` `detail`: la atribución
+de ADR-0035 completa en una orden real. **Pendiente de Careless:** que su 3PL prepare el pedido y marque el envío en
+Shopify; con el webhook de envío Vio captura en Vipps (modo «al enviar»). Vigilantes puestos.
