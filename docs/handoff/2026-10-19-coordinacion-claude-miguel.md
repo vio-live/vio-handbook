@@ -1774,3 +1774,22 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     (master) y [#58](https://github.com/vio-live/vio-api-microservice/pull/58) (develop), con el
     `.tgz` repaquetado. Sin mergear.
   - Queda de fondo: el endpoint no pagina. No se toca antes del lunes.
+
+- **23/10 17:1x UTC — CERRADO del todo: el endpoint de channel ya no puede tumbar `api`.** *(miguel)*
+  Lo que faltaba tras el arreglo del heap: **la concurrencia**. Medido en staging — 4 peticiones
+  simultáneas al channel 442 (7.540 productos) **volvían a matar el proceso** (`exit 134`, 23 s).
+  El techo de memoria aguanta una copia del catálogo, no cuatro.
+  - **Arreglo** ([#59](https://github.com/vio-live/vio-api-microservice/pull/59) a develop,
+    [#60](https://github.com/vio-live/vio-api-microservice/pull/60) a master): se serializan las
+    ejecuciones de `getChannelUserByIdV2` por proceso y se rechaza si hay más de 8 en cola. **No
+    cambia ningún resultado**, solo impide dos copias del catálogo en memoria a la vez.
+  - **QA:** las 4 que lo mataban → 200 las cuatro, en fila, 0 reinicios. Con 12: 8 en 200, 4
+    rechazadas, 0 muertes.
+  - **PRODUCCIÓN:** 8 simultáneas a los channels 480 y 482 → **las ocho en 200**, 0 reinicios.
+  - A master fue **cherry-pick del fichero de servicio**, no un merge de develop: eso habría
+    cambiado los `requests` del chart de prod.
+  - Ojo: el rechazo sale como **417**, no 503 — el `catch` del controlador mapea todo a
+    `EXPECTATION_FAILED`. Es como ya estaba la ruta.
+  - **Sin arreglar de fondo:** el endpoint sigue construyendo el catálogo entero en memoria antes
+    de filtrar/ordenar/paginar. Esto evita que mate el proceso; no lo hace eficiente. ~4.800
+    líneas, no se toca en la semana del lanzamiento.

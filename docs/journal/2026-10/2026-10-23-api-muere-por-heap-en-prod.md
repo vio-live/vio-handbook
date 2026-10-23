@@ -114,3 +114,27 @@ no cuatro. O sea: el arreglo de #57/#58 hacía el fallo improbable, no imposible
 Las **mismas 4 peticiones simultáneas** que hoy matan el proceso tienen que terminar las cuatro
 en 200. Hasta que eso esté medido en QA, #59 no sube a master.
 
+### CERRADO: verificado en QA y en producción
+
+**QA, con el guardia desplegado** (comprobado antes que estaba en el `dist` que corre):
+
+- Las 4 simultáneas que lo mataban: `200` las cuatro, en 12,1 / 23,2 / 34,3 / 45,5 s — se ve que
+  van en fila, que es lo que hace el cambio. **0 reinicios.**
+- Forzando la cola con 12: **8 → 200, 4 rechazadas, 0 reinicios**, y la línea esperada en el log
+  (`8 peticiones ya en cola: rechazo esta para no quedarme sin memoria`).
+
+**Producción** ([#60](https://github.com/vio-live/vio-api-microservice/pull/60), cherry-pick solo
+del fichero de servicio — **no** se mergeó `develop` entero a propósito, porque habría cambiado los
+`requests` del chart de prod por los de develop):
+
+- Guardia presente en el `dist` que corre y `NODE_OPTIONS` activo.
+- **8 peticiones simultáneas a los channels 480 y 482**: las ocho en `200` (2,1 s → 14,1 s,
+  serializadas), **0 reinicios en las dos réplicas**, `api-ecom` en 401 normal.
+
+**Detalle honesto:** el rechazo llega al cliente como **417**, no 503 — el `catch` del controlador
+mapea cualquier error a `EXPECTATION_FAILED`. Es el comportamiento que ya tenía la ruta; no se tocó
+porque cambiarlo afecta al mapeo de errores de todo el endpoint.
+
+**Lo que sigue abierto y no es de infraestructura:** la campaña 1 está `paused = 1` desde las
+14:49, hay dos channels vivos (480 y 482) con el mismo catálogo, y el Replit aún no ha publicado.
+
