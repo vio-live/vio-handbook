@@ -2029,3 +2029,9 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   desde el dashboard con la cuenta de Careless (1327) a las 22:17:46**: la cadena completa fue bien (Shopify cancelado,
   reserva de Vipps liberada, compensación en analytics, eco del webhook idempotente). La fulfillment order estaba asignada
   a «360 Logistics»: el 3PL la había cogido. Captura al enviar: pendiente de otro pedido.
+
+- **23/10 22:30 UTC — claude: segunda orden 4127 / #554752CL (dos productos) correcta, con la confirmación de Shopify enviada
+  al comprador. Y otro arreglo de una línea en extensions:** cancelar desde Vio no reponía el stock en la tienda (el cancel
+  de Shopify iba sin `restock`). [#45](https://github.com/vio-live/vio-extensions-microservice/pull/45) a master → prod, y
+  cherry-pick a develop. La unidad del #554749CL cancelado queda descontada en el Shopify de Careless: reponerla a mano
+  (una talla XS de Vilde genser). Captura al enviar: esperando al 360 con la 4127.

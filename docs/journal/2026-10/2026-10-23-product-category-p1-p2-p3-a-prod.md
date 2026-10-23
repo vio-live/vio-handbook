@@ -222,3 +222,17 @@ marcando el envío o con la captura manual desde la tarjeta de la orden.
 `send_receipt` + `send_fulfillment_receipt` en prod desde las 22:16:18 (extensions #43) y en QA (#44). Woo manda su
 correo por la transición a `processing` al crear el pedido; Magento depende del módulo de la tienda. El namespace
 `outshifter-qa` de los metafields queda como está: Angelo, «no le aparecerá visible».
+
+### 22:21 UTC: segunda orden, con dos productos, y el stock que no volvía
+
+- **Orden 4127 / Shopify #554752CL:** dos líneas (699 + 599 NOK, más 59 de envío), las dos atribuidas a la campaña 2 y al
+  artículo 146, cada una a su bloque (4 y 3), desde la ficha. `order_paid` 1.357 NOK aceptado. **Esta vez Shopify envió la
+  confirmación al comprador** (`send_receipt`, extensions #43). Fulfillment order abierta y asignada a «360 Logistics».
+  Captura al enviar: pendiente del 360 o de la tarjeta de la orden.
+- **Cancelar desde Vio no reponía el stock en Shopify.** Angelo preguntó si al cancelar se liberaba el stock. En el
+  #554749CL cancelado no hay ningún registro de reposición y el inventario de la talla solo cambió al crearse los pedidos
+  (22:07 y 22:21), no al cancelar (22:17). Causa: el `POST /orders/{id}/cancel.json` iba con `email: true` y sin
+  `restock`, y Shopify por API no repone salvo que se le pida; la cancelación por ítem (`refund` con `restock_type:
+  cancel`) sí reponía. extensions [#45](https://github.com/vio-live/vio-extensions-microservice/pull/45) (master) y su
+  cherry-pick a develop: `restock: true`. Vio sigue el stock de Shopify por webhook, así que con eso quedan los dos en
+  orden. La unidad del #554749CL hay que reponerla a mano en el admin de Shopify.
