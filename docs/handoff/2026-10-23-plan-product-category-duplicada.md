@@ -111,6 +111,11 @@ datetime(6) NULL, `product_id` int NULL, `category_id` int NULL. Índices: sólo
 de FK. **0 filas con `deleted_at` no nulo, 0 con `product_id` o `category_id` en NULL**, así que
 el índice plano cubre el 100 % de la tabla y la limpieza es segura hoy.
 
+**QA no se parece a prod en esto** (medido 23/10 por la noche): 4.755 filas, **155 soft-deleted**,
+**2 pares mixtos en los que la fila viva tiene el id MÁS ALTO** y **39 filas con `product_id` o
+`category_id` en NULL**. O sea que en QA sí se ejercitan las dos reglas finas de abajo, y el
+criterio de hecho hay que filtrarlo. Lo que no se vea en prod se va a ver allí primero.
+
 El borrado lógico **se queda** — no hay cambio de comportamiento. La condición se traslada a P1:
 al re-vincular una categoría quitada antes, el código tiene que **recuperar la fila existente
 aunque esté soft-deleted y hacer `restore()`** (o `INSERT ... ON DUPLICATE KEY UPDATE
@@ -131,6 +136,12 @@ Dos detalles que la migración no puede pasar por alto:
 - Borrado **por lotes**, no en una sentencia: son 262.719 filas.
 - Criterio: `count(*) == count(distinct product_id, category_id)` y el índice presente. Primero QA,
   después prod en ventana.
+  > Corrección (23/10, noche): ese criterio hay que leerlo **filtrando
+  > `product_id IS NOT NULL AND category_id IS NOT NULL`**. `count(distinct a,b)` descarta las
+  > filas donde alguno es NULL y `count(*)` las cuenta, así que sin el filtro la resta frena el
+  > índice por filas que el índice no ata. En prod da igual (0 filas con NULL); **en QA hay 39** y
+  > la primera versión de la migración se frenaba ahí con la tabla ya limpia. Ver
+  > [`../lessons/null-en-count-distinct-y-en-indices-unicos-mysql.md`](../lessons/null-en-count-distinct-y-en-indices-unicos-mysql.md).
 - Ojo al orden de despliegue: **P1 desplegado antes de que corra P2 en ese entorno.**
 
 ## P3 — Que el endpoint no dependa del dato · `vio-api-microservice`
@@ -160,8 +171,17 @@ ordenaciones). Con P3 deja de ser urgente. No se toca en la semana del lanzamien
 | Orden, ventanas, verificación en prod | — | **Miguel** |
 
 **Decisión de Angelo (23/10, 20:40): las tres las lleva `claude`.** Yo las había repartido entre
-`jhondev` (P1, P2) y `juan` (P3); los desconvoqué antes de que abrieran nada. El detalle operativo
-está en el canal de coordinación, que es por donde trabajamos claude y yo.
+`jhondev` (P1, P2) y `juan` (P3). El detalle operativo está en el canal de coordinación, que es por
+donde trabajamos claude y yo.
+
+> Corrección (23/10, noche): escribí que a jhondev y juan «los desconvoqué antes de que abrieran
+> nada». **Es falso y lo señalaron ellos, no yo**: el PR de P1
+> ([vio-products-microservice#31](https://github.com/vio-live/vio-products-microservice/pull/31))
+> se abrió a las **18:45 UTC**, hora y media ANTES de las 20:40, y jhondev además lo verificó
+> contra datos reales de QA; juan abrió el de P3
+> ([vio-api-microservice#61](https://github.com/vio-live/vio-api-microservice/pull/61)). Lo que
+> hubo fue una reasignación por encima de trabajo ya hecho, no un desconvoque a tiempo. El trabajo
+> de los dos es el que está sobre la mesa y es el que hay que revisar.
 
 > Nota de reparto: P2 se mandó primero a `maxi` y lo devolvió — ese agente es **Lovisa**, perfil
 > legal y contable (`maxi` es sólo su id técnico). Comprobar el perfil antes de asignar.

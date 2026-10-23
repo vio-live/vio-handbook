@@ -57,6 +57,14 @@ Dos cosas más que se pasan por alto al limpiar la tabla antes de crear el índi
   caer al menor `id` global sólo si no hay ninguna. Conservar la soft-deleted y borrar la viva hace
   desaparecer el dato de la aplicación en silencio, sin error en ninguna parte.
 
+# Lección hermana
+
+Si además de las columnas del índice son nullable las columnas de la **pareja** (`product_id`,
+`category_id` lo son aquí), hay un segundo NULL que muerde en el criterio de verificación y en el
+propio dedupe:
+[`null-en-count-distinct-y-en-indices-unicos-mysql.md`](null-en-count-distinct-y-en-indices-unicos-mysql.md).
+Frenó la creación del índice en QA con la tabla ya limpia.
+
 # De dónde salió
 
 Plan de `product_category` duplicada, 23/10/2026
