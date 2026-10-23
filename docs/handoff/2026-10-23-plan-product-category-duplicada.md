@@ -2,7 +2,7 @@
 title: Plan — `product_category` duplicada 46x, el coste del endpoint de channel, y cómo lo arreglamos con código
 last-updated: 2026-10-23
 owner: Miguel (coordina) · ejecutan varios agentes
-status: abierto
+status: cerrado — en producción el 23/10; sólo queda api#63 para el lunes
 ---
 
 # El problema, medido
@@ -165,7 +165,7 @@ ordenaciones). Con P3 deja de ser urgente. No se toca en la semana del lanzamien
 | Paso | Repo | Quién |
 |---|---|---|
 | P1 | `vio-products-microservice` | **jhondev** |
-| P2 | `package-database` | **jhondev** (acoplada a P1 por orden de despliegue) |
+| P2 | `package-database` | **claude** — #28. jhondev no llegó a arrancarla (bien: le faltaba brief) |
 | P3 | `vio-api-microservice` | **juan** |
 | Coordinación y Trello | — | **vio** |
 | Orden, ventanas, verificación en prod | — | **Miguel** |
@@ -188,6 +188,37 @@ volver a concentrarlo en `claude`, manda su decisión y se corrige aquí.
 
 > Nota de reparto: P2 se mandó primero a `maxi` y lo devolvió — ese agente es **Lovisa**, perfil
 > legal y contable (`maxi` es sólo su id técnico). Comprobar el perfil antes de asignar.
+
+> **Estado final (23/10, 21:30 UTC) — esto ya NO está pendiente.** La frase de abajo («nada entra
+> en producción antes del lunes») quedó superada esa misma noche: Angelo lo pidió explícitamente
+> («vamos con todo, quiero ese problema resuelto hoy») y los tres pasos están **en producción**.
+>
+> - **P1** products [#31](https://github.com/vio-live/vio-products-microservice/pull/31) (develop
+>   19:01Z) y [#32](https://github.com/vio-live/vio-products-microservice/pull/32) (master 19:20Z).
+>   El helper lo escribió **jhondev**; antes del merge se le añadió un segundo commit (`3f8396e`,
+>   19:00Z) que trata `ER_DUP_ENTRY` (1062) como «ya existe» en vez de como error, para la carrera
+>   de dos importaciones simultáneas del mismo par. Sólo se traga el 1062; lo demás se relanza.
+> - **P2** package-database [#28](https://github.com/vio-live/package-database/pull/28) (develop
+>   19:18Z) y **ejecutada en producción** a las 19:27Z: 263.241 filas borradas en 53 lotes, red =
+>   PITR `2026-10-23T19:27:54Z`. Los PR #26 y #27 están **cerrados por superados**.
+> - **P3** api [#61](https://github.com/vio-live/vio-api-microservice/pull/61) (develop 19:08Z) y
+>   [#62](https://github.com/vio-live/vio-api-microservice/pull/62) (master 19:29Z).
+> - **El índice que entró no es el `UNIQUE` plano de este plan**: es columna generada `live` +
+>   `UNIQUE (product_id, category_id, live)`, que exime las filas con borrado lógico. Por eso el
+>   bloqueante que yo había levantado (re-enlazar una categoría quitada antes) **no aplica**.
+>
+> **Verificado por mí en producción a las 21:2xZ, lectura directa de la base:** 5.871 filas totales,
+> 5.871 vivas, 5.871 pares distintos, **0 duplicados**, índice `UQ_product_category_live` presente
+> sobre las tres columnas. Cero filas nuevas desde la migración, donde antes crecía ~10.000/día, y
+> ningún `ER_DUP_ENTRY` en el log de `products`. El `AUTO_INCREMENT` (271.131) va por delante del
+> `max(id)` vivo (269.754) simplemente porque borrar no lo baja: **no** es señal de inserciones
+> rechazadas.
+>
+> **Lo único abierto:** api [#63](https://github.com/vio-live/vio-api-microservice/pull/63), para
+> revisar el lunes. Y la verificación que sigue faltando de P1 es **la de verdad**: importar dos
+> veces el mismo producto de Shopify contra el servicio desplegado y contar. Lo que hay es la
+> lógica SQL del helper simulada a mano contra datos de QA — útil, pero no es el camino de
+> escritura real (misma trampa que `docs/lessons/` ya recoge para los helpers simulados).
 
 **Nada de esto entra en producción antes del lunes salvo que Angelo lo pida**: P0 ya cubre el
 go-live. El valor de P1-P3 es que el problema no vuelva y que se pueda crecer el catálogo.
