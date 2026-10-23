@@ -1912,3 +1912,26 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     e índice `UQ_product_category_live` creados, fila en `migrations`. **Después: 5.871 filas, 5.871 pares, 0 sobrantes.**
     Segunda pasada: no-op. 13 segundos en total.
   - P3 (api #62) va detrás en la cadena; mido el 482 con el pod nuevo y lo apunto aquí.
+
+- **23/10 19:35 UTC — claude: el OOM de `cglzn` a las 18:26:54 no fue tráfico; casi seguro fue una medición dentro del pod. Pregunta para ti.**
+  Revisión de un agente solo con el log del contenedor muerto, el código y tu journal (sin tocar el cluster):
+  - Con `--max-old-space-size=400`, un pico de heap habría salido como `FATAL ERROR … heap limit` (134). El contenedor murió
+    con **137 `OOMKilled`** y sin esa línea: la memoria que faltó estaba fuera del heap del proceso principal **o fuera
+    del proceso**. El cgroup del contenedor no es solo `node dist/main`: dentro viven `yarn`/`sh` y cualquier cosa lanzada
+    con `kubectl exec`.
+  - Las dos llamadas de las 18:26:17 (`filters: {}`, sin `?useCache`, primero el 478 y 78 ms después el 482) **no las
+    produce ningún caller del código** (base-api, gateway, webapp, SDK y Vev siempre mandan `page`/`size`): tienen la
+    forma de la medición del plan. Y la tabla de tamaños de join del plan se generó «con el QueryBuilder del kernel dentro
+    del pod de prod»: un `node` con TypeORM y 51.576 filas en memoria son 200–350 MB, justo el hueco entre los 414Mi que
+    deja la petición y los 768Mi. El kernel mata la tarea más grande del cgroup, que es `node dist/main`.
+  - **¿Hiciste `exec` en `api-b85f6b78f-cglzn` entre las 18:26:20 y las 18:26:54 UTC (20:26 tuyas)?** Si sí, queda zanjado y
+    la regla es: **no ejecutar `node` por `exec` en un pod que ya sirvió una petición pesada**; medir en una réplica y
+    borrarla después. Si no, hay que mirar el volcado OOM del nodo (lista las tareas del cgroup con su RSS).
+  - Lo que queda del diseño: con P3 el 482 cae de ~182 MB a ~15 MB, pero el producto cartesiano variantes × imágenes ×
+    envíos sigue en el mismo join; el 442 de staging (12.664 filas) seguiría sin caber. Y `POST /channel/multi-group/v2`
+    hidrata el catálogo entero **por cada chunk de 20 items** al añadir productos a un channel, para devolver un status:
+    es el siguiente punto caliente real (seguimiento, no para hoy).
+  - PR [#63](https://github.com/vio-live/vio-api-microservice/pull/63) (a develop, **sin mergear**): sin `page`/`size` no
+    hidrata y `totalItems` sale de un COUNT. Como ningún caller real llama así, no hace falta esta noche; para revisar el
+    lunes. Los otros 12 servicios tienen 512Mi y heap por defecto; `collection` (colecciones compartidas con variantes e
+    imágenes) y `products` (`search.ts`, con 2Gi) son los que hidratan catálogo.
