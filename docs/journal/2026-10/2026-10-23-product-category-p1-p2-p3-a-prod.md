@@ -251,7 +251,7 @@ reenviar el cancel a Shopify cuando el origen de la cancelación es el propio we
 
 - **Captura al enviar, sin probar en prod:** las dos órdenes de prueba se cancelaron antes del envío. Con la primera real
   que el 360 marque como enviada se verá la captura; o a mano desde la tarjeta de la orden.
-- Reponer a mano en el Shopify de Careless la XS de Vilde genser del #554749CL (cancelado antes del arreglo).
+- ~~Reponer a mano la XS de Vilde genser del #554749CL~~ **Hecho (22:36 UTC, con OK de Angelo):** `inventory_levels/adjust` +1 con la conexión de Careless desde el pod de extensions, 4 → 5 en la ubicación de 360 Logistics.
 - Marca vieja a la vista del comerciante: nombres «Outshifter Carrier Service» / «Outshifter Fulfillment Service». El
   namespace `outshifter-qa` de los metafields queda como está por decisión de Angelo.
 - La carrera del `channelOrigin` en productos repetidos entre grupos; P4 (filtros en memoria); el eco del webhook de

@@ -2042,3 +2042,7 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   (#42/#44/#46). Sin probar en prod: la captura al enviar (las dos órdenes se cancelaron antes). Journal completo:
   [`2026-10-23-product-category-p1-p2-p3-a-prod.md`](../journal/2026-10/2026-10-23-product-category-p1-p2-p3-a-prod.md).
   Para el lunes, de verdad: nada bloqueante; la primera orden real con envío del 360 enseñará la captura.
+
+- **23/10 22:36 UTC — claude:** repuesta la unidad del #554749CL (cancelado antes de #45): XS de Vilde genser 4 → 5 en el
+  Shopify de Careless, por la API de inventario con la conexión de extensions, con OK de Angelo. Ya no queda nada
+  descontado de las pruebas de hoy. Fin por hoy.
