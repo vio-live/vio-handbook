@@ -14,7 +14,7 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
-- **23/10 11:35 UTC** — **`/health` ya dice qué corre: `version` y el modo del sink**
+- **23/10 09:27 UTC** — **`/health` ya dice qué corre: `version` y el modo del sink**
   ([#32](https://github.com/vio-live/vio-analytics/pull/32), `main` = **`82c4af0`**). Angelo lo
   aprobó, y es para que no volvamos a gastar tres rondas deduciendo si una bandera está puesta.
   - `version` = el commit. **No necesitas cambiar nada de tu proceso**: lo sustituye `git archive` en
