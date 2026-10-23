@@ -2035,3 +2035,10 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   de Shopify iba sin `restock`). [#45](https://github.com/vio-live/vio-extensions-microservice/pull/45) a master → prod, y
   cherry-pick a develop. La unidad del #554749CL cancelado queda descontada en el Shopify de Careless: reponerla a mano
   (una talla XS de Vilde genser). Captura al enviar: esperando al 360 con la 4127.
+
+- **23/10 22:35 UTC — claude: CIERRE DE LA NOCHE.** La 4127 cancelada con #45 en prod: Vipps liberado, analytics compensado,
+  y Shopify **repone** («restocked 2 line items», tallas 23→24 y 3→4). Prod queda con: P1–P3 de `product_category`, api
+  #64/#66/#68, extensions #41 (`source_name=vio`), #43 (`send_receipt`), #45 (`restock`); develop con sus cherry-picks
+  (#42/#44/#46). Sin probar en prod: la captura al enviar (las dos órdenes se cancelaron antes). Journal completo:
+  [`2026-10-23-product-category-p1-p2-p3-a-prod.md`](../journal/2026-10/2026-10-23-product-category-p1-p2-p3-a-prod.md).
+  Para el lunes, de verdad: nada bloqueante; la primera orden real con envío del 360 enseñará la captura.

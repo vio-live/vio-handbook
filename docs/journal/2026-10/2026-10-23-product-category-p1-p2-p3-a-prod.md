@@ -236,3 +236,24 @@ correo por la transición a `processing` al crear el pedido; Magento depende del
   cancel`) sí reponía. extensions [#45](https://github.com/vio-live/vio-extensions-microservice/pull/45) (master) y su
   cherry-pick a develop: `restock: true`. Vio sigue el stock de Shopify por webhook, así que con eso quedan los dos en
   orden. La unidad del #554749CL hay que reponerla a mano en el admin de Shopify.
+
+### 22:33 UTC: la 4127 cancelada con el arreglo puesto — el stock vuelve
+
+Con extensions #45 en los pods (22:30:38), Angelo canceló la 4127 desde el dashboard a las 22:33:09. En tres segundos:
+compensación de 1.298 NOK aceptada por analytics, **reserva de Vipps liberada** (`cancelled: true`), pedido cancelado
+en Shopify **con reposición**: la línea de tiempo dice «Vio Sync restocked 2 line items», el pedido queda
+`fulfillment_status: restocked`, y las dos tallas pasan de 23 → **24** y de 3 → **4** a las 22:33:10. Antes del arreglo
+(#554749CL) no había reposición. El eco del webhook `orders/cancelled` repitió la cancelación en Vio y una segunda llamada
+de cancel a Shopify, las dos sin efecto (Vipps: «nada reservado»; stock sin doble reposición). Seguimiento menor: no
+reenviar el cancel a Shopify cuando el origen de la cancelación es el propio webhook de Shopify.
+
+## Lo que queda después de esta noche
+
+- **Captura al enviar, sin probar en prod:** las dos órdenes de prueba se cancelaron antes del envío. Con la primera real
+  que el 360 marque como enviada se verá la captura; o a mano desde la tarjeta de la orden.
+- Reponer a mano en el Shopify de Careless la XS de Vilde genser del #554749CL (cancelado antes del arreglo).
+- Marca vieja a la vista del comerciante: nombres «Outshifter Carrier Service» / «Outshifter Fulfillment Service». El
+  namespace `outshifter-qa` de los metafields queda como está por decisión de Angelo.
+- La carrera del `channelOrigin` en productos repetidos entre grupos; P4 (filtros en memoria); el eco del webhook de
+  cancelación; `collection` con 512Mi.
+- Marcar la campaña 2 como por defecto en la surface de Aller cuando se retire la 1.
