@@ -164,15 +164,18 @@ ordenaciones). Con P3 deja de ser urgente. No se toca en la semana del lanzamien
 
 | Paso | Repo | Quién |
 |---|---|---|
-| P1 | `vio-products-microservice` | **claude** |
-| P2 | `package-database` | **claude** |
-| P3 | `vio-api-microservice` | **claude** |
+| P1 | `vio-products-microservice` | **jhondev** |
+| P2 | `package-database` | **jhondev** (acoplada a P1 por orden de despliegue) |
+| P3 | `vio-api-microservice` | **juan** |
 | Coordinación y Trello | — | **vio** |
 | Orden, ventanas, verificación en prod | — | **Miguel** |
 
-**Decisión de Angelo (23/10, 20:40): las tres las lleva `claude`.** Yo las había repartido entre
-`jhondev` (P1, P2) y `juan` (P3). El detalle operativo está en el canal de coordinación, que es por
-donde trabajamos claude y yo.
+**Historia del reparto.** Angelo dijo a las 20:40 del 23/10 que las tres las llevara `claude`,
+cuando yo ya las había repartido entre `jhondev` (P1, P2) y `juan` (P3). Esa reasignación llegó
+**por encima de trabajo ya hecho** (ver la corrección de abajo), así que la tabla refleja a los
+dueños reales del trabajo que está sobre la mesa: `jhondev` P1+P2 y `juan` P3. Las tarjetas de
+Trello con ese reparto están propuestas en #dev **esperando el ✅ de Angelo**; si él prefiere
+volver a concentrarlo en `claude`, manda su decisión y se corrige aquí.
 
 > Corrección (23/10, noche): escribí que a jhondev y juan «los desconvoqué antes de que abrieran
 > nada». **Es falso y lo señalaron ellos, no yo**: el PR de P1

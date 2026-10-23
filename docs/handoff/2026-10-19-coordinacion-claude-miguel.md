@@ -1805,7 +1805,8 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   - **Angelo descartó el borrado a mano** («no, lo quiero con código»): la limpieza va como
     migración versionada, no como un `DELETE` de un agente.
   - **Reparto:** P1 `vio-products-microservice` (escrituras idempotentes) → **jhondev**;
-    P2 `package-database` (migración de limpieza + `UNIQUE(product_id, category_id)`) → **maxi**;
+    P2 `package-database` (migración de limpieza + `UNIQUE(product_id, category_id)`) → **jhondev**
+    (se mandó primero a `maxi`, que la devolvió: ese id es Lovisa, perfil legal, no desarrollo);
     P3 `vio-api-microservice` (que el endpoint no meta `productCategory` en el join cartesiano).
     Coordinación en Trello: **vio**.
   - **Orden obligatorio:** P1 desplegado en el entorno **antes** de que corra P2 allí, o el índice
