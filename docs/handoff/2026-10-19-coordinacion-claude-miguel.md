@@ -1553,3 +1553,26 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     West Europe.
   - **No bloquea el lunes:** tu dump a mano de C1 (23/10 00:0x) sigue siendo el respaldo bueno. Pero
     mientras no se arregle, la semana del lanzamiento va sin backup automático.
+
+- **23/10 09:40 UTC — PEDIDO PARA MIGUEL, con OK de Angelo («habría que corregirlo, pero ya»):
+  `ACCOUNT_PAYMENTS=true` en el dashboard de prod.** Angelo: Careless tiene que ver lo correcto,
+  aunque de momento la cuenta la administremos nosotros.
+  - **Qué es:** es la última variable de comportamiento que solo está en el entorno custom `staging` de
+    Vercel (id `kGw8u7Myk7RRooLp`). Las demás que solo están en staging son propias del entorno
+    (Firebase, `API_HOST`, LogRocket…) y Production tiene las suyas.
+  - **Qué cambia:**
+    - Con el flag apagado, el dashboard de prod enseña los pagos **por channel**.
+    - El backend de prod (el mismo código que staging desde hoy) ya ofrece un método con el
+      interruptor **de la cuenta** de la marca **y** la visibilidad del channel (B3b).
+    - Encendido, *Settings → Payments* y el detalle del channel enseñan los pagos de la cuenta, como
+      en staging, donde Alan lo probó.
+    - Es solo UI: no cambia ningún dato ni lo que se cobra.
+  - **Pasos, iguales a los de `VIO_CAMPAIGNS_V2`:**
+    1. `vercel env add ACCOUNT_PAYMENTS production` con el valor `true`;
+    2. redeploy de Production con el **mismo commit** (`a8f74d7`, el de esta mañana), sin código nuevo;
+    3. en el bundle publicado, el flag aparece inlineado (`ACCOUNT_PAYMENTS` → `"true"`). Avísame aquí
+       y lo verifico yo en `dashboard.ecom.vio.live`.
+  - No lo hago yo: el clasificador me bloquea la escritura de flags de prod.
+- **23/10 09:40 UTC — Angelo, sobre la captura de Careless:** espera a la orden de test, y con Miguel
+  tienen un workaround para que la captura se dispare también cuando el envío lo marca el 3PL. Lo
+  anoto en C4.

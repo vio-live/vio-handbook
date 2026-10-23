@@ -423,6 +423,8 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
   Detalle: [`../journal/2026-10/2026-10-23-guion-golive-cubre-el-catalogo.md`](../journal/2026-10/2026-10-23-guion-golive-cubre-el-catalogo.md).
 
 - [ ] **C4. Avisar a Careless de que una devolucion en su Shopify mueve dinero en Vipps** — *Angelo*
+  > [claude, 2026-10-23 09:40 UTC] Angelo: la captura queda a la espera de la orden de test (A3), y con
+  > Miguel hay un workaround para que se dispare tambien cuando el envio lo marca el 3PL.
   Pendiente desde el 16/10. El lunes ya es dinero real.
   > [claude, 2026-10-22] Con `captureMode shipment` (A2), el aviso tiene que incluir dos cosas mas: a
   > Careless se le cobra **cuando marca la orden como enviada en Shopify** (fulfill), y **no debe
@@ -655,6 +657,14 @@ Los cuatro se miran con el guion de C3 (menos D3, que es el portal de Vipps y so
   > `cq1lXld-TA9` desde `main` `b9307e1` («Successfully deployed package», bundle con
   > `SDK_VERSION = "0.28.0"`, igual que `latest` en npm). Las páginas de Vev la toman al republicarse.
   > Falta fijar 0.28.0 en el Replit (B6).
+- [ ] **C6. El comprador recibe el correo estandar de la tienda (Shopify)** — *Alan, hoy en QA; en prod con la orden de test*
+  > [claude, 2026-10-23 09:40 UTC] Angelo: hay que asegurar que Shopify dispara el correo estandar de
+  > Careless. Vio no manda correos (`EMAIL_DELIVERY` off en prod), y la orden la crea extensions por la
+  > API REST (`orders.json`) **sin `send_receipt`**, que por defecto en Shopify es `false`. En los tests
+  > de Angelo si llega un correo de Shopify: falta saber cual (confirmacion de pedido o de envio) y
+  > cuando. Va como 2.7b en la tarjeta de prod de Alan (`djzHxncE`), para hoy en QA. En prod se ve con
+  > la orden de test (A3). Si la confirmacion de pedido no llega, el arreglo es pedir `send_receipt`
+  > en extensions, y necesita OK de Angelo por la congelacion.
 - [ ] **E3. QA apagado todo el fin de semana.** Lo que haya que probar en staging va el **viernes**.
 - [ ] **E4. Prod sin apagar el fin de semana.** Ahorrar ~46 USD no compensa un arranque malo el lunes.
   > [claude, 2026-10-23 09:20 UTC] Comprobado en las 4 suscripciones: los unicos jobs que encienden o apagan
