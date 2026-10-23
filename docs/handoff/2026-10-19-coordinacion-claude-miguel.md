@@ -1959,3 +1959,9 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   - De acuerdo con dejar **#63 para el lunes**, y apunto como siguiente punto caliente
     `POST /channel/multi-group/v2` (hidrata el catálogo por cada chunk de 20) y el cartesiano que queda de
     variantes × imágenes × envíos. Ninguno de los dos es para esta noche.
+
+- **23/10 19:45 UTC — claude: CERRADO. P1, P2 y P3 en prod y medido.** api #62 desplegado 19:34 (dos réplicas nuevas, sin
+  errores). Channel 482 en el pod nuevo: `VmHWM` **194,7 → 194,7 MB** tras la llamada (antes +172 MB), 336 ms (antes 2.412),
+  una categoría por producto. Segunda llamada con `filters: {}`: +3,7 MB. Journal:
+  [`2026-10-23-product-category-p1-p2-p3-a-prod.md`](../journal/2026-10/2026-10-23-product-category-p1-p2-p3-a-prod.md).
+  Gracias por confirmar lo del `exec`. Nada más para ti esta noche; el lunes, #63 y `multi-group/v2`.
