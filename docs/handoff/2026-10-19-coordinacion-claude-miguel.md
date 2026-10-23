@@ -14,6 +14,39 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **23/10 09:11 UTC** — **El colector no ha reiniciado: `MIXPANEL_IDENTITY` no está activa todavía.**
+  Dijiste dos veces que ya estaba y te creo con el `.env`; lo que no ha pasado es el reinicio, y la
+  configuración se lee **solo al arrancar** (`const config = loadConfig()` al cargar `src/index.ts`,
+  con `dotenv/config`). Tres medidas de `/health` apuntan al mismo arranque: `uptime_s` 626 (anoche,
+  tras tu deploy), 5776 (86 min después) y 47204 (ahora) → **19:47 UTC del 22/10 en staging y 19:48
+  en prod**, que es tu deploy de `c2fc1614`. Un único proceso desde entonces.
+  - **Lo que necesito**, en las dos VMs: `systemctl restart vio-analytics`. Nada más; el binario que
+    ya está puesto sirve.
+  - **La comprobación que lo zanja** (lee el entorno del proceso vivo, no el fichero; no imprime
+    ningún valor, solo cuenta):
+    ```bash
+    systemctl show -p ActiveEnterTimestamp vio-analytics
+    tr '\0' '\n' < /proc/$(systemctl show -p MainPID --value vio-analytics)/environ | grep -c '^MIXPANEL_IDENTITY=simplified'
+    ```
+    `1` = encendida. `0` = sigue apagada aunque el `.env` lo diga. Si sale `1` y el uptime es alto,
+    me equivoco yo y quiero saberlo.
+  - **Sí, incluye prod**, y lo pidió Angelo con estas palabras: *«quiero hacerlo ya! arreglalo ya.
+    nada de antes del lunes»* (22/10). Sé que tu norma del bucle es prod nada; esto es excepción
+    pedida por él, igual que el deploy del colector de anoche.
+  - **Por qué corre prisa**: prod **ya no está en cero**, tiene 30 eventos ingeridos y reenviados. El
+    argumento de «ahora no se parte nada» era que estaba vacío. Cada anónimo que entra antes de
+    encender la identidad es historia que se corta cuando se encienda (su `distinct_id` canónico pasa
+    a `$device:<anon>`). Con 30 eventos da igual; el lunes no.
+  - Si prefieres desplegar en vez de reiniciar: `main` = `76859ab`
+    ([#31](https://github.com/vio-live/vio-analytics/pull/31)) ya trae `simplified` **por defecto** y
+    no necesita tocar ningún `.env`. Las dos vías valen; la del reinicio es más corta.
+  - **Verificación después**: `uptime_s` bajo en los dos, y en staging un evento real entrando y
+    saliendo (`clickhouse.inserted` y `sinks.mixpanel.forwarded` subiendo juntos, `lastError: null`).
+    En prod **no inyectes nada**, como hiciste bien anoche.
+  - Aparte: `/health` no expone ni versión ni el modo de identidad, y por eso este ida y vuelta se
+    resuelve con aritmética de uptime. Le he propuesto a Angelo añadirlos (dos líneas, mías); si lo
+    aprueba, la próxima vez esto se comprueba con un `curl` y no hace falta que entres en la máquina.
+
 - **19/10 18:25 UTC** — Visto: migración de atribución en QA (verificada desde el pod: columnas e índice presentes,
   `OrderAttribution1792300000000` última) y bumps 1.0.277 lanzados por ti. Gracias. Lo que viene esta noche:
   PRs de la fase A (colector → `main`, base-api → develop, webapp → develop) y el de shopcart (atribución al crear
