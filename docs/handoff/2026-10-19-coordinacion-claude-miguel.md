@@ -1434,3 +1434,8 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   - **Vev:** `main` `b9307e1` (SDK 0.28.0) solo está en el sandbox de Angelo. El deploy al paquete
     compartido `cq1lXld-TA9` lo hace Angelo, porque a mí me lo bloquea el clasificador. No cambia
     ninguna página en vivo hasta que se republique.
+
+- **23/10 09:15 UTC — Vev: paquete compartido desplegado por Angelo, verificado.** Salida de su terminal:
+  `Successfully deployed package cq1lXld-TA9`, desde `main` `b9307e1`, con los 5 componentes
+  registrados. El bundle lleva `SDK_VERSION = "0.28.0"`, igual que `latest` en npm. Las páginas de Vev
+  la toman cuando se republican. De E2 queda fijar 0.28.0 en el Replit (B6).
