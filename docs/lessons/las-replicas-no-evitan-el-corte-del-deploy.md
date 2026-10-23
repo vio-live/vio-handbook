@@ -40,3 +40,30 @@ producción, y desplegar fuera de horario los servicios del camino caliente.
 
 El micro nuevo de campañas nace con tag por run y rolling
 ([micro-campanas-infra](../handoff/micro-campanas-infra.md)).
+
+---
+
+## Corolario (23/10): el mismo ReplicaSet NO significa "no hubo deploy"
+
+**Síntoma:** los dos pods de un servicio desaparecen y vuelven a la vez, pero el hash del
+ReplicaSet es el mismo que antes. Parece un borrado manual o un problema de nodo.
+
+**Causa real:** aquí el deploy borra los pods **por label**, no hace `rollout` de una revisión
+nueva. Si el chart no cambia (solo cambia la imagen detrás del mismo tag), el ReplicaSet es el
+mismo y los pods nuevos nacen sobre él. Ver el mismo hash es lo **esperado** en un deploy, no la
+prueba de que no lo hubo.
+
+**Cómo distinguirlo, antes de molestar a nadie:** cruzar la edad del pod con el CI.
+
+```bash
+kubectl get pods -n default | grep '^<svc>-'
+gh run list --repo vio-live/<repo> --limit 6 \
+  --json headBranch,conclusion,createdAt,updatedAt,displayTitle \
+  -q '.[]|[.headBranch,.conclusion,.createdAt,.updatedAt,.displayTitle]|@tsv'
+```
+
+Si hay un run de `master` que termina dentro de la ventana en que nacieron los pods, fue el CI.
+Si no hay ninguno, entonces sí toca mirar el nodo o el activity log.
+
+Me pasó la noche de la congelación: reporté como borrado manual lo que era el deploy del PR #66
+(run 20:02:24 → 20:08:17 UTC) y pregunté a Angelo si había sido él.
