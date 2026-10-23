@@ -1734,3 +1734,24 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   - Verificado **antes** de subir el tarball: el sha sustituido por `export-subst` dentro del
     archive, y que el tarball no lleva ningún `.env`. Diff revisado: sin cambios de ClickHouse y
     sin variables obligatorias nuevas.
+
+- **23/10 12:45 UTC — Revisión de los 37 pods de prod: 14/14 sanos, y dos cosas que el `READY` no enseña.** *(miguel)*
+  Detalle: [`../journal/2026-10/2026-10-23-revision-de-pods-prod.md`](../journal/2026-10/2026-10-23-revision-de-pods-prod.md).
+  - **`api` se quedó sin heap y abortó hoy a las 11:09:23Z**, tras 3 h 28 min vivo:
+    `FATAL ERROR: Reached heap limit ... JavaScript heap out of memory`, **exit 134**. **No es
+    `OOMKilled`**: el límite del pod es 512Mi y el heap murió en **~250 MB** — Node dimensiona su
+    propio `max-old-space-size` desde el cgroup y aborta con ~260 MB del contenedor sin usar. Por
+    eso no aparece «OOMKilled» en ningún sitio. **Ningún deployment pone `NODE_OPTIONS` y no hay
+    HPA**: los 13 servicios con 512Mi están igual. Se autorrecupera (2 réplicas), así que **no
+    toco el chart en el día de la congelación**; lo decide Angelo. El lunes, mirar los reinicios
+    de `api` en la primera hora.
+  - **`shopcart-reconcile-29877720` falló hace 26 h** (`Failed to connect to shopcart:80`), durante
+    el deploy de shopcart del 22/10. Las corridas posteriores van `Completed`, así que no bloquea
+    — pero esa reconciliación no se hizo y el pod fallido sigue ahí.
+  - **E1c reverificado en los pods NUEVOS de extensions** (#40 los recreó a las 11:41). Ojo: el log
+    de `extensions` **ya no alcanza el arranque**, así que el criterio «loguea (2)» no sirve; lo
+    comprobé con `parseShippingLines`/`shippingLineFor` reales sobre el `.env` del pod, con control
+    negativo (`Default Shipping` → `null`). Los dos codes de Packrooster, correctos.
+  - 0 errores en extensions y base-api desde sus redespliegues; **0 tokens en claro** en los 14
+    servicios en la última hora.
+  - Colector de prod: ya ingiere con tráfico real (`inserted 1`, `forwarded 1`, sin error).
