@@ -271,3 +271,13 @@ reenviar el cancel a Shopify cuando el origen de la cancelación es el propio we
   esta noche:** qué añadió la línea de las 22:08 (¿segunda pestaña, ficha abierta tras el pago?) y por qué el panel no
   reflejaba el carrito del servidor; reproducir en QA con la página de Replit de staging y hacer que el checkout muestre
   siempre lo que hay en el servidor antes de pagar.
+
+### Para mañana: la línea fantasma del carrito (Angelo, 22:45: «hay que investigarlo para mañana»)
+
+Un agente analiza en `vio-web-sdk` la cronología de esta noche, carrito por carrito: cómo persiste el id del carrito,
+qué hace el pago exprés desde la ficha (tres carritos en 90 s), cómo pinta el panel sus líneas frente al carrito del
+servidor, y si el checkout se construye desde el servidor sin enseñarlo. Entrega: análisis con el mecanismo reproducido
+en tests y el arreglo mínimo en un PR a `main` (sin mergear): refrescar el carrito del servidor antes del checkout y
+pintar exactamente eso; que las demás pestañas se enteren del pago; que el pago exprés no deje líneas vivas en carritos
+abandonados. Lo que Angelo puede aportar mañana: si añadió Sofie genser a las 22:08 tras el primer pago, y si tenía la
+página en dos pestañas.
