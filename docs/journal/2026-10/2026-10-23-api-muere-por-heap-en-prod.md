@@ -82,3 +82,35 @@ Lo que cerró el diagnóstico no fue leer más código: fue **reproducirlo en st
   el fin de semana del go-live.
 - Los otros 12 servicios con límite de 512Mi están en la misma situación de techo de heap. Ninguno
   ha dado el problema, pero conviene revisarlo después del lunes.
+
+---
+
+## Continuación (17:30-18:xx UTC+2): Angelo — «el lunes vamos live y así no podemos ir»
+
+Tenía razón, y lo medí en vez de discutirlo.
+
+### Lo que faltaba medir: concurrencia
+
+Mi verificación había sido **secuencial**. Con el heap ya en 400 MB, lancé **4 peticiones
+simultáneas** al channel 442 de staging (7.540 productos): el proceso **vuelve a morir**,
+`exit 134` a los 23 s, pod no listo. El techo de memoria aguanta **una** copia del catálogo,
+no cuatro. O sea: el arreglo de #57/#58 hacía el fallo improbable, no imposible.
+
+### Lo que se hizo con eso
+
+- **#57 y #58 mergeados** (Angelo: «y hazlo tú» — levanta ADR-0001 para este caso). Prod ya no
+  depende del `kubectl patch`: el chart es el dueño, verificado tras el deploy de CI
+  (`NODE_OPTIONS` presente, cgroup en 805306368 B = 768Mi, `helm get values` limpio).
+- **QA alineado a 768Mi.** Antes tenía heap 400 MB dentro de 512Mi, que es la peor combinación:
+  convierte el aborto de Node (134) en un `OOMKilled` del kernel (137). Lo confirmé por accidente
+  cuando un `exec` murió con 137.
+- **[#59](https://github.com/vio-live/vio-api-microservice/pull/59)**: serializa
+  `getChannelUserByIdV2` por proceso y rechaza con **503** si hay más de 8 en cola. No cambia
+  ningún resultado — solo impide que dos copias del catálogo coexistan en memoria. Typecheck
+  limpio (los 2 errores que salen son de specs de pagos, previos).
+
+### Criterio de hecho, pendiente al escribir esto
+
+Las **mismas 4 peticiones simultáneas** que hoy matan el proceso tienen que terminar las cuatro
+en 200. Hasta que eso esté medido en QA, #59 no sube a master.
+
