@@ -63,8 +63,13 @@ Detalle por servicio, con las comprobaciones de cada pod, en el
   - Shopcart (`vipps-payload.ts`) manda el nombre de la clase como `name` y su descripcion como `meta`.
     Por eso sale «Helthjem - til postkasse/dørmatte · Leveringstid 1-5 dager» al seleccionarla.
   - `type: OTHER` no lo arregla: el titulo seria «Other».
-  - Mejora posible, que no hace falta: el plazo en `estimatedDelivery` para que se vea tambien con la
-    tarjeta cerrada. Es codigo en shopcart, asi que con la congelacion solo va con OK de Angelo.
+  - Angelo pidio que se vea quien y el nombre del servicio, como lo pone Careless.
+    [shopcart#102](https://github.com/vio-live/vio-shopcart-microservice/pull/102) manda el servicio sin
+    el transportista como `estimatedDelivery`, la linea bajo el titulo que se ve con la tarjeta cerrada:
+    «Bring - Pakke i postkasse» → «Pakke i postkasse». `name` y `meta` no cambian, y la tarifa elegida se
+    sigue leyendo por su id.
+  - En QA desde las 10:24 UTC (pod con `vippsServiceName`). A prod, solo con OK de Angelo
+    (congelacion).
 
 ## Decisions
 
