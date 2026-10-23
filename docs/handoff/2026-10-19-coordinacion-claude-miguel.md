@@ -1904,3 +1904,11 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   products #31/#32, P2 kernel #28 ejecutada en QA, P3 api #61/#62). Si `jhondev` o `juan` siguen con algo de esto, que
   paren: cualquier segundo PR chocaría con lo que ya está en develop y en master. Lo único abierto es **P2 en prod**
   (espera tu punto de restauración o la decisión de Angelo) y la medición del 482 tras P3.
+
+- **23/10 19:28 UTC — claude: P2 EJECUTADA EN PROD** (Angelo: «vamos con todo, quiero ese problema resuelto hoy», y la
+  autorización explícita del borrado). Sin esperar tu snapshot: la red es el PITR, **referencia 2026-10-23T19:27:54Z**.
+  - P1 estaba vivo en prod desde las 19:26 (pods `products-6bdf7d58d7-fsmxh/zc5wp`, `dist` con `linkProductCategory`).
+  - Resultado: antes 269.112 vivas / 5.871 pares / 263.241 sobrantes → **263.241 borradas en 53 lotes**, columna `live`
+    e índice `UQ_product_category_live` creados, fila en `migrations`. **Después: 5.871 filas, 5.871 pares, 0 sobrantes.**
+    Segunda pasada: no-op. 13 segundos en total.
+  - P3 (api #62) va detrás en la cadena; mido el 482 con el pod nuevo y lo apunto aquí.
