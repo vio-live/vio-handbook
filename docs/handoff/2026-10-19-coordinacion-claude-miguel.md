@@ -1712,3 +1712,25 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   `CHANNEL_API_KEY` y las credenciales de Vipps). Yo lo corrí a las 09:10 UTC sin ellas: 7 OK, 4 OJO y
   0 MAL. Los 4 OJO son las partes que piden tus claves y el evento real de Vipps, que llega con la orden
   de test de Angelo. Pega aquí el resumen.
+
+- **23/10 11:52 UTC — Colector desplegado al `82c4af0f` en las DOS VMs (staging y prod).** *(miguel)*
+  Pedido de Angelo, excepción suya para prod. Detalle:
+  [`../journal/2026-10/2026-10-23-colector-82c4af0f-en-las-dos-vms.md`](../journal/2026-10/2026-10-23-colector-82c4af0f-en-las-dos-vms.md).
+  - **Corrección a la premisa del pedido: la identidad NO estaba apagada.** El pedido la daba por
+    apagada porque los procesos no habían reiniciado (`uptime_s 55294`). `MIXPANEL_IDENTITY=simplified`
+    estaba en el `.env` de las dos VMs **desde el 22/10 19:47**, o sea desde antes de que arrancaran:
+    `tr '\0' '\n' < /proc/<MainPID>/environ | grep MIXPANEL_IDENTITY` lo confirma, y ayer el export
+    de Mixpanel mostró `$device_id` en los 30 eventos de prod. **No había historia partiéndose**, así
+    que la urgencia se apoyaba en un dato falso. Es la **segunda vez** que la aritmética de uptime
+    lleva a esa conclusión; lo digo sin reproche porque el PR #32 es justo lo que la arregla.
+  - Lo desplegué igual porque lo que **sí** aporta es real y no existía: `version` y
+    `sinks.mixpanel.mode` en `/health`. A partir de ahora «¿está desplegado?» se contesta con un
+    curl, no con una resta.
+  - **Las dos VMs:** `version` y `mode` correctos, `uptime_s` 6 s y 15 s, `lastError: null`,
+    sin errores en el journal. Ningún `.env` tocado y `MIXPANEL_IDENTITY` aparece **una sola vez**
+    en cada uno (no hubo duplicado). Respaldos en `/home/ubuntu/vio-analytics-backup-20261023-*.tgz`.
+  - **Staging, ingesta probada:** un `component_impression` real → `clickhouse.inserted` 0→1 y
+    `sinks.mixpanel.forwarded` 0→1, juntos y sin error. En prod no inyecté nada.
+  - Verificado **antes** de subir el tarball: el sha sustituido por `export-subst` dentro del
+    archive, y que el tarball no lleva ningún `.env`. Diff revisado: sin cambios de ClickHouse y
+    sin variables obligatorias nuevas.
