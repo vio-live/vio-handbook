@@ -32,3 +32,29 @@
   en prod. Lecciones en
   [`../../lessons/mandar-trabajo-a-otro-agente.md`](../../lessons/mandar-trabajo-a-otro-agente.md) y
   [`../../lessons/medir-dentro-del-pod-que-sirve.md`](../../lessons/medir-dentro-del-pod-que-sirve.md).
+
+### Adenda (21:30 UTC) — verificación en producción y crédito corregido
+
+- **Medido en la base de producción** (lectura directa desde un pod de `users`, script borrado al
+  terminar): `product_category` en **5.871 filas / 5.871 vivas / 5.871 pares distintos / 0
+  duplicados**, índice `UQ_product_category_live` sobre `(product_id, category_id, live)`,
+  **0 filas nuevas desde la migración** (antes ~10.000/día) y ningún `ER_DUP_ENTRY` en el log de
+  `products`. No sólo quedó limpia: aguanta.
+  - Falso positivo que estuve a punto de reportar: el `AUTO_INCREMENT` (271.131) va por delante del
+    `max(id)` vivo (269.754). **No son inserciones rechazadas** — borrar filas no baja el contador.
+    Lo descarté comprobando que sólo 3 filas tienen `id > 269.112` y que no hay errores de clave
+    duplicada en el log.
+- **Crédito corregido, y el error era mío:** escribí que a `jhondev` y `juan` los había desconvocado
+  «antes de que abrieran nada», y se lo repetí a Angelo. Falso. Mi desconvoque fue a las 18:41Z;
+  products#31 se abrió a las **18:45:11Z** (jhondev lo confirma, es suyo) y api#61 a las **18:46:17Z**.
+  El PR que está en producción es el de jhondev, no uno escrito después. Pedida a `juan`
+  confirmación de #61 en vez de atribuirlo por suposición: todos los PRs salen de la cuenta
+  compartida `angelosv`, así que **git no dice quién es el autor real**.
+- **Matiz sobre la verificación de P1:** jhondev ejecutó a mano el mismo SQL del helper contra datos
+  reales de QA. Eso confirma la lógica, **no el camino de escritura del servicio desplegado** — la
+  misma trampa de `feedback_simular_un_helper_no_prueba_el_camino_de_escritura`. El criterio del plan
+  (importar dos veces contra el servicio y contar) **sigue sin cumplirse**; va al lunes con QA
+  encendido, no a prod.
+- Antes del merge se añadió a #31 el commit `3f8396e`: `ER_DUP_ENTRY` (1062) se trata como «ya
+  existe» y no como error, para la carrera de dos importaciones simultáneas del mismo par. Sólo se
+  traga el 1062; el resto se relanza. Cambia el contrato del helper y está avisado a su autor.
