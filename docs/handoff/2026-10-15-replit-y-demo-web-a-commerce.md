@@ -214,3 +214,130 @@ Texto para el agente de Replit, cuando la 0.27.0 esté en npm:
 >   `{ orderNumber, buyerRef, sponsor }`; guardad `checkoutId` y `sponsorId` en la URL de vuestra confirmación.
 >   `Vio.sponsorIdentity(sponsorId)` da `{ id, name, logoUrl, avatarUrl }` en cualquier momento.
 > - La marca es siempre la del checkout que se paga, nunca la del artículo abierto. Sin logo, el nombre.
+
+---
+
+## PRODUCCIÓN (23/10) — prompt para el agente de Replit, con luz verde de Angelo
+
+> [miguel, 2026-10-23] Angelo: «tengo luz verde para migrar a Replit de prod». Esta sección
+> **sustituye** a la del 21/10 para el salto a producción. Todo lo de aquí está **medido contra
+> prod hoy**, no inferido de QA.
+
+### La corrección que hay que leer antes de copiar nada: la key NO es la del channel
+
+El checklist decía (B3, B6) que la api key del channel 480 — `DWWWP0S-…` — «es la que va en el
+Replit». **Es falso y es bloqueante.** El bootstrap del SDK pega contra `api.vio.live`, que es
+**el micro de campañas entero** (`virtual-service-campaigns-prod`), y su guarda es
+`SurfaceKeyGuard`: busca la clave en `surface.api_key` y exige `status = 'active'`. Con la key del
+channel responde **401 `Invalid API key`** y la página no arranca.
+
+Medido hoy contra prod:
+
+| Petición | Key del channel | Key de la surface |
+|---|---|---|
+| `GET /v2/mobile/config?platform=web` | **401** | **200** |
+| `GET /v2/web/brands` | **401** | **200** |
+| `GET /v2/commerce/sponsors/1327/catalog` | — | **200**, 14 productos |
+
+**La key del channel no hay que pasarla a nadie: viene dentro de la respuesta.** El bootstrap
+devuelve `primarySponsor.commerce = { apiKey, channelId: "480", paymentMethods: ["vipps"] }` y el
+SDK la usa solo para hablar con `graph-ql.vio.live`. Un solo secreto en el Replit, no dos.
+
+La surface de producción es la **1, «Mote Livsstil Hub»**, publisher Aller (1330), `status active`,
+`markets []`, `privacy_mode standard`. Su `api_key` empieza por `mote_livsstil_hub_api_key_…`;
+el valor **no va al repo** (está en el TOOLS.md de Miguel, y lo pega Angelo en Replit).
+
+### Lo que resuelve `environment: 'production'` (leído del paquete publicado 0.28.0)
+
+```
+production: { apiBase: 'https://api.vio.live',
+              graphQLBase: 'https://graph-ql.vio.live',
+              eventsBase: 'https://events.vio.live' }
+```
+
+Los tres responden desde `www.moteoglivsstil.no`: CORS comprobado hoy en graph-ql (`204`,
+`allow-origin: *`) y en el colector (`204`, refleja el origen). **No hay que poner `apiBase` ni
+`graphQLBase` a mano** — si se ponen, se pierde el mapeo y se acaba apuntando a `graph-ql-dev`,
+que es el valor por defecto del paquete.
+
+### El prompt
+
+> **Contexto.** Pasáis de QA a producción. Cambia la key, el `environment` y el host de las
+> llamadas de vuestro servidor. El resto de la integración (puntos 3 a 9 del prompt del 21/10)
+> **no cambia**.
+>
+> **1. Versión del SDK: `0.28.0` exacta.**
+> ```
+> npm i --save-exact @vio-live/web-sdk@0.28.0
+> ```
+> Sin `^`. Es la `latest` de npm desde el 22/10 18:13 Oslo y coincide con `main` (`gitHead`
+> `3840330`, nada mergeado sin publicar). **Nosotros no publicamos nada después de la congelación
+> del viernes**, así que fijarla exacta cierra el riesgo de que un publish os cambie la página en
+> vivo el lunes.
+>
+> **2. Configuración.**
+> ```ts
+> Vio.init({
+>   apiKey: VIO_SURFACE_KEY,            // la key de la surface de PRODUCCION (os la pasa Angelo)
+>   environment: 'production',          // NO pongais apiBase ni graphQLBase
+>   platform: 'web',
+>   campaignId: <vioCampaignId del articulo, o nada>,
+> })
+> Vio.analytics.start({ host: 'replit', requireConsent: true })
+> ```
+>
+> **3. Vuestro servidor: mismo contrato, otro host.** `api-staging.vio.live` → `api.vio.live`,
+> con la key de producción en `X-Api-Key`:
+> - `GET https://api.vio.live/v2/mobile/config?platform=web` — campañas y sponsor principal
+> - `GET https://api.vio.live/v2/web/brands` — marcas de la surface
+> - `GET https://api.vio.live/v2/commerce/sponsors/1327/catalog` — catálogo del sponsor
+>
+> **4. Lo que hay hoy en producción**, para que sepáis qué tenéis que ver:
+> - Surface **1 «Mote Livsstil Hub»**, publisher Aller.
+> - Campaña **1 «Careless Aller (test)»**, por defecto, activa del 22/10 22:17 al 29/10 23:17 UTC,
+>   sponsor principal **Careless (1327)**, comisión 15 %.
+> - **14 productos** en el catálogo, todos de Careless, de 299 a 1.499 NOK.
+> - Slots ya registrados de la prueba: `article-146-block-2/3/4` (card) y `-block-5` (carousel).
+>   Con el artículo real cambian solos (`article-<id>-block-<n>`).
+> - El bootstrap ya trae `termsUrl` y `refundPolicyUrl` de Careless: los enlaces
+>   «Kjøpsvilkår · Angrerett» salen solos en la ficha.
+>
+> **5. Pagos: en producción solo hay Vipps, y es dinero real.** `paymentMethods: ["vipps"]`. No hay
+> Stripe. Cada compra de prueba cobra de verdad en la cuenta de Careless, así que importe mínimo y
+> avisadnos antes.
+>
+> **6. El bloqueo al volver de Vipps sigue abierto y en producción es peor.** Es vuestra guarda de
+> surfaces, no el SDK: con `vio_payment` en la URL, saltáosla e iniciad con la surface del carrito.
+> Sin eso, un comprador del lunes ve «Handlekurven tilhører en annen Vio-surface» en vez de la
+> confirmación, con el pago ya hecho.
+>
+> **7. Del salto 0.26.1 → 0.28.0, lo que se rompe en silencio** (`⚠️ Upgrade notes`):
+> `.sponsor-header` / `.topbar-brand` ya no existen (ahora `::part(sponsor)`); si tenéis vuestra
+> propia pantalla de «cargando Vipps», `preventDefault()` en `vio:payment-redirect-start`; si
+> bloqueáis la página al abrir una hoja, quitadlo (lo hace el SDK); vuestra confirmación necesita
+> `checkoutId` + `sponsorId` en su propia URL para sobrevivir a una recarga.
+> Si no da tiempo al CSS, subid igual y restaurad el aspecto con `detailImageAspect: '1 / 1'`,
+> `detailImageFit: 'contain'`, `detailOptionHeight: '42px'`, `detailBuyPosition: 'static'`.
+> **El bump no es estético:** en 0.26.1 el `commerce.order_id` del evento `purchase` es el uuid del
+> checkout en todo pago por redirección — y Vipps lo es. Con eso las devoluciones no netean nunca.
+>
+> **8. Consentimiento (Didomi).** Elegid **uno**: o vuestro CMP carga el script de Vio solo después
+> de aceptar (y entonces `requireConsent` sobra), o se carga siempre con `requireConsent: true` y
+> llamáis `setConsent(true)` al aceptar. Lo que no vale es cargarlo antes de aceptar sin
+> `requireConsent`: eso escribe en `localStorage` sin consentimiento.
+>
+> **9. Qué reportar**, con ids de artículo, checkout y orden: que `Vio.attribution()` devuelve
+> `campaignId 1`, `sponsorId 1327` y el `contentId` del artículo; que los bloques pintan precio e
+> imagen en vivo; y una compra con Vipps en **Safari móvil, ventana normal**, que es donde apareció
+> el bloqueo del punto 6.
+
+### Lo que verifiqué yo antes de pasar esto (23/10, 11:0x–11:3x UTC, solo lectura)
+
+- Los **cuatro** endpoints del bootstrap existen y responden en prod con la key de la surface:
+  `mobile/config`, `mobile/surface`, `web/brands`, `commerce/sponsors/:id/catalog`, más
+  `mobile/campaigns/1/components` (200, con los 4 slots). `mobile/components/manifest` es **POST**
+  y solo acepta `locations[]`: un GET da 404 y no es un fallo.
+- Guion de C3 completo contra prod con la key del channel y las credenciales de Vipps:
+  **9 OK · 2 OJO · 0 MAL**. Los dos `OJO` son los que solo cierra el pago real (A3).
+  Escaparate 14 productos, Vipps ofrecido, Cassia a 1499 con IVA, webhook registrado apuntando a
+  shopcart de prod, unidad **1179558 Careless AS** `paymentAllowed: true`.

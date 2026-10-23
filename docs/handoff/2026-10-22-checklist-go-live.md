@@ -193,7 +193,9 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
 
 - [x] **B3. Channel de Aller creado** — *Angelo desde el dashboard, 22/10 ~23:56*
   `channel_user` **480**, user 1330, `channel_id 10` (Sdk), activo, api key
-  **`DWWWP0S-8KA4WGZ-M9ABEGN-XZE3G4Y`** (es la que va en el Replit, B6), con `channel_group` 1076
+  **`DWWWP0S-8KA4WGZ-M9ABEGN-XZE3G4Y`** (~~es la que va en el Replit, B6~~ **NO: al Replit va la key
+  de la SURFACE; esta la entrega el bootstrap dentro de `primarySponsor.commerce.apiKey`** — ver la
+  nota de miguel en B6), con `channel_group` 1076
   -> share 606 -> collection `NnRsYSAaJ` (14 items).
   Hubo dos channels mas en el camino: el 479 (borrado 21:55 UTC, su grupo apuntaba a la share muerta
   605) y el 481 (duplicado mio, borrado por mi al ver que el 480 ya servia). **Solo el 480 esta vivo.**
@@ -297,6 +299,27 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
   **Fijar la version**: npm esta en `@vio-live/web-sdk@0.27.0`, el prompt del 21/10 decia 0.26.1.
   La misma en Replit y en Vev, y una ya probada en QA — no estrenar version el lunes.
   Criterio: `Vio.analytics.start` con consentimiento y el colector dejando de estar a 0.
+
+  > [miguel, 2026-10-23 11:3x UTC] **Luz verde de Angelo para migrar el Replit a prod.** Lo nuestro
+  > esta listo y verificado; lo que falta es el deploy de Replit. Prompt de produccion completo en
+  > [el handoff de Replit](./2026-10-15-replit-y-demo-web-a-commerce.md#produccion-2310--prompt-para-el-agente-de-replit-con-luz-verde-de-angelo).
+  > **Dos correcciones a lo que dice este checklist mas arriba:**
+  > 1. **La key que va en el Replit NO es la del channel 480.** B3 dice que `DWWWP0S-…` «es la que
+  >    va en el Replit (B6)»: con ella el bootstrap da **401 `Invalid API key`**. `api.vio.live` es
+  >    el micro de campanas entero y su guarda es `SurfaceKeyGuard` (`surface.api_key`,
+  >    `status active`). Va la key de la **surface 1 «Mote Livsstil Hub»** (publisher 1330), que
+  >    empieza por `mote_livsstil_hub_api_key_…` y esta en el TOOLS.md de Miguel. La del channel
+  >    **viaja dentro de la respuesta** (`primarySponsor.commerce.apiKey`): no hay que pasarla.
+  >    Leccion: [`../lessons/la-key-del-replit-es-la-de-la-surface.md`](../lessons/la-key-del-replit-es-la-de-la-surface.md).
+  > 2. **La version es `0.28.0`, no 0.27.0.** 0.27.0 fue `latest` 20 horas. Fijarla **exacta**
+  >    (`--save-exact`), no `^`. El bump no es estetico: en 0.26.1 el `order_id` de `purchase` es el
+  >    uuid del checkout en todo pago por redireccion, y con eso las devoluciones no netean nunca.
+  > **Medido en prod hoy, solo lectura:** los 4 endpoints del bootstrap responden 200 con la key de
+  > la surface (`mobile/config`, `mobile/surface`, `web/brands`,
+  > `commerce/sponsors/1327/catalog` -> 14 productos), mas `mobile/campaigns/1/components` con los 4
+  > slots; `environment: 'production'` resuelve a `api.vio.live` / `graph-ql.vio.live` /
+  > `events.vio.live` (leido del paquete publicado) y los tres aceptan CORS desde
+  > `www.moteoglivsstil.no`. Guion de C3 completo: **9 OK · 2 OJO · 0 MAL**.
 
 
 - [ ] **B6b. El Replit de Aller se queda bloqueado al volver de Vipps** — *Angelo (agente de Replit)*
