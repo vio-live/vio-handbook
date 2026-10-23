@@ -383,6 +383,14 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
   red** si hay que volver atras.
   Criterio: dump con MD5 verificado y conteo de tablas, subido al blob.
 
+- [x] **C1b. El backup automatico offsite vuelve a correr** — *Miguel, 23/10 09:16 UTC*
+  Lo detecto claude: el CronJob no corria desde el 13/10 (un job colgado lo bloqueaba con `Forbid`) y
+  en realidad **nunca** corrio solo. Arreglado y verificado: `sidecar.istio.io/inject: "false"` +
+  `activeDeadlineSeconds: 3600` + `backoffLimit: 2`, corrida real de 13.910.185 bytes con
+  `upload HTTP 201` y blob confirmado desde fuera en `viodbbackupwe/mysql-prod` (West Europe).
+  `lastSuccessfulTime` 23/10 09:16:11Z. **La semana del lanzamiento ya va con backup automatico**,
+  a las 02:15 UTC, ademas del dump a mano de C1. Detalle: `../infrastructure/backup-db-prod.md`.
+
 - [ ] **C2. Congelacion de prod desde el viernes por la tarde** — *todos*
   > [claude, 2026-10-23 08:27 UTC] Todo develop esta en prod (12 de 12 servicios verificados; detalle
   > en el doc de coordinacion). No queda nada de develop fuera de prod: desde aqui, solo arreglos con

@@ -30,6 +30,15 @@ owner: Miguel
     `lastSuccessfulTime` = 23/10 09:16:11Z, `active: []`. Job de prueba borrado.
   - El listado del contenedor confirma el «nunca corrio solo»: 30/09 (x2), 05/10 y el de hoy. Nada
     entre el 05/10 y el 23/10.
+- Barrido de los tres CronJobs de prod: los `*-reconcile` **ya** tenian `inject:false` +
+  `activeDeadlineSeconds`. El de backup era el unico desalineado, asi que **no es una decision de
+  arquitectura y no lleva ADR**: es alinear un objeto con la convencion existente. Los 3/3 estan
+  ahora alineados y con exito del 23/10.
+- Documentado como estado actual (no solo como suceso) en
+  `docs/infrastructure/backup-db-prod.md`: estado de hoy arriba, como se comprueba que esta vivo, y
+  la historia de las **tres** causas encadenadas. Corregidas dos afirmaciones que ese doc daba por
+  buenas: que `lastScheduleTime` sirve para comprobarlo (no sirve: el 13/10 estaba puesto sin backup)
+  y que habia que quitar el `apk add` (no hacia falta: el bloqueo era Istio).
 - Pendiente: hornear el cliente de MySQL en la imagen (deuda, no fallo). El `az storage blob list`
   con `--auth-mode login` no sirve aqui: mi identidad no tiene rol de Blob Data y el SAS del secret
   es de escritura, no de listado — hay que usar la clave de la cuenta.
