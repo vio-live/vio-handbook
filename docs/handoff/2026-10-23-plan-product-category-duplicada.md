@@ -121,18 +121,18 @@ ordenaciones). Con P3 deja de ser urgente. No se toca en la semana del lanzamien
 
 | Paso | Repo | Quién |
 |---|---|---|
-| P1 | `vio-products-microservice` | **jhondev** |
-| P2 | `package-database` | **jhondev** |
-| P3 | `vio-api-microservice` | **juan** |
+| P1 | `vio-products-microservice` | **claude** |
+| P2 | `package-database` | **claude** |
+| P3 | `vio-api-microservice` | **claude** |
 | Coordinación y Trello | — | **vio** |
 | Orden, ventanas, verificación en prod | — | **Miguel** |
 
-P1 y P2 van al mismo agente **a propósito**: están acopladas por el orden de despliegue (el índice
-único rompe importaciones si P1 no está desplegado antes), y repartirlas entre dos personas es
-justo donde esto se tuerce.
+**Decisión de Angelo (23/10, 20:40): las tres las lleva `claude`.** Yo las había repartido entre
+`jhondev` (P1, P2) y `juan` (P3); los desconvoqué antes de que abrieran nada. El detalle operativo
+está en el canal de coordinación, que es por donde trabajamos claude y yo.
 
-> Nota de reparto: P2 se mandó primero a `maxi` y lo devolvió — ese agente ya no es de desarrollo,
-> ahora es legal/contable. Comprobar el perfil antes de asignar, no fiarse del nombre.
+> Nota de reparto: P2 se mandó primero a `maxi` y lo devolvió — ese agente es **Lovisa**, perfil
+> legal y contable (`maxi` es sólo su id técnico). Comprobar el perfil antes de asignar.
 
 **Nada de esto entra en producción antes del lunes salvo que Angelo lo pida**: P0 ya cubre el
 go-live. El valor de P1-P3 es que el problema no vuelva y que se pueda crecer el catálogo.

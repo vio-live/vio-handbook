@@ -1811,3 +1811,50 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   - **Orden obligatorio:** P1 desplegado en el entorno **antes** de que corra P2 allí, o el índice
     único rompe las importaciones.
   - **Nada a producción antes del lunes.** P0 (heap + serialización, ya en prod) cubre el go-live.
+
+- **23/10 20:4x UTC+2 — claude: las tres tareas del plan de `product_category` son tuyas.** *(miguel)*
+  Angelo lo ha dicho explícitamente. Lo había repartido entre jhondev y juan por error; ya los
+  desconvoqué. Plan completo con todas las mediciones:
+  [`2026-10-23-plan-product-category-duplicada.md`](./2026-10-23-plan-product-category-duplicada.md).
+
+  **El resumen en tres líneas:** `product_category` tiene **268.590 filas vivas para 5.871 pares
+  reales** (98 % duplicados, **+10.000 al día**). Eso multiplica por **32** el join de
+  `getChannelUserByIdV2` (1.582 → 51.576 filas) y convierte una petición de ~15 MB en **172 MB**,
+  que es lo que mató `api` seis veces hoy. La contención (heap 400 MB + 768Mi + serialización) ya
+  está en producción y verificada; esto es para que no vuelva y para poder crecer el catálogo.
+
+  **P1 · `vio-products-microservice`** — `src/modules/product/providers/product.service.ts`.
+  Escrituras de `product_category` idempotentes. Cuatro sitios escriben; **`categoryShopify`** y la
+  **ruta de duplicar producto** hacen `save()` **sin comprobar**. El patrón correcto ya está en ese
+  fichero: **`linkFeedCategory`** hace `findOne` y sale. Extrae el helper y que pasen las cuatro.
+  *Criterio: importar dos veces el mismo producto en QA no añade ni una fila. Cuenta antes y
+  después, no lo des por bueno leyendo el código.*
+
+  **P2 · `package-database`** — migración en dos partes: (a) borrar duplicados conservando el `id`
+  más bajo por `(product_id, category_id)`, **por lotes** (son 262.719 filas); (b) crear
+  **`UNIQUE (product_id, category_id)`**, que es lo que lo hace permanente.
+  *Criterio: `count(*) == count(distinct product_id, category_id)` y el índice presente.*
+  **Orden obligatorio: P1 desplegado en el entorno antes de que corra P2 allí**, o el índice único
+  rompe las importaciones en cuanto Shopify sincronice.
+
+  **P3 · `vio-api-microservice`** — que `getChannelUserByIdV2` no multiplique: cargar
+  `productCategory` (e idealmente imágenes y variantes) en consultas aparte, no en el mismo join
+  cartesiano. Así da igual que el dato se vuelva a ensuciar.
+  *Criterio medible: con los datos sucios de hoy, el channel 482 baja de 172 MB a ~15 MB.*
+
+  **Dos avisos:**
+  1. **No quites el guardia** que serializa el endpoint (#59/#60, lo puse hoy): es lo que impide
+     que dos peticiones a la vez se coman la memoria. Medido: 4 simultáneas mataban el proceso
+     incluso con el heap ya subido.
+  2. **No te metas con los 15 filtros y 10 ordenaciones en memoria** (~4.800 líneas). Eso es el P4
+     y no es para esta semana.
+
+  **Nada a `master` ni a producción antes del lunes 26.** Para en PR a `develop` y avísame; las
+  ventanas de prod las abro yo.
+
+  **Cómo medir**, que es como salió todo esto (pod recién arrancado parte de ~194 MB):
+  ```bash
+  P=$(kubectl get pods -n default -l app.kubernetes.io/instance=api -o jsonpath='{.items[0].metadata.name}')
+  kubectl exec -n default $P -c api -- sh -c 'PID=$(ps -eo pid,args | grep "[/]usr/local/bin/node dist/main" | awk "{print \$1}" | head -1); awk "/VmHWM/{print \$2}" /proc/$PID/status'
+  # llamar a POST /channel/user/v2/1330/482 y volver a leer VmHWM
+  ```
