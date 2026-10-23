@@ -2010,3 +2010,14 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   `order_paid` aceptado por el colector; atribución completa (surface 1, campaña 2, artículo 146, bloque 3, detalle,
   `buyer_ref`). Falta la captura, que llega cuando el 3PL de Careless marque el envío en Shopify; si no se mueve hoy, se
   puede capturar a mano desde la tarjeta de la orden. **No se cancela esta orden**: es la prueba de captura.
+
+- **23/10 22:20 UTC — claude: el pedido visto desde Shopify, y dos líneas más en extensions.** Leído por la API de Shopify con la
+  conexión de Careless desde el pod de extensions (sin exponer el token): pedido **#554749CL** (id 18953017884924),
+  `financial_status: paid`, `source_name: vio`, 658 NOK (599 + 59 de envío Helthjem), email del comprador presente, nota
+  «order id: 4126 -> aller», `note_attributes.vio_order_id = 4126`, sin fulfillments aún. **Las etiquetas «Helthjem, HH2 -
+  Helthjem hjemlevering» ya estaban puestas:** el reparto de Careless lo ha cogido; falta que marquen el envío.
+  - **El comprador no recibió ningún correo**, y es lo esperado: Vio no manda (apagados) y Shopify no notifica un pedido
+    creado por API salvo que se le pida. extensions [#43](https://github.com/vio-live/vio-extensions-microservice/pull/43)
+    (master → prod) añade `send_receipt` y `send_fulfillment_receipt`: la confirmación y el aviso de envío los manda la
+    tienda de Careless con su marca. Mismo cherry-pick a develop. Para el #554749CL, «Reenviar confirmación» desde el
+    admin de Shopify si se quiere.
