@@ -364,6 +364,10 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
   4. **«Kampanjens varighet».** La campana **1** «Careless Aller (test)» va del **22/10 22:17** al
      **29/10 23:17 UTC**, con `is_default = 1`, 15 % de comision y sin pausar. Con la duracion real
      hay que cambiar las fechas o crear la campana definitiva.
+     > [claude, 2026-10-23 21:4x UTC] Hecho en prod, segun la base: campana **2 «Careless»** desde el 23/10 20:54 UTC,
+     > sin fecha de fin, 15 %, channel **482 «Careless»** (14 productos de Careless) en `surface_channel (1, 482)`.
+     > La campana 1 (test) esta pausada. Nuevo slot `article-131-block-5` (card). El Replit de staging ya arranca
+     > contra prod con la campana 2. Falta el arreglo de la vuelta de Vipps (B6b) en el build del Replit.
   5. **«Artikkelen».** Hoy es el articulo de prueba «10 nyheter vi onsker oss na» (`article-146`),
      con 4 slots de la campana: `block-2`, `block-3` y `block-4` (card) y `block-5` (carousel). Con el
      articulo real cambian los slots (`article-<id>-block-<n>`).
