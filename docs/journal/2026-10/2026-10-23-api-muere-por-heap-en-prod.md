@@ -138,3 +138,74 @@ porque cambiarlo afecta al mapeo de errores de todo el endpoint.
 **Lo que sigue abierto y no es de infraestructura:** la campaña 1 está `paused = 1` desde las
 14:49, hay dos channels vivos (480 y 482) con el mismo catálogo, y el Replit aún no ha publicado.
 
+---
+
+## Revisión a fondo (19:20-20:00): el porqué, con números, y una corrección a mi propia corrección
+
+Angelo pidió revisarlo en detalle. Al medirlo salió que **mi explicación era incompleta** y que una
+de las «hipótesis falsas» que descarté esta tarde estaba descartada por el motivo equivocado.
+
+### 1. El coste real de UNA petición, medido limpio
+
+En la réplica de prod que no había tocado (`xfp4t`, `VmHWM` 193.248 kB de base):
+
+| | VmHWM |
+|---|---|
+| base | 193 MB |
+| tras **una** petición al channel 482 (14 productos) | **375 MB** |
+| tras una segunda petición | 375 MB (no crece) |
+
+**Una sola petición cuesta ~182 MB.** La segunda no sube nada: V8 reutiliza el heap, así que **no
+hay fuga** — es un pico por petición.
+
+Con el techo de heap anterior (~256 MB) y una base de ~190 MB, esa petición **no podía no matar al
+proceso**. El crash no era mala suerte: era determinista.
+
+### 2. Lo que estaba mal en mi relato de la tarde
+
+Dije: «el channel de Aller es minúsculo, 14 productos, así que el tamaño no explica la muerte».
+**Falso.** Es minúsculo en *productos* y carísimo en *lo que cuelga de cada producto*: cada uno de
+los 14 trae 7 variantes y sus imágenes y envíos, y el join sale a **1.582 filas**.
+
+### 3. Y la corrección a la corrección: por qué descarté bien las imágenes duplicadas
+
+Esta tarde descarté la hipótesis de las imágenes duplicadas diciendo que TypeORM filtra las
+borradas. **Lo verifiqué de verdad ahora**, generando el SQL real con el QueryBuilder del propio
+kernel dentro del pod de prod:
+
+```
+LEFT JOIN `image` `img` ON `img`.`productId`=`p`.`id` AND (`img`.`deletedAt` IS NULL)
+```
+
+El filtro está. Las 14.283 filas de imagen borradas **no entran** en el join. La conclusión era
+correcta; lo que no tenía era la prueba, y ahora sí.
+
+### 4. Lo que NO se puede afirmar
+
+Quise sacar una ley de «X MB por fila de join» y **no sale**: prod son 1.582 filas → 182 MB
+(~118 kB/fila) y el channel 442 de staging son 12.664 filas → 237 MB (~19 kB/fila). Seis veces de
+diferencia. El coste lo domina el grafo hidratado por producto (campos largos, relaciones
+anidadas), no el número de filas. **No extrapolar con una regla de tres.**
+
+### 5. La consecuencia práctica, y es la que importa para el lunes
+
+El catálogo de Careless **ya consume 182 MB de los ~220 MB de margen** que da el techo nuevo. Queda
+en torno a un 20 % de holgura **para una petición**; la serialización garantiza que no haya dos a
+la vez por réplica.
+
+**Añadir productos a la colección compartida es lo que puede volver a romperlo.** Angelo dijo hoy
+«voy con la collection con productos de test y después los cambiamos o añadimos más»: Careless
+tiene **49** productos y hoy hay **14** en la colección. Triplicar el catálogo con este perfil de
+coste se come el margen.
+
+**Medida barata y repetible antes de crecer** (lectura pura, 30 segundos):
+
+```bash
+P=$(kubectl get pods -n default -l app.kubernetes.io/instance=api -o jsonpath='{.items[0].metadata.name}')
+kubectl exec -n default $P -c api -- sh -c 'PID=$(ps -eo pid,args | grep "[/]usr/local/bin/node dist/main" | awk "{print \$1}" | head -1); awk "/VmHWM/{print \$2}" /proc/$PID/status'
+# ...llamar al endpoint del channel y volver a leer VmHWM
+```
+
+Si tras una petición el pico se acerca a los 600 MB del contenedor (768Mi), hay que parar y
+paginar de verdad antes de seguir añadiendo.
+
