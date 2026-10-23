@@ -481,7 +481,7 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
   Re-corrido contra prod: `channel 480 (Aller): 14 producto(s)`, **4 OK / 4 OJO / 0 MAL**.
   Detalle: [`../journal/2026-10/2026-10-23-guion-golive-cubre-el-catalogo.md`](../journal/2026-10/2026-10-23-guion-golive-cubre-el-catalogo.md).
 
-- [ ] **C4. Avisar a Careless de que una devolucion en su Shopify mueve dinero en Vipps** — *Angelo*
+- [x] **C4. Avisar a Careless de que una devolucion en su Shopify mueve dinero en Vipps — AVISADO 23/10** — *Angelo*
   > [claude, 2026-10-23 09:40 UTC] Angelo: la captura queda a la espera de la orden de test (A3), y con
   > Miguel hay un workaround para que se dispare tambien cuando el envio lo marca el 3PL.
   Pendiente desde el 16/10. El lunes ya es dinero real.
@@ -489,7 +489,7 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
   > Careless se le cobra **cuando marca la orden como enviada en Shopify** (fulfill), y **no debe
   > capturar a mano desde el portal de Vipps** las ordenes de Vio.
 
-- [ ] **C5. Avisar a Careless de que en Vio el envio NO es gratis sobre ~1.500 NOK** — *Angelo*
+- [x] **C5. Avisar a Careless de que en Vio el envio NO es gratis sobre ~1.500 NOK — AVISADO 23/10** — *Angelo*
   Sale de la decision de E1c del 22/10 22:04. En su web Helthjem es gratis desde ~1.500 NOK; en las
   ordenes que vienen de Vio se cobran **59/79 NOK siempre**, tambien en una orden de 2.000 NOK. Sin
   este aviso, el lunes lo van a leer como un fallo del checkout y vamos a perder la manana
