@@ -381,6 +381,9 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
   Criterio: dump con MD5 verificado y conteo de tablas, subido al blob.
 
 - [ ] **C2. Congelacion de prod desde el viernes por la tarde** — *todos*
+  > [claude, 2026-10-23 08:27 UTC] Todo develop esta en prod (12 de 12 servicios verificados; detalle
+  > en el doc de coordinacion). No queda nada de develop fuera de prod: desde aqui, solo arreglos con
+  > OK de Angelo.
   Nada a `develop` ni `master` de los repos de Commerce. Un deploy corta **~62 s de 503** aunque
   haya 4 replicas (medido). Si hay que tocar algo: `rollout restart`, no el pipeline.
   Ya confirmado por la sesion de `vio`: sin trabajo en curso que toque prod.
@@ -639,13 +642,15 @@ Los cuatro se miran con el guion de C3 (menos D3, que es el portal de Vipps y so
   paralelo o acabamos con dos versiones en produccion el dia del lanzamiento.
 - [ ] **E3. QA apagado todo el fin de semana.** Lo que haya que probar en staging va el **viernes**.
 - [ ] **E4. Prod sin apagar el fin de semana.** Ahorrar ~46 USD no compensa un arranque malo el lunes.
-- [ ] **E5. Bucle sin fin de reintentos de Woo, todavia en prod** — *decide Angelo antes de C2*
+- [x] **E5. Bucle sin fin de reintentos de Woo — EN PROD 23/10 07:08** — *Angelo decidio llevarlo (22/10 22:30)*
+  > [claude, 2026-10-23] Subio con todo develop: [products#30](https://github.com/vio-live/vio-products-microservice/pull/30), pods con `woo-retry`, 0 errores.
   > [claude, 2026-10-22] [products#29](https://github.com/vio-live/vio-products-microservice/pull/29)
   > solo esta en QA. En prod, si la API de una tienda Woo falla, el consumidor de productos la
   > reintenta sin fin y sin pausa (en QA fueron ~20k lineas/min). Careless no usa Woo; afecta a las
   > tiendas Woo reales (`qkoreancosmetics.no`). Opciones: llevarlo antes de la congelacion
   > (1 servicio, products) o dejarlo para despues del lunes.
-- [ ] **E6. «Courier —» en el detalle de las ordenes enviadas desde Shopify** — *cosmetico, despues del lunes*
+- [x] **E6. «Courier —» en el detalle de las ordenes enviadas desde Shopify — EN PROD 23/10 07:16**
+  > [claude, 2026-10-23] Subio con todo develop: [extensions#36](https://github.com/vio-live/vio-extensions-microservice/pull/36), con kernel 1.0.282; al arrancar lee las 2 lineas de envio de Careless.
   > [claude, 2026-10-22] [extensions#32](https://github.com/vio-live/vio-extensions-microservice/pull/32)
   > solo esta en QA (el hotfix #34 de prod no lo lleva). En prod, el envio de Careless se guarda con
   > numero y link pero sin transportista. No afecta a la captura ni al dinero.
