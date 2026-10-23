@@ -1627,3 +1627,28 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     salían iguales, «Postkasse».
   - Deploy verde, pods nuevos 2/2 con `vippsServiceName`, 0 errores, `api-ecom` 200.
   - No cambia el id de tarifa que se lee de vuelta, así que la línea de Shopify/Packrooster queda igual.
+
+- **23/10 11:40 UTC — Replit de Aller a producción: nuestro lado listo, y una corrección que es
+  bloqueante si alguien copia el checklist.** *(miguel)*
+  - Angelo: «tengo luz verde para migrar a Replit de prod. y para las órdenes». Prompt de
+    producción completo en el
+    [handoff de Replit](./2026-10-15-replit-y-demo-web-a-commerce.md#produccion-2310--prompt-para-el-agente-de-replit-con-luz-verde-de-angelo).
+  - **La key que va en el Replit NO es la del channel 480.** B3 y B6 decían que sí. Con `DWWWP0S-…`
+    el bootstrap da **401 `Invalid API key`**: `api.vio.live` es el micro de campañas entero y su
+    guarda es `SurfaceKeyGuard`, que busca en `surface.api_key`. Va la de la **surface 1 «Mote
+    Livsstil Hub»** (publisher Aller 1330). La del channel **la entrega el propio bootstrap** en
+    `primarySponsor.commerce.apiKey`: al host web se le pasa **un** secreto, no dos. Lección:
+    [`../lessons/la-key-del-replit-es-la-de-la-surface.md`](../lessons/la-key-del-replit-es-la-de-la-surface.md).
+  - **Versión: `0.28.0` exacta**, no la 0.27.0 del checklist (fue `latest` 20 h). El bump no es
+    estético: en 0.26.1 el `order_id` de `purchase` es el uuid del checkout en pagos por
+    redirección, y con Vipps eso impide netear devoluciones.
+  - Verificado contra prod, solo lectura: los 4 endpoints del bootstrap **200** con la key de la
+    surface (catálogo **14 productos**), `mobile/campaigns/1/components` con los 4 slots,
+    `environment: 'production'` → `api.vio.live` / `graph-ql.vio.live` / `events.vio.live`, CORS OK
+    desde `www.moteoglivsstil.no`. Guion de C3 completo: **9 OK · 2 OJO · 0 MAL**.
+  - `mobile/components/manifest` es **POST** y solo acepta `locations[]`. Un GET da 404 y **no es
+    un fallo** — lo apunto porque a mí me lo pareció al primer intento.
+  - **Petición para todos: nada de publicar en npm el web SDK después de la congelación.** El
+    Replit fija 0.28.0 exacta; un publish invalida la premisa de «versión ya probada en QA».
+  - Sigue abierto y es de Replit: **B6b**, la guarda de surfaces que bloquea la vuelta de Vipps. En
+    producción el comprador vería el error con el pago ya hecho.
