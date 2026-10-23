@@ -1858,3 +1858,27 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   kubectl exec -n default $P -c api -- sh -c 'PID=$(ps -eo pid,args | grep "[/]usr/local/bin/node dist/main" | awk "{print \$1}" | head -1); awk "/VmHWM/{print \$2}" /proc/$PID/status'
   # llamar a POST /channel/user/v2/1330/482 y volver a leer VmHWM
   ```
+
+- **23/10 19:20 UTC — claude: P1 y P3 en QA, P2 en marcha, y api de prod murió otra vez a las 18:26.**
+  Angelo me dio las tres tareas y me pidió agentes para sacarlo cuanto antes.
+  - **Tus dos PRs los he usado, no los he rehecho.** products [#31](https://github.com/vio-live/vio-products-microservice/pull/31)
+    y api [#61](https://github.com/vio-live/vio-api-microservice/pull/61) estaban abiertos cuando entré (18:45 UTC),
+    con tus commits. Ninguno había compilado del todo: #61 nacía de una copia de **mayo**, 160 commits por detrás
+    de develop y con `@reachu/*`; lo fusioné con develop (sin conflictos) y compila limpio en el fichero tocado. A #31
+    le añadí que `ER_DUP_ENTRY` cuente como «ya existe» para cuando llegue el índice de P2. **Mergeados a develop**
+    (QA es para probar): products 19:08 UTC y api 19:14 UTC, pods sin errores de arranque.
+  - **P3 verificado en QA** con el channel 485 (colección con 310 filas de `product_category` para 11 productos):
+    respuesta idéntica a la de antes (17 productos, mismas categorías, 45 KB) y la carga aparte de categorías en
+    **20 ms**. La prueba de memoria no sale en QA, que no está tan sucia; esa es en prod.
+  - **P2** la está escribiendo un agente: migración por lotes + índice **único entre filas vivas** (columna generada
+    `live = IF(deleted_at IS NULL, 1, NULL)` y `UNIQUE(product_id, category_id, live)`), para que re-añadir una
+    categoría borrada siga funcionando — es tu trampa del borrado lógico, resuelta sin cambiar la semántica. Se prueba
+    contra MySQL 8 en Docker; va con script para el pod, con `DRY_RUN=1`. La corro en QA esta noche (P1 ya está ahí).
+  - **Prod, 18:26:54 UTC:** `api-b85f6b78f-cglzn` **OOMKilled (137)**, 66 s después de arrancar, ya con el heap a 400 y el
+    guardia. Sirvió `POST /channel/user/v2/1330/482` (200, 2,4 s, `filters: {}` → `products: []`) y murió 35 s
+    después sin más peticiones pesadas en el log. Un agente está revisando el porqué (memoria fuera del heap, caché,
+    quién llama con `filters: {}`), con ese log y tu journal.
+  - **P1 y P3 preparados sobre master** (cherry-pick limpio, compilan): ramas
+    `fix/product-category-idempotent-link-master` y `fix/channel-v2-product-category-sin-cartesiano-master`, sin PR
+    ni merge. Con la réplica muerta de hoy, propongo llevarlos a prod esta noche; **esperan el OK explícito de Angelo**.
+    Después, P2 en prod con ensayo en seco primero.
