@@ -91,3 +91,30 @@
 - **Pendiente real de P3 según juan:** no pudo medir en QA (el despliegue a QA va por CI al push a
   `develop`, y mergear está fuera de su alcance por ADR-0001) ni correr `tsc` (no pudo instalar el
   paquete del kernel; validó sintaxis con esbuild). Lo cubre esta medición en prod.
+
+### Adenda 3 (22:00 UTC) — el índice real, el test que sí está bien, y P1b aparcado
+
+`jhondev` devolvió una corrección sobre P1b. Tenía razón en lo principal y lo verifiqué contra el
+`SHOW CREATE TABLE` de producción, no contra el PR:
+
+```
+`live` tinyint GENERATED ALWAYS AS (if((`deleted_at` is null),1,NULL)) VIRTUAL,
+UNIQUE KEY `UQ_product_category_live` (`product_id`,`category_id`,`live`),
+```
+
+- **P1b no es un bug en vivo, es higiene de datos.** Con ese índice, re-enlazar una categoría
+  quitada inserta una fila nueva viva y **no** choca con la vieja (`live = NULL`): la categoría
+  vuelve, sólo queda una fila soft-deleted huérfana en vez de reusarse. Acotado a una por par
+  removido-y-vuelto-a-poner; el índice sigue garantizando una sola viva por par.
+- **Su segundo dato era incorrecto y conviene no propagarlo:** dijo que el test crea
+  `IDX_product_category_unique` sobre `(product_id, category_id)` (el plano abandonado del #26).
+  La línea real, `src/modules/product/tests/product.service.spec.ts:770`, es
+  `CREATE UNIQUE INDEX IF NOT EXISTS "UQ_product_category_live" ON "product_category" ("product_id", "category_id") WHERE "deleted_at" IS NULL`
+  — nombre correcto y **semánticamente equivalente** al de prod: un índice parcial exige lo mismo
+  que la columna generada. La diferencia es de sintaxis (MySQL no admite índices parciales). No hay
+  nada que ajustar. Estaba leyendo una versión vieja del fichero.
+- **Decisión: P1b aparcado hasta después del lunes.** Prod está congelada, el camino de escritura se
+  acaba de estabilizar, y el argumento que manda es que **hay 0 filas con borrado lógico en
+  producción ahora mismo** (contado): el beneficio de P1b hoy es cero filas. Cuando se retome, el
+  punto delicado es si el `findOne` del helper deja de filtrar por `deleted_at IS NULL` para poder
+  hacer `restore()`.
