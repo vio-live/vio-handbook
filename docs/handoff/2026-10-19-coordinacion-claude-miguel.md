@@ -88,6 +88,45 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## De Miguel (escribe Miguel)
 
+- **23/10 09:20 UTC — `MIXPANEL_IDENTITY` SI esta activa en las dos VMs. Tu aritmetica de uptime es
+  correcta, la conclusion no.** Corri tu comprobacion tal cual, y es la buena:
+  - prod `82.70.54.151`: `ActiveEnterTimestamp` 22/10 **19:48:41 UTC**, grep del `/proc/<pid>/environ`
+    del proceso vivo = **1**.
+  - staging `129.151.196.99`: `ActiveEnterTimestamp` 22/10 **19:47:40 UTC**, grep = **1**.
+  - Un unico arranque desde entonces, como mediste. Lo que falla es el supuesto de que yo escribi el
+    `.env` *despues* de ese arranque: lo escribi **antes**, en la misma pasada del deploy de
+    `c2fc1614`. El proceso nacio ya con la identidad. **No hay nada que reiniciar**, y menos hoy con
+    la congelacion.
+  - **La prueba que lo zanja sin entrar en la maquina** (export de Mixpanel, solo lectura, no inyecte
+    nada en prod): de los **30** eventos de prod, los **30** traen `$device_id`. 25 del 22/10
+    (`component_impression` 8, `select_item` 8, `view_item` 8, `add_to_cart` 1) y 5 del 23/10.
+    **Cero eventos anonimos sin identidad**, asi que tampoco hay historia que se corte el lunes: el
+    riesgo que describias no existe porque la identidad estuvo encendida desde el primer evento.
+  - De acuerdo en lo otro: que `/health` no exponga version ni modo de identidad es lo que obliga a
+    esta aritmetica. Si Angelo aprueba tus dos lineas, adelante — me ahorra entrar por SSH.
+  - `76859ab` no lo despliego: el `.env` ya lo enciende y un deploy hoy es riesgo sin ganancia.
+
+- **23/10 09:16 UTC — El backup offsite de prod ARREGLADO Y CORRIENDO. Tu diagnostico era exacto.**
+  Confirme tus tres puntos (`lastSuccessfulTime` 30/09 12:44, el job `...-29864295` colgado desde el
+  13/10, el contenedor `dump` en `exitCode 3` por el `apk add`) y lo arregle, porque el CronJob
+  **no lo gestiona Helm** (sin `managed-by`, sin anotaciones de release), asi que un patch no deja
+  deriva. Respaldo previo en `/tmp/backup-cronjob-pre-fix-20261023.yaml`.
+  - Hecho: borrado el job colgado; `sidecar.istio.io/inject: "false"` en el pod del jobTemplate;
+    `activeDeadlineSeconds: 3600` y `backoffLimit: 2` para que un cuelgue no vuelva a bloquear el
+    cron para siempre con `Forbid`.
+  - **No cambie la imagen ni el script.** Tu punto 3 (hornear el cliente de MySQL) y mi propia
+    leccion decian que `apk add` hay que quitarlo; medido hoy, con el sidecar fuera el `apk add`
+    **funciona**: el bloqueo era Istio, no Alpine. Queda como deuda, no como fallo.
+  - Verificado con una corrida real (`kubectl create job --from=cronjob/...`): pod **1/1** (sin
+    sidecar), `tamano 13910185 bytes`, `upload HTTP 201`, y **confirmado desde fuera** con la clave
+    de la cuenta: `outshifter-20261023T091546Z.sql.gz`, 13.910.185 bytes, en
+    `viodbbackupwe/mysql-prod` (West Europe). `lastSuccessfulTime` ya es 23/10 09:16:11Z y
+    `active: []`. Job de prueba borrado.
+  - El listado desde fuera confirma tu «nunca corrio solo»: solo hay 30/09 (x2), 05/10 y el de hoy.
+    Nada entre el 05/10 y el 23/10.
+  - **La semana del lanzamiento ya va con backup automatico**, a las 02:15 UTC. El dump de C1 sigue
+    siendo la red del corte.
+
 - **19/10 19:55 UTC** — **Colector de la fase A desplegado en staging y las 12 lecturas nuevas
   responden 200 con datos reales.** Ojo: desplegué **`d7d64a3`**, no `ebaa0a7` — cuando llegué ya
   tenías encima el #24 (`fix/limites-de-lectura-margen`). Arrancado 19:48:40 UTC, `schema ready`,

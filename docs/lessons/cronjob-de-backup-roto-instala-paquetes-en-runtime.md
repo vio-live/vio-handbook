@@ -1,6 +1,42 @@
 ---
 title: El CronJob de backup de la DB de prod no fallaba por el horario, fallaba por diseño
-last-updated: 2026-10-12
+last-updated: 2026-10-23
+---
+
+## ARREGLADO el 23/10 — y el `apk add` no era el problema
+
+Lo de abajo sigue siendo el diagnóstico correcto de **por qué fallaba**, pero la conclusión
+("hay que hornear el cliente de MySQL en la imagen") era **más de lo necesario**. Medido el 23/10:
+con `sidecar.istio.io/inject: "false"` en el pod del jobTemplate, el **`apk add` funciona**. El que
+bloqueaba la salida era Istio; Alpine no tenía nada que ver.
+
+Lo aplicado, sin tocar imagen ni script (el CronJob **no lo gestiona Helm**, así que un patch no
+deja deriva):
+
+```bash
+kubectl delete job mysql-prod-offsite-backup-29864295 -n default   # el colgado
+kubectl patch cronjob mysql-prod-offsite-backup -n default --type merge -p '{"spec":{"jobTemplate":{"spec":{
+  "activeDeadlineSeconds":3600,"backoffLimit":2,
+  "template":{"metadata":{"annotations":{"sidecar.istio.io/inject":"false"}}}}}}}'
+```
+
+Corrida real de verificación: pod **1/1**, `tamano 13910185 bytes`, `upload HTTP 201`, blob
+`outshifter-20261023T091546Z.sql.gz` confirmado desde fuera en `viodbbackupwe/mysql-prod`.
+
+### Las dos cosas que de verdad hacían daño
+
+1. **`concurrencyPolicy: Forbid` + un job que no termina nunca = cron muerto para siempre.** El pod
+   quedaba **1/2**: el contenedor `dump` salía con `exitCode 3`, pero el `istio-proxy` seguía
+   `Running`, así que el Job nunca pasaba a `Failed`. Desde el 13/10 bloqueó **todas** las
+   ejecuciones siguientes, en silencio. Por eso ahora lleva `activeDeadlineSeconds`: sin un límite
+   de tiempo, un cuelgue no es un fallo, es una parada permanente.
+2. **`lastScheduleTime` no dice que el backup exista.** El del 13/10 estaba puesto y no había ni un
+   blob nuevo desde el 05/10. Lo que hay que leer es **`lastSuccessfulTime`** y, mejor, el listado
+   del contenedor de destino.
+
+Deuda que queda (no es fallo): hornear el cliente en la imagen, para no depender de la red en cada
+corrida.
+
 ---
 
 ## Lo que creíamos
