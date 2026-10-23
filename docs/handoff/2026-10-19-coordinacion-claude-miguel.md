@@ -2046,3 +2046,8 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 - **23/10 22:36 UTC — claude:** repuesta la unidad del #554749CL (cancelado antes de #45): XS de Vilde genser 4 → 5 en el
   Shopify de Careless, por la API de inventario con la conexión de extensions, con OK de Angelo. Ya no queda nada
   descontado de las pruebas de hoy. Fin por hoy.
+
+- **23/10 22:42 UTC — claude: orden 4128 / Shopify 18953071886588 (una línea, 658 NOK) queda SIN cancelar, para ver la captura
+  al enviar.** Cuando el 360 marque el envío: Vipps reservado → cobrado, orden enviada en Vio. Si el lunes sigue sin
+  captura, mirar los logs de extensions (webhook de fulfillment) y de orders. Observado además un desajuste del carrito en
+  la página de Replit (la 4127 salió con una línea que el panel no enseñaba): cronología en el journal, seguimiento SDK.

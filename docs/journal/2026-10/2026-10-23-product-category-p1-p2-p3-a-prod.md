@@ -257,3 +257,17 @@ reenviar el cancel a Shopify cuando el origen de la cancelación es el propio we
 - La carrera del `channelOrigin` en productos repetidos entre grupos; P4 (filtros en memoria); el eco del webhook de
   cancelación; `collection` con 512Mi.
 - Marcar la campaña 2 como por defecto en la surface de Aller cuando se retire la 1.
+
+### 22:40 UTC: la orden que se queda para la captura, y por qué la 4127 salió con dos productos
+
+- **Orden 4128 / Shopify 18953071886588**, pagada a las 22:40:27 con Vipps, una línea (599 + 59 NOK), atribuida a la
+  campaña 2 y al artículo 146. **Se deja sin cancelar** para ver la captura cuando el 360 marque el envío: en Vipps debe
+  pasar de reservado a cobrado y en Vio la orden a enviada; si tarda, se puede capturar desde la tarjeta de la orden.
+- **Por qué la 4127 llevaba dos productos** cuando Angelo solo había puesto uno: el carrito del servidor `73ff36e9` se creó a
+  las 22:08:27, un minuto después de pagar la 4126, y recibió una línea de Sofie genser (desde la ficha, bloque 4) a las
+  22:08:28; a las 22:21:18 entró la Vilde XS en ese mismo carrito y el checkout de las 22:21 se llevó las dos. El panel del
+  carrito enseñaba una. Después, a las 22:38–22:40, el SDK creó **tres carritos nuevos** en 90 s (uno por intento de pago
+  desde la ficha, con la línea del anterior borrada): patrón del pago exprés desde la ficha. **Seguimiento SDK, no de
+  esta noche:** qué añadió la línea de las 22:08 (¿segunda pestaña, ficha abierta tras el pago?) y por qué el panel no
+  reflejaba el carrito del servidor; reproducir en QA con la página de Replit de staging y hacer que el checkout muestre
+  siempre lo que hay en el servidor antes de pagar.
