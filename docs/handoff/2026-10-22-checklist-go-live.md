@@ -311,6 +311,40 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
   > Criterio: compra con Vipps en Safari movil, ventana normal, y la confirmacion aparece al volver.
   > Mientras no este, un comprador del lunes que vuelva de Vipps ve un error en vez de la confirmacion.
 
+- [ ] **B9. Pedido de Angelo a Michael (23/10)** — *Michael; lo sigue Angelo*
+  Angelo se lo pidio el 23/10 por la manana. Estado de cada punto en prod, medido el 23/10 a las
+  09:5x UTC, solo leyendo:
+  1. **«Installering av Vio i Replit (prod)».** `www.moteoglivsstil.no` todavia no carga Vio: su
+     bundle no tiene ninguna referencia. El Replit de staging si carga Vio, contra prod. Es B6.
+  2. **«2/3 order i prod (test orders)».** En prod hay **0 ordenes** desde el 22/10 a las 12:00 UTC.
+     Son A3 y A4.
+  3. **«Produktliste».** El channel **480** de Aller vende hoy **14 productos**, todos de Careless
+     (1327):
+     - Active Man Running Shorts - Black (411,75)
+     - Active melert shorts - Grå (299)
+     - Active melert half-zip dame - Grå (299)
+     - Active melert tights - Lilla (299)
+     - Active melert tights - Grå (299)
+     - Cassia jakke - Brun (1.499)
+     - Cassia jakke - Svart (1.499)
+     - Hennie cardigan - Svart (599)
+     - Hennie cardigan - Beige (599)
+     - Vilde genser - Burgunder (599)
+     - Vilde genser - Brun (599)
+     - Sofie genser - Brun (699)
+     - Active pile fleece half-zip - Brun (699)
+     - Active pile fleece half-zip - Beige (699)
+
+     El articulo de prueba ensena 5 de ellos. Si la lista de Michael es otra, hay que cambiar la
+     coleccion compartida de Careless, **no borrarla**: desde el 23/10, borrar una coleccion en uso
+     se rechaza con `COLLECTION_IN_USE`.
+  4. **«Kampanjens varighet».** La campana **1** «Careless Aller (test)» va del **22/10 22:17** al
+     **29/10 23:17 UTC**, con `is_default = 1`, 15 % de comision y sin pausar. Con la duracion real
+     hay que cambiar las fechas o crear la campana definitiva.
+  5. **«Artikkelen».** Hoy es el articulo de prueba «10 nyheter vi onsker oss na» (`article-146`),
+     con 4 slots de la campana: `block-2`, `block-3` y `block-4` (card) y `block-5` (carousel). Con el
+     articulo real cambian los slots (`article-<id>-block-<n>`).
+
 - [x] **B7. Migracion `BrandProfilePolicyUrls1792500000000` en QA** — *Miguel, 22/10 15:40*
   Dos columnas nuevas en `brand_profile` (`terms_url`, `refund_policy_url`), aditivas y NULL, para
   que la ficha del producto enlace condiciones y devoluciones de la marca. `ALTER` byte a byte igual
