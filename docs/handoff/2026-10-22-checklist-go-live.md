@@ -105,9 +105,32 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
   Criterio: el cobro aparece en el portal de Vipps en la unidad **1179558** (NO en la de Vio), y el
   log de shopcart **no** dice `[vippsEvent] ... refused: signature mismatch`.
   Es el unico paso que no se puede fingir. Webhook de prod ya registrado (`e1de7656`).
+  > [claude, 2026-10-23 22:25 UTC] **Hecho en los logs de prod; falta solo mirarlo en el portal.**
+  > Orden **4126** (22:07 UTC), desde el Replit de Aller en prod: Vipps Express, 599 + 59 NOK. Se pidio
+  > en modo partner sobre **1179558** (`initPayment ... partner 1179558`). El webhook `AUTHORIZED`
+  > llego firmado (`signed: true`) y se acepto: 0 lineas `signature mismatch` o `refused`. La orden la
+  > creo el webhook, y despues el recibo se mando a Vipps (2 lineas). No se capturo nada: la captura va
+  > con el envio (D2). Shopify `18953017884924` / `#554749CL`: `source_name vio`, envio Helthjem
+  > `helthjem|2|#13435` (Packrooster), campana 2, componente `detail`.
+  > Hubo un segundo intento (`VIO-21fceb47`, 699 NOK, 22:08): se quedo en `CREATED` y no hay orden.
+  > Abandonado.
 
 - [ ] **A4. Devolucion de ese mismo pago** — *Angelo, tras A3*
   Criterio: la devolucion se ve en Vipps y llega `order_refunded` al colector.
+  > [claude, 2026-10-23 22:25 UTC] **La anulacion funciona. La devolucion de un pago capturado sigue
+  > sin probar.** La 4126 se cancelo desde el dashboard con la cuenta de Careless a las 22:17 UTC. El
+  > recorrido completo:
+  > 1. orders cancelo el item;
+  > 2. salio `order_cancelled`, 599 NOK, `full=true`;
+  > 3. shopcart pidio `POST .../cancel` a Vipps, que respondio 200: la reserva se libero y no se cobro;
+  > 4. extensions cancelo el pedido en Shopify;
+  > 5. el `orders/cancelled` que devolvio Shopify no hizo nada (`nothing left in this transition`).
+  >
+  > Como el pago nunca se capturo, esto es una anulacion y no una devolucion: al colector llega
+  > `order_cancelled`, no `order_refunded`. La devolucion de verdad se prueba cuando una orden ya
+  > enviada (capturada) se devuelve.
+  > Detalle visto: en Shopify el pedido cancelado sigue con `financial_status: paid`, porque Shopify no
+  > se entera de la anulacion en Vipps. Solo es cosmetico.
 
 ---
 
@@ -731,6 +754,11 @@ Los cuatro se miran con el guion de C3 (menos D3, que es el portal de Vipps y so
   > cuando. Va como 2.7b en la tarjeta de prod de Alan (`djzHxncE`), para hoy en QA. En prod se ve con
   > la orden de test (A3). Si la confirmacion de pedido no llega, el arreglo es pedir `send_receipt`
   > en extensions, y necesita OK de Angelo por la congelacion.
+  > [claude, 2026-10-23 22:25 UTC] **Con la 4126 no llego ningun correo** (pedido creado sin
+  > `send_receipt`). El arreglo, extensions #43 (`send_receipt` y `send_fulfillment_receipt`), lleva en
+  > prod desde las **22:17 UTC**. El deploy salio verde, el rollout termino y los pods nuevos lo traen
+  > en `dist`. Lo cierra la proxima orden de test, si llega la confirmacion de Careless. La 4126 se
+  > hizo antes del arreglo: para ella sirve «Reenviar confirmacion» en el admin de Shopify.
 - [ ] **E3. QA apagado todo el fin de semana.** Lo que haya que probar en staging va el **viernes**.
 - [ ] **E4. Prod sin apagar el fin de semana.** Ahorrar ~46 USD no compensa un arranque malo el lunes.
   > [claude, 2026-10-23 09:20 UTC] Comprobado en las 4 suscripciones: los unicos jobs que encienden o apagan
