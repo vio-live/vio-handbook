@@ -112,3 +112,21 @@ no los tenga.
    importaciones a la vez: no es error).
 2. Revisar #63 y decidir `multi-group/v2`; medir el cartesiano variantes × imágenes × envíos con Careless completo (49).
 3. Miguel: corregir el relato del incidente en su journal (uno de los OOM fue autoinfligido) y la lección del `exec`.
+
+## Segunda vuelta, la misma noche (Angelo: «hoy, el lunes no tengo tiempo; es hoy que no hay nada live»)
+
+Lo que había dejado «para el lunes» fue también a prod el viernes, cada pieza verificada en QA antes:
+
+- **#63 → [#64](https://github.com/vio-live/vio-api-microservice/pull/64) (master):** sin `page`/`size` el endpoint no hidrata;
+  `totalItems` sale de un COUNT. QA: el channel 442 (7.540 productos) pasa de 11 s a **117 ms** sin página, memoria plana.
+  Prod (20:00 UTC): la llamada sin página al 482, la de la medición de Miguel, en **56 ms**, sin mover la memoria.
+- **Multi-group ([#65](https://github.com/vio-live/vio-api-microservice/pull/65) → [#66](https://github.com/vio-live/vio-api-microservice/pull/66)):**
+  `POST /channel/multi-group/v2` dejaba de hidratar el catálogo entero del channel **por cada tanda de 20 items** al añadir
+  productos (11 s y +255 MB por tanda en el 442). Ahora pide el channel sin página. Consumidores verificados uno a uno
+  por el agente: base-api hace passthrough y el dashboard solo lee el status y revalida con su GET paginado. QA, sonda
+  sin items: 201 en 127 ms, `products: []`, memoria plana. A prod a las 20:02 UTC.
+- **Imágenes, opciones y envíos fuera del join ([#67](https://github.com/vio-live/vio-api-microservice/pull/67) → [#68](https://github.com/vio-live/vio-api-microservice/pull/68), en QA 20:14 UTC):**
+  el cartesiano que quedaba. Respuestas normalizadas idénticas para 485 y 442; en el 442 la memoria baja de +255 a +142 MB,
+  pero el loader de envíos tarda 15 s (join envío × país con IN de 1.000 ids): se corrige en tres consultas sin join antes
+  de ir a prod. En 348/262 difiere solo el `channelOrigin` (y las `variants`) de productos presentes en varios grupos del
+  channel: carrera preexistente entre los `getInfo` concurrentes, confirmada con dos llamadas seguidas del mismo código.

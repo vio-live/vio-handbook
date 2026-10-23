@@ -1965,3 +1965,24 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   una categoría por producto. Segunda llamada con `filters: {}`: +3,7 MB. Journal:
   [`2026-10-23-product-category-p1-p2-p3-a-prod.md`](../journal/2026-10/2026-10-23-product-category-p1-p2-p3-a-prod.md).
   Gracias por confirmar lo del `exec`. Nada más para ti esta noche; el lunes, #63 y `multi-group/v2`.
+
+- **23/10 20:30 UTC — claude: DÓNDE ESTAMOS, para que no haya dudas.** Angelo pidió hoy mismo todo lo que estaba «para el
+  lunes» («es hoy que no hay nada live»). Estado real, comprobado en los pods, no en los PRs:
+
+  | Pieza | Qué es | Prod | Verificación |
+  |---|---|---|---|
+  | P1 products [#32](https://github.com/vio-live/vio-products-microservice/pull/32) | escrituras de `product_category` idempotentes | **sí**, 19:26 UTC | pods sanos, `dist` con el helper |
+  | P2 kernel [#28](https://github.com/vio-live/package-database/pull/28) | limpieza + índice único entre filas vivas | **sí**, 19:28 UTC | 263.241 filas borradas, quedan 5.871 = pares; PITR ref 19:27:54Z |
+  | P3 api [#62](https://github.com/vio-live/vio-api-microservice/pull/62) | categorías fuera del join | **sí**, 19:34 UTC | channel 482: +0 MB (antes +172), 336 ms (antes 2.412) |
+  | #63 → api [#64](https://github.com/vio-live/vio-api-microservice/pull/64) | sin `page`/`size` no se hidrata, COUNT | **sí**, 19:53 UTC | 482 sin página: 56 ms, memoria plana; en QA el 442 pasa de 11 s a 117 ms |
+  | #65 → api [#66](https://github.com/vio-live/vio-api-microservice/pull/66) | `multi-group/v2` no hidrata por cada tanda de 20 | **sí**, 20:07 UTC | sonda sin items: 201 en 40 ms, sin hidratar |
+  | #67 → api [#68](https://github.com/vio-live/vio-api-microservice/pull/68) | imágenes, opciones y envíos fuera del join (el cartesiano que quedaba) | **NO todavía**: en QA desde 20:14 | respuestas **idénticas** (485, 442; 348/262 solo difieren en `channelOrigin`, ver abajo); 442: memoria +255 → **+142 MB**, pero **19,4 s** porque el loader de envíos tarda 15 s. Se está arreglando (envíos en tres consultas sin join) antes de ir a prod |
+
+  - **Lo que NO ha pasado:** ningún micro de prod se ha caído desde las 18:26 (y aquel fue tu `exec`); no hay OOM nuevos;
+    api lleva 0 reinicios en las réplicas nuevas. No se ha tocado ningún chart ni ningún Secret.
+  - **Hallazgo colateral, preexistente:** un producto que está en varios grupos del mismo channel (colección + producto
+    suelto) sale con el `channelOrigin` del grupo cuya consulta termina primero, y con las `variants` de esa ruta (la de
+    colección solo trae la variante del item). Dos llamadas seguidas difieren entre sí también con el código de antes
+    (comprobado en QA). No es de hoy; apuntado como seguimiento del `Delete duplicate products` (1 s en el 442).
+  - **Qué queda esta noche:** el arreglo del loader de envíos → QA (misma comparación) → #68 a master → medir 482 y 480
+    en prod. Después, journal y memoria. Nada para ti salvo que quieras mirar #68 mañana.
