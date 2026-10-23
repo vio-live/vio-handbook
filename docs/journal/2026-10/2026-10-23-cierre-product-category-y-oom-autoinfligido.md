@@ -58,3 +58,36 @@
 - Antes del merge se añadió a #31 el commit `3f8396e`: `ER_DUP_ENTRY` (1062) se trata como «ya
   existe» y no como error, para la carrera de dos importaciones simultáneas del mismo par. Sólo se
   traga el 1062; el resto se relanza. Cambia el contrato del helper y está avisado a su autor.
+
+### Adenda 2 (21:45 UTC) — P3 remedido en producción, y el aviso de "no crecer el catálogo" levantado
+
+- **juan confirma que el PR #61 (P3) es suyo.** Con eso el crédito queda: **P1 jhondev** (#31),
+  **P3 juan** (#61), **P2 claude** (#28). Los tres creían que su PR seguía sin mergear; los tres
+  estaban mergeados y en producción. Ninguno se saltó ADR-0001.
+- **Medición en prod del endpoint del channel 482**, disparada desde dentro del pod con `curl` (sin
+  el script de TypeORM que me provocó el OOM):
+  - con `page`/`size` (la forma de los callers reales): `http=200`, 313 ms, 14 items, 86,7 KB, y
+    **`VmHWM` 194.920 → 203.712 kB = 8,6 MB**. Antes del arreglo: 172-182 MB.
+  - sin `page`/`size`: `http=200`, 78 ms, y **`products: []` con `totalItems: 14`**.
+- **Dos trampas que resolví leyendo en vez de deduciendo:**
+  1. Deduje de esa respuesta vacía que el **#63 ya estaba desplegado**. **Falso.** Leí el `dist` del
+     pod: sigue el `paginatedProducts` en memoria, `totalItems` sale del array filtrado — o sea que
+     **sí hidrata** y luego pagina con `size` undefined, devolviendo cero productos con un 200. Es
+     un fallo silencioso que el #63 arregla, no un ahorro ya desplegado. `master` está en `24bad56`
+     (merge del #62) y el head del #63 no está dentro.
+  2. El `PORT` del contenedor es **8000**, no el 80 del `containerPort`. Y el port-forward al 80 da
+     `http=000` por el sidecar de Istio: la petición hay que dispararla desde dentro del pod.
+  - El cuerpo correcto es `{"data":{"user":{...},"filters":{...}}}`; sin el envoltorio `data` el
+    handler devuelve **417** «Cannot read properties of undefined (reading 'user')» — que es el
+    mapeo a `EXPECTATION_FAILED` del `catch`, no un rechazo de autorización.
+- **Consecuencia práctica: levantado el aviso de no añadir productos a la colección de Careless.**
+  Con 8,6 MB por petición y ~570 MB de margen por pod, los 49 productos entran de sobra. El aviso
+  decía lo contrario basándose en los 182 MB de antes.
+- **Matiz honesto sobre el criterio de P3:** el plan pedía medirlo «con los datos sucios de hoy», y
+  esos datos ya no existen en prod — la limpieza corrió a las 19:27Z. Así que esta medición
+  **verifica el resultado pero no separa el mérito de P3 del de la limpieza**. Para separarlo haría
+  falta QA con datos sucios, y no lo considero necesario: lo que importa de cara al lunes es el
+  coste real, y está medido.
+- **Pendiente real de P3 según juan:** no pudo medir en QA (el despliegue a QA va por CI al push a
+  `develop`, y mergear está fuera de su alcance por ADR-0001) ni correr `tsc` (no pudo instalar el
+  paquete del kernel; validó sintaxis con esbuild). Lo cubre esta medición en prod.
