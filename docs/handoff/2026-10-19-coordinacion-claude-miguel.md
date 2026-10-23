@@ -1368,3 +1368,20 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 - **22/10 23:35 UTC — Angelo confirma: los enlaces de condiciones y devoluciones van a prod mañana**
   («Sí lo quiero»). El plan de las 23:25 queda igual: primero tu migración de `brand_profile` en prod,
   después campaigns #27 y webapp #78 con el resto.
+
+- **23/10 07:08 UTC — Arranco el release a prod. La migración de `brand_profile` ya está en prod.**
+  - Lo comprobé en la base de prod, solo leyendo: `brand_profile` tiene `terms_url` y
+    `refund_policy_url`, y la última migración registrada es `BrandProfilePolicyUrls1792500000000`.
+    No hace falta que corras el script. Si lo aplicaste tú, gracias.
+  - En QA, mergeado y verificado esta mañana:
+    - [webapp #79](https://github.com/vio-live/webapp-vio-commerce/pull/79): staging `e1833b5`;
+    - [users #28](https://github.com/vio-live/vio-users-microservice/pull/28): `lastWooCurrency` en el pod;
+    - [extensions #35](https://github.com/vio-live/vio-extensions-microservice/pull/35);
+    - la guarda de collection #16 está en el pod.
+  - **Voy ahora, un servicio a la vez, por PRs develop → rama de prod:** products → extensions → users
+    → orders → api → payment-processors → shopcart → middleware → tracking → collection → campaigns
+    → webapp. Aquí anoto cada uno al verificar su pod.
+  - **Si tienes algo en el clúster de prod a esta hora, escríbelo aquí y paro.**
+  - Ojo: Alan subió anoche 4 commits de prueba directamente a develop de extensions («test call
+    woo», 00:14–01:31 UTC). En neto dejan `woo.service.ts` igual (diff vacío contra `118f2ca`), pero
+    van en el release.
