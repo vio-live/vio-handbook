@@ -2,7 +2,7 @@
 title: Paridad de variables de entorno entre staging y produccion (Vercel)
 last-updated: 2026-10-23
 owner: Miguel
-status: tarea de limpieza abierta
+status: tarea de limpieza abierta (T4 cerrada el 23/10)
 ---
 
 # Paridad de variables: staging vs produccion
@@ -37,14 +37,22 @@ En realidad cuelgan de un **entorno custom** llamado `staging`:
 Una comparacion que solo mire `production` vs `preview` **no ve la deriva**. Hay que mirar
 `customEnvironmentIds`.
 
-## Estado al 23/10 00:20 (medido)
+## Estado al 23/10 10:15 (medido)
 
 Solo en el entorno `staging`, ausentes en `production`:
 
-- **`ACCOUNT_PAYMENTS = 'true'`** — la unica con efecto. Ver la seccion de abajo: **no se enciende
-  antes del lunes**, y no es un olvido.
 - `LOGROCKET_API_KEY = ''` — vacia, sin efecto. Candidata a borrarse.
 - `REACT_APP_TIPIO_ADMIN_API = ''` — vacia y con nombre de la era Tipio/CRA. Candidata a borrarse.
+
+**Ya no hay ninguna variable con efecto fuera de paridad.** `ACCOUNT_PAYMENTS` se encendio en
+`production` el 23/10 a las 10:01 UTC por decision de Angelo — ver la seccion de abajo.
+
+<details><summary>Estado anterior (23/10 00:20)</summary>
+
+- **`ACCOUNT_PAYMENTS = 'true'`** — la unica con efecto, solo en `staging`.
+- `LOGROCKET_API_KEY` y `REACT_APP_TIPIO_ADMIN_API`, vacias.
+
+</details>
 
 Las que difieren en valor (`API_HOST`, `FIREBASE_*`, `CHANNEL_DASHBOARD_URL`) difieren **bien**: en
 staging estan vacias o apuntan al dominio de staging, en prod llevan el valor real cifrado.
@@ -71,42 +79,55 @@ print('en staging y NO en production:', sorted(falta) or 'ninguna')
 
 - [ ] **T1. Meter esta comprobacion en CI**, en el pipeline del webapp: que falle (o avise) si
   aparece una variable en `staging` que no este en `production`, con una lista blanca explicita para
-  las que deben diferir a proposito (`ACCOUNT_PAYMENTS` mientras siga apagada, y los valores por
-  entorno). Es lo unico que corta el patron de raiz. **Despues del go-live.**
+  las que deben diferir a proposito (los valores por entorno). Es lo unico que corta el patron de raiz. **Despues del go-live.**
 - [ ] **T2. Borrar las dos vacias**: `LOGROCKET_API_KEY` y `REACT_APP_TIPIO_ADMIN_API` del entorno
   `staging`. No hacen nada y ensucian la comparacion. Riesgo cero, pero no hace falta tocarlo antes
   del lunes.
 - [ ] **T3. Documentar cada bandera nueva en el PR que la introduce**, con las dos lineas que faltan
   siempre: *que pasa si no esta* y *en que entornos tiene que estar*. Hoy
   `next.config.js` las declara con `|| ''`, que es exactamente lo que hace el fallo silencioso.
-- [ ] **T4. Decidir `ACCOUNT_PAYMENTS` en produccion** — ver abajo. Decide Angelo, **despues** del
-  lunes.
+- [x] **T4. `ACCOUNT_PAYMENTS` en produccion: ENCENDIDA el 23/10 10:01 UTC.** Lo decidio Angelo
+  («habria que corregirlo, pero ya»), antes del lunes y no despues. Ver abajo.
 
-## `ACCOUNT_PAYMENTS`: que es y por que se queda apagada el lunes
+## `ACCOUNT_PAYMENTS`: que es y como quedo (ENCENDIDA el 23/10)
 
 **Que hace** (`src/lib/account-payments.js`, ADR-0026 p.2 / ADR-0028 p.2, F2.7): mueve la eleccion
 de metodos de pago de **por channel** a **por cuenta**. La marca decide una vez que metodos se
 ofrecen en el checkout y **cada channel que vende sus productos lo hereda**. Las credenciales siguen
 en `payment_method`. Con la bandera encendida, *el settings del channel ignora los campos de pago*.
 
-**La cadena SI esta completa en produccion** (lo comprobe, 23/10 00:19):
+**La cadena esta completa en produccion** (comprobada dos veces: 23/10 00:19 por el api, y 23/10
+10:1x dentro de los pods que corren):
 
 - `api`: `GET /paymentmethod/account/:userId` responde **200** con datos reales — para Careless
-  (1327) devuelve `vipps: true`.
-- `base-api`: tiene el proxy `GET`/`PUT /paymentmethod/account` con `authentication` +
-  `resolveAccountUser`, que reenvia al api con el usuario de la sesion.
-- El comentario del propio modulo dice «F2.6, todavia sin rama»: **esta desactualizado**, el proxy
-  esta vivo.
+  (1327) devuelve `vipps: true`. En el pod: `dist/modules/paymentMethod/providers/account-payments.js`
+  y la ruta `account/:userId`.
+- `base-api`: proxy `GET`/`PUT /paymentmethod/account` con `authentication` + `resolveAccountUser`,
+  que reenvia al api con `API_MICROSERVICE_URL` y el usuario de la sesion. En el pod:
+  dos ocurrencias de `'/paymentmethod/account'` en `dist/router/paymentMethodRouter.js`.
+- El comentario del propio modulo del webapp dice «F2.6, todavia sin rama»: **esta desactualizado**,
+  el proxy esta vivo.
 
-**Entonces por que no se enciende ya.** Es una bandera de **front**: solo cambia lo que el dashboard
-muestra y edita, no lo que el checkout ofrece (eso lo decide el api cruzando los switches de la
-marca con la visibilidad del channel). Encenderla el fin de semana **quitaria de la interfaz los
-interruptores de pago por channel** — justo los que se usaron para montar el go-live y los que
-habria que tocar el lunes si algo falla (`channel_user_settings.vipps`, verificado el 23/10 en el
-channel 480). Cambiar el modelo de edicion de pagos la vispera del lanzamiento no arregla nada y
-quita una palanca.
+**Estado: encendida en `production` el 23/10 10:01 UTC**, por decision de Angelo («habria que
+corregirlo, pero ya»): Careless tiene que ver lo correcto aunque la cuenta la administremos
+nosotros. Detalle del cambio y de la verificacion del bundle en el
+[journal del 23/10](../journal/2026-10/2026-10-23-account-payments-prod.md).
 
-**Criterio para encenderla despues:** con el go-live cerrado, poner `ACCOUNT_PAYMENTS=true` en
-production, redesplegar, y comprobar que la pantalla de pagos de la cuenta carga los 11 switches
-desde `/paymentmethod/account` y que el checkout sigue ofreciendo lo mismo que antes para el channel
-480.
+**Consecuencia que hay que tener presente, no es un fallo.** Es una bandera de **front**: solo
+cambia lo que el dashboard muestra y edita, no lo que el checkout ofrece (eso lo decide el api
+cruzando los switches de la cuenta con la visibilidad del channel). Encendida, **el detalle del
+channel ya no edita pagos**: los ensena heredados en solo lectura
+(`channel-detail/index.jsx:535`). Es decir, desaparecen de la interfaz los interruptores de pago por
+channel.
+
+- El interruptor `channel_user_settings.vipps` del channel 480 **sigue vigente y respetado** por el
+  checkout (B3b). Lo que se pierde es editarlo desde el dashboard.
+- Si el lunes hay que mover esa palanca, se mueve por el endpoint interno o por base de datos, que
+  es **como se monto el go-live de todas formas**: esa pantalla no se uso nunca para esto.
+
+**Como se comprueba que esta de verdad encendida.** No buscando `ACCOUNT_PAYMENTS` en el bundle: el
+nombre desaparece al inlinearse (`'true' === 'true'` se pliega a un booleano). Hay que leer el valor
+de la constante exportada por el modulo `account-payments`, y para llegar a su chunk hace falta el
+mapa de chunks del `webpack-*.js` — el dashboard es un export estatico con catch-all y las vistas
+van en chunks perezosos, asi que los 19 chunks del HTML no la contienen. `let n=!0` = encendida,
+`let n=!1` = apagada. Receta completa en el journal del 23/10.

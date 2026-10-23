@@ -1576,3 +1576,37 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 - **23/10 09:40 UTC — Angelo, sobre la captura de Careless:** espera a la orden de test, y con Miguel
   tienen un workaround para que la captura se dispare también cuando el envío lo marca el 3PL. Lo
   anoto en C4.
+
+- **23/10 10:15 UTC — HECHO: `ACCOUNT_PAYMENTS=true` en el dashboard de prod.** Los tres pasos, con
+  el mismo commit `a8f74d7` y sin codigo nuevo. Variable `iH4dyH5Gvr4eXaKJ` creada **10:01:33**,
+  redeploy `dpl_2qcuTdK8yBbGoZLCBJ3eTR6BkPJh` creado **10:01:54**, READY **10:03:08**, y es el que
+  sirve `dashboard.ecom.vio.live` (alias confirmado por la API, no por el navegador).
+  - **No lo verifiques grepeando el nombre: no esta.** `next.config.js` lo inlinea y
+    `process.env.ACCOUNT_PAYMENTS === 'true'` se pliega a un booleano, asi que el identificador
+    desaparece. Y los 19 chunks del HTML no contienen la vista: el dashboard es un export estatico
+    con catch-all y hay 51 chunks perezosos, que salen del mapa del `webpack-*.js`.
+  - Lo que hay que leer es el valor de la constante: en el chunk del modulo `account-payments`
+    (hoy `1241.f7e540fef33bbab3.js`, se encuentra por `stripePaymentLink`),
+    `o.d(t,{...,EW:()=>n,...});...let n=!0` -> **encendida**.
+  - **Control negativo**, que es lo que lo cierra: el deploy anterior del **mismo commit** (08:23,
+    antes de crear la variable) trae `let n=!1`. Mismo codigo, distinto valor.
+  - Receta reusable:
+    [`../lessons/un-flag-inlineado-no-se-busca-por-su-nombre-en-el-bundle.md`](../lessons/un-flag-inlineado-no-se-busca-por-su-nombre-en-el-bundle.md).
+  - **La cadena de backend la comprobe en los pods que corren**, no en el repo: `base-api`
+    (`base-api-86d4998988-rcw7l`) tiene GET y PUT `'/paymentmethod/account'` con `resolveAccountUser`
+    en su `dist`, y **reenvia al api** por `API_MICROSERVICE_URL`; el `api`
+    (`api-77b9845bf5-n4r9g`) tiene `account-payments.js` y la ruta `account/:userId`. Cadena completa.
+  - **Ojo con un camino que no verifica nada:** `curl` sin token a `/api/paymentmethod/account` da
+    401, y a `/api/paymentmethod/accountxx` **tambien** 401. La autenticacion corre antes del
+    routing, asi que el codigo no distingue si la ruta existe.
+  - **Consecuencia operativa que conviene tener presente, y no es un fallo:** el detalle del channel
+    **ya no edita pagos**, los ensena heredados en solo lectura
+    (`channel-detail/index.jsx:535`). O sea, desaparecen de la interfaz los interruptores de pago por
+    channel. El `channel_user_settings.vipps` del 480 sigue vigente y respetado por el checkout
+    (B3b); lo que se pierde es tocarlo desde el dashboard. Si el lunes hay que moverlo, va por
+    endpoint interno o base de datos — que es como se monto el go-live de todas formas, esa pantalla
+    no se uso nunca para esto.
+  - Mi doc de paridad decia «no se enciende antes del lunes» por este motivo. Angelo decidio lo
+    contrario y lo doy por cerrado: doc actualizado, T4 cerrada, y **ya no queda ninguna variable
+    con efecto fuera de paridad** (solo `LOGROCKET_API_KEY` y `REACT_APP_TIPIO_ADMIN_API`, vacias).
+  - Detalle: [`../journal/2026-10/2026-10-23-account-payments-prod.md`](../journal/2026-10/2026-10-23-account-payments-prod.md).
