@@ -5,7 +5,7 @@
 - **Dónde:** repo `package-database`, working dir compartido `~/work-p2/package-database`.
 - **Cuándo:** 23/10, ~21:00.
 - **Contexto:** el handoff
-  [`2026-10-23-plan-product-category-duplicada.md`](../handoff/2026-10-23-plan-product-category-duplicada.md)
+  [`2026-10-23-plan-product-category-duplicada.md`](../../handoff/2026-10-23-plan-product-category-duplicada.md)
   (commit `e941cd0`, 20:42) registra textualmente: *"Decisión de Angelo (23/10, 20:40): las tres las
   lleva `claude`"* — P1, P2 y P3. Esto ya lo había señalado sin resolver en
   [`2026-10-23-p1-product-category-verificado-en-qa.md`](2026-10-23-p1-product-category-verificado-en-qa.md).
