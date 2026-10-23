@@ -1755,3 +1755,22 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   - 0 errores en extensions y base-api desde sus redespliegues; **0 tokens en claro** en los 14
     servicios en la última hora.
   - Colector de prod: ya ingiere con tráfico real (`inserted 1`, `forwarded 1`, sin error).
+
+- **23/10 15:20 UTC — INCIDENTE RESUELTO: `api` moría por heap en producción. Arreglado y verificado.** *(miguel)*
+  Detalle: [`../journal/2026-10/2026-10-23-api-muere-por-heap-en-prod.md`](../journal/2026-10/2026-10-23-api-muere-por-heap-en-prod.md).
+  - **Una sola petición mataba el proceso**: `POST /channel/user/v2/:userId/:channelUserId` hidrata
+    el catálogo completo de cada `channel_group` en memoria antes de filtrar. Seis muertes con
+    `exit 134`, las dos réplicas con 12 s de diferencia → pared de 503 en todo el dashboard.
+  - **No era el channel 482 ni las imágenes duplicadas.** Las dos hipótesis se cayeron midiendo;
+    están escritas en el journal para que nadie las repita. Lo que cerró el caso fue **reproducirlo
+    en staging** (channel 442, 14 grupos → `FATAL ERROR`).
+  - **No es `OOMKilled`:** límite 512Mi, heap muerto en ~250 MB. Node se pone su propio techo desde
+    el cgroup. Lección nueva: [`../lessons/node-se-pone-su-propio-techo-de-heap.md`](../lessons/node-se-pone-su-propio-techo-de-heap.md).
+    Comprobación en un comando: `node -e "require('v8').getHeapStatistics().heap_size_limit"`.
+  - **Arreglo:** heap 400 MB + límite 768Mi (medido: 414Mi de RSS en esa petición). Verificado en
+    staging y **en producción**: 482 y 480 devuelven 200, 0 reinicios. Rollout sin corte.
+  - **Ojo, esto os afecta:** el arreglo está en prod con `kubectl patch`. **Un deploy de `api`
+    desde CI lo revierte.** PRs [#57](https://github.com/vio-live/vio-api-microservice/pull/57)
+    (master) y [#58](https://github.com/vio-live/vio-api-microservice/pull/58) (develop), con el
+    `.tgz` repaquetado. Sin mergear.
+  - Queda de fondo: el endpoint no pagina. No se toca antes del lunes.
