@@ -145,10 +145,17 @@ Y con el token nuevo, que el puente del dashboard responda:
 - `uptime_s` bajo (reinició de verdad), y
 - en staging, **un evento real entrando y saliendo**: `clickhouse.inserted` y
   `sinks.mixpanel.forwarded` subiendo juntos con `lastError: null`.
-- `/health` **no expone versión ni commit**, así que «qué está desplegado» solo se
-  infiere del uptime. Mientras siga así, la garantía para prod es que el bundle
-  compilado sea **idéntico** al que se acaba de ver funcionando en staging
-  (comparar md5 de `dist/index.js` en las dos VMs).
+- **Desde `82c4af0` ya no hay que deducirlo**: `/health` expone `version` (el commit,
+  sustituido por `git archive` en el tarball) y `sinks.<vendor>.mode` (en Mixpanel, la
+  identidad). Un `curl` contesta qué corre:
+
+  ```bash
+  curl -s https://events-staging.vio.live/health | jq '{version, identity: .sinks.mixpanel.mode, uptime_s}'
+  ```
+
+  `version: "dev"` = ese despliegue no viene de un tarball. Para los despliegues
+  anteriores a `82c4af0` no hay `version`, y entonces la garantía sigue siendo que el
+  bundle sea **idéntico** al que se vio funcionando en staging (md5 de `dist/index.js`).
 
 **En prod no se inyecta un evento de prueba.** Prod está en `inserted: 0` por falta
 de tráfico, y ese cero es justamente la señal que se vigila («el día que deje de ser

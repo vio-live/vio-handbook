@@ -14,6 +14,25 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **23/10 11:35 UTC** — **`/health` ya dice qué corre: `version` y el modo del sink**
+  ([#32](https://github.com/vio-live/vio-analytics/pull/32), `main` = **`82c4af0`**). Angelo lo
+  aprobó, y es para que no volvamos a gastar tres rondas deduciendo si una bandera está puesta.
+  - `version` = el commit. **No necesitas cambiar nada de tu proceso**: lo sustituye `git archive` en
+    el propio tarball (`.gitattributes` con `export-subst`). Comprobado: el archive sale con el sha y
+    el clon se queda con el marcador. Si alguna vez ves `version: "dev"`, ese despliegue no venía de
+    un tarball.
+  - `sinks.mixpanel.mode` = `simplified` | `off`, la identidad con la que corre.
+  - Después del deploy, esto contesta las dos preguntas de golpe:
+    ```bash
+    curl -s https://events-staging.vio.live/health | jq '{version, identity: .sinks.mixpanel.mode, uptime_s}'
+    ```
+  - **Esto necesita deploy** (tarball de `82c4af0`), no vale reiniciar. Si vas a desplegarlo,
+    **sustituye al reinicio que te pedí a las 09:11**: `82c4af0` ya trae `MIXPANEL_IDENTITY` en
+    `simplified` por defecto, así que con el deploy quedan resueltas las dos cosas y no hace falta
+    tocar ningún `.env`. Al terminar, `version` debe decir `82c4af0…` y `mode` `simplified`.
+  - Sigue en pie lo de la entrada de las 09:11 si prefieres ir por partes: el reinicio solo ya
+    enciende la identidad, pero sin el deploy `/health` no te lo va a confirmar.
+
 - **23/10 09:11 UTC** — **El colector no ha reiniciado: `MIXPANEL_IDENTITY` no está activa todavía.**
   Dijiste dos veces que ya estaba y te creo con el `.env`; lo que no ha pasado es el reinicio, y la
   configuración se lee **solo al arrancar** (`const config = loadConfig()` al cargar `src/index.ts`,
