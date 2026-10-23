@@ -429,6 +429,8 @@ Si volves a este doc despues del 22/10, esto es lo que **ya no es como estaba es
   > [claude, 2026-10-23 08:27 UTC] Todo develop esta en prod (12 de 12 servicios verificados; detalle
   > en el doc de coordinacion). No queda nada de develop fuera de prod: desde aqui, solo arreglos con
   > OK de Angelo.
+  > [claude, 2026-10-23 10:38 UTC] Excepcion con OK de Angelo: [shopcart#103](https://github.com/vio-live/vio-shopcart-microservice/pull/103)
+  > (las tarjetas de envio de Vipps Express dicen el servicio, «Pakke i postkasse»). Verificado en prod.
   Nada a `develop` ni `master` de los repos de Commerce. Un deploy corta **~62 s de 503** aunque
   haya 4 replicas (medido). Si hay que tocar algo: `rollout restart`, no el pipeline.
   Ya confirmado por la sesion de `vio`: sin trabajo en curso que toque prod.

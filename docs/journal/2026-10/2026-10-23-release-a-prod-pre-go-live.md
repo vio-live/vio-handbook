@@ -68,8 +68,9 @@ Detalle por servicio, con las comprobaciones de cada pod, en el
     el transportista como `estimatedDelivery`, la linea bajo el titulo que se ve con la tarjeta cerrada:
     «Bring - Pakke i postkasse» → «Pakke i postkasse». `name` y `meta` no cambian, y la tarifa elegida se
     sigue leyendo por su id.
-  - En QA desde las 10:24 UTC (pod con `vippsServiceName`). A prod, solo con OK de Angelo
-    (congelacion).
+  - En QA desde las 10:24 UTC. **En prod desde las 10:37 UTC** con OK de Angelo, como excepcion a la
+    congelacion ([shopcart#103](https://github.com/vio-live/vio-shopcart-microservice/pull/103)): pods con
+    `vippsServiceName`, 0 errores. Se ve en la app con la orden de test.
 
 ## Decisions
 

@@ -1619,3 +1619,11 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   - Lo demás sigue igual: `CAMPAIGNS_V2` `p=!0` (chunk 5410), y `COLLECTION_IN_USE` y
     `refundPolicyUrl` siguen presentes.
   - Careless ve ya en *Settings → Payments* y en el channel los pagos de la cuenta, como en staging.
+
+- **23/10 10:38 UTC — Excepción a la congelación, con OK de Angelo («Te doy mi ok»): shopcart a prod.**
+  - [shopcart#103](https://github.com/vio-live/vio-shopcart-microservice/pull/103), que lleva #102: en
+    Vipps Express, la línea bajo el título de cada tarjeta de envío (`estimatedDelivery`) dice ahora el
+    servicio sin el transportista («Pakke i postkasse»). Antes, las dos tarifas de buzón de Careless
+    salían iguales, «Postkasse».
+  - Deploy verde, pods nuevos 2/2 con `vippsServiceName`, 0 errores, `api-ecom` 200.
+  - No cambia el id de tarifa que se lee de vuelta, así que la línea de Shopify/Packrooster queda igual.
