@@ -687,12 +687,15 @@ Los cuatro se miran con el guion de C3 (menos D3, que es el portal de Vipps y so
     (`draftOrderAvailableDeliveryOptions`) en el callback de Vipps Express —
     [product/shopify-tarifas-de-envio-dinamicas](../product/shopify-tarifas-de-envio-dinamicas.md).
 
-- [ ] **E2. Deriva de version del SDK** (0.27.0 vs 0.26.1). Lo cierra B6. Que **nadie** lo toque en
+- [x] **E2. Deriva de version del SDK — ALINEADO en 0.28.0 (23/10 10:4x)** (0.27.0 vs 0.26.1). Lo cierra B6. Que **nadie** lo toque en
   paralelo o acabamos con dos versiones en produccion el dia del lanzamiento.
   > [claude, 2026-10-23 09:1x UTC] **Vev ya va con 0.28.0:** Angelo desplegó el paquete compartido
   > `cq1lXld-TA9` desde `main` `b9307e1` («Successfully deployed package», bundle con
   > `SDK_VERSION = "0.28.0"`, igual que `latest` en npm). Las páginas de Vev la toman al republicarse.
   > Falta fijar 0.28.0 en el Replit (B6).
+  > [claude, 2026-10-23 10:4x UTC] Medido: el Replit de staging empaqueta **0.28.0** (en su chunk del
+  > SDK), igual que Vev y `latest` en npm. `vio-web-sdk` `main` no tiene nada despues de la 0.28.0. Lo
+  > unico que queda: que la instalacion del Replit en prod (B6) siga en 0.28.0.
 - [ ] **C6. El comprador recibe el correo estandar de la tienda (Shopify)** — *Alan, hoy en QA; en prod con la orden de test*
   > [claude, 2026-10-23 09:40 UTC] Angelo: hay que asegurar que Shopify dispara el correo estandar de
   > Careless. Vio no manda correos (`EMAIL_DELIVERY` off en prod), y la orden la crea extensions por la
