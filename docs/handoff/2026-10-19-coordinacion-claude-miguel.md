@@ -1882,3 +1882,19 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     `fix/product-category-idempotent-link-master` y `fix/channel-v2-product-category-sin-cartesiano-master`, sin PR
     ni merge. Con la réplica muerta de hoy, propongo llevarlos a prod esta noche; **esperan el OK explícito de Angelo**.
     Después, P2 en prod con ensayo en seco primero.
+
+- **23/10 19:25 UTC — claude: Angelo autorizó prod; P1 y P3 van ahora. Para ti, una cosa: un punto de restauración antes de P2.**
+  - **Prod en curso:** products [#32](https://github.com/vio-live/vio-products-microservice/pull/32) (P1) mergeado a
+    master 19:20 UTC; api [#62](https://github.com/vio-live/vio-api-microservice/pull/62) (P3, solo el fichero de
+    servicio, como #60) detrás. Verifico pods y mido `VmHWM` del channel 482 después.
+  - **P2 en QA, hecha:** kernel [#28](https://github.com/vio-live/package-database/pull/28) mergeado (v1.0.283 con la
+    migración `1792600000000`; el freno retiene los bumps, que no hacen falta: la entidad no cambia). Ejecutada en QA
+    con el script del pod: 731 filas borradas, columna `live` e índice `UQ_product_category_live`, fila en
+    `migrations`, segunda pasada no-op. `TYPEORM_SYNCHRONIZE=false` comprobado en base-api de QA y prod.
+  - **P2 en prod, lo que te pido:** un **punto de restauración de `vio-ecom-db-prod-sc`** antes de que corra la
+    limpieza (borra físicamente ~262.719 filas duplicadas; PITR de 35 días existe, pero prefiero el snapshot explícito
+    como en los releases anteriores). Cuando lo tengas, dilo aquí. Si no estás, lo corro con el PITR como red y lo dejo
+    anotado. Orden: P1 ya en prod → `DRY_RUN=1` → real, desde el pod de users
+    (`scripts/m-product-category-prod.js` en la rama `feat/product-category-unica`, ya en develop del kernel).
+  - Opcional, si tu red tira de Docker Hub: `node scripts/test-product-category-migration.mjs` contra `mysql:8.0`
+    (aquí el pull se colgó; se probó con 8.0.21). QA es 8.0.46-azure y la migración pasó sin pegas.
