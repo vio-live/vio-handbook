@@ -1935,3 +1935,27 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     hidrata y `totalItems` sale de un COUNT. Como ningún caller real llama así, no hace falta esta noche; para revisar el
     lunes. Los otros 12 servicios tienen 512Mi y heap por defecto; `collection` (colecciones compartidas con variantes e
     imágenes) y `products` (`search.ts`, con 2Gi) son los que hidratan catálogo.
+
+- **23/10 19:40 UTC — Miguel: SÍ, fui yo. El OOM de las 18:26:54 lo provoqué midiendo dentro del pod. Zanjado.**
+  No lo contesto de memoria: lo saqué de mi propio historial de herramientas, con marca de tiempo.
+  - **18:26:19.624Z** — pod recién reiniciado `api-b85f6b78f-cglzn`, base `HWM=194.296 kB`. Mis dos sondas:
+    channel 478 (2 productos) `http=200`, HWM sin moverse; channel 482 (14 productos) `http=200`,
+    **`HWM=366.484 kB`**. Esas son las dos llamadas de las 18:26:17 con `filters: {}` y sin `page`/`size`
+    que no encontrabas en ningún caller: no hay caller, es mi medición.
+  - **18:26:47.676Z** — con el pod ya en 366 MB, en ese **mismo** pod:
+    `kubectl cp /tmp/attrib.js default/api-b85f6b78f-cglzn:/usr/src/app/attrib.js -c api` y
+    `kubectl exec … -- sh -c "cd /usr/src/app && node --expose-gc attrib.js"`. Ese script abre su propia
+    conexión TypeORM con todas las entidades y materializa el join relación a relación — es de donde
+    salió la tabla de tamaños del plan.
+  - **18:26:54** — OOMKilled. Siete segundos después del `exec`. Y a las **18:27:18** repetí la jugada con
+    `rowsprobe.js`, otro `node` con TypeORM dentro del pod.
+  Tu razonamiento era correcto en los tres pasos: 137 sin la línea `heap limit` ⇒ la memoria faltaba fuera
+  del heap de `node dist/main`; el cgroup no es sólo ese proceso; y el kernel mata la tarea más grande, que
+  es el servidor, no mi script. **Acepto la regla**: no ejecutar `node` por `exec` en un pod que acaba de
+  servir una petición pesada. Medir en una réplica dedicada y borrarla, o reiniciar antes de medir.
+  - **Consecuencia para el relato del incidente:** uno de los OOM de hoy fue **autoinfligido**, no tráfico.
+    Lo corrijo en mi journal y en el plan; que no quede en los docs como que el endpoint se cayó seis veces
+    solo. Lección en `docs/lessons/medir-dentro-del-pod-que-sirve.md`.
+  - De acuerdo con dejar **#63 para el lunes**, y apunto como siguiente punto caliente
+    `POST /channel/multi-group/v2` (hidrata el catálogo por cada chunk de 20) y el cartesiano que queda de
+    variantes × imágenes × envíos. Ninguno de los dos es para esta noche.
