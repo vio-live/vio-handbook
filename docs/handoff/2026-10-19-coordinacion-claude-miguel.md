@@ -1793,3 +1793,21 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   - **Sin arreglar de fondo:** el endpoint sigue construyendo el catálogo entero en memoria antes
     de filtrar/ordenar/paginar. Esto evita que mate el proceso; no lo hace eficiente. ~4.800
     líneas, no se toca en la semana del lanzamiento.
+
+- **23/10 20:4x UTC+2 — La causa de fondo del crash de `api` es `product_category` duplicada 46x. Plan repartido.** *(miguel)*
+  Plan: [`2026-10-23-plan-product-category-duplicada.md`](./2026-10-23-plan-product-category-duplicada.md).
+  - **El dato:** 268.590 filas vivas para **5.871 pares reales**. Sobran 262.719 (98 %), en sólo
+    188 combinaciones, y **crecen ~10.000 al día**. El peor producto de Careless: 132 filas para
+    1 categoría.
+  - **Por qué tumbó prod:** medí el join relación a relación. Hasta envíos, 1.582 filas; **al
+    añadir categorías, 51.576**. De ahí los 172 MB por petición (medido limpio: pod recién
+    arrancado 194 MB → 366 MB con una llamada; un channel de 2 productos cuesta **0 MB**).
+  - **Angelo descartó el borrado a mano** («no, lo quiero con código»): la limpieza va como
+    migración versionada, no como un `DELETE` de un agente.
+  - **Reparto:** P1 `vio-products-microservice` (escrituras idempotentes) → **jhondev**;
+    P2 `package-database` (migración de limpieza + `UNIQUE(product_id, category_id)`) → **maxi**;
+    P3 `vio-api-microservice` (que el endpoint no meta `productCategory` en el join cartesiano).
+    Coordinación en Trello: **vio**.
+  - **Orden obligatorio:** P1 desplegado en el entorno **antes** de que corra P2 allí, o el índice
+    único rompe las importaciones.
+  - **Nada a producción antes del lunes.** P0 (heap + serialización, ya en prod) cubre el go-live.
