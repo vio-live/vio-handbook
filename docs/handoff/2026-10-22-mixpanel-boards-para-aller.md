@@ -182,3 +182,69 @@ eventos. Cuatro cosas que lo explican, por orden de impacto:
 
 **Lo que NO propongo:** usar el `buyer_ref` (el HMAC del email) como id de usuario en Mixpanel. Es
 pseudónimo, no anónimo, y mandarlo a un tercero cambia la naturaleza de lo que se comparte.
+
+## Los boards, tarjeta por tarjeta (23/10)
+
+Para que montarlos sea mecánico en cuanto conecte el MCP. **Todas las tarjetas llevan el mismo filtro
+base**: `client_app_id` = las surfaces de Aller (en el prototipo sobre staging, las surfaces que haya;
+el filtro se cambia al clonar a prod). Y **todas excluyen `is_server = true`** salvo las que miden
+dinero cobrado, porque esos eventos no tienen persona detrás.
+
+### Board 1 — Embudo y caja
+
+| Tarjeta | Tipo | Definición |
+|---|---|---|
+| Embudo | Funnels | `component_impression → component_click → view_item → add_to_cart → begin_checkout → purchase`, ventana 7 días |
+| Compras por día | Insights, línea | `purchase`, total, diario |
+| Revenue de líneas | Insights, número | `purchase`, suma de `value` |
+| **Cobrado** (envío incluido) | Insights, número | `order_paid`, suma de `value` |
+| Pedidos cobrados | Insights, número | `order_paid`, cuenta de valores distintos de `order_id` |
+| **Ventas que el navegador no reportó** | Insights, fórmula | `A − B`; A = `order_paid` distintos por `order_id`, B = `purchase` distintos por `order_id` |
+| Nota | Texto | Por qué `purchase.value` (líneas) y `order_paid.value` (cobrado, con envío) **no son la misma cifra** y no hay que restarlas, y que `order_paid` no tiene sesión: no entra en el embudo ni en la conversión (ADR-0038) |
+
+### Board 2 — Por campaña y por slot
+
+Las mismas cinco medidas, con tres desgloses: `campaign_id`, `location_id` (el hueco de la página) y
+`sponsor_id`.
+
+| Tarjeta | Tipo | Definición |
+|---|---|---|
+| Impresiones | Insights, barras | `component_impression`, total, desglose por el campo |
+| Clicks | Insights, barras | `component_click`, total, desglose por el campo |
+| CTR | Insights, fórmula | `B / A` (clicks / impresiones), mismo desglose |
+| Compras | Insights, barras | `purchase`, total, mismo desglose |
+| Revenue | Insights, barras | `purchase`, suma de `value`, mismo desglose |
+
+### Board 3 — Productos
+
+| Tarjeta | Tipo | Definición |
+|---|---|---|
+| Vistos / al carrito / comprados | Insights, tabla | `view_item`, `add_to_cart`, `purchase`, desglose por `product_name` (con `product_id` de respaldo) |
+| Revenue por producto | Insights, barras | `purchase`, suma de `value`, desglose por `product_id` |
+| Embudo de producto | Funnels | `view_item → add_to_cart → purchase`, desglose por `product_id` |
+
+⚠️ En surfaces con privacidad `minimal` no hay `product_name` — y de hecho no llegan a Mixpanel.
+
+### Board 4 — Fuente del tráfico y salud
+
+| Tarjeta | Tipo | Definición |
+|---|---|---|
+| Sesiones por fuente | Insights, barras | `session_start`, total, desglose por `utm_source` |
+| Sesiones por dominio de origen | Insights, barras | `session_start`, total, desglose por `$referring_domain` |
+| **Qué fuente convierte** | Funnels | el embudo del board 1, desglosado por `utm_source` |
+| Revenue por fuente | Insights, barras | `purchase`, suma de `value`, desglose por `utm_source` |
+| Errores | Insights, barras | `sdk_error` + `checkout_error`, desglose por `error_code` |
+| Nota | Texto | Que la fuente es la del **aterrizaje de la sesión** (se recuerda entre páginas) y que un referrer del propio sitio cuenta como directo |
+
+Este es el board que contesta lo de Aller: empujan tráfico al artículo y quieren saber **de dónde vino
+y si convirtió**. Disponible desde `82c4af0` (desplegado el 23/10): antes de esa fecha los eventos en
+Mixpanel **no llevan fuente**, y los perfiles de usuario tampoco existen antes del 23/10.
+
+### Lo primero que haré al conectar el MCP, antes de crear nada
+
+1. Qué proyectos hay y si staging y prod comparten uno (si lo comparten, los datos de QA están
+   mezclados con lo que vería un cliente).
+2. **Qué versión del ID Merge usa el proyecto**: de eso depende que `$device_id`/`$user_id` hagan algo.
+3. Qué eventos y propiedades tiene de verdad, y desde qué fecha — incluida la data vieja del micro
+   `tracking` y del cron de base-api, que son de otra taxonomía.
+4. Qué `client_app_id` aparecen, para fijar el filtro base.
