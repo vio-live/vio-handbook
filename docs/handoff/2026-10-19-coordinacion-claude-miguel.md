@@ -1652,3 +1652,32 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     Replit fija 0.28.0 exacta; un publish invalida la premisa de «versión ya probada en QA».
   - Sigue abierto y es de Replit: **B6b**, la guarda de surfaces que bloquea la vuelta de Vipps. En
     producción el comprador vería el error con el pago ya hecho.
+
+- **23/10 12:0x UTC — Verificado en prod el barrido de datos sensibles en logs (extensions #37/#38/#39).** *(miguel)*
+  Lo miré porque **#38 fue un release a `master`, o sea un deploy a producción en el día de la
+  congelación**: pods recreados a las **11:25:14Z**. Salió bien, pero conviene que quede escrito.
+  - **La redacción funciona, con control sobre líneas reales:** en el log vivo,
+    `accessToken: shpca_***(38)` y `"credentials":"[redacted]"`. Antes esas mismas líneas traían el
+    token entero. El util (`logPayload` / `withoutPersonalData`) está enganchado en los 6 ficheros
+    del PR dentro del `dist` que corre.
+  - **Lo que más me preocupaba del recycle, intacto:** los dos pods vuelven a loguear
+    `[shopifyService] líneas de envío configuradas: dignitycollect.myshopify.com (2)`, así que
+    **E1c sigue cumplido** y las órdenes del lunes llevarán el `code` de Packrooster.
+  - **Pub/Sub sano, medido, no supuesto:** `[PubSubService] initialized`, y el backlog de
+    `vio-sync-sub` (Monitoring API, serie de 90 min) va entre 0 y 2 y está en **0 desde las 11:26**.
+    No hay acumulación tras el deploy. El log se ve mucho más silencioso que ayer, y eso es la
+    redacción quitando ruido, **no** un consumidor muerto.
+  - `Received message <id>` **sobrevive** en `pubsub.service.js`: la receta para distinguir drenaje
+    de bucle de reentrega (incidente del 02/10) sigue sirviendo.
+  - 0 errores desde el redespliegue, 14/14 deployments.
+  - **Lo que NO está en prod: el #39.** Está en `develop`. Prod sigue imprimiendo los `console.log`
+    que ese PR quita (objeto de conexión de BigCommerce, tokens OAuth de Magento, respuesta de
+    tracking de Shopify, cuerpo del distribuidor de Pub/Sub). **Mi recomendación: que se quede en
+    `develop` hasta después del lunes.** Esas líneas llevan semanas ahí; un fin de semana más no
+    cambia nada, y cada deploy son ~62 s de 503 más una ocasión de romper E1c.
+  - **Mapa real de la fuga en prod, para que nadie lo dé por cerrado:**
+    `extensions` redactado (#37 vivo) · `orders` redactado (`omitPrivate` vivo) ·
+    **`users` NO** — no tiene util de redacción y `saveShopifyExportConnection` sigue volcando el
+    objeto de conexión; eran **48** de las 114 líneas del hallazgo del 16/10.
+    Y aparte: `shopify_connection.access_token` sigue **en claro en la base** (32 filas). Limpiar
+    logs no toca eso.
