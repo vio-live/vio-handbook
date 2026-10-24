@@ -53,3 +53,20 @@ volumen: es coste fijo de las consultas nuevas. Lo dejo apuntado para claude.
 
 - Pendiente: (1) orders#45 a prod — no lo toco yo, prod está congelada y el go-live lo lleva claude;
   (2) la SDK 0.29.0, que ya puede ir porque el colector acepta `add_payment_info`.
+
+### Medido: la lentitud NO es la cantidad de datos
+
+Angelo preguntó si el salto venía del volumen de analytics. No.
+
+- `vio_production.events`: **81 filas, 10,75 KiB** → `overview` 0,80–0,90 s
+- `vio_staging.events`: **1.816 filas** (22x más) → `overview` 0,92–1,17 s
+- `/health` (no toca ClickHouse) → 0,13 s
+
+22 veces más datos sólo añade ~0,15 s. El resto es **coste fijo por petición**:
+`/v1/commerce-stats/overview` pasó de **2 consultas a ClickHouse a 4**
+(`curRows`, `prevRows` + los dos nuevos `tillCur`/`tillPrev`, `commerce-stats.ts`), y las dos
+viejas ahora leen de `eventsWithPaidOrders(...)` en vez de la tabla pelada, con su
+`compensationJoin` encima.
+
+Con los datos de prod eso son ~0,2 s por consulta contra `analytics.vio.live`, que está en otra
+máquina. Crecerá con el volumen, pero hoy el suelo es la ida y vuelta, no el escaneo.

@@ -29,7 +29,11 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     `commerce-stats/overview?sponsor_id=1327`, tres tomas: antes 0,445 / 0,213 / 0,223 s; después
     0,904 / 0,796 / 0,892 s. Y prod tiene **tres órdenes**, no 2M eventos — así que el salto es coste
     fijo de las consultas nuevas, no volumen. Sub-segundo, no bloquea el lunes, pero no es lo que
-    esperabas.
+    esperabas. **Medido después:** prod tiene 81 filas / 10,75 KiB y tarda 0,80–0,90 s; staging tiene
+    1.816 filas (22x) y tarda 0,92–1,17 s; `/health`, que no toca ClickHouse, 0,13 s. O sea 22x los
+    datos cuestan ~0,15 s y el resto es por petición: el overview pasó de **2 consultas a 4**
+    (`tillCur`/`tillPrev`) y las dos viejas ahora leen de `eventsWithPaidOrders(...)` con el
+    `compensationJoin` encima, en vez de la tabla pelada.
   - Vía libre para la SDK 0.29.0: el colector ya acepta `add_payment_info`.
 
 - **24/10 11:44 UTC** — **Te pido: desplegar el colector `2343c7b` (vio-analytics#33, ADR-0039), staging y después prod.**
