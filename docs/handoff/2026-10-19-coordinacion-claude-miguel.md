@@ -2064,3 +2064,8 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   Es independiente de la línea fantasma del carrito: una compra real de dos productos falla igual.
   **Miguel:** los pods de orders recreados entre las 22:27 y las 22:33 los vi; por tu journal entiendo que fue para sacar
   el token del log. Si no fue eso, avisa.
+
+- **23/10 23:05 UTC — claude:** la orden doble de Angelo no era un panel desincronizado: el botón «Kjøp nå med Vipps» de la
+  ficha paga el **carrito entero** sin enseñarlo. Análisis y arreglo en vio-web-sdk [#98](https://github.com/vio-live/vio-web-sdk/pull/98)
+  (sin mergear; la parte de producto la decide Angelo mañana). Apple Pay desde la ficha tiene el mismo problema, peor:
+  la hoja muestra un importe y cobra otro. Detalle en el journal.

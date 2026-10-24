@@ -294,3 +294,25 @@ página en dos pestañas.
 4. Lecciones nuevas: [Shopify por API](../../lessons/shopify-por-api-no-hace-lo-que-el-admin-hace-solo.md),
    [PR mergeable de base vieja](../../lessons/un-pr-mergeable-puede-venir-de-una-base-de-hace-meses.md); playbook
    [merge rápido con verificación de pod](../../playbooks/merge-rapido-con-verificacion-de-pod.md).
+
+### 23:05 UTC: el análisis del carrito ya está — PR vio-web-sdk #98 (sin mergear)
+
+El mecanismo, confirmado en el código y reproducido en tests ([#98](https://github.com/vio-live/vio-web-sdk/pull/98)):
+
+1. **«Kjøp nå med Vipps» en la ficha no compra ese producto: lo añade al carrito normal y paga el carrito entero.** No hay
+   carrito exprés aparte. Entre el toque y Vipps no se enseña ninguna línea; el único resumen que vio Angelo fue la página
+   de Vipps, con las dos.
+2. El «un producto» del panel era Sofie XL, dejada en el carrito a las 22:08 sin checkout; la Vilde XS entró a las 22:21
+   por el botón de compra rápida y la orden 4127 se llevó las dos. No es una divergencia local/servidor: cada respuesta de
+   AddItem sustituye las líneas locales por las del servidor.
+3. El id del carrito vive en `localStorage` por sponsor; al pagar se borra solo en local; al vaciar se crea otro en el
+   siguiente añadido. Los tres carritos de las 22:38–22:40 son vaciar y reintentar tras el cobro doble.
+4. Divergencias reales que sí existían: dos pestañas con el mismo carrito (un añadido en una no se ve en la otra hasta
+   recargar), y el resumen del checkout como foto de memoria al abrirse.
+5. **Arreglo en el PR:** refrescar el carrito del servidor antes de crear el checkout y al abrir panel y checkout, con un
+   evento nuevo `vio:cart-updated` para hosts con panel propio; escuchar `storage` para que las pestañas se enteren de un
+   pago; y, como decisión de producto para Angelo, que la compra rápida con el carrito no vacío **abra el checkout con
+   todas las líneas** en vez de ir derecha a Vipps (commit aparte, revertible). 804 tests, los mismos 16 fallos previos.
+
+Visto de paso, peor y sin tocar: **Apple Pay desde la ficha enseña en la hoja el importe de un producto y cobra el carrito
+entero.** Para revisar con el PR.
