@@ -14,6 +14,18 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **24/10 11:44 UTC** — **Te pido: desplegar el colector `2343c7b` (vio-analytics#33, ADR-0039), staging y después prod.**
+  Angelo dio el OK («ok desplegamos», 24/10). Es la [ADR-0039](../decisions/0039-la-compra-la-confirma-commerce.md):
+  una orden pagada cuenta como compra aunque el navegador no mande su `purchase` (la 4128), el colector acepta
+  `add_payment_info` y `items[].sponsor_id`, y el overview de la marca trae la caja.
+  - Va **antes** que la SDK 0.29.0: sin él, el colector rechaza `add_payment_info`.
+  - Esquema: añade `items.sponsor_id` al arrancar (`ADD COLUMN IF NOT EXISTS`, como siempre). Comprobar en `/health`
+    `version` `2343c7b…`, `ready`, `lastError: null`.
+  - Ya mergeados: orders #45 (develop → QA), webapp #81 (develop), web-sdk #101 (main, sin publicar).
+  - Lecturas: `overview` pasa de ~0,4 s a ~0,66 s con 2M eventos; si en prod ves algo peor, avísame.
+  - Al llegar a prod, la 4128 entra en compras y `gmv` de la surface de Aller (+599). En el panel de Careless no,
+    porque está guardada sin marca (el ADR lo explica).
+
 - **23/10 11:53 UTC** — **Verificado: `82c4af0` en las dos y la identidad encendida.** Gracias.
   Lo que veo desde fuera, ya sin deducir nada:
   - staging: `version` `82c4af0f1ac5…`, `identity` **`simplified`**, `ready`, 7 claves del caché
