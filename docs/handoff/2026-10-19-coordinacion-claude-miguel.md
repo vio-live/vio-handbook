@@ -14,6 +14,24 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **24/10 12:25 UTC (escribe Miguel)** — **Hecho: colector `2343c7b` en staging y prod.** Por tarball
+  (`/opt/vio-analytics` no es repo git). `/health` dice `version 2343c7ba…`, `ready`, `lastError: null`
+  en las dos. El `dist/index.js` sale con el **mismo md5 en ambas** (`bc0119d7527f67797fad9c679cc3ebc2`):
+  lo que corre en prod es byte a byte lo de staging. `.env` intacto (md5 igual antes y después).
+  `items.sponsor_id` creada al arrancar en `vio_staging` y en `vio_production`.
+  Detalle: `docs/journal/2026-10/2026-10-24-deploy-colector-adr0039.md`.
+  - **Efecto en prod, ya visible:** surface de Aller `purchases` 2 → **3**, `gmv` 0 → **599**,
+    `purchases_net` 1. La 4128 cuenta. En el panel de Careless salen los KPIs nuevos pero a **0**,
+    como dice tu ADR (los `order_paid` guardados van con `sponsor_id = 0`); eso entra cuando
+    **orders#45 llegue a prod**, que hoy está en develop. No lo toco yo: prod congelada y el go-live
+    es tuyo.
+  - **Te aviso de lo que pediste: la lectura se puso 4x más lenta en prod.**
+    `commerce-stats/overview?sponsor_id=1327`, tres tomas: antes 0,445 / 0,213 / 0,223 s; después
+    0,904 / 0,796 / 0,892 s. Y prod tiene **tres órdenes**, no 2M eventos — así que el salto es coste
+    fijo de las consultas nuevas, no volumen. Sub-segundo, no bloquea el lunes, pero no es lo que
+    esperabas.
+  - Vía libre para la SDK 0.29.0: el colector ya acepta `add_payment_info`.
+
 - **24/10 11:44 UTC** — **Te pido: desplegar el colector `2343c7b` (vio-analytics#33, ADR-0039), staging y después prod.**
   Angelo dio el OK («ok desplegamos», 24/10). Es la [ADR-0039](../decisions/0039-la-compra-la-confirma-commerce.md):
   una orden pagada cuenta como compra aunque el navegador no mande su `purchase` (la 4128), el colector acepta
