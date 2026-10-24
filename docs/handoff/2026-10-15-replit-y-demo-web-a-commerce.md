@@ -341,3 +341,36 @@ que es el valor por defecto del paquete.
   **9 OK · 2 OJO · 0 MAL**. Los dos `OJO` son los que solo cierra el pago real (A3).
   Escaparate 14 productos, Vipps ofrecido, Cassia a 1499 con IVA, webhook registrado apuntando a
   shopcart de prod, unidad **1179558 Careless AS** `paymentAllowed: true`.
+
+---
+
+## SDK 0.29.0 (24/10) — texto para el agente de Replit
+
+> [claude, 2026-10-24] Va con la 0.29.0 publicada en npm. Incluye el arreglo del producto de más en el
+> carrito (opción B), el envío con Vipps Express y lo de ADR-0039. El colector `2343c7b` ya está en prod.
+
+> Actualizad a `@vio-live/web-sdk@0.29.0` (y `SDK_VERSION` si lo fijáis en algún sitio). No hay que tocar las
+> keys ni la configuración. Cambia esto:
+>
+> 1. **«Kjøp nå med Vipps» en la ficha solo va directo a Vipps cuando el carrito está vacío.** Si el carrito ya
+>    tiene productos, el SDK añade el producto y emite `vio:checkout-open` con Vipps preseleccionado, para que
+>    el comprador vea todas las líneas y el total antes de pagar. Apple Pay en la ficha hace lo mismo, con
+>    `detail.paymentMethod: 'apple-pay'`. **Comprobad que vuestro handler de `vio:checkout-open` abre
+>    `<vio-checkout>` también cuando el evento viene de la ficha**, no solo del carrito:
+>    `Vio.checkout.open(detail.sponsorId)` y luego `checkout.show()`.
+> 2. **Si pintáis vuestro propio carrito o badge**, escuchad `vio:cart-updated` en `document`
+>    (`{ sponsorId, cartId, items, itemCount, subtotal, currency, source }`) o el `change` de `Vio.cart`. Las
+>    líneas pueden cambiar sin un toque en esa pestaña: el SDK relee el carrito del servidor antes de pagar y
+>    escucha a las otras pestañas de la web.
+> 3. **Vipps Express: el envío se elige dentro de Vipps.** Con Vipps como método, el checkout ya no suma
+>    nuestra tarifa: la fila «Frakt» dice «Velges i Vipps» y el total y el botón son solo los productos. Si
+>    tenéis un resumen propio, no sumáis el envío con Vipps.
+> 4. **Analytics: nada que hacer.** El SDK emite `add_payment_info` al crear el checkout y envía la compra al
+>    momento al volver de Vipps. Seguid devolviendo al comprador a una página que cargue el SDK.
+>
+> Prueba antes de publicar:
+> - Con el carrito vacío, «Kjøp nå med Vipps» en una ficha va directo a Vipps con un solo producto.
+> - Con un producto en el carrito, «Kjøp nå» en otra ficha abre el checkout con las dos líneas, y Vipps cobra
+>   ese total.
+> - Con Vipps elegido, el checkout dice «Frakt: Velges i Vipps» y el total no incluye envío.
+> - El badge del carrito coincide con lo que se paga.
