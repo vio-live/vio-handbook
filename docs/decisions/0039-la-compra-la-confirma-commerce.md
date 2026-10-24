@@ -54,11 +54,29 @@ Sigue mereciendo arreglar cada caso en que el SDK no emite `purchase`, pero ya n
   las órdenes pagadas después del deploy de orders.
 - Despliegue en cualquier orden: el colector tolera la ausencia de `add_payment_info` y de `sponsor_id`.
 
-## Implementación
+## Implementación (2026-10-24)
 
 | Repo | PR | Qué |
 |---|---|---|
-| vio-orders-microservice | — | `order_paid` con `items[].sponsor_id` y `context.sponsor_id` |
-| vio-analytics | — | compra = `purchase` ∪ `order_paid` sin `purchase`; sesión por `add_payment_info`; KPIs de cobro en commerce-stats |
-| vio-web-sdk | — | `add_payment_info` con `checkout_id` al crear el checkout |
-| webapp-vio-commerce | — | tile de cobrado y aviso en el panel de la marca |
+| vio-orders-microservice | [#45](https://github.com/vio-live/vio-orders-microservice/pull/45) | `order_paid` con `items[].sponsor_id` y `context.sponsor_id`; también el barrido de reconciliación |
+| vio-analytics | [#33](https://github.com/vio-live/vio-analytics/pull/33) | compra = `purchase` ∪ `order_paid` sin `purchase` (`src/stats-paid-orders.ts`); sesión por `add_payment_info`; caja en el overview de la marca |
+| vio-web-sdk | [#101](https://github.com/vio-live/vio-web-sdk/pull/101) | `add_payment_info` (y `vio:checkout-created`) al crear el checkout; el `purchase` de una vuelta pagada sale al momento, no espera la cola |
+| webapp-vio-commerce | [#81](https://github.com/vio-live/webapp-vio-commerce/pull/81) | tile de cobrado y aviso en el panel de la marca; textos de #73 corregidos |
+
+**Precisiones que el ADR no decía y fija la implementación:**
+
+- Un `order_paid` sin `purchase` se reparte **por línea**: una fila por (campaña, marca, slot), cada una con su dinero
+  de línea. Campaña: la de la línea, si no la del pedido, si no la del `add_payment_info`.
+- Un pedido casa con su `purchase` si comparten `order_id` **o** `checkout_id` en la misma surface (cubre los dos
+  `order_id_kind`), con un día de margen a cada lado del rango.
+- **Caja de una marca** en un pedido de varias marcas: solo sus líneas, sin envío (el envío no es de nadie). Un
+  pedido entero de la marca cuenta completo, envío incluido.
+- `sessions` deja de contar la sesión vacía de los eventos de servidor; nuevo `session_purchases` (pedidos netos con
+  sesión) y `conversion = session_purchases / impression_sessions`.
+- Corrige dos fallos latentes de la caja de ADR-0038: una compensación sin `checkout_id` no restaba de un
+  `order_paid` con él, y un `purchase` sin `checkout_id` contaba dos veces con su `order_paid`.
+
+**Orden de despliegue:** colector primero (si no, rechaza `add_payment_info`), luego orders, webapp y la
+publicación de la SDK 0.29.0. Seguimientos: la webapp recalcula la conversión al sumar surfaces con
+`purchases_net` (debería usar `session_purchases`); el emparejamiento es por surface, así que un `purchase` caído en
+otra surface que la del pedido contaría dos veces.
