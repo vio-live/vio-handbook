@@ -56,3 +56,29 @@ del lunes: si se repite, cada venta real queda fuera del panel de Aller y de Car
 
 - Pendiente: (1) decidir si se cancela la 4128 o se deja seguir hasta el envío para probar la
   captura por tracking; (2) averiguar por qué faltó el `purchase` del navegador.
+
+### Corrección (24/10, 10:10) — dije mal que la 4128 "no aparece en el panel"
+
+Medido en el colector, no deducido:
+
+- **Panel del publisher (Aller, surface 1)** — `GET /stats/surfaces/1/overview` de base-api, que
+  reenvía a `/v1/stats/surface/overview?client_app_id=<surfaceId>`: `orders_paid 3`,
+  `orders_unattributed 1`, `charged 776`, `charged_gross 2673`, junto a `purchases 2`, `gmv 0`,
+  `cancelled_orders 2`. **La 4128 sí está**, contada en la caja y marcada como no atribuida. Es
+  exactamente lo que ADR-0038 diseñó para esto.
+- **Panel de la marca (Careless, sponsor 1327)** — `GET /stats/overview`, que reenvía a
+  `/v1/commerce-stats/overview?sponsor_id=1327`: sus KPIs son `views, clicks, spend, netRevenue,
+  grossRevenue, refundedValue, purchases, cancelledOrders, purchasesNet`. **No tiene `charged`,
+  `orders_paid` ni `orders_unattributed`.** Ahí la 4128 no se ve por ninguna vía: `purchases 2`,
+  `grossRevenue 0`.
+
+O sea, lo real no es "la venta se pierde", es una **asimetría entre los dos paneles**: el publisher
+ve el dinero cobrado sin atribuir, la marca no. Y sigue en pie la pregunta de por qué esa compra no
+emitió el `purchase` del navegador.
+
+El dashboard es `dashboard.ecom.vio.live` (webapp en Vercel) contra base-api en `api-ecom.vio.live`;
+`client_app_id` lo fija base-api con el id de la surface (`statsService.js:283`), no con el del
+usuario.
+
+- Angelo (24/10): la 4128 **se deja correr** para probar la captura por tracking de punta a punta.
+  `captureMode = shipment` es intencionado: se revisó la tienda de Shopify y así trabajan ellos.
