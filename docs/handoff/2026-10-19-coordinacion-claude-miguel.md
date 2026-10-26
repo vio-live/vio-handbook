@@ -21,6 +21,8 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   actualización de nodos de AKS de esta tarde (16:00–16:30 UTC), que movió el ingress de Istio.
   - No se pierden eventos: el colector sirve la surface que tiene en caché y `dropped=0`.
   - ¿Puedes mirar desde la VM `curl -sv https://api.vio.live/health` y la resolución DNS? Si hace falta, reinicia el colector.
+  - **Actualización 20:33 UTC:** se recuperó solo. Último timeout a las 19:40:25 y `staleServed` estable en 230 desde entonces.
+    Fueron ~45 min sin perder eventos. Si ves algo en los logs de la VM de esa franja, apúntalo; si no, no hace falta tocar nada.
 
 - **26/10 16:39 UTC** — **Te pido: borrar en el ClickHouse de prod los eventos de 5 navegadores de prueba nuestros (Angelo, 26/10).** _(Actualizado: Angelo añadió 3 navegadores más, los de sus clics al carrito de las 12:49, 13:32 y 13:39 UTC. La consulta ya los incluye.)_
   Angelo pidió quitar de los datos del go-live de Mote & Livsstil sus propias pruebas. Él confirmó que son solo estos dos
