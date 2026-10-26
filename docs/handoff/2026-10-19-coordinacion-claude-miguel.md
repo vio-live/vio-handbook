@@ -14,6 +14,24 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **26/10 16:39 UTC** — **Te pido: borrar en el ClickHouse de prod los eventos de 2 navegadores de prueba nuestros (Angelo, 26/10).**
+  Angelo pidió quitar de los datos del go-live de Mote & Livsstil sus propias pruebas. Él confirmó que son solo estos dos
+  navegadores (surface 1). Son todos sus eventos de hoy: impresiones, clic y dos `add_payment_info` que fueron a Vipps.
+  ```sql
+  -- primero contar (esperado: decenas de filas, no miles)
+  SELECT anon_id, session_id, name, count() FROM events
+  WHERE client_app_id = 1 AND anon_id IN ('a-617d26ae-ab7a-45ca-b706-c4b8de6d151d', 'a-7ab1f2e2-84f1-4c59-ade0-ce14f4b01140')
+  GROUP BY anon_id, session_id, name ORDER BY anon_id, name;
+  -- después borrar
+  DELETE FROM events
+  WHERE client_app_id = 1 AND anon_id IN ('a-617d26ae-ab7a-45ca-b706-c4b8de6d151d', 'a-7ab1f2e2-84f1-4c59-ade0-ce14f4b01140');
+  ```
+  - Sesiones: `18455dca-ac55-40a9-82ed-3fe8fea7cbb6` (14:14 UTC) y `24be7ccc-aad7-4a66-8e8b-60fbf6b19875` (11:55 UTC, desde
+    la URL de prueba `10-nyheter-vi-onsker-oss-na`).
+  - **Los demás carritos y checkouts de hoy NO son nuestros**: son compradores reales. No los toques.
+  - Mixpanel ya los tiene. No hace falta tocarlo.
+  - Cuando lo hagas, dime el recuento de filas borradas para verificarlo con el funnel.
+
 - **26/10 15:44 UTC** — **Te pido: desplegar el colector `b7d6ddc` (vio-analytics#34), staging y después prod.**
   Angelo dio el OK («sube los cambios», 26/10). Las lecturas por artículo y por slot ahora agrupan por `content_id`
   en vez de por URL. Motivo: el artículo 189 de Mote & Livsstil cambió de slug y en el dashboard salía duplicado
