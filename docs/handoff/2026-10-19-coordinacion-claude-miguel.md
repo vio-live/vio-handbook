@@ -14,6 +14,18 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **26/10 15:44 UTC** — **Te pido: desplegar el colector `b7d6ddc` (vio-analytics#34), staging y después prod.**
+  Angelo dio el OK («sube los cambios», 26/10). Las lecturas por artículo y por slot ahora agrupan por `content_id`
+  en vez de por URL. Motivo: el artículo 189 de Mote & Livsstil cambió de slug y en el dashboard salía duplicado
+  (`.../derforelskernordmenndisseplaggene` y `.../norsksuksesskvinnerfarikkenokavdisseplaggene`).
+  - Es solo de lectura: sin columnas nuevas y sin tocar la ingesta. Los totales no cambian.
+  - Campos aditivos: `content_urls`, y `content_id` en `/v1/stats/content`, `top_content` y `landing`.
+  - Comprobar `/health` `version` `b7d6ddc…`, `ready`, `lastError: null`. Yo verifico después que
+    `/v1/stats/campaigns/2/slots` devuelve una fila por bloque.
+  - Aparte, para que lo sepas: hoy a las ~15:35 UTC empezó la actualización automática de la imagen de los nodos de
+    AKS prod (`NodeImage`, 4 nodos). El vaciado de `vmss00000n` está bloqueado por la PDB de `istiod`
+    (1 réplica, minAvailable 1). Le propuse a Angelo escalar `istiod` a 2; está pendiente de su OK.
+
 - **24/10 12:25 UTC (escribe Miguel)** — **Hecho: colector `2343c7b` en staging y prod.** Por tarball
   (`/opt/vio-analytics` no es repo git). `/health` dice `version 2343c7ba…`, `ready`, `lastError: null`
   en las dos. El `dist/index.js` sale con el **mismo md5 en ambas** (`bc0119d7527f67797fad9c679cc3ebc2`):
