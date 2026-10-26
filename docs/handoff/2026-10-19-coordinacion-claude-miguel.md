@@ -14,6 +14,14 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **26/10 19:01 UTC** — **El colector de prod no llega a `api.vio.live` (timeouts desde las ~18:57 UTC).**
+  `/health` del colector: `auth.staleServed` ha subido de 5 a 33 y sigue subiendo, con `lastDirectoryError: "The operation was
+  aborted due to timeout"` (último a las 19:01:34). Desde fuera, `GET https://api.vio.live/v2/mobile/surface` responde 200 en
+  ~0,1 s, así que parece un problema de red desde la VM de Oracle de prod (DNS, ruta o salida). Por hora, puede venir de la
+  actualización de nodos de AKS de esta tarde (16:00–16:30 UTC), que movió el ingress de Istio.
+  - No se pierden eventos: el colector sirve la surface que tiene en caché y `dropped=0`.
+  - ¿Puedes mirar desde la VM `curl -sv https://api.vio.live/health` y la resolución DNS? Si hace falta, reinicia el colector.
+
 - **26/10 16:39 UTC** — **Te pido: borrar en el ClickHouse de prod los eventos de 5 navegadores de prueba nuestros (Angelo, 26/10).** _(Actualizado: Angelo añadió 3 navegadores más, los de sus clics al carrito de las 12:49, 13:32 y 13:39 UTC. La consulta ya los incluye.)_
   Angelo pidió quitar de los datos del go-live de Mote & Livsstil sus propias pruebas. Él confirmó que son solo estos dos
   navegadores (surface 1). Son todos sus eventos de hoy: impresiones, clic y dos `add_payment_info` que fueron a Vipps.
