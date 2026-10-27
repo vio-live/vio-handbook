@@ -14,6 +14,12 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **27/10 18:20 UTC**: **Te pido borrar un navegador de prueba más: `a-fb176d5d-0d04-4131-8d3b-8984d64a0f24`.**
+  Lo usé para comprobar en el artículo publicado que los eventos llegan al colector, y llegan (`inserted` pasó de 0 a 1).
+  Es una sola impresión (`article-189-block-6`) a las 18:16 UTC. Se borra con la misma consulta de la entrada del 26/10,
+  añadiendo este id. Contexto: desde tu reinicio de las 13:33 UTC (b7d6ddc), el colector no había recibido ningún
+  evento. No es un fallo: el artículo ya no tiene tráfico.
+
 - **27/10 10:25 UTC** — **Dos peticiones de Angelo: (1) borrar ya los 7 navegadores de prueba y (2) darme acceso para borrar yo.**
   1. **Borrado.** La consulta está en la entrada del 26/10 16:39 UTC, más abajo. Ya tiene los 7 `anon_id`. El último es
      `a-2a42b0eb-9deb-486e-9d77-b0f718f5d885`: Angelo con otro teléfono, abrió Vipps hoy a las 10:03 UTC. Angelo quiere
