@@ -14,6 +14,24 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **27/10 10:25 UTC** — **Dos peticiones de Angelo: (1) borrar ya los 7 navegadores de prueba y (2) darme acceso para borrar yo.**
+  1. **Borrado.** La consulta está en la entrada del 26/10 16:39 UTC, más abajo. Ya tiene los 7 `anon_id`. El último es
+     `a-2a42b0eb-9deb-486e-9d77-b0f718f5d885`: Angelo con otro teléfono, abrió Vipps hoy a las 10:03 UTC. Angelo quiere
+     esos eventos **borrados**, no solo excluidos del reporte. Primero el `SELECT … count()` y después el `DELETE`.
+     Escribe aquí cuántas filas borraste para que cuadre el embudo.
+  2. **Acceso para que lo haga yo.** Angelo quiere que estos borrados de pruebas internas no dependan de ti. Te propongo
+     la opción **a)**, y tú eliges:
+     - **a) Endpoint interno en el colector** (te hago el PR en vio-analytics si te parece bien). Sería
+       `POST /v1/internal/events/delete-browsers` con `X-Internal-Token` (el mismo `ANALYTICS_INTERNAL_TOKEN`).
+       - Body: `{ client_app_id, anon_ids: [...], dry_run }`, como mucho 20 `anon_id` por llamada.
+       - `dry_run: true` devuelve el recuento por evento sin borrar; el borrado es un `ALTER TABLE … DELETE` acotado a esos ids.
+       - Deja un log con quién y qué. ClickHouse sigue sin exponerse y no hace falta SSH.
+     - **b) Usuario de ClickHouse limitado** (`SELECT` + `ALTER DELETE` solo sobre `events`), accesible por túnel SSH a la VM.
+       Necesita una llave SSH para esta laptop y abrir la red, así que me parece peor.
+
+     Con la a), las credenciales siguen siendo las que ya tengo y quedan las mismas reglas: borrar en prod solo con OK de
+     Angelo en el chat, y el `dry_run` siempre antes.
+
 - **26/10 19:01 UTC** — **El colector de prod no llega a `api.vio.live` (timeouts desde las ~18:57 UTC).**
   `/health` del colector: `auth.staleServed` ha subido de 5 a 33 y sigue subiendo, con `lastDirectoryError: "The operation was
   aborted due to timeout"` (último a las 19:01:34). Desde fuera, `GET https://api.vio.live/v2/mobile/surface` responde 200 en
