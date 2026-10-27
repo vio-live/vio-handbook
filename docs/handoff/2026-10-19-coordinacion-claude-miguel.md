@@ -211,6 +211,53 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## De Miguel (escribe Miguel)
 
+- **27/10 12:35 UTC — Hecho lo tres: borrado (162 filas), colector `b7d6ddc` en staging y prod, y elijo la opcion a).**
+
+  **1. Borrado de los 7 navegadores de prueba.** OK de Angelo en el chat ("sip", 27/10 13:31 CET).
+  - Conteo previo, tu consulta tal cual: **162 filas** en `vio_production.events`, `client_app_id = 1`,
+    los 7 `anon_id` presentes (ninguno vacio). Reparto por navegador: `a-497e65c0` 72, `a-8d63c81e` 51,
+    `a-9ec5d4dc` 16, `a-7ab1f2e2` 8, `a-617d26ae` 6, `a-d2ea7af4` 5, `a-2a42b0eb` 4.
+  - Borradas con `ALTER TABLE events DELETE ... ` y `mutations_sync=2` (mutacion cerrada, `is_done=1`,
+    `parts_to_do=0`, sin `latest_fail_reason`). ReplacingMergeTree, ClickHouse 24.8.14.39.
+  - **Total de la tabla 11.283 -> 11.121 = 162 exactas.** `count()` de esos 7 ids ahora **0**.
+  - **Copia antes de borrar**, por si hay que reponer algo: `/opt/vio-analytics/backups/events-pruebas-internas-20261027.jsonl`
+    en la VM de prod (162 lineas, 224.292 bytes, md5 `1e5b004873db8b9163ef7f3d28c37cf9`, permisos 600).
+    Si lo necesitas de vuelta, es un `INSERT ... FORMAT JSONEachRow` con ese fichero.
+  - Mixpanel sin tocar, como dijiste.
+
+  **2. Acceso para que lo hagas tu: voy con la a).** Hazme el PR del endpoint interno en vio-analytics.
+  Con estas condiciones, que es como lo planteas tu mas una cosa mia:
+  - `POST /v1/internal/events/delete-browsers`, `x-internal-token` (**ojo: la cabecera es `x-internal-token`,
+    no `Authorization: Bearer`**), maximo 20 `anon_id` por llamada, `dry_run` que devuelve el recuento sin borrar.
+  - **El token que vale es el FULL (`INTERNAL_EVENTS_TOKEN`), no el de solo lectura.** El de solo lectura
+    (`INTERNAL_READ_TOKENS`, el que usa base-api) no debe poder borrar: si lo acepta, el minimo privilegio
+    que monte el 16/10 se queda en nada. Pon el guarda del borrado en el token full y dejalo dicho en el PR.
+  - Lo mio: **que haga la copia antes de borrar**, igual que la que acabo de hacer a mano — volcar las filas
+    afectadas a `/opt/vio-analytics/backups/` antes del `ALTER DELETE`. Un borrado sin red no me gusta en prod.
+  - Sigue en pie: en prod, OK de Angelo en el chat y `dry_run` antes. Eso no lo pone el codigo, lo ponemos nosotros.
+
+  **3. Colector `b7d6ddc` (vio-analytics#34) desplegado, staging y despues prod.** Por tarball, como siempre.
+  - `/health` en las dos: `version b7d6ddccd76274c64845644765bcad62d14e9311`, `ready: true`, `lastError: null`,
+    Mixpanel `simplified`.
+  - `dist/index.js` md5 **`68137ec0e533fadd43192dffc0ec902d` en las dos** (venia de `bc0119d7…`): lo que corre en
+    prod es byte a byte lo de staging. `.env` intacto en las dos (staging `de1d96e7…`, prod `42c0965c…`, iguales antes y despues).
+  - Respaldos: staging `~/vio-analytics-backup-20261027-133246.tgz`, prod `~/vio-analytics-backup-20261027-133331.tgz`.
+  - **Tu verificacion ya esta hecha y sale bien:** `/v1/stats/content` de prod devuelve el articulo 189 en **una sola
+    fila**, con `content_id "189"` y los **tres** slugs colapsados en `content_urls`
+    (`10-nyheter-vi-onsker-oss-na`, `derforelskernordmenndisseplaggene`, `norsksuksesskvinnerfarikkenokavdisseplaggene`).
+    Ya no sale duplicado. `/v1/stats/campaigns/2/slots?client_app_id=1` 200.
+  - **Aviso para que no lo diagnostiques dos veces:** `/v1/stats/campaigns/2/slots` **sin** `client_app_id` responde
+    **400** `internal reads must set ?client_app_id= (UInt32)`. Es validacion de parametros, no un fallo del deploy.
+  - Latencias de prod tras el deploy: `content` 0,51 s · `slots` 0,63 s · `commerce-stats/overview` 0,78 s.
+    El overview sigue donde lo dejamos el 24/10 (~0,8 s): este PR no lo mejora ni lo empeora.
+
+  **Cifras del embudo despues del borrado**, para que cuadres el reporte: articulo 189 queda en
+  `sessions 1468`, `impressions 10173`, `clicks 390`, `add_to_carts 9`, `purchases 0`.
+
+  **Del aviso del 26/10 19:01 (timeouts del colector):** no hace falta tocar nada, como dijiste. En `/health` de prod
+  antes de mi reinicio: `staleServed 230` estable y `lastDirectoryErrorAt 2026-10-26T19:40:25Z`, o sea ni un timeout
+  nuevo en ~17 h. Con el reinicio de ahora los contadores vuelven a 0 y `lastDirectoryError` sale `null`.
+
 - **23/10 09:20 UTC — `MIXPANEL_IDENTITY` SI esta activa en las dos VMs. Tu aritmetica de uptime es
   correcta, la conclusion no.** Corri tu comprobacion tal cual, y es la buena:
   - prod `82.70.54.151`: `ActiveEnterTimestamp` 22/10 **19:48:41 UTC**, grep del `/proc/<pid>/environ`
