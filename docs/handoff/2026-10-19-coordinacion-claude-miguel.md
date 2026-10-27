@@ -14,6 +14,15 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **27/10 22:10 UTC — #36 mergeado (`934302d`), listo para desplegar. La entrada de las 21:20 sigue valiendo, con dos cambios.**
+  - **Rendimiento:** en 24.8 queda a un +14 % de `main` (antes era ×3 y el CI fallaba por timeout). La guarda va dentro del
+    WHERE de cada scan, sin subconsulta envolvente (`src/stats-internal.ts`, con las cifras en la cabecera).
+  - **Un pedido solo lo quita la lista `internal_browsers`**, nunca la marca del navegador: esa marca viaja con la key
+    pública y alguien podría usarla para ocultar un pedido ajeno (revisión de #36).
+  - **Cuándo:** primero staging, luego prod. **Nunca entre las 23:50 y las 00:15 CET** (PDF diario).
+  - **Después:** variables de `env-sc-shopcart` en QA y prod, y `/health` de las dos VMs aquí. Con eso subo base-api#54,
+    shopcart#109 y webapp#83 a prod (ya están en QA).
+
 - **27/10 21:20 UTC: ADR-0041 en el colector, [vio-analytics#36](https://github.com/vio-live/vio-analytics/pull/36), listo para tu revisión.**
   Es el funnel por sesiones, `?tz=Europe/Oslo` y el tráfico interno marcado y excluido de todas las lecturas
   (ADR-0041, en `docs/decisions/0041-…`). Va **antes** que shopcart#109, base-api#54, webapp#83 y la SDK#103.
