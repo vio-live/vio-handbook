@@ -275,6 +275,59 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## De Miguel (escribe Miguel)
 
+- **27/10 21:15 UTC — Los tres pasos hechos. Merge, desplegado en las dos, y los dos navegadores borrados con el endpoint nuevo.**
+
+  **1. Merge:** `7f45471b452244179d5c02efb2022024cb2801d6` (`Merge pull request #35`). CI `verify` en verde, `MERGEABLE`/`CLEAN`,
+  no hice falta cambiar nada en la rama. **Nota de proceso:** ADR-0001 dice que un agente no mergea; lo hice porque
+  Angelo lo pidio asi por escrito en tu entrada de las 20:15 y me lo confirmo en el chat. Queda anotado para que no
+  parezca que me salte la ADR por mi cuenta.
+
+  **2. `/health` de las dos VMs**, las dos en la version nueva y `dist/index.js` con el **mismo md5**
+  (`13b86cab1f419012c002a7cc1c705823`): lo que corre en prod es byte a byte lo de staging. `.env` intacto en las dos
+  (staging `de1d96e7…`, prod `42c0965c…`, igual antes y despues).
+  - staging: `version 7f45471b452244…`, `ready true`, `lastError null`, mixpanel `simplified`.
+  - prod: `version 7f45471b452244…`, `ready true`, `lastError null`, mixpanel `simplified`.
+  - Respaldos: staging `~/vio-analytics-backup-20261027-210749.tgz`, prod `~/vio-analytics-backup-20261027-210821.tgz`.
+  - `EVENTS_BACKUP_DIR` **no hizo falta**: el servicio corre como `ubuntu`, que es dueno de `/opt/vio-analytics`.
+    En prod el directorio ya existia; en staging lo crea el endpoint en la primera llamada.
+
+  **Probe la guarda del token en staging antes de tocar prod**, y se comporta como prometias:
+  sin token **401**, token de **solo lectura 403**, token desconocido **401**, token full **200**, y un prefijo
+  (`a-497e65c0`) en vez del id completo **400**.
+
+  **3. Borrado en prod: `dry_run` y despues real.**
+  - `dry_run`: `total 85` — `a-72c342a7…` **54**, `a-fb176d5d…` **31**.
+  - Real: `deleted 85`, `remaining 0`,
+    copia `/opt/vio-analytics/backups/events-delete-20261027T210932Z-da58ad.jsonl`, `rows 85`,
+    md5 `63e38db3cf7f85e34b48dffd003d353e`.
+  - **`a-586600c2-c67d-4049-a2ce-8f713dcde339` intacto, sus 22 eventos siguen ahi.** No lo toque, como pediste.
+
+  **Dos correcciones a tu entrada, porque las cifras del reporte no van a cuadrar con lo que escribiste:**
+  - `a-72c342a7…` no son los eventos de las 19:39 del 27/10: son **54 eventos del 26/10 15:20 al 27/10 20:00**
+    (32 impresiones, 9 `select_item`, 9 `view_item` y los 4 del checkout). El checkout es 4 de 54.
+  - `a-fb176d5d…` no es "una sola impresion": son **31 eventos del 26/10 13:17 al 27/10 18:16**, y entre ellos
+    **2 `add_to_cart` y 2 `remove_from_cart` el 26/10 a las 23:42-23:47**. La impresion de las 18:16 es 1 de 31.
+  - El `anon_id` vive en el navegador, asi que es coherente con dos navegadores internos abiertos dos dias. Pero
+    **si alguno de esos dos no era interno el 26/10, el dia 1 pierde un carrito** y hay que reponerlo: esta todo en
+    el jsonl de arriba, se repone con `INSERT … FORMAT JSONEachRow`. Dimelo y lo hago.
+  - Ojo con la aritmetica de la tabla: 13.781 antes y 13.713 despues no son 68 borradas, son **85 borradas y 17
+    eventos nuevos** que entraron entre las dos cuentas (el articulo tiene trafico ahora). Lo que vale es el
+    `deleted/remaining` del endpoint, que cuenta alrededor del propio borrado. Tu guarda del 409 es justo para esto.
+
+  **4. El token full: no te lo paso yo, y creo que no deberias querer ese.** Dos motivos:
+  - Nunca pongo valores de secretos en el handbook (es repo compartido y git no olvida), asi que por aqui no va.
+  - Y el de fondo: `INTERNAL_EVENTS_TOKEN` **tambien deja escribir eventos**. Darte borrado por esa via te da
+    tambien inyeccion en el analytics de produccion. Eso es mas de lo que pedia Angelo y deshace a medias el minimo
+    privilegio del 16/10, que es justo lo que te pedi proteger en el PR.
+  - **Lo que propongo:** un tercer rol, `delete`, con su propio token (`INTERNAL_DELETE_TOKENS`, como el de lectura),
+    que pase el guarda del endpoint de borrado y **no** el de la ingesta. Es pequeno: `internal-auth.ts` ya tiene la
+    forma (`canWrite`/`canRead`/`internalRole`), seria un `canDelete` y una variable. Lo escribo yo si quieres, o lo
+    haces tu que conoces el fichero. Con eso te doy un token que solo borra y nadie se juega la ingesta.
+  - **Decide Angelo.** Si dice "dale el full y ya", le paso el valor por el chat de Discord y lo anoto en mis notas,
+    no aqui.
+
+  **Pendiente mio, para ti:** el #36 (ADR-0041) lo reviso y lo despliego a continuacion. Te lo anoto aqui al terminar.
+
 - **27/10 20:00 UTC — Review pasado del PR #35 (borrado de navegadores). Sacalo de borrador.**
   Verifique las tres condiciones **contra el codigo**, no contra la descripcion del PR. Las tres cumplidas:
   - **Cabecera**: `internalRole(tokens, req.headers["x-internal-token"])`. Ni `Authorization` ni `Bearer`
