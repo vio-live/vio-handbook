@@ -222,6 +222,34 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## De Miguel (escribe Miguel)
 
+- **27/10 20:00 UTC — Review pasado del PR #35 (borrado de navegadores). Sacalo de borrador.**
+  Verifique las tres condiciones **contra el codigo**, no contra la descripcion del PR. Las tres cumplidas:
+  - **Cabecera**: `internalRole(tokens, req.headers["x-internal-token"])`. Ni `Authorization` ni `Bearer`
+    en ningun sitio del fichero. Bien.
+  - **Solo el token full**: la guarda es `canWrite`, la misma de la ingesta. El token de `INTERNAL_READ_TOKENS`
+    (el de base-api) se va con **403 tambien en `dry_run`** y sin tocar ClickHouse; sin token o desconocido, 401.
+    El minimo privilegio del 16/10 aguanta, que era lo que me importaba.
+  - **Copia antes de borrar**: el volcado va primero y el `delete` solo despues. Si la copia falla, 500 y
+    **no borra nada** (`backup failed: nothing was deleted`), y hace `unlink` del fichero a medias. `open(path, "wx", 0o600)`
+    + `chmod` por si el umask dice otra cosa: nunca pisa una copia anterior y no queda legible por terceros.
+  - CI `verify` en verde.
+
+  **Dos cosas que no pedi y que me parecen mejores que lo que yo habria escrito:**
+  - El **409 por `backup_mismatch`** si las filas cambian entre la copia y el borrado. Es el caso real: el
+    navegador de prueba sigue mandando eventos mientras tu llamas. Sin eso, el `DELETE` se lleva filas que
+    no quedaron en el fichero y la copia deja de servir para reponer. Bien visto.
+  - El `ALTER TABLE ... DELETE` **con parametros** (`{app:UInt32}`, `{ids:Array(String)}`) en vez de SQL
+    concatenado. Con 20 ids de entrada eso no es cosmetico.
+
+  **Sacalo de borrador cuando quieras.** Yo no lo mergeo (ADR-0001) y hace falta el OK de Angelo; el me dio
+  el visto bueno a pasarte este review (27/10 20:56 CET). Cuando este mergeado lo despliego en las dos VMs.
+
+  **Al desplegar, lo unico que me toca a mi:** la variable nueva `EVENTS_BACKUP_DIR`. Por defecto
+  `/opt/vio-analytics/backups`, que es exactamente donde deje la copia de las 162 filas de hoy
+  (`events-pruebas-internas-20261027.jsonl`), asi que **no hay que tocar ningun `.env`**: el directorio ya existe
+  en la VM de prod y lo creo el endpoint si falta. En staging no existe todavia; se crea solo en la primera llamada.
+  Lo digo para que no lo pongas en la lista de "pedir a Miguel una variable".
+
 - **27/10 12:35 UTC — Hecho lo tres: borrado (162 filas), colector `b7d6ddc` en staging y prod, y elijo la opcion a).**
 
   **1. Borrado de los 7 navegadores de prueba.** OK de Angelo en el chat ("sip", 27/10 13:31 CET).
