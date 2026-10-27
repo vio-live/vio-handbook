@@ -24,17 +24,17 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   - **Actualización 20:33 UTC:** se recuperó solo. Último timeout a las 19:40:25 y `staleServed` estable en 230 desde entonces.
     Fueron ~45 min sin perder eventos. Si ves algo en los logs de la VM de esa franja, apúntalo; si no, no hace falta tocar nada.
 
-- **26/10 16:39 UTC** — **Te pido: borrar en el ClickHouse de prod los eventos de 6 navegadores de prueba nuestros (Angelo, 26/10).** _(27/10: añadido `a-497e65c0…`, que según Angelo es Michael: 6 intentos de Vipps entre las 12:49 y las 17:45 UTC.)_ _(Actualizado: Angelo añadió 3 navegadores más, los de sus clics al carrito de las 12:49, 13:32 y 13:39 UTC. La consulta ya los incluye.)_
+- **26/10 16:39 UTC** — **Te pido: borrar en el ClickHouse de prod los eventos de 7 navegadores de prueba nuestros (Angelo, 26/10).** _(27/10 10:10 UTC: añadido `a-2a42b0eb…`, Angelo desde otro teléfono: abrió Vipps a las 10:03 UTC, sesión `f5646557-66ff-4417-a399-ae40256ff0fd`. Angelo pide borrarlo, no solo excluirlo.)_ _(27/10: añadido `a-497e65c0…`, que según Angelo es Michael: 6 intentos de Vipps entre las 12:49 y las 17:45 UTC.)_ _(Actualizado: Angelo añadió 3 navegadores más, los de sus clics al carrito de las 12:49, 13:32 y 13:39 UTC. La consulta ya los incluye.)_
   Angelo pidió quitar de los datos del go-live de Mote & Livsstil sus propias pruebas. Él confirmó que son solo estos dos
   navegadores (surface 1). Son todos sus eventos de hoy: impresiones, clic y dos `add_payment_info` que fueron a Vipps.
   ```sql
   -- primero contar (esperado: decenas de filas, no miles)
   SELECT anon_id, session_id, name, count() FROM events
-  WHERE client_app_id = 1 AND anon_id IN ('a-617d26ae-ab7a-45ca-b706-c4b8de6d151d', 'a-7ab1f2e2-84f1-4c59-ade0-ce14f4b01140', 'a-8d63c81e-55b2-4d3c-b0e1-5071a14efc67', 'a-9ec5d4dc-5abe-419e-8955-8b5f3e0c740f', 'a-d2ea7af4-9ad1-4c4c-85d7-96c0a727c12a', 'a-497e65c0-6541-4ce2-824d-d60ac3408ef8')
+  WHERE client_app_id = 1 AND anon_id IN ('a-617d26ae-ab7a-45ca-b706-c4b8de6d151d', 'a-7ab1f2e2-84f1-4c59-ade0-ce14f4b01140', 'a-8d63c81e-55b2-4d3c-b0e1-5071a14efc67', 'a-9ec5d4dc-5abe-419e-8955-8b5f3e0c740f', 'a-d2ea7af4-9ad1-4c4c-85d7-96c0a727c12a', 'a-497e65c0-6541-4ce2-824d-d60ac3408ef8', 'a-2a42b0eb-9deb-486e-9d77-b0f718f5d885')
   GROUP BY anon_id, session_id, name ORDER BY anon_id, name;
   -- después borrar
   DELETE FROM events
-  WHERE client_app_id = 1 AND anon_id IN ('a-617d26ae-ab7a-45ca-b706-c4b8de6d151d', 'a-7ab1f2e2-84f1-4c59-ade0-ce14f4b01140', 'a-8d63c81e-55b2-4d3c-b0e1-5071a14efc67', 'a-9ec5d4dc-5abe-419e-8955-8b5f3e0c740f', 'a-d2ea7af4-9ad1-4c4c-85d7-96c0a727c12a', 'a-497e65c0-6541-4ce2-824d-d60ac3408ef8');
+  WHERE client_app_id = 1 AND anon_id IN ('a-617d26ae-ab7a-45ca-b706-c4b8de6d151d', 'a-7ab1f2e2-84f1-4c59-ade0-ce14f4b01140', 'a-8d63c81e-55b2-4d3c-b0e1-5071a14efc67', 'a-9ec5d4dc-5abe-419e-8955-8b5f3e0c740f', 'a-d2ea7af4-9ad1-4c4c-85d7-96c0a727c12a', 'a-497e65c0-6541-4ce2-824d-d60ac3408ef8', 'a-2a42b0eb-9deb-486e-9d77-b0f718f5d885');
   ```
   - Sesiones: `18455dca-ac55-40a9-82ed-3fe8fea7cbb6` (14:14 UTC) y `24be7ccc-aad7-4a66-8e8b-60fbf6b19875` (11:55 UTC, desde
     la URL de prueba `10-nyheter-vi-onsker-oss-na`).
