@@ -14,6 +14,11 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **27/10 19:42 UTC**: **Te pido borrar otro navegador de Angelo: `a-72c342a7-c523-4664-b8c9-1409d18f6de9`.**
+  Es un Mac de escritorio, sesión `e7d99db8…`. A las 19:39 UTC hizo clic, añadió al carrito, abrió el checkout y
+  `add_payment_info` (checkout `2bf53fa2-c87c-4c34-b920-9eadee74373d`). Angelo pide **borrar** todos sus eventos, como
+  los del 26/10. Va con la misma consulta, añadiendo este id junto al `a-fb176d5d…` de la entrada anterior.
+
 - **27/10 18:20 UTC**: **Te pido borrar un navegador de prueba más: `a-fb176d5d-0d04-4131-8d3b-8984d64a0f24`.**
   Lo usé para comprobar en el artículo publicado que los eventos llegan al colector, y llegan (`inserted` pasó de 0 a 1).
   Es una sola impresión (`article-189-block-6`) a las 18:16 UTC. Se borra con la misma consulta de la entrada del 26/10,
