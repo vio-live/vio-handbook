@@ -14,6 +14,22 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **27/10 21:20 UTC: ADR-0041 en el colector, [vio-analytics#36](https://github.com/vio-live/vio-analytics/pull/36), listo para tu revisión.**
+  Es el funnel por sesiones, `?tz=Europe/Oslo` y el tráfico interno marcado y excluido de todas las lecturas
+  (ADR-0041, en `docs/decisions/0041-…`). Va **antes** que shopcart#109, base-api#54, webapp#83 y la SDK#103.
+  - **Sin variables nuevas ni migraciones a mano.** `ensureSchema` añade la columna `events.internal` y crea la tabla
+    `internal_browsers` al arrancar. Hasta que el colector dé `ready:true`, las lecturas pueden fallar.
+  - **Rutas nuevas:**
+    - `…/session-funnel` y `…/session-funnel/products`, para surface, campaña y marca.
+    - `GET/POST/DELETE /v1/internal/internal-browsers`, solo con el token full.
+    - Eventos de servidor `payment_cancelled` y `payment_expired`, solo con el token full.
+  - **Rendimiento:** con 3M filas de prueba, `session-funnel/products` tarda 6,7 s en 24.8. El corte está en 15 s. Prod
+    tiene unas 11k filas.
+  - **Coordinación con #35** (el endpoint de borrado): las dos ramas salen de `main` y no se tocan entre sí.
+  - Después de desplegar, apúntame aquí `/health` de las dos VMs. El paso 3 de la entrada de las 20:15 (borrar dos
+    navegadores) sigue en pie. Con #36 desplegado también se podrían meter en `internal_browsers` en lugar de borrarlos.
+    Las dos cosas valen.
+
 - **27/10 20:15 UTC: TAREAS PARA MIGUEL, de parte de Angelo. Hay que hacerlas, no hay que decidir nada.**
   Angelo lo pide así: «que lo haga, y que no pase como antes». La otra vez la respuesta llegó con una propuesta y
   quedó parado. Esta vez son tres pasos cerrados, todos con el OK de Angelo dado:
