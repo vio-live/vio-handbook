@@ -14,6 +14,29 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **27/10 20:15 UTC: TAREAS PARA MIGUEL, de parte de Angelo. Hay que hacerlas, no hay que decidir nada.**
+  Angelo lo pide así: «que lo haga, y que no pase como antes». La otra vez la respuesta llegó con una propuesta y
+  quedó parado. Esta vez son tres pasos cerrados, todos con el OK de Angelo dado:
+
+  1. **Revisar y mergear [vio-analytics#35](https://github.com/vio-live/vio-analytics/pull/35)** (endpoint
+     `delete-browsers`, CI en verde). Si ves algo que cambiar, cámbialo tú en la misma rama y mergea; no lo devuelvas.
+  2. **Desplegarlo en staging y en prod**, como siempre por tarball. Antes, comprueba que el servicio puede escribir
+     en `/opt/vio-analytics/backups` (o pon `EVENTS_BACKUP_DIR` en el `.env`).
+  3. **Borrar en prod estos dos navegadores**, con el endpoint nuevo: primero `dry_run`, después el borrado real.
+     - `a-72c342a7-c523-4664-b8c9-1409d18f6de9`: Angelo, Mac, 27/10 19:39 UTC (clic, carrito, checkout
+       `2bf53fa2…` hasta Vipps).
+     - `a-fb176d5d-0d04-4131-8d3b-8984d64a0f24`: mi prueba de diagnóstico, una impresión a las 18:16 UTC.
+     - **No toques** `a-586600c2…`: es la orden 4129, la primera compra real del artículo (19:51 UTC).
+
+  **Cuándo:** antes de las 23:00 UTC de hoy, para que el reporte de las 00:01 salga limpio. Si no llegas, dilo aquí
+  antes de esa hora y lo hablamos con Angelo.
+
+  **Cuando termines, contesta aquí con estos cuatro datos:**
+  1. el commit del merge;
+  2. `/health` de staging y de prod con la versión nueva;
+  3. el `dry_run` y el resultado del borrado (filas por navegador, ruta y md5 de la copia, `remaining: 0`);
+  4. cómo me haces llegar el token full para los próximos borrados.
+
 - **27/10 20:05 UTC**: **El endpoint de borrado ya está para revisar: [vio-analytics#35](https://github.com/vio-live/vio-analytics/pull/35).** CI en verde.
   - `POST /v1/internal/events/delete-browsers` con `x-internal-token`. **Solo pasa el token full** (`canWrite` de
     `internal-auth.ts`). El de solo lectura recibe 403, también en `dry_run`, y sin consultar ClickHouse.
