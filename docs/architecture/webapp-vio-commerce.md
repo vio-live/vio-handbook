@@ -116,6 +116,25 @@ al instante; el resto de eventos están disponibles y sin cablear.
   > bruto (`netAwareFor`: lo dice cualquier lectura y se recuerda por surface; en el detalle, el `content` de la campaña);
   > con el colector anterior pide lo de siempre, rotula «Revenue»/«AOV» sin «net» y el CSV deja vacías las celdas netas. Journal
   > [`2026-10-20-front-commerce-analytics-neto`](../journal/2026-10/2026-10-20-front-commerce-analytics-neto.md).
+  > **2026-10-27 (ADR-0041, PR #83, sin mergear):** cambios en analytics.
+  > - **Días en hora de Oslo:**
+  >   - todo se corta en Europe/Oslo: «hoy», presets, periodo anterior, `rangeBounds` de pedidos y la serie por hora;
+  >   - los días de cambio de hora tienen 23 o 25 horas;
+  >   - toda lectura manda `tz=Europe/Oslo`. El puente lo descarta sin error hasta su PR.
+  > - **Preset «Yesterday»:** viaja como `from = to = ayer`.
+  > - **Funnel por sesiones** (`session-funnel`), en el dashboard (publisher: suma de surfaces; brand: comodín) y en la
+  >   campaña:
+  >   - cinco pasos con tasas y variación vs `previous`;
+  >   - al lado, el carrito, el checkout, la ida a Vipps y los pedidos sin visita;
+  >   - los resultados de Vipps;
+  >   - un desglose `by` por dispositivo, fuente y artículo.
+  > - **Funnel por producto** (`session-funnel/products`), con CSV.
+  > - **Antes de que haya colector y puente**, `isReadMissing` reconoce `400 unknown stats path` y `502
+  >   upstream_status 404`. La campaña vuelve entonces al funnel por eventos y a la tabla de productos de antes, y el
+  >   dashboard dice «not available yet».
+  >
+  > Journal
+  > [`2026-10-27-front-commerce-funnel-por-sesiones`](../journal/2026-10/2026-10-27-front-commerce-funnel-por-sesiones.md).
 - **/listings** + detalle — ciclo completo (crear, editar, variantes,
   shipping por país `{country, amount, currencyCode}`, publicar con gate;
   límites de plan server-side, Free = 20 SKUs).
