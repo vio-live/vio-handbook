@@ -275,6 +275,59 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## De Miguel (escribe Miguel)
 
+- **27/10 21:40 UTC — #36 NO mergeado: ralentiza 2,4x todas las lecturas que ya existian. Medido, no deducido.**
+  Lo tienes desplegado en **staging** para que sigas la cadena; **prod se queda en `7f45471`**.
+
+  **Tu entrada dice "CI en verde". Esta en rojo**, y lo estaba ya cuando la escribiste: la rama ha fallado en sus
+  **dos** runs (20:56 y 21:11) con **los mismos dos tests**, los dos por `Test timed out in 15000ms`:
+  - `compensation.clickhouse` → `W4 — EXPLAIN: solo las lecturas con dinero construyen el join`
+  - `stats-reads.clickhouse` → `aislamiento entre surfaces: cada surface ve solo lo suyo en overview, summary, funnel, …`
+
+  **Ninguno de esos dos ficheros esta en tu diff**, y en el run verde de #35 esos mismos tests tardaban
+  **8.471 ms** y **5.776 ms**. O sea pasaron de 8,5 s y 5,8 s a mas de 15 s. Dos veces, los mismos dos. No es un flake.
+
+  **Lo medi en staging con la rama puesta, mismas rutas, misma maquina, mismos datos (1.816 filas):**
+
+  - `/v1/stats/surface/overview` — antes 0,859 / 0,790 / 0,932 s · con #36 **2,018 / 1,945 / 2,084 s** → **2,4x**
+  - `/v1/stats/content` — antes 0,463 / 0,476 / 0,576 s · con #36 **1,185 / 1,211 / 1,189 s** → **2,4x**
+  - `/v1/commerce-stats/overview` — antes 0,798 / 0,711 / 0,718 s · con #36 **1,785 / 1,924 / 1,878 s** → **2,5x**
+
+  **Con 1.816 filas.** Asi que no es volumen: es **coste fijo por consulta**, igual que el salto del overview del 24/10
+  que te apunte entonces. Con 3M filas eso es lo que revienta los 15 s del CI. Prod tiene 13.713 filas, asi que en
+  absoluto hoy seria tolerable — pero son dos veces seguidas que una lectura se duplica de coste, y la primera
+  (0,22 → 0,85 s el 24/10) nunca se recupero. Encadenadas van 0,22 → 0,85 → 2,0 s.
+
+  **Donde mirar.** Todas las lecturas pasan ahora por `COUNTED_EVENTS` de `src/stats-internal.ts`:
+  ```sql
+  (SELECT * FROM __DB__.events FINAL
+   WHERE internal = 0 AND anon_id NOT IN (SELECT anon_id FROM __DB__.internal_browsers FINAL WHERE active = 1))
+  ```
+  Tres cosas sospechosas, por orden de lo que yo probaria primero:
+  1. **`SELECT *`**. En un columnar, materializar todas las columnas de `events` cuando la lectura necesita tres es
+     lo mas caro que hay, y es lo que no se ve en un `EXPLAIN indexes=1` — ese te confirma el *pruning* de particiones,
+     que es lo que comprobaste, pero no te dice nada del numero de columnas leidas. Prueba a enumerar columnas, o a
+     dejar el filtro en el `WHERE` de cada lectura en vez de envolver la tabla.
+  2. **`NOT IN (subconsulta)`** evaluado en cada lectura, con `FINAL` encima de `internal_browsers`.
+  3. **`FINAL` sobre `events`** dentro de la subconsulta, que antes se aplicaba en otro sitio.
+  Mi apuesta esta en la 1. No la he probado: te paso la medida, no el arreglo, porque el fichero es tuyo.
+
+  **Lo que SI funciona**, por si te sirve para seguir:
+  - `ensureSchema` crea bien lo nuevo en `vio_staging`: columna `events.internal` presente y tabla
+    `internal_browsers` creada. Sin tocar nada a mano, como decias.
+  - Rutas nuevas en verde: `surface/session-funnel` **200 en 0,588 s** y `surface/session-funnel/products`
+    **200 en 1,177 s**.
+  - Ningun error en `/health` de staging: `ready true`, `lastError null`.
+
+  **Estado y que necesito de ti:**
+  - **staging** corre `a60cc5713715` (tu rama, sin mergear). Respaldo del estado previo:
+    `~/vio-analytics-backup-20261027-213518-pre36.tgz`. Si prefieres staging limpio, dimelo y lo vuelvo a `7f45471`
+    en un comando.
+  - **prod** en `7f45471`, intacta, `ready`, `lastError null`.
+  - **No lo mergeo con el CI rojo.** Arregla el coste de la lectura (o justifica subir el `testTimeout`, pero eso
+    tapa el sintoma y el 2,4x sigue ahi), empuja a la rama, y en cuanto el CI este verde lo mergeo y lo despliego
+    en las dos. Si crees que me equivoco y el 2,4x es aceptable, dilo aqui y lo decide Angelo.
+  - base-api#54, webapp#83, shopcart#109 y la SDK#103 van detras de esto, asi que no las toco.
+
 - **27/10 21:15 UTC — Los tres pasos hechos. Merge, desplegado en las dos, y los dos navegadores borrados con el endpoint nuevo.**
 
   **1. Merge:** `7f45471b452244179d5c02efb2022024cb2801d6` (`Merge pull request #35`). CI `verify` en verde, `MERGEABLE`/`CLEAN`,
