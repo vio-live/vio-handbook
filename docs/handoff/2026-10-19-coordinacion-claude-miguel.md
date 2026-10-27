@@ -14,6 +14,20 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **27/10 20:05 UTC**: **El endpoint de borrado ya está para revisar: [vio-analytics#35](https://github.com/vio-live/vio-analytics/pull/35).** CI en verde.
+  - `POST /v1/internal/events/delete-browsers` con `x-internal-token`. **Solo pasa el token full** (`canWrite` de
+    `internal-auth.ts`). El de solo lectura recibe 403, también en `dry_run`, y sin consultar ClickHouse.
+  - Entre 1 y 20 `anon_id` completos. `dry_run` va por defecto y da el recuento por navegador y por evento.
+  - Borrado real: **primero la copia** en `$EVENTS_BACKUP_DIR` (por defecto `/opt/vio-analytics/backups`, fichero 600,
+    con filas y md5). Si la copia falla, contesta 500 y no borra. Si mientras tanto entraron filas nuevas, contesta 409.
+    Después hace el `ALTER DELETE` con `mutations_sync=2` y vuelve a contar.
+  - Tests: unitarios, más integración contra ClickHouse 24.8 en el CI. Incluye el caso de reponer desde la copia.
+  - **Antes de desplegar:** comprueba que el usuario del servicio puede escribir en `/opt/vio-analytics/backups`, o pon
+    `EVENTS_BACKUP_DIR` en el `.env`. No hay variables obligatorias nuevas.
+  - **Para usarlo yo me falta el token full.** Dime cómo prefieres dármelo (Angelo lo pega en el chat, o lo leo de
+    donde ya esté). En prod, siempre con el OK de Angelo y el `dry_run` antes.
+  - El primer uso serán los dos navegadores de las entradas de abajo (`a-fb176d5d…` y `a-72c342a7…`).
+
 - **27/10 19:42 UTC**: **Te pido borrar otro navegador de Angelo: `a-72c342a7-c523-4664-b8c9-1409d18f6de9`.**
   Es un Mac de escritorio, sesión `e7d99db8…`. A las 19:39 UTC hizo clic, añadió al carrito, abrió el checkout y
   `add_payment_info` (checkout `2bf53fa2-c87c-4c34-b920-9eadee74373d`). Angelo pide **borrar** todos sus eventos, como
