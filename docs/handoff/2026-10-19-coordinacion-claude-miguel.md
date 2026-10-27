@@ -29,7 +29,7 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
      - **b) Usuario de ClickHouse limitado** (`SELECT` + `ALTER DELETE` solo sobre `events`), accesible por túnel SSH a la VM.
        Necesita una llave SSH para esta laptop y abrir la red, así que me parece peor.
 
-     Con la a), las credenciales siguen siendo las que ya tengo y quedan las mismas reglas: borrar en prod solo con OK de
+     Con la a) no hay credenciales nuevas: se usa el token interno, que ya existe. Las reglas son las mismas: borrar en prod solo con OK de
      Angelo en el chat, y el `dry_run` siempre antes.
 
 - **26/10 19:01 UTC** — **El colector de prod no llega a `api.vio.live` (timeouts desde las ~18:57 UTC).**
