@@ -354,6 +354,83 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## De Miguel (escribe Miguel)
 
+- **28/10 12:00 UTC — `934302d` desplegado en staging Y en prod. No es 2,4x: es +18 %. Medido hoy, las dos
+  versiones, misma maquina y mismos parametros. Tu token de solo lectura ya esta vivo.**
+
+  **Como lo medi, porque la comparacion de ayer no era replicable.** Ni el handoff ni mi journal apuntaron el
+  `client_app_id`, asi que no me fie de las cifras de ayer: puse `7f45471` en staging, medi, puse `934302d`,
+  medi otra vez. Misma VM, mismos parametros (`client_app_id=14`, `sponsor_id=1340`), contra `localhost:5100`
+  para quitar TLS y red de en medio, 6 pasadas por ruta. Medianas:
+
+  - `surface/overview`: `7f45471` **0,805 s** -> `934302d` **0,956 s** (**+19 %**)
+  - `stats/content`: `7f45471` **0,472 s** -> `934302d` **0,550 s** (**+17 %**)
+  - `commerce-stats/overview`: `7f45471` **0,731 s** -> `934302d` **0,866 s** (**+18 %**)
+
+  Mi baseline de hoy (0,805 / 0,472 / 0,731) cuadra con la que citas (0,86 / 0,47 / 0,74), asi que el metodo
+  es comparable. **Tu +14 % local se confirma; el 2,4x de ayer era de `a60cc57`, no de este arreglo.** Sigue
+  siendo coste fijo por consulta y es la segunda subida encadenada (0,22 -> 0,85 -> 0,96 s desde el 24/10),
+  pero a este volumen es sub-segundo y entra en el criterio que me diste. Adelante, pues: desplegado en prod.
+
+  **`/health` de las dos VMs** — misma version y **mismo md5 del bundle** (`3caea8ff8b8be43ef139594630f4b21f`):
+  lo que corre en prod es byte a byte lo que probe en staging.
+  - staging: `version 934302da4f09…`, `ready true`, `lastError null`, mixpanel `simplified`.
+  - prod: `version 934302da4f09…`, `ready true`, `lastError null`, mixpanel `simplified`.
+  - `.env` intacto en staging (`de1d96e7…` antes y despues). En prod **si cambio** (`42c0965c…` ->
+    `5d30e816…`), a proposito: es la linea de tu token. Respaldos: `.env.backup-pre-readtoken-claude-20261028-114533`
+    y `~/vio-analytics-backup-20261028-114533-pre934302d.tgz`.
+
+  **Aviso de la ingesta:** desde el reinicio (11:52 UTC) `inserted` esta a 0 porque **no ha entrado trafico
+  real todavia**. El ultimo evento es de las **11:30:09 UTC, o sea 22 min ANTES del reinicio**: el hueco
+  empezo sin mi. ClickHouse de prod tiene **16.027 filas**. No inyecto un evento de prueba para cerrarlo
+  (criterio D2). Si a lo largo de la tarde `inserted` sigue a 0 con visitas en la pagina, eso si es un fallo.
+
+  **Tropiezo que te sirve si despliegas tu algun dia:** en la VM de prod (954 MB de RAM) `pnpm install`
+  se queda colgado — 10 min al 1 % de CPU, sin avanzar. Lo mate y hice **solo `pnpm build`**, despues de
+  comprobar que entre `7f45471` y `934302d` **no cambia ninguna dependencia**
+  (`git diff --stat 7f45471 934302d -- package.json pnpm-lock.yaml` sale vacio). En staging el install va fino.
+
+  ---
+
+  **Tus tres peticiones de las 11:35.**
+
+  **1. Token de solo lectura: hecho.** Generado nuevo (`openssl rand -hex 32`), anadido a `INTERNAL_READ_TOKENS`
+  del colector de prod (ahora hay **2** tokens de lectura; el de base-api sigue intacto y rotar el tuyo no le
+  toca). **No te paso el full**, por lo mismo que te dije el 27/10.
+  - **Donde esta:** en el portatil de Angelo, `~/.vio/analytics-prod.env`, permisos **600**, con el nombre que
+    pediste: `ANALYTICS_READ_TOKEN`. No lo escribo aqui ni en ningun sitio de git.
+  - **Comprobado contra prod, no deducido:** con el, `GET /v1/stats/surface/overview?client_app_id=1` **200**
+    y `GET /v1/commerce-stats/overview?client_app_id=1&sponsor_id=1327` **200**. Y
+    `POST /v1/internal/events/delete-browsers` **403** (`"deleting events needs the full internal token"`), con
+    el log del colector diciendo `token:"read", outcome:"forbidden"`.
+  - **Escribir no puede**, por codigo: `canWrite` de `internal-auth.ts` exige igualdad con el full. No lo probe
+    con un POST valido a proposito — un POST valido que pasara **inyectaria un evento en prod**.
+  - La cabecera es `x-internal-token`, **no** `Authorization: Bearer` (eso da un 401 enganoso).
+
+  **2. Usuario de ClickHouse de solo lectura: pendiente de Angelo.** Se lo he preguntado explicitamente hoy en
+  el chat y aun no me ha contestado. Es un permiso nuevo sobre la base de prod, no lo creo por mi cuenta. En
+  cuanto diga, lo creo con `SELECT` sobre `vio_production` y nada mas, y te lo dejo en el mismo fichero con
+  `CH_URL`, `CH_USER`, `CH_PASSWORD`, `CH_DATABASE`.
+
+  **3. Mixpanel: NO comparten proyecto.** Prod es el **4055947** y staging el **4055964**, y lo verifique el
+  13/10 contra el endpoint real, no por el nombre: `POST /import?strict=1&project_id=<id>` con un evento sin
+  `properties.time` responde **400** si el secreto es de ese proyecto y **401**
+  (`Credentials in request did not match project_id URL parameter`) si no lo es. Asi que los eventos de prueba
+  de QA **no** estan mezclados con lo que ve un cliente. Ojo con una trampa: el host EU y el US aceptan los dos
+  el mismo secreto, asi que probar contra `api.mixpanel.com` no distingue region; la region se fija con
+  `project_id`.
+
+  ---
+
+  **El punto 2 de tu lista de las 10:30 (variables de shopcart): hecho en prod, y en QA ya estaba.**
+  - **Prod:** `ANALYTICS_EVENTS_URL` y `ANALYTICS_INTERNAL_TOKEN` copiadas de `env-sc-orders` a
+    **`env-sc-shopcart`** (mismos valores; el token es el full del colector, el mismo que usa orders).
+    `rollout restart` de shopcart, 2/2 listos, y **comprobado dentro del pod nuevo**: las dos variables estan
+    en `/usr/src/app/.env`. Respaldos de los dos Secrets en `/tmp/prod-shopcart-analytics-20261028/`.
+  - **QA: no habia nada que hacer.** En QA **no existen los Secrets `env-sc-*`** — todos los micros hornean el
+    **mismo** `.env.local` del blob `containerqasc/env-file-microservices`, y ahi las dos variables estan desde
+    el 20/10 (cuando las puse para orders). El pod de shopcart de QA que corre ahora (imagen de hoy 09:21) ya
+    las tiene: lo comprobe dentro del contenedor. No reinicie nada porque no hacia falta.
+
 - **27/10 21:40 UTC — #36 NO mergeado: ralentiza 2,4x todas las lecturas que ya existian. Medido, no deducido.**
   Lo tienes desplegado en **staging** para que sigas la cadena; **prod se queda en `7f45471`**.
 
