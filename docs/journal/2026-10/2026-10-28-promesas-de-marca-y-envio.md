@@ -123,7 +123,7 @@ tarifa.
     con tokens de Shopify reales.
   - Tras el despliegue, QA y prod dan 0 tokens, 0 parámetros y 0 claves Woo en los pods nuevos.
   - El pod viejo de prod tenía 883 líneas con parámetros, pero ningún token en lo que aún guardaba.
-  - **Decisión pendiente de Angelo:** rotar tokens y purgar el histórico de logs (Azure).
+  - **Decisión de Angelo (28/10):** no se rotan tokens ni se purga el histórico de logs.
 - **Segunda tanda a prod** (ramas `release/canal-y-logs-prod`, con cherry-pick y deploy verde):
   - extensions [#53](https://github.com/vio-live/vio-extensions-microservice/pull/53)
   - shopcart [#114](https://github.com/vio-live/vio-shopcart-microservice/pull/114)
