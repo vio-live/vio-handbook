@@ -79,3 +79,52 @@ base de prod; no lo creo por mi cuenta.
 Pregunta que claude llevaba abierta desde el 22/10. Prod es el **4055947**, staging el **4055964**, verificado el
 13/10 contra el endpoint real (`POST /import?strict=1&project_id=<id>` sin `properties.time`: 400 si el secreto es
 de ese proyecto, 401 si no). Los eventos de prueba de QA no están mezclados con lo que ve un cliente.
+
+---
+
+## 17:00 UTC — Usuario de ClickHouse de solo lectura, y la prueba de que no se perdió nada
+
+Angelo contestó a las dos preguntas abiertas: «1, sí. 2, es importante no perder data».
+
+### `claude_ro`: SELECT en `vio_production` y nada más
+
+- Permisos exactos: `GRANT SELECT ON vio_production.*`, perfil `readonly`. Su `SHOW GRANTS` devuelve esa
+  línea y solo esa.
+- Credenciales en `~/.vio/analytics-prod.env` del portátil de Angelo (chmod 600): `CH_URL`, `CH_USER`,
+  `CH_PASSWORD`, `CH_DATABASE`. **El valor no está en git.**
+- Verificado contra el servidor: lee `vio_production` (16.031 filas); `vio_staging` y `vio_development` dan
+  ACCESS_DENIED y `SHOW DATABASES` le devuelve **solo** `vio_production`; `INSERT`, `ALTER DELETE`,
+  `CREATE TABLE` y `DROP TABLE`, los cuatro ACCESS_DENIED.
+- **No tiene `system.*`** (ni `system.parts`). Si hace falta para auditorías, es un grant aparte — y `system`
+  expone el esquema de los tres entornos, así que no lo di de entrada.
+
+### Cómo se crea un usuario ahí, que no es por SQL
+
+ClickHouse corre en Docker en **`129.151.210.107`** (`vio-clickhouse-1`, imagen 24.8, detrás de Caddy;
+`analytics.vio.live` resuelve ahí). El usuario `default` está definido en `users_xml` y **no tiene access
+management**: `CREATE USER` por SQL da ACCESS_DENIED.
+
+La vía es `users.d`: fichero en el **host** (`/opt/vio/users.d/claude-ro.xml`, 600) con el bloque del usuario,
+su `password_sha256_hex` y sus `<grants><query>GRANT SELECT ON vio_production.*</query></grants>`, copiado al
+contenedor. **ClickHouse recarga `users.d` en caliente**: no hubo reinicio ni corte. Y lo añadí al
+`docker-compose.yml` como montaje `:ro` del fichero suelto (no del directorio, para no tapar
+`default-user.xml`), así que el usuario **sobrevive a un `docker compose up -d`**. Respaldo:
+`docker-compose.yml.backup-pre-claudero-20261028`.
+
+### La ingesta no perdió nada con el reinicio, y esta vez con prueba del proxy
+
+Por la mañana dejé el aviso con `inserted: 0`. No era pérdida:
+
+- Antes de parar, el colector tenía **`buffered: 0`** (nada en vuelo) y `lastFlushAt 11:30:13`.
+- `nginx` de la VM de prod (`events-access.log`), hoy: **35 `POST /v1/events` con 202**, un 400 que es **mío**
+  (sonda de permisos de las 11:56), **cero 5xx**, y `events-rejected.log` a **cero**.
+- En la ventana del reinicio (11:50–11:55) **no entró ningún POST de eventos**, solo `/health` — y el de las
+  11:52:43, en plena ventana, respondió 200.
+- Después entraron dos lotes reales (14:32 y 15:41, ambos 202): `inserted: 4`, `dropped: 0`.
+- 16.031 filas, historia continua desde el 22/10. Por horas hoy (UTC): 06h 2, 08h 12, 09h 16, 10h 5, 11h 4,
+  14h 3, 15h 1. **El tráfico es de 1–16 eventos/hora**: un hueco de dos horas a mediodía es tráfico, no avería.
+
+**Riesgo que sigue abierto:** el reinicio deja ~8 s sin nadie escuchando y un POST que caiga ahí **se pierde en
+el navegador** — no hay cola ni reintento. Hoy no cayó ninguno por suerte, no por diseño. Lo barato sería que
+nginx encolara/reintentara hacia el upstream durante el reinicio. Propuesto a claude en el canal; mientras no
+esté, desplegar a horas de poco tráfico.
