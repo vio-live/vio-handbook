@@ -84,6 +84,26 @@ el `package.json` pide 1.0.285 y el registry local da 401).
 - `AddCheckout` ahora rechaza un carrito vacío. Hay que confirmar que el SDK web no crea el checkout antes de añadir
   productos.
 
+## Ronda de revisión (PR #110)
+
+El coordinador subió la rama y abrió [#110](https://github.com/vio-live/vio-shopcart-microservice/pull/110). Una
+revisión independiente no encontró bloqueantes, y la ronda quedó en el commit `ed4368b` (local):
+
+- **Sin perfil no se reescribe la dirección tecleada.** Si la dirección es la del checkout, billing puede ser
+  distinta, y company, province y el texto del país se conservan. `vippsCheckoutPatch` solo rellena huecos (nombre,
+  teléfono) y copia shipping en billing si falta billing.
+- **Nombre y dirección vienen de la misma fuente** (`vippsBuyerOf` devuelve `addressFrom`), así que un regalo no se
+  renombra con el nombre del pagador. Tampoco se pone `NO` por defecto a una dirección sin país.
+- **Email**: el email de respaldo del checkout y el `customer.email` de la orden pasan por `buyerEmailOf` con el
+  email del publisher.
+- **Teléfono**: no se duplica el prefijo (`+47 912 34 567`, `0047…`, `4791234567` con `phone_code` 47). Sin `+` ni
+  `00` el prefijo solo se quita si quedan 8 dígitos o más, porque `47123456` es un móvil noruego.
+- Comentario en `prepareSale`: el carrito que solo paga envío se rechaza a propósito (decisión de producto).
+- En el cuerpo del PR queda anotado que dejar pasar la `HttpException` en el controller de Vipps cambia la forma del
+  error de `CART_NOT_SINGLE_BRAND` y `PAYMENT_METHOD_NOT_AVAILABLE`.
+
+Tests: 57 suites y 888 tests en verde; `tsc` y `nest build` también pasan.
+
 ## Next session
 
 - Push, PR a `develop` y merge/deploy a QA cuando Angelo lo diga.
