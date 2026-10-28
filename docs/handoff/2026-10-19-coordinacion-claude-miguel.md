@@ -14,6 +14,42 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **28/10 11:35 UTC** — **Acceso a la data de analytics de prod: lo que me falta.** Angelo me pide que
+  lo pida aquí. Antes miré qué tengo ya, para no pedir de más:
+  - **Ya tengo** la api key pública de la surface 1 (está en `~/vio-reportes/mote-livsstil/pdf.py`, la
+    usa el reporte diario, y de todas formas viaja en el HTML de la página). Con ella leo de prod
+    `/v1/stats/overview`, `/v1/stats/recent`, `/v1/stats/retention`, `/v1/events`, `/v1/cohorts`,
+    `/v1/gmv` y `/v1/ts`, **solo de esa surface**. Comprobado hoy: 200 y datos del 27/10.
+  - **No tengo** las lecturas nuevas, que piden token interno: `/v1/stats/surface/overview`,
+    `/v1/stats/surface/by-campaign`, `/entry`, `/products`, `/content`, `/by-channel`,
+    `/v1/stats/campaigns/*` y `/v1/commerce-stats`. Son las de ADR-0035/0038 — campaña, slot, fuente
+    del tráfico, caja (`charged`, `orders_paid`, `orders_unattributed`). Ahí responde
+    `"this read takes the internal token only: the surface key is public"`.
+
+  **Lo que te pido, por orden:**
+
+  1. **Un token de SOLO LECTURA propio para mí**, añadido a `INTERNAL_READ_TOKENS` del colector de
+     prod (coma-separados). **No el `INTERNAL_EVENTS_TOKEN`**: ese es full y permite inyectar eventos.
+     El de lectura existe justo para esto — si se filtra no escribe nada, y rotar el mío no toca al de
+     base-api. Con eso me basta para el 90 % de lo que hago.
+  2. **Un usuario de ClickHouse de solo lectura** (`SELECT` sobre `vio_production`), para los cortes
+     que los endpoints no cubren: auditorías de duplicados, calidad del dato, desgloses ad-hoc. Si
+     prefieres no darlo, dímelo y me apaño con 1 — pero entonces cada corte raro te lo tendré que
+     pedir a ti.
+  3. Pendiente desde el 22/10, de una línea: **¿staging y prod comparten proyecto de Mixpanel?** Si lo
+     comparten, los eventos de prueba de QA están mezclados con lo que vería un cliente.
+
+  **Cómo pasármelos — no los escribas aquí.** Este fichero está en git y lo lee medio mundo. Dos vías
+  buenas:
+  - Se los das a **Angelo** y él los deja en su portátil en `~/.vio/analytics-prod.env` (chmod 600),
+    con estos nombres: `ANALYTICS_READ_TOKEN`, `CH_URL`, `CH_USER`, `CH_PASSWORD`, `CH_DATABASE`. Yo
+    lo cargo desde ahí y **nunca imprimo los valores**.
+  - O me dices **dónde ya están** (por ejemplo en qué variable de qué pod de prod) y los leo yo de
+    ahí, con la autorización explícita de Angelo.
+
+  Cuando esté, lo confirmo aquí con una lectura de prueba (un endpoint y un conteo), no con un «ya
+  funciona».
+
 - **28/10 10:30 UTC: qué queda de tu parte, de parte de Angelo.**
   1. **Colector `934302d`:** despliégalo en staging, mide tus tres rutas y, si quedan cerca de `7f45471`, súbelo a prod
      (detalle en la entrada de las 07:05).
