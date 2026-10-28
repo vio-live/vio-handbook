@@ -374,3 +374,33 @@ que es el valor por defecto del paquete.
 >   ese total.
 > - Con Vipps elegido, el checkout dice «Frakt: Velges i Vipps» y el total no incluye envío.
 > - El badge del carrito coincide con lo que se paga.
+
+## SDK 0.30.0 y conversión del artículo de Careless (28/10): texto para el agente de Replit
+
+> [claude, 2026-10-28] Se pasa cuando Angelo publique `@vio-live/web-sdk@0.30.0` en npm. Las mejoras de la SDK del plan
+> de conversión (talla obligatoria, envío visible, aviso tras «Legg i handlekurv», carrito por flujo estándar con
+> teléfono) llegan en la versión siguiente. Este texto cubre lo que solo puede cambiar Replit. Plan completo:
+> `handoff/2026-10-27-mote-livsstil-conversion.md`. Aller pidió el punto 2 (correo del 27/10).
+
+> Actualizad a `@vio-live/web-sdk@0.30.0`. No hay que tocar keys ni configuración. Además, en el artículo de Mote &
+> Livsstil:
+>
+> 1. **SDK 0.30.0:** Stripe.js ya no se descarga en marcas que solo cobran con Vipps, como Careless (~300 KB menos).
+>    Para el equipo, abrir cualquier página con `?vio_internal=1` marca el navegador como interno y sus visitas dejan
+>    de contar en las estadísticas. `?vio_internal=0` lo desmarca. No tenéis que hacer nada para esto.
+> 2. **Un solo botón por tarjeta, el de Vipps.** Cambiad «Kjøp her fra Careless» por un botón con la marca oficial de
+>    Vipps («Kjøp med Vipps»), siguiendo la guía de marca de Vipps MobilePay. Al pulsarlo se abre la ficha del
+>    producto (`vio-product-detail`) para elegir talla, y desde ahí se paga con Vipps. No saquéis al lector a la web
+>    de la marca. Debajo del botón, una línea: «Du betaler med Vipps og blir værende i saken».
+> 3. **Navegadores dentro de apps (Dagbladet, Facebook, Instagram).** Si `localStorage` o `sessionStorage` fallan,
+>    la página no puede bloquear la compra. Envolved cada acceso en `try/catch` con un valor en memoria (por ejemplo
+>    `ml.vio.carts.v1`, `ml.vio.surface`, `ml.vio.cartScope`, `ml:vio-origins:v1`) y comprobad en Instagram y en la
+>    app de Dagbladet que se puede abrir la ficha, elegir talla y llegar a Vipps.
+> 4. **El salto a Vipps tiene que salir del toque.** En iOS, si entre el toque en «Kjøp nå med Vipps» y la redirección
+>    pasan varios segundos de llamadas encadenadas, el navegador puede no abrir la app. No pongáis vuestras propias
+>    llamadas (`/api/track`, `bootstrap`, etc.) delante de la redirección. Dejad que la SDK la haga en cuanto tenga
+>    la URL, y lanzad vuestro tracking sin `await`.
+> 5. **Las tarjetas no deben aparecer de golpe.** Reservad su alto (`min-height` o un esqueleto) mientras carga el
+>    catálogo, para que el texto del artículo no salte.
+>
+> Probad en staging con la surface de staging y decidnos qué versión queda publicada.
