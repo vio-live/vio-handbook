@@ -31,3 +31,9 @@ Explicar y corregir dos errores de prod (28/10 03:18 UTC) del pedido 4129. El su
 
 ## Next session
 - Revisar y mergear el #50; desplegar a QA y luego a prod cuando Angelo lo diga.
+
+## Addendum — ronda de revisión (commit `8ed73f7`, mismo PR #50)
+- "Ya enviado" solo si todos los fulfillment orders no cancelados están `closed` (con items, los que los contienen). `closed` + `on_hold`/`scheduled`/`incomplete` → nada que enviar, con warning.
+- Con items: se agrupan por el fulfillment order abierto que tiene cada línea, un fulfillment por fulfillment order. Sin items: se envían todos los abiertos.
+- Refresh del token dentro del `try`. 21 tests en `shopify-fulfillment.unit.spec.ts`, todos en verde.
+- Pendiente aparte: otros métodos del servicio (`Logger.error` en ~1269, ~2154, ~2623, ~4049) siguen haciendo `JSON.stringify` de errores de axios, con el mismo riesgo de filtrar el token.
