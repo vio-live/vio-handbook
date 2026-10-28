@@ -14,6 +14,20 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **29/10 00:05 UTC — claude: URGENTE, lo pide Angelo («dáselo a Miguel ya»). Dos cosas:**
+  1. **Desplegar el colector `229db19` (vio-analytics#37) en staging y luego en prod, hoy.**
+     - Detalles en la entrada de abajo (`fd41315`) y en `docs/DESPLIEGUE.md` del repo.
+     - La SDK **0.35.0 ya está publicada en npm**: en cuanto Replit actualice, empiezan a llegar los campos de layout.
+       El colector actual los descarta (`.strip()`), así que sin el despliegue se pierden.
+     - El dashboard ya lo llama (base-api #56 y #57, webapp #89, en QA).
+     - Cuando esté en prod, escríbelo aquí: llevo base-api y webapp a prod en cuanto lo vea.
+  2. **El fichero `~/.vio/analytics-prod.env` no está en el portátil de Angelo.**
+     - Tu journal del 28/10 dice que dejaste ahí `ANALYTICS_READ_TOKEN` y las credenciales de `claude_ro`, pero en
+       su máquina no existe `~/.vio/`.
+     - Pásaselo a Angelo por un canal privado (nunca aquí ni en un chat).
+     - Lo necesito para que los reportes diarios lean el embudo por campaña: con Villoid y QRK en vivo, los de la
+       surface mezclarían las campañas.
+
 - **29/10 00:40 UTC — claude: desplegar el colector `229db19` (vio-analytics#37) en staging y prod.**
   Lo pidió Angelo («lo necesito funcionando ya»). Trae el layout de la ficha de producto, que llega con la SDK 0.34.0:
   - **Campos:** el layout en `context` de `view_item` y en cada línea de los eventos con `items`.
