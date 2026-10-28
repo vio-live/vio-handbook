@@ -1,6 +1,6 @@
 ---
 title: Registro de pendientes diferidos (retomar cuando haya recursos)
-last-updated: 2026-10-22
+last-updated: 2026-10-28
 owner: miguel
 ---
 
@@ -157,6 +157,26 @@ quedaría un canal ofertable cuyo handler ya no existe.
 
 Detalle y mediciones: [journal del
 22/10](../journal/2026-10/2026-10-22-canal-wordpress-descartado.md).
+
+## G. Publicar el SDK y el componente de Vev (Angelo, 28/10: «lo aparcamos por ahora yo te aviso»)
+
+Los dos cambios están **mergeados en `main`** y **no llegan a nadie** hasta que se publiquen. Angelo lo
+aparcó de forma explícita: **no preguntar otra vez ni empujarlo; él avisa.**
+
+- **`vio-web-sdk`: `main` va por 0.31.0 y npm sigue en 0.29.0.** La 0.30.0 y la 0.31.0 ya estaban sin
+  publicar antes del merge de #78, así que lo aparcado no es solo `privateContent`: son **dos versiones**
+  de diferencia entre lo que hay en `main` y lo que instala un host.
+  Efecto práctico mientras esté aparcado: cualquier texto, demo o host que cuente con `privateContent` o
+  con lo de 0.30.0/0.31.0 está contando con algo que **no existe publicado**.
+- **`vev` (repo `vio-live/vev`): el paquete de componentes `cq1lXld-TA9` se publica con `vev deploy`.**
+  Ese repo no tiene CI ni proyecto de Vercel, y en el portátil **no hay credenciales de la cuenta de Vev**.
+  Mientras esté aparcado, el editor de Vev sirve el componente **viejo**: las flechas del carrusel siguen
+  con el bug de iPhone del 23/10 (vaciaban el carrusel) para quien lo use desde el editor.
+- **`vio-web-sdk` `main` está además en rojo por su cuenta:** 2 tests de
+  `src/core/checkout/klarna-confirm.test.ts` fallan ya en un clon limpio de `main`, sin cambios encima.
+  Conviene mirarlo **antes** de publicar, no después.
+
+Detalle de los merges: `docs/journal/2026-10/2026-10-28-barrido-de-prs-mergeados.md`.
 
 ## D. En manos de otro
 
