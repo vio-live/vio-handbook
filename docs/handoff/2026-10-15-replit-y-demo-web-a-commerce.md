@@ -414,46 +414,68 @@ que es el valor por defecto del paquete.
 > Lo que se pide es que Replit lo ofrezca como **ajustes generales** en su configuración, no que lo fije en el código
 > del artículo. Referencia completa: README de la SDK → *Options of the detail and the product cards (0.32)*.
 
-> Actualizad **staging** a `@vio-live/web-sdk@0.32.0` (en producción todavía no: os avisamos). La versión trae
-> opciones nuevas para la ficha de producto y para las tarjetas. Repartidlas así:
+> [claude, 2026-10-28, tarde] Reescrito tras leer el documento técnico de Replit («Vio en Mote & Livsstil —
+> contexto técnico»): usan la SDK solo para ficha, carrito y checkout; **sus tarjetas y carruseles son componentes
+> propios** (`VioProductsBlock`, `ShoppingCarousel`), la ficha la retocan con un adaptador de shadow DOM
+> (`lib/vioDetailLayout.ts`), están en 0.29.0 exacta y el proyecto editorial de destino es solo-Prod.
 >
-> **A. Ficha de producto (`vio-product-detail`): ajustes GENERALES del sitio.** Van en vuestra configuración global
-> del widget, una sola vez para toda la web, aplicados con `applyVioTheme({ … })` al cargar. **No se configuran por
-> artículo** ni con atributos en el elemento.
-> 1. **Galería:** «Miniaturas» (por defecto) o «Carrusel» → `detailGallery: 'thumbs' | 'carousel'`. En carrusel,
->    opcional «Asomar la foto siguiente» → `detailCarouselPeek: '32px'`.
-> 2. **Descripción:** «Vista previa» (por defecto), «Cerrada» o «Abierta» → `detailDescriptionMode: 'preview' |
->    'folded' | 'open'`; líneas de la vista previa → `detailDescriptionPreviewLines` (3).
-> 3. **Promesas de la marca** (franja de iconos bajo el botón de compra): mostrar (por defecto) u ocultar →
->    `detailHighlightsDisplay: 'none'`. Los textos los escribe cada marca en su dashboard de Commerce: no los pongáis
->    vosotros.
-> 4. **Frakt & retur:** mostrar (por defecto) u ocultar → `detailShippingReturnsDisplay: 'none'`. Transportistas,
->    precios y plazo vienen de Commerce.
+> Pasad la **copia de desarrollo** (la que conecta con Staging) a `@vio-live/web-sdk@0.32.0`. El proyecto editorial
+> de producción todavía no: os avisamos cuando Commerce esté en prod. 0.32.0 lleva también 0.30.0 y 0.31.0, que no se
+> publicaron sueltas: leed sus «Upgrade notes» en el CHANGELOG.
+>
+> **A. Ficha de producto: ajustes generales en «Vio config» (`/admin/vio`).** Una sola configuración para toda la
+> web, aplicada con `applyVioTheme({ … })` en `lib/vio.ts`. Nada por artículo.
+> 1. **Galería:** «Miniaturas» (por defecto) o «Carrusel» → `detailGallery`; en carrusel, `detailCarouselPeek`.
+> 2. **Descripción:** «Vista previa» (por defecto), «Cerrada» o «Abierta» → `detailDescriptionMode`;
+>    `detailDescriptionPreviewLines` (3).
+> 3. **Promesas de la marca:** mostrar (por defecto) u ocultar → `detailHighlightsDisplay: 'none'`. Los textos los
+>    escribe la marca en su dashboard y llegan en el bootstrap: vuestro proxy de `/api/vio/bootstrap` tiene que pasar
+>    el bloque del sponsor tal cual (como ya pasa `termsUrl`).
+> 4. **Frakt & retur:** mostrar (por defecto) u ocultar → `detailShippingReturnsDisplay: 'none'`.
 > 5. **Botón de compra fijo abajo:** no (por defecto) o sí → `detailBuyPosition: 'sticky'`.
+> 6. **Aviso «Lagt i handlekurven»** (nuevo en 0.31, encendido por defecto): si vuestro host ya responde a
+>    `vio:added-to-cart` con su propia UI, elegid uno de los dos (`no-added-toast` en `<vio-product-detail>` apaga el
+>    de la SDK). Su «Til kassen» usa vuestro handler de `vio:checkout-open`.
 >
-> **B. Tarjetas (`vio-product-carousel` y sus `vio-product`): ajustes POR BLOQUE de productos.** Cada bloque de
-> productos de un artículo tiene los suyos en el editor del artículo. Se ponen como atributos del
-> `vio-product-carousel` de ese bloque y, los de estilo, con `applyVioTheme({ … }, elementoDelBloque)` (el segundo
-> parámetro limita el estilo a ese bloque).
-> 6. **Disposición:** «Carrusel» (por defecto) o «Lista» (una debajo de otra) → `layout="list"`.
-> 7. **Descripción en la tarjeta:** no (por defecto) o sí → `show-description`. Y por cada producto del bloque, un
->    campo para **reescribir su descripción** si el editor quiere mejorarla → `descriptions='{"<productId>":"texto"}'`
->    (texto vacío = ese producto sin descripción).
-> 8. **Botón:** «Icono» (bolsa sobre la imagen, por defecto), «Barra» («Kjøp» a todo el ancho) o «Ninguno» →
->    `button-style="icon" | "bar" | "hidden"`; texto de la barra → `button-label` («Kjøp»).
-> 9. **Estilo de las tarjetas del bloque:** fuente (`cardFont`), fuente del precio (`cardPriceFont`), marco
->    (`cardBorder`, p. ej. `1px solid rgba(230,230,230,.6)`), proporción de la imagen (`cardImageAspect`, `1 / 1` o
->    `3 / 4`), imagen entera o recortada (`cardImageFit`), fondo y margen de la imagen (`cardImageBg`,
->    `cardImagePadding`), relleno del texto (`cardMetaPadding`), color y esquinas de la barra (`cardAccent`,
->    `cardBarRadius`), líneas de descripción (`cardDescriptionLines`), vendedor arriba en vez de abajo
->    (`cardRetailerOrder: '-1'`).
+> **Quitad el adaptador `lib/vioDetailLayout.ts`.** En 0.31 y 0.32 cambió el interior de la ficha (las tallas
+> dentro de la zona de compra, la nota de envío bajo las tallas, descripción con vista previa, franja de promesas,
+> «Frakt & retur», carrusel), así que sus selectores ya no apuntan a lo mismo y pueden pelearse con el layout nuevo.
+> Lo que pedía el diseño ya es configurable sin tocar el shadow DOM:
+> - márgenes interiores de 10 px en móvil → `detailPaddingX: '10px'` (y `detailImageInset`);
+> - esquinas superiores redondeadas → `radiusXl`;
+> - altura de la imagen controlada → `detailImageMaxHeight` (o `detailImageAspect`);
+> - título, precio y opciones compactos → `detailTitleSize`, `detailPriceSize`, `detailOptionHeight`,
+>   `detailOptionGap`;
+> - marca arriba, imagen en `cover`, miniaturas en una fila, Vipps encima de «Legg i handlekurv» → ya es así por
+>   defecto;
+> - cierre por gesto → la hoja ya se cierra tirando hacia abajo desde cualquier punto cuando está arriba.
+> Si algo de vuestro diseño no tiene opción, pedídnosla y la añadimos a la SDK en vez de tocar su interior.
 >
-> **Para Mote & Livsstil × Careless**, lo aprobado:
-> - General (ficha): `detailGallery: 'carousel'`; el resto por defecto.
-> - En los bloques de Careless: `layout="list"`, `show-description`, `button-style="bar"`, y de estilo
->   `cardFont: "'Lato', sans-serif"`, `cardPriceFont: "'Cormorant Garamond', serif"`,
->   `cardBorder: '1px solid rgba(230,230,230,.6)'`, `cardImageAspect: '3 / 4'`, `cardImageFit: 'contain'`,
->   `cardImagePadding: '12px'`, `cardImageBg: 'rgba(247,246,244,.6)'`, `cardMetaPadding: '16px'`,
->   `cardRetailerOrder: '-1'`.
+> **B. Vuestras tarjetas y carruseles (`VioProductsBlock`, `ShoppingCarousel`): ajustes por bloque, en vuestro
+> editor.** Siguen siendo vuestros (las opciones de tarjeta de la SDK son para quien usa `vio-product-carousel`, como
+> Vev). Lo que pedimos es que el editor del bloque permita, y que los bloques de Careless queden así:
+> 7. **Disposición:** lista (una debajo de otra, a todo el ancho de la columna) o carrusel. Careless: lista.
+> 8. **Descripción:** mostrar sí/no por bloque. Por defecto la del producto de Vio (texto, sin HTML, cortada a cuatro
+>    líneas); si el editor escribió la suya en el producto del bloque («descripción editorial»), esa. Careless: sí.
+> 9. **Botón:** una barra a todo el ancho con el texto «Kjøp» (editable) que abre la ficha para elegir talla.
+> 10. **Estilo** (el aprobado para Careless): marco fino `1px solid rgba(230,230,230,.6)`; imagen 3:4 entera
+>     (`contain`) con 12 px de margen sobre `rgba(247,246,244,.6)`; marca en versalitas pequeñas encima del título;
+>     título en Lato 16 px; descripción gris 14 px; precio en Cormorant Garamond seminegrita 20 px; 16 px de relleno.
+>     Mantened «DIREKTE KJØP» y la identificación publicitaria.
 >
-> Probad en staging con la surface de staging y decidnos qué versión queda publicada.
+> **C. Lo que cambia en 0.30 y 0.31 para vuestro host** (en el CHANGELOG, «Upgrade notes»):
+> - El botón Vipps del carrito abre ahora el checkout por `vio:checkout-open` con `paymentMethod: 'vipps'` (pago
+>   estándar con el móvil en el formulario, sin la pantalla de perfil de Vipps). Ya lo escucháis: comprobad que
+>   preselecciona Vipps. Los `vio:payment-redirect-*` con `source: 'cart'` ya no existen.
+> - `Vio.checkout.open()` lanza también con un carrito de 0 kr: el `catch` que ya tenéis debe cubrirlo.
+> - Si rellenáis el checkout con `Vio.checkout.setAddress()`, incluid `phone`.
+> - Los botones de compra de la ficha no se deshabilitan sin talla: muestran «Velg størrelse».
+> - Abrir cualquier página con `?vio_internal=1` marca vuestro navegador como interno y deja de contar en las
+>   estadísticas (`?vio_internal=0` lo desmarca). Usadlo en todas vuestras pruebas en prod.
+>
+> **D. Atribución:** como las tarjetas son vuestras, las impresiones de bloque las emite `useVioImpression`. Desde
+> 0.30 las de la SDK llevan los productos mostrados, y el embudo por producto los necesita: comprobad que las
+> vuestras también los envían.
+>
+> Probad en la copia de desarrollo con la conexión Staging (Careless en QA tiene ya sus promesas y su
+> «Frakt & retur») y decidnos qué versión queda publicada.
