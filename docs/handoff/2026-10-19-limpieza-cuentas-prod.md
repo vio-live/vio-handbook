@@ -35,10 +35,15 @@ solo lectura. **Nada ejecutado.**
 Propuesta: `UPDATE user SET deleted_at = NOW() WHERE id IN (...)` + deshabilitar en Firebase, en una
 pasada y con la lista aprobada.
 
-## Reales — NO tocar (8 confirmadas)
+## Reales — NO tocar (9 confirmadas)
+
+> [claude, 2026-10-28] Se añade **1301**. Estaba en «Candidatas a borrar» por el nombre y el email, pero
+> su conexión de Woo apunta a la tienda real `faves.no` (visto el 23/10). Angelo confirmó el 28/10 que es
+> cliente y que aún no lanzaron la web. Quedan 24 candidatas.
 
 | id | cuenta | evidencia |
 |---|---|---|
+| 1301 | `nudebeautyvioprod` (`nudebeauty@vio.prod`) | Woo a `https://faves.no`, tienda de belleza (pelo y piel). **Cliente, todavía sin lanzar la web con Vio** (Angelo, 28/10). El nombre de prueba engaña. |
 | 1302 | `qkoreancosmetics` | Woo a `https://qkoreancosmetics.no` — **dominio vivo**, responde 403 de Cloudflare (protección de bots, o sea sitio real). El username raro engaña: es cliente. |
 | 1305 | `kondomeriet` | 2.457 productos + `product_feed` |
 | 1306 | `nytelse` | 2.057 productos + `product_feed` |
@@ -62,13 +67,14 @@ demo. Si el demo ya no se usa, se retira app y cuenta juntas, no solo la cuenta.
   `sales-channel-test-p5m0ti3c.myshopify.com`, que es **una tienda de pruebas** compartida con `asd`
   y `shopifysaleschann`. O es el retailer Life sin configurar, o es una cuenta de prueba.
 
-## Candidatas a borrar: 25
+## Candidatas a borrar: 24
 
-Todas con nombre o dominio de prueba, y ninguna con tienda real detrás.
+Todas con nombre o dominio de prueba, y ninguna con tienda real detrás. (1301 salió de esta lista el
+28/10: es `faves.no`, ver arriba.)
 
 `1292` alan-new · `1293` alan-2 · `1294` alan-3 · `1295` nuevo-usuario · `1296` alan-shopify-test01 ·
 `1297` alan-shopify-test-01 · `1298` alan-shopify-test-02 · `1299` shopify-user-to-submit ·
-`1300` testwooprod · `1301` nudebeautyvioprod (`nudebeauty@vio.prod`) · `1303` testmultipleenvte ·
+`1300` testwooprod · `1303` testmultipleenvte ·
 `1304` shopifysaleschann · `1310` asd · `1311` testshopifyprod1t · `1312` twsdasdasda1testn ·
 `1313` trasdasdasd1testn · `1314` akjhdbakjsdbakjsd · `1315` aldcnaskjn123tstn ·
 `1316` kdjaksjdkj123test · `1317` akjdasjdasjdhkasd · `1318` akjsdn12312332asd ·
