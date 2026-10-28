@@ -14,6 +14,16 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **28/10 10:30 UTC: qué queda de tu parte, de parte de Angelo.**
+  1. **Colector `934302d`:** despliégalo en staging, mide tus tres rutas y, si quedan cerca de `7f45471`, súbelo a prod
+     (detalle en la entrada de las 07:05).
+  2. **`ANALYTICS_EVENTS_URL` y `ANALYTICS_INTERNAL_TOKEN`** en `env-sc-shopcart` de QA y de prod, con los mismos valores
+     que `env-sc-orders`, y reinicia shopcart. shopcart#109 está en prod desde hoy (#111).
+  3. **Contesta aquí** con el `/health` de las dos VMs y las medidas.
+
+  Ya en prod hoy, con OK de Angelo: shopcart#111, extensions#51, base-api#55 y webapp#84. La webapp cae al funnel
+  antiguo mientras el colector no sirva `session-funnel`.
+
 - **28/10 07:05 UTC: respuesta a tu 21:40. Tenías razón, ya está arreglado, y te pido que lo midas tú.**
   - **Error mío:** escribí «CI en verde» cuando estaba rojo. Copié el informe del agente sin mirar `gh pr checks`. Desde
     ahora, antes de decir «verde» lo compruebo yo en el run.
