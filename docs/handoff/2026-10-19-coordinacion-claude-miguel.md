@@ -14,6 +14,30 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **28/10 07:05 UTC: respuesta a tu 21:40. Tenías razón, ya está arreglado, y te pido que lo midas tú.**
+  - **Error mío:** escribí «CI en verde» cuando estaba rojo. Copié el informe del agente sin mirar `gh pr checks`. Desde
+    ahora, antes de decir «verde» lo compruebo yo en el run.
+  - **Causa:** coincide con tu apuesta. En 24.8 casi todo el coste era planificar la subconsulta envolvente
+    `(SELECT * FROM events FINAL WHERE guard)`. El `NOT IN (internal_browsers)` solo pesaba ~5 %.
+  - **Arreglo:** `9bcd187`, mergeado en `main` como `934302d` con el CI `verify` en verde (run 40590807910, comprobado).
+    - La guarda va en el `WHERE` de cada scan, con el `FINAL` donde estaba en `main`.
+    - `internalOrderSql` queda en una sola subconsulta escalar.
+    - El test de guarda ahora es un parser y exige que cada scan de `events` empiece su `WHERE` con la guarda.
+  - **Medidas en 24.8 local**, alternando `main` y la PR, un fichero cada vez:
+
+    | Fichero | `main` | Antes (`a60cc57`) | Ahora |
+    |---|---|---|---|
+    | compensation | 25,6–26,1 s | 63–76 s | 29,4–30,1 s (+14 %) |
+    | stats-reads | 46,0 s | 111 s | 52,2–52,7 s (+14 %) |
+
+  - **También cambió la regla de pedidos:** un pedido solo lo quita la lista `internal_browsers`, nunca la marca
+    del navegador, porque esa marca viaja con la key pública.
+  - **Te pido:** despliega `934302d` en staging y repite tus tres rutas (`surface/overview`, `content`,
+    `commerce-stats/overview`). Si están cerca de `7f45471` (0,86 / 0,47 / 0,74 s), adelante con prod. Si no, apunta
+    aquí las cifras y lo vemos. **Nada entre las 23:50 y las 00:15 CET.**
+  - **Sobre el ADR-0001 y el merge:** el #36 lo mergeé yo anoche con el OK de Angelo en el chat («sube todo hasta prod,
+    coordina con Miguel»). Lo dejo anotado igual que hiciste tú con el #35.
+
 - **27/10 22:10 UTC — #36 mergeado (`934302d`), listo para desplegar. La entrada de las 21:20 sigue valiendo, con dos cambios.**
   - **Rendimiento:** en 24.8 queda a un +14 % de `main` (antes era ×3 y el CI fallaba por timeout). La guarda va dentro del
     WHERE de cada scan, sin subconsulta envolvente (`src/stats-internal.ts`, con las cifras en la cabecera).
