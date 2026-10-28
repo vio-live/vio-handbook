@@ -457,7 +457,9 @@ que es el valor por defecto del paquete.
 > 7. **Disposición:** lista (una debajo de otra, a todo el ancho de la columna) o carrusel. Careless: lista.
 > 8. **Descripción:** mostrar sí/no por bloque. Por defecto la del producto de Vio (texto, sin HTML, cortada a cuatro
 >    líneas); si el editor escribió la suya en el producto del bloque («descripción editorial»), esa. Careless: sí.
-> 9. **Botón:** una barra a todo el ancho con el texto «Kjøp» (editable) que abre la ficha para elegir talla.
+> 9. **Botón:** una barra a todo el ancho con el texto «Kjøp» (editable) que abre la ficha para elegir talla. El
+>    botón de compra directa con Vipps sigue siendo una opción del bloque, que el editor activa o no (la que ya
+>    tenéis).
 > 10. **Estilo** (el aprobado para Careless): marco fino `1px solid rgba(230,230,230,.6)`; imagen 3:4 entera
 >     (`contain`) con 12 px de margen sobre `rgba(247,246,244,.6)`; marca en versalitas pequeñas encima del título;
 >     título en Lato 16 px; descripción gris 14 px; precio en Cormorant Garamond seminegrita 20 px; 16 px de relleno.
@@ -476,6 +478,17 @@ que es el valor por defecto del paquete.
 > **D. Atribución:** como las tarjetas son vuestras, las impresiones de bloque las emite `useVioImpression`. Desde
 > 0.30 las de la SDK llevan los productos mostrados, y el embudo por producto los necesita: comprobad que las
 > vuestras también los envían.
+>
+> **E. Carritos por conexión:** el riesgo que anotasteis (dos pestañas con conexiones distintas adoptando por un
+> momento el carrito de la otra) venía de la SDK: todas las conexiones compartían `vio.cart.v1`. Está corregido en la
+> próxima versión (vio-web-sdk#110): cada conexión (entorno + huella de la key) guarda su propio carrito, una
+> pestaña solo escucha el suyo, y `Vio.init` con otra key cambia `Vio.cart` a los carritos de esa conexión. Cuando
+> la tengáis, vuestro archivo/restauración por conexión (`vioCartConnections`) puede simplificarse; repetid la prueba
+> de vuestro punto 13 para certificarlo.
+>
+> **F. Incidencias del lanzamiento:** para investigarlas necesitamos ejemplos concretos: URL del artículo o
+> carrusel, dispositivo y navegador (o app: Dagbladet, Instagram…), hora aproximada, pasos, y qué esperabais y qué
+> pasó. Sin datos de pago.
 >
 > Probad en la copia de desarrollo con la conexión Staging (Careless en QA tiene ya sus promesas y su
 > «Frakt & retur») y decidnos qué versión queda publicada.
