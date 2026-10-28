@@ -136,4 +136,9 @@ tarifa.
 - **Pendiente de Villoid y QRK:** su canal de Aller (solo su colección), su campaña con fechas (QRK al 10 %), su
   perfil de marca (logo, condiciones, devoluciones, promesas), sus tarifas con plazo, y la unidad de Vipps de cada
   una.
+- **SDK 0.33.0 publicada en npm** (21:31 UTC, shasum `f47d742…`, la de `main`). El texto final para Replit está en el
+  handoff de Replit.
+- **Promesas de Careless en prod** (brand 1327, con OK de Angelo): las tres de careless.no (plane / heart / shirt),
+  cargadas en `brand_profile.highlights` sin pisar nada (estaba vacío). El bootstrap de prod ya las sirve. La marca
+  las edita en Settings → Brand → Promises.
 
