@@ -414,41 +414,46 @@ que es el valor por defecto del paquete.
 > Lo que se pide es que Replit lo ofrezca como **ajustes generales** en su configuración, no que lo fije en el código
 > del artículo. Referencia completa: README de la SDK → *Options of the detail and the product cards (0.32)*.
 
-> Actualizad **staging** a `@vio-live/web-sdk@0.32.0` (en producción todavía no: os avisamos) y añadid a vuestra configuración del widget (la que ya aplica
-> `applyVioTheme`) estos ajustes generales, con estos valores por defecto. Cada uno se aplica a todas las fichas y
-> tarjetas de la página; un artículo puede sobrescribirlo con el atributo del elemento.
+> Actualizad **staging** a `@vio-live/web-sdk@0.32.0` (en producción todavía no: os avisamos). La versión trae
+> opciones nuevas para la ficha de producto y para las tarjetas. Repartidlas así:
 >
-> **Ficha de producto (`vio-product-detail`)**
-> 1. **Galería:** «Miniaturas» (por defecto) o «Carrusel» → `applyVioTheme({ detailGallery: 'thumbs' | 'carousel' })`.
->    En carrusel, opcional «Asomar la foto siguiente» → `detailCarouselPeek: '32px'`.
+> **A. Ficha de producto (`vio-product-detail`): ajustes GENERALES del sitio.** Van en vuestra configuración global
+> del widget, una sola vez para toda la web, aplicados con `applyVioTheme({ … })` al cargar. **No se configuran por
+> artículo** ni con atributos en el elemento.
+> 1. **Galería:** «Miniaturas» (por defecto) o «Carrusel» → `detailGallery: 'thumbs' | 'carousel'`. En carrusel,
+>    opcional «Asomar la foto siguiente» → `detailCarouselPeek: '32px'`.
 > 2. **Descripción:** «Vista previa» (por defecto), «Cerrada» o «Abierta» → `detailDescriptionMode: 'preview' |
 >    'folded' | 'open'`; líneas de la vista previa → `detailDescriptionPreviewLines` (3).
 > 3. **Promesas de la marca** (franja de iconos bajo el botón de compra): mostrar (por defecto) u ocultar →
->    `detailHighlightsDisplay: 'none'`. Los textos los escribe cada marca en su dashboard; no los pongáis vosotros.
->    Solo si un artículo necesita otros, el atributo `highlights='[{"icon":"plane","title":"…","text":"…"}]'`.
+>    `detailHighlightsDisplay: 'none'`. Los textos los escribe cada marca en su dashboard de Commerce: no los pongáis
+>    vosotros.
 > 4. **Frakt & retur:** mostrar (por defecto) u ocultar → `detailShippingReturnsDisplay: 'none'`. Transportistas,
->    precios y plazo salen de Commerce. Si una marca no tiene plazo en sus tarifas, el atributo
->    `delivery-time="2-5 virkedager"`.
+>    precios y plazo vienen de Commerce.
 > 5. **Botón de compra fijo abajo:** no (por defecto) o sí → `detailBuyPosition: 'sticky'`.
 >
-> **Tarjetas (`vio-product-carousel` y sus `vio-product`)**
-> 6. **Disposición:** «Carrusel» (por defecto) o «Lista» (una debajo de otra) → atributo `layout="list"` o
->    `applyVioTheme({ carouselLayout: 'list' })`.
-> 7. **Descripción en la tarjeta:** no (por defecto) o sí → atributo `show-description`. Y en cada artículo, un campo
->    por producto para **reescribir la descripción** si el editor quiere mejorarla →
->    `descriptions='{"<productId>":"texto"}'` (texto vacío = sin descripción en ese producto).
+> **B. Tarjetas (`vio-product-carousel` y sus `vio-product`): ajustes POR BLOQUE de productos.** Cada bloque de
+> productos de un artículo tiene los suyos en el editor del artículo. Se ponen como atributos del
+> `vio-product-carousel` de ese bloque y, los de estilo, con `applyVioTheme({ … }, elementoDelBloque)` (el segundo
+> parámetro limita el estilo a ese bloque).
+> 6. **Disposición:** «Carrusel» (por defecto) o «Lista» (una debajo de otra) → `layout="list"`.
+> 7. **Descripción en la tarjeta:** no (por defecto) o sí → `show-description`. Y por cada producto del bloque, un
+>    campo para **reescribir su descripción** si el editor quiere mejorarla → `descriptions='{"<productId>":"texto"}'`
+>    (texto vacío = ese producto sin descripción).
 > 8. **Botón:** «Icono» (bolsa sobre la imagen, por defecto), «Barra» («Kjøp» a todo el ancho) o «Ninguno» →
->    `button-style="icon" | "bar" | "hidden"`, texto de la barra → `button-label` («Kjøp»).
-> 9. **Estilo de la tarjeta:** fuente (`cardFont`), fuente del precio (`cardPriceFont`), marco (`cardBorder`, p. ej.
->    `1px solid rgba(230,230,230,.6)`), proporción de la imagen (`cardImageAspect`, `1 / 1` o `3 / 4`), imagen entera
->    o recortada (`cardImageFit`), fondo y margen de la imagen (`cardImageBg`, `cardImagePadding`), relleno del texto
->    (`cardMetaPadding`), color y esquinas de la barra (`cardAccent`, `cardBarRadius`), líneas de descripción
->    (`cardDescriptionLines`), vendedor arriba en vez de abajo (`cardRetailerOrder: '-1'`).
+>    `button-style="icon" | "bar" | "hidden"`; texto de la barra → `button-label` («Kjøp»).
+> 9. **Estilo de las tarjetas del bloque:** fuente (`cardFont`), fuente del precio (`cardPriceFont`), marco
+>    (`cardBorder`, p. ej. `1px solid rgba(230,230,230,.6)`), proporción de la imagen (`cardImageAspect`, `1 / 1` o
+>    `3 / 4`), imagen entera o recortada (`cardImageFit`), fondo y margen de la imagen (`cardImageBg`,
+>    `cardImagePadding`), relleno del texto (`cardMetaPadding`), color y esquinas de la barra (`cardAccent`,
+>    `cardBarRadius`), líneas de descripción (`cardDescriptionLines`), vendedor arriba en vez de abajo
+>    (`cardRetailerOrder: '-1'`).
 >
-> Para Mote & Livsstil × Careless, el look que aprobamos es: galería en carrusel, tarjetas en lista con descripción
-> y botón en barra, `cardFont: "'Lato', sans-serif"`, `cardPriceFont: "'Cormorant Garamond', serif"`,
-> `cardBorder: '1px solid rgba(230,230,230,.6)'`, `cardImageAspect: '3 / 4'`, `cardImageFit: 'contain'`,
-> `cardImagePadding: '12px'`, `cardImageBg: 'rgba(247,246,244,.6)'`, `cardMetaPadding: '16px'`,
-> `cardRetailerOrder: '-1'`.
+> **Para Mote & Livsstil × Careless**, lo aprobado:
+> - General (ficha): `detailGallery: 'carousel'`; el resto por defecto.
+> - En los bloques de Careless: `layout="list"`, `show-description`, `button-style="bar"`, y de estilo
+>   `cardFont: "'Lato', sans-serif"`, `cardPriceFont: "'Cormorant Garamond', serif"`,
+>   `cardBorder: '1px solid rgba(230,230,230,.6)'`, `cardImageAspect: '3 / 4'`, `cardImageFit: 'contain'`,
+>   `cardImagePadding: '12px'`, `cardImageBg: 'rgba(247,246,244,.6)'`, `cardMetaPadding: '16px'`,
+>   `cardRetailerOrder: '-1'`.
 >
 > Probad en staging con la surface de staging y decidnos qué versión queda publicada.
