@@ -1,7 +1,7 @@
 // Migración 1792800000000-brand-highlights-shipping-logo en la MySQL de PROD (outshifter), desde el pod de users.
 // Idempotente: cada columna y la fila de `migrations` solo se crean si faltan. Mismo SQL que package-database.
 // En prod NO carga promesas: las escribe la marca en el dashboard. (Careless en prod es 1327.)
-require('dotenv').config({ path: '/usr/src/app/.env.local' });
+require('dotenv').config({ path: '/usr/src/app/.env' });
 const mysql = require('mysql2/promise');
 const e = process.env;
 const NAME = 'BrandHighlightsShippingLogo1792800000000';
@@ -29,7 +29,7 @@ const col = (table, column) =>
   if (m === 0) { await c.query('INSERT INTO migrations (timestamp, name) VALUES (1792800000000, ?)', [NAME]); console.log('fila migrations insertada'); }
   const [h1] = await c.query(col('brand_profile', 'highlights'));
   const [l1] = await c.query(col('shipping', 'logo_url'));
-  const [last] = await c.query('SELECT name FROM migrations ORDER BY timestamp DESC LIMIT 2');
+  const [last] = await c.query('SELECT name FROM migrations ORDER BY timestamp DESC LIMIT 4');
   console.log(`después: highlights ${JSON.stringify(h1)} | logo_url ${JSON.stringify(l1)} | migrations: ${JSON.stringify(last.map((x) => x.name))}`);
   await c.end();
 })().catch((err) => { console.log('ERR', String(err.message).split('\n')[0]); process.exit(1); });
