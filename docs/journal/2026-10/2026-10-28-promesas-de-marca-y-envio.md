@@ -151,3 +151,26 @@ tarifa.
     (`ProductShipping.logo_url`) ya los devuelve con «Leveringstid 1-5 dager». Otras marcas que usen Bring o Helthjem
     pueden reutilizar las mismas URLs.
 
+## Madrugada 29/10: orden de la ficha, seguimiento por layout y Vipps del carrito
+
+- **Origen:** pedido de Replit: un editor arrastrable del orden de la ficha y comparar resultados por layout.
+  Angelo: «construyelo ya».
+- **SDK:**
+  - [#113](https://github.com/vio-live/vio-web-sdk/pull/113): `Vio.configureDetail({ layout })` y la propiedad
+    `layout`, que reordena el DOM. Se puede leer lo aplicado con `appliedLayout`, `Vio.detailLayout()` y el evento
+    `vio:detail-layout-applied`. El layout viaja en `context` del `view_item` y en cada línea de los eventos con items
+    (`experiment_variant_id`, porque `variant_id` de línea es la variante del producto).
+  - [#115](https://github.com/vio-live/vio-web-sdk/pull/115): el botón de Vipps paga con Express el carrito entero de
+    la marca, en el carrito y en la ficha si ya hay líneas, con la nota «Betaler hele handlekurven · n varer · total».
+    Con `vippsCartPayment: 'checkout'` se vuelve al comportamiento anterior.
+  - **0.35.0 publicada en npm** por Angelo (shasum `31cfab8…`). Incluye la 0.34.0, que no se publicó suelta.
+- **Colector:** [vio-analytics#37](https://github.com/vio-live/vio-analytics/pull/37) (`229db19`) con 8 columnas por
+  `ensureSchema` y `layout-funnel` por surface y campaña. La compra confirmada se cruza por `checkout_id` y producto.
+  **Falta que Miguel lo despliegue** (canal de coordinación, `fd41315`).
+- **Dashboard:** base-api [#56](https://github.com/vio-live/vio-base-api/pull/56) y
+  [#57](https://github.com/vio-live/vio-base-api/pull/57) (los filtros siguen la regla de tokens de la SDK) y
+  webapp [#89](https://github.com/vio-live/webapp-vio-commerce/pull/89). En QA: Angelo pidió encender QA de
+  madrugada y lo encendí (`az aks start`). Prod, cuando el colector esté desplegado.
+- **Replit:** texto 0.35.0 entregado a Angelo en el chat (orden, seguimiento, experimentos, analítica y Vipps del
+  carrito). Los experimentos los asigna Replit; la SDK solo los transporta.
+
