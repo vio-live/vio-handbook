@@ -486,6 +486,22 @@ que es el valor por defecto del paquete.
 > la tengáis, vuestro archivo/restauración por conexión (`vioCartConnections`) puede simplificarse; repetid la prueba
 > de vuestro punto 13 para certificarlo.
 >
+> **G. Varias campañas en la misma web (Villoid y QRK llegan después de Careless).** La regla es un artículo = una
+> campaña = un canal = una marca; la SDK no mezcla marcas en un carrito. Para que cada artículo venda y cuente para
+> su propia campaña:
+> 1. En cada `vio:product-click` pasad todo el contexto: `{ productId, sponsorId (la marca del producto),
+>    campaignId (la del artículo), slot, contentId, contentTitle }`. Sin `sponsorId` la ficha cae en la marca de la
+>    campaña por defecto de la web.
+> 2. Poned `data-vio-campaign="<id>"` en el contenedor del artículo (o en `<body>`, actualizándolo en cada cambio de
+>    ruta de la SPA). **No** fijéis `campaignId` en `Vio.init` para toda la web.
+> 3. En `vio:checkout-open`, `Vio.checkout.open(detail.sponsorId)`: nunca un sponsor fijo.
+> 4. El badge del carrito: `Vio.cart.itemCount` en el evento `change` de `Vio.cart`, no el `itemCount` de
+>    `vio:cart-updated` (ese es de una sola marca).
+> 5. La misma surface (la misma key) en todos los artículos, y `<vio-checkout>` montado en todas las páginas: la
+>    vuelta de Vipps aterriza en la URL del artículo.
+> 6. Una campaña que termina deja de vender en su artículo (su marca desaparece del bootstrap): el artículo sigue
+>    publicado, pero sus bloques Vio tienen que mostrarse como no disponibles, no rotos.
+>
 > **F. Incidencias del lanzamiento:** para investigarlas necesitamos ejemplos concretos: URL del artículo o
 > carrusel, dispositivo y navegador (o app: Dagbladet, Instagram…), hora aproximada, pasos, y qué esperabais y qué
 > pasó. Sin datos de pago.
