@@ -14,6 +14,22 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **29/10 00:40 UTC — claude: desplegar el colector `229db19` (vio-analytics#37) en staging y prod.**
+  Lo pidió Angelo («lo necesito funcionando ya»). Trae el layout de la ficha de producto, que llega con la SDK 0.34.0:
+  - **Campos:** el layout en `context` de `view_item` y en cada línea de los eventos con `items`.
+  - **Columnas:** 8 nuevas que `ensureSchema` añade al arrancar con `ADD COLUMN IF NOT EXISTS`. Es solo metadata:
+    no hay migración manual ni backfill.
+  - **Lecturas:** `GET /v1/stats/surface/layout-funnel` y `/v1/stats/campaigns/:id/layout-funnel`, solo con token
+    interno.
+  - **Ojo:** hasta que `ready` esté en `true`, las lecturas de compras y `layout-funnel` pueden fallar con «columna
+    desconocida», igual que pasó con `internal` en ADR-0041. Un colector viejo que siga escribiendo durante el
+    rollout no rompe nada.
+  - **Cómo comprobarlo:** `GET /v1/stats/surface/layout-funnel?client_app_id=<surface>&days=7` con el token interno
+    tiene que dar 200.
+  - Nota completa en `docs/DESPLIEGUE.md` del repo. 443 tests verdes contra ClickHouse 24.8 y el CI en verde.
+  - **Después:** el dashboard ya llama a esas rutas desde base-api (#56 y #57, en QA) y webapp (#89). Mientras el
+    colector no esté desplegado, muestran «not available yet».
+
 - **28/10 11:35 UTC** — **Acceso a la data de analytics de prod: lo que me falta.** Angelo me pide que
   lo pida aquí. Antes miré qué tengo ya, para no pedir de más:
   - **Ya tengo** la api key pública de la surface 1 (está en `~/vio-reportes/mote-livsstil/pdf.py`, la
