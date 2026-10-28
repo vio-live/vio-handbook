@@ -419,9 +419,9 @@ que es el valor por defecto del paquete.
 > propios** (`VioProductsBlock`, `ShoppingCarousel`), la ficha la retocan con un adaptador de shadow DOM
 > (`lib/vioDetailLayout.ts`), están en 0.29.0 exacta y el proyecto editorial de destino es solo-Prod.
 >
-> Pasad la **copia de desarrollo** (la que conecta con Staging) a `@vio-live/web-sdk@0.32.0`. El proyecto editorial
-> de producción todavía no: os avisamos cuando Commerce esté en prod. 0.32.0 lleva también 0.30.0 y 0.31.0, que no se
-> publicaron sueltas: leed sus «Upgrade notes» en el CHANGELOG.
+> Pasad la **copia de desarrollo** (la que conecta con Staging) a `@vio-live/web-sdk@0.33.0`. El proyecto editorial
+> de producción, cuando lo hayáis probado allí: Commerce ya está en prod con todo lo que necesita. 0.33.0 lleva también
+> 0.30.0, 0.31.0 y 0.32.0: leed sus «Upgrade notes» en el CHANGELOG.
 >
 > **A. Ficha de producto: ajustes generales en «Vio config» (`/admin/vio`).** Una sola configuración para toda la
 > web, aplicada con `applyVioTheme({ … })` en `lib/vio.ts`. Nada por artículo.
@@ -480,8 +480,8 @@ que es el valor por defecto del paquete.
 > vuestras también los envían.
 >
 > **E. Carritos por conexión:** el riesgo que anotasteis (dos pestañas con conexiones distintas adoptando por un
-> momento el carrito de la otra) venía de la SDK: todas las conexiones compartían `vio.cart.v1`. Está corregido en la
-> próxima versión (vio-web-sdk#110): cada conexión (entorno + huella de la key) guarda su propio carrito, una
+> momento el carrito de la otra) venía de la SDK: todas las conexiones compartían `vio.cart.v1`. Está corregido en
+> 0.33.0: cada conexión (entorno + huella de la key) guarda su propio carrito, una
 > pestaña solo escucha el suyo, y `Vio.init` con otra key cambia `Vio.cart` a los carritos de esa conexión. Cuando
 > la tengáis, vuestro archivo/restauración por conexión (`vioCartConnections`) puede simplificarse; repetid la prueba
 > de vuestro punto 13 para certificarlo.
@@ -494,7 +494,9 @@ que es el valor por defecto del paquete.
 >    campaña por defecto de la web.
 > 2. Poned `data-vio-campaign="<id>"` en el contenedor del artículo (o en `<body>`, actualizándolo en cada cambio de
 >    ruta de la SPA). **No** fijéis `campaignId` en `Vio.init` para toda la web.
-> 3. En `vio:checkout-open`, `Vio.checkout.open(detail.sponsorId)`: nunca un sponsor fijo.
+> 3. En `vio:checkout-open`, `Vio.checkout.open(detail.sponsorId)`: nunca un sponsor fijo. Desde 0.33.0 la SDK usa
+>    la key del canal de la campaña del artículo y cada carrito recuerda su canal; la campaña del pedido siempre es de
+>    la marca que vende.
 > 4. El badge del carrito: `Vio.cart.itemCount` en el evento `change` de `Vio.cart`, no el `itemCount` de
 >    `vio:cart-updated` (ese es de una sola marca).
 > 5. La misma surface (la misma key) en todos los artículos, y `<vio-checkout>` montado en todas las páginas: la

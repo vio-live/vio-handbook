@@ -94,3 +94,46 @@ tarifa.
 - Publicar la SDK (Angelo) y pasar el texto a Replit.
 - Prod: migración + despliegue, con frase explícita.
 - Que Careless ponga sus promesas en prod desde el dashboard.
+
+## Noche: varias campañas (Villoid, QRK) y segunda tanda a prod
+
+- **Campaña por defecto de M&L en prod:** la de test (1, canal 480) estaba activa y por defecto, contra lo que decía
+  el checklist B9. Lectura de prod: el pedido 4129 cayó en el canal 482 con la campaña 2, y de los 41 carritos desde
+  el 26/10, 38 son del 482 y 3 del 480. Escrito en prod (con OK de Angelo): la 1 pausada y sin default, la 2 por
+  defecto. En el origen, campaigns devuelve 2/482 y solo la 2; el proxy de Replit lo tenía en caché.
+- **Decisiones de Angelo:** un artículo = una campaña = un canal = un sponsor; no hay carrito multi-marca. Se trabaja
+  solo con Vipps. Una campaña que termina deja de vender. Careless no tiene fecha de fin; las nuevas sí la tendrán.
+  QRK lleva un 10 % de comisión. Las unidades de Vipps de Villoid y QRK las pide Angelo. Villoid ya instaló la app de
+  Shopify y faltan sus productos.
+- **SDK:**
+  - [#111](https://github.com/vio-live/vio-web-sdk/pull/111): la key sale del canal de la campaña y el carrito
+    recuerda su canal. La campaña del pedido es la del sponsor, el bootstrap se refresca a los 5 minutos al volver a
+    la pestaña, y el plazo deja de mostrar textos de relleno.
+  - Release **0.33.0** ([#112](https://github.com/vio-live/vio-web-sdk/pull/112)), con #110 y #111, sin publicar
+    todavía (la publica Angelo).
+  - En QA, el carrito de Careless 1338 quedó en el canal 513 y lo recuerda.
+- **shopcart** [#113](https://github.com/vio-live/vio-shopcart-microservice/pull/113): la campaña del pedido solo
+  puede ser de la marca que vende; si no, la de esa marca en su canal; si no hay, null.
+- **Plazo de entrega:** el dashboard lo edita
+  ([webapp#87](https://github.com/vio-live/webapp-vio-commerce/pull/87)) y en products un `""` lo vacía
+  ([#40](https://github.com/vio-live/vio-products-microservice/pull/40)).
+- **extensions** [#52](https://github.com/vio-live/vio-extensions-microservice/pull/52): ningún log imprime
+  credenciales de tienda.
+  - TypeORM tenía `logging: true` e imprimía cada SQL con sus parámetros: en QA salían unas 3.000 líneas en 2 horas
+    con tokens de Shopify reales.
+  - Tras el despliegue, QA y prod dan 0 tokens, 0 parámetros y 0 claves Woo en los pods nuevos.
+  - El pod viejo de prod tenía 883 líneas con parámetros, pero ningún token en lo que aún guardaba.
+  - **Decisión pendiente de Angelo:** rotar tokens y purgar el histórico de logs (Azure).
+- **Segunda tanda a prod** (ramas `release/canal-y-logs-prod`, con cherry-pick y deploy verde):
+  - extensions [#53](https://github.com/vio-live/vio-extensions-microservice/pull/53)
+  - shopcart [#114](https://github.com/vio-live/vio-shopcart-microservice/pull/114)
+  - products [#41](https://github.com/vio-live/vio-products-microservice/pull/41)
+  - webapp [#88](https://github.com/vio-live/webapp-vio-commerce/pull/88)
+- **Reportes por campaña** (`~/vio-reportes/mote-livsstil/`):
+  - Una configuración por campaña, plantilla para Villoid y QRK, y la key fuera del código.
+  - **Limitación:** usuarios, clics, carrito y «til kassen» son de toda la surface, porque el colector, con la key
+    pública, no da el embudo por campaña. Hace falta acceso interno antes de que Villoid y QRK estén en vivo.
+- **Pendiente de Villoid y QRK:** su canal de Aller (solo su colección), su campaña con fechas (QRK al 10 %), su
+  perfil de marca (logo, condiciones, devoluciones, promesas), sus tarifas con plazo, y la unidad de Vipps de cada
+  una.
+
