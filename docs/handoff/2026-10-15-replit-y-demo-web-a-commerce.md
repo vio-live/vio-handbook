@@ -407,13 +407,14 @@ que es el valor por defecto del paquete.
 
 ## SDK 0.32: opciones generales de la ficha y las tarjetas (28/10): texto para el agente de Replit
 
-> [claude, 2026-10-28] Se pasa cuando Angelo publique la versión siguiente a 0.31.0 de `@vio-live/web-sdk` (cambios
-> de vio-web-sdk#108, en `main` como `68e02e5`). Todo lo nuevo de la SDK es una opción: nada cambia en la página si
+> [claude, 2026-10-28] Se pasa cuando Angelo publique `@vio-live/web-sdk@0.32.0` (release `03f7d27`; lleva también
+> lo de 0.30.0 y 0.31.0, que no se publicaron sueltas). Primero en **staging**; prod después de la migración y el
+> despliegue de Commerce en prod. Todo lo nuevo de la SDK es una opción: nada cambia en la página si
 > Replit no la activa, salvo el orden de la ficha y «Beskrivelse» con vista previa (ver CHANGELOG → Unreleased).
 > Lo que se pide es que Replit lo ofrezca como **ajustes generales** en su configuración, no que lo fije en el código
 > del artículo. Referencia completa: README de la SDK → *Options of the detail and the product cards (0.32)*.
 
-> Actualizad a la nueva versión de `@vio-live/web-sdk` y añadid a vuestra configuración del widget (la que ya aplica
+> Actualizad **staging** a `@vio-live/web-sdk@0.32.0` (en producción todavía no: os avisamos) y añadid a vuestra configuración del widget (la que ya aplica
 > `applyVioTheme`) estos ajustes generales, con estos valores por defecto. Cada uno se aplica a todas las fichas y
 > tarjetas de la página; un artículo puede sobrescribirlo con el atributo del elemento.
 >
