@@ -354,6 +354,55 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## De Miguel (escribe Miguel)
 
+- **28/10 17:00 UTC — ClickHouse de solo lectura: creado y verificado. Y la ingesta de prod no perdio nada
+  con el reinicio: lo probe con el log de nginx, no con el contador.**
+
+  **1. Usuario de ClickHouse.** Angelo dijo si. Esta vivo: **`claude_ro`**, y sus permisos son exactamente
+  `GRANT SELECT ON vio_production.*`, nada mas (su `SHOW GRANTS` devuelve esa linea y solo esa), con el perfil
+  `readonly`.
+  - **Donde:** mismo fichero que el token, `~/.vio/analytics-prod.env` del portatil de Angelo (chmod 600), con
+    los nombres que pediste: `CH_URL=https://analytics.vio.live`, `CH_USER=claude_ro`, `CH_PASSWORD=…`,
+    `CH_DATABASE=vio_production`. Se conecta por HTTP con Basic auth a traves de Caddy, igual que el colector.
+  - **Comprobado contra el servidor real, no deducido:**
+    - `SELECT count() FROM vio_production.events` -> **16.031**, 200.
+    - `vio_staging` y `vio_development` -> **ACCESS_DENIED**. `SHOW DATABASES` le devuelve **solo**
+      `vio_production`: los otros entornos no existen para el.
+    - `INSERT`, `ALTER DELETE`, `CREATE TABLE`, `DROP TABLE` -> **ACCESS_DENIED** los cuatro.
+    - El `INSERT` lo probe de una forma que **no escribe aunque pase**:
+      `INSERT INTO vio_production.events SELECT * FROM vio_production.events WHERE 1=0`. Ojo con la trampa:
+      un `INSERT … VALUES` con un nombre de columna inventado da `NO_SUCH_COLUMN_IN_TABLE` **antes** de mirar
+      permisos, y ese error **no prueba nada**.
+  - **Lo que NO tiene, por si te choca:** `system.*`. `SELECT FROM system.parts` le da ACCESS_DENIED. Si para
+    las auditorias de duplicados necesitas `system.tables`, `system.columns` o `system.parts`, dimelo y te
+    anado ese grant — pero mirate antes si te basta con `vio_production`, porque `system` ve el esquema de los
+    tres entornos.
+  - **Como esta montado** (por si alguien recrea el contenedor): ClickHouse corre en Docker en
+    `129.151.210.107` (`vio-clickhouse-1`), y el usuario `default` **no tiene access management**, asi que
+    `CREATE USER` por SQL da ACCESS_DENIED. Lo hice por `users.d`: el fichero vive en el **host** en
+    `/opt/vio/users.d/claude-ro.xml` y lo anadi al `docker-compose.yml` como montaje `:ro`, para que el usuario
+    **sobreviva a un recreate**. ClickHouse **recarga `users.d` en caliente**: no reinicie nada, no hubo corte.
+    Respaldo del compose: `docker-compose.yml.backup-pre-claudero-20261028`.
+
+  **2. «No perder data» (Angelo).** El hueco que te avise esta mañana **no era perdida**, y ahora tengo la
+  prueba en el proxy, no en el contador del propio servicio:
+  - Antes del reinicio el colector tenia **`buffered: 0`** y `lastFlushAt 11:30:13`: no habia nada en vuelo
+    cuando lo pare.
+  - `nginx` de la VM de prod, log `events-access.log`, hoy: **35 `POST /v1/events` con 202**, uno con 400
+    (ese 400 es **mio**, la sonda de permisos de las 11:56), **cero 5xx** y **cero** en `events-rejected.log`.
+  - En la ventana del reinicio (11:50–11:55) **no entro ni un POST de eventos**, solo `/health` — y el de
+    las 11:52:43, en plena ventana, respondio **200**.
+  - Despues del reinicio entraron dos lotes reales (14:32 y 15:41, los dos 202) y el colector los metio:
+    `inserted: 4`, **`dropped: 0`**.
+  - ClickHouse de prod: **16.031 filas**, historia continua desde el 22/10 22:50. Por horas hoy (UTC): 06h 2,
+    08h 12, 09h 16, 10h 5, 11h 4, 14h 3, 15h 1. **El trafico es asi de fino**: 1–16 eventos por hora. Un hueco
+    de dos horas a mediodia es trafico, no averia — por eso un `inserted` bajo no es sintoma de nada.
+
+  **Lo que si es un riesgo real, y te lo dejo apuntado:** el reinicio deja ~8 s sin nadie escuchando, y un
+  `POST /v1/events` que caiga justo ahi **se pierde en el navegador** (no hay cola ni reintento del lado del
+  colector). Hoy no cayo ninguno por suerte, no por diseno. Si quieres que deje de ser suerte, lo barato es
+  que nginx encole/reintente hacia el upstream durante el reinicio; dilo y lo monto. Mientras no este,
+  desplegar en horas de poco trafico sigue siendo lo sensato.
+
 - **28/10 12:00 UTC — `934302d` desplegado en staging Y en prod. No es 2,4x: es +18 %. Medido hoy, las dos
   versiones, misma maquina y mismos parametros. Tu token de solo lectura ya esta vivo.**
 
