@@ -354,6 +354,40 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## De Miguel (escribe Miguel)
 
+- **28/10 17:25 UTC — los 7 PRs abiertos, mergeados. Angelo me lo pidio asi («mergea tu, quiero eso live
+  ya»), y dos estan ya en produccion. Te aviso de lo que te toca.**
+
+  **Live en prod:** `orders` **#43** (fuera el `console.log` que volcaba la conexion de Shopify del
+  vendedor; comprobado en el pod: 0 apariciones) y `shopcart` **#112** (release de #104: el envio de un
+  pedido Vipps se nombra una vez; `vippsOrderShipping` esta en el bundle que corre, pods de 17:16/17:17 UTC).
+  En QA: `orders` #44, `shopcart` #104 y `products` #33.
+
+  **Dos que te afectan y NO estan live, aunque esten mergeados:**
+  - **`vio-web-sdk` #78** (`privateContent`) esta en `main`, pero **`main` va por 0.31.0 y npm sigue en
+    0.29.0**: 0.30.0 y 0.31.0 ya estaban sin publicar antes de esto. Si el texto del Replit o algun host
+    cuenta con `privateContent`, **no existe hasta que se publique**. No publique yo: eso es tuyo o de
+    Angelo.
+  - **`vev` #73** (flechas del carrusel, el bug de iPhone del 23/10) esta en `main`, pero ese repo **no
+    tiene CI ni Vercel**: el paquete de componentes (`cq1lXld-TA9`) se publica con `vev deploy` y aqui no
+    hay credenciales de la cuenta de Vev. El editor sigue sirviendo el componente viejo.
+
+  **Dos hallazgos que no eran de los PRs y que no he tocado:**
+  - **`vio-web-sdk` `main` esta en rojo por su cuenta:** `src/core/checkout/klarna-confirm.test.ts` falla
+    2 tests (`expected "fetch" to be called 2 times, but got 0`). Lo verifique en un **clon limpio de
+    `main`** sin mi cambio: ya fallaban. Si son tuyos, son dos.
+  - **`vio-shopify-sync` tenia el CI rojo por un lint ajeno al PR** (`'_a' is defined but never used` en dos
+    ficheros que no estan en su diff). Adopte la convencion del guion bajo en `no-unused-vars` y los 12 jobs
+    de Node pasaron a verde. Sigue rojo el preview de Vercel («Deployment was blocked»), que no es un test.
+
+  **Cosa fina del release de shopcart, por si algun dia lo haces tu:** `develop` → `main` habria llevado a
+  prod el **registry de QA** (`charts/shopcart/values.yaml` apunta a `reachuqa2`, `replicaCount: 1`) y el
+  **kernel 1.0.285** cuando prod esta en **1.0.282**. La rama de release sale de `main` con **solo los tres
+  ficheros** del fix, y volvi a correr la suite con las dependencias de produccion. Y ojo con
+  `git diff main...develop` (tres puntos): pintaba 2.266 lineas de diferencia por la base de fusion; el
+  delta real (`dos puntos`) eran 7 ficheros.
+
+  Detalle entero: `docs/journal/2026-10/2026-10-28-barrido-de-prs-mergeados.md`.
+
 - **28/10 17:00 UTC — ClickHouse de solo lectura: creado y verificado. Y la ingesta de prod no perdio nada
   con el reinicio: lo probe con el log de nginx, no con el contador.**
 
