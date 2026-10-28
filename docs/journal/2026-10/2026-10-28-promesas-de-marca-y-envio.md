@@ -56,9 +56,29 @@ tarifa.
 - La SDK pide `logo_url` con respaldo: un gateway sin el campo se consulta otra vez sin él, una vez por página.
   Así un SDK nuevo contra prod viejo no pierde las tarifas.
 
+## Prod (28/10, noche)
+
+- SDK **0.32.0 publicada en npm** por Angelo (lleva 0.30 y 0.31, que no se publicaron). Carrito por conexión en
+  [vio-web-sdk#110](https://github.com/vio-live/vio-web-sdk/pull/110), en `main`, sin publicar (irá en 0.33).
+- Migración en la base de prod con `m-promesas-envio-prod.js` (corregido a `/usr/src/app/.env`, que es el de prod).
+  Idempotencia comprobada. La base ya tenía 1792600000000 y 1792700000000.
+- Release a prod: ramas `release/promesas-y-envio-prod` desde la rama de prod con `cherry-pick -x` de los bumps
+  1.0.285 y 1.0.287 y del cambio. Los archivos del cambio quedan idénticos a develop y los `yarn.lock` sin restos de
+  1.0.282.
+  - campaigns [#30](https://github.com/vio-live/vio-campaigns-microservice/pull/30)
+  - products [#39](https://github.com/vio-live/vio-products-microservice/pull/39)
+  - api [#75](https://github.com/vio-live/vio-api-microservice/pull/75)
+  - graphql [#35](https://github.com/vio-live/graphql/pull/35)
+  - webapp [#86](https://github.com/vio-live/webapp-vio-commerce/pull/86)
+- Comprobado: deploys verdes, pods sanos, 0 `Unknown column` y Vercel verde. Por la API pública de prod, el gateway
+  acepta `logo_url` y la consulta sin `shipping_country` ya responde. Careless (1327) todavía no tiene promesas:
+  las pone desde el dashboard.
+- Hallazgo: la campaña por defecto de la surface de M&L en prod es «Careless Aller (test)» (id 1, channel 480), que
+  **termina el 29/10 a las 23:17 UTC**. La real es «Careless» (id 2, channel 482). En análisis.
+
 ## Blockers
 
-- **Prod:** nada desplegado. Orden obligatorio:
+- **Prod:** hecho (ver arriba). Orden obligatorio:
   1. migración en prod con
      [`m-promesas-envio-prod.js`](../../handoff/assets/2026-10-28-promesas-y-envio/m-promesas-envio-prod.js),
      que no carga promesas;
