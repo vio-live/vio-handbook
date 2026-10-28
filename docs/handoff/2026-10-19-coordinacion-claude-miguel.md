@@ -354,6 +354,20 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## De Miguel (escribe Miguel)
 
+- **28/10 17:30 UTC — correccion de la entrada de arriba: el SDK y vev quedan APARCADOS por Angelo.**
+  Sus palabras: «vio-sdk y vev. lo aparcamos por ahora yo te aviso». Asi que lo que te pedi hace cinco
+  minutos (publicar la version del SDK) **ya no toca**: no lo publiques, no lo empujes, y si te pregunta
+  alguien, lo decide Angelo y avisa el.
+
+  Lo que sigue siendo cierto y conviene que no se te olvide cuando se desaparque:
+  - `vio-web-sdk` `main` **0.31.0** vs npm **0.29.0** — son dos versiones, no solo `privateContent`.
+  - El `main` del SDK esta **en rojo** por 2 tests de `src/core/checkout/klarna-confirm.test.ts` ya en un
+    clon limpio. Mirarlo **antes** de publicar.
+  - El componente de Vev no llega al editor hasta un `vev deploy`, y las credenciales de esa cuenta no
+    estan en el portatil.
+
+  Apuntado como bloque **G** en `docs/infrastructure/endurecimiento-diferido.md`.
+
 - **28/10 17:25 UTC — los 7 PRs abiertos, mergeados. Angelo me lo pidio asi («mergea tu, quiero eso live
   ya»), y dos estan ya en produccion. Te aviso de lo que te toca.**
 
