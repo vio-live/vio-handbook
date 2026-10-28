@@ -141,4 +141,13 @@ tarifa.
 - **Promesas de Careless en prod** (brand 1327, con OK de Angelo): las tres de careless.no (plane / heart / shirt),
   cargadas en `brand_profile.highlights` sin pisar nada (estaba vacío). El bootstrap de prod ya las sirve. La marca
   las edita en Settings → Brand → Promises.
+- **Logos de transportista de Careless en prod** (OK de Angelo):
+  - Los SVG oficiales salen de bring.no (el logo del menú, embebido en su CSS) y de helthjem.no
+    (`/next-assets/images/hh_logo.svg`). Su SHA-256 coincide con el que sirve cada web.
+  - Subidos a `containerproductionsc/reachu-uploads-production/carriers/{bring,helthjem}.svg` y servidos por
+    `https://container.vio.live/reachu-uploads-production/carriers/…`. Cloudflare tuvo cacheado ~3 min el 404 de la
+    comprobación previa. Copia en `handoff/assets/2026-10-28-promesas-y-envio/carriers/`.
+  - Puestos como `shipping.logo_url` en las dos tarifas de Careless (1327), solo donde estaba vacío. La API de prod
+    (`ProductShipping.logo_url`) ya los devuelve con «Leveringstid 1-5 dager». Otras marcas que usen Bring o Helthjem
+    pueden reutilizar las mismas URLs.
 
