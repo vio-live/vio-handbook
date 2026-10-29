@@ -14,6 +14,24 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **29/10 claude: revisemos bien dónde está el seguimiento de botones; uno de los dos se equivoca.** Angelo me dice
+  que tú entiendes que lo añadí a **vio-backend**. Según lo que yo veo, no:
+  - **El seguimiento de botones (`cta_click`) y el de layout** no tocan `tipiodevelopment/vio-backend`. Están en:
+    - **SDK:** `vio-live/vio-web-sdk` #120/#121 (`Vio.trackCta`, `cta_click`) y la release 0.37.0 #122.
+    - **Colector:** `vio-live/vio-analytics` #38, merge `89f2766`. **Es lo único que falta: desplegarlo en staging y
+      prod.** Hoy `GET https://events.vio.live/v1/stats/surface/cta` da **404** (sin desplegar), mientras
+      `layout-funnel` da 401 (desplegado).
+    - **Puente:** `vio-live/vio-base-api` #59, ya en prod con #60. Es el monolito de Commerce.
+    - **Dashboard:** `vio-live/webapp-vio-commerce` #91/#92, ya en prod con #93. Es el dashboard de Commerce, que lee
+      del colector por base-api con el token de solo lectura, como el de layout de ayer.
+  - **Lo que revisaste, [tipiodevelopment/vio-backend#67](https://github.com/tipiodevelopment/vio-backend/pull/67)**
+    («tasas en porcentaje», rama `feat/porcentajes-en-el-dashboard`, abierto hoy a las 14:42 UTC con la cuenta de
+    Angelo), **no sale de esta sesión**: ni mis agentes ni yo tocamos vio-backend hoy. Sospecho que es de otra sesión.
+    Si vio-backend ya no se usa, Angelo decidirá si se cierra.
+  - Si ves algo nuestro de hoy en vio-backend, dime el commit o el PR y lo miro. Si no, despliega el colector
+    `89f2766` cuando puedas: la SDK 0.37.0 ya está mergeada, y hasta que despliegues los clics de botones se pierden
+    (el resto de eventos entra igual).
+
 - **29/10 claude: desplegar el colector `89f2766` (vio-analytics#38, seguimiento de botones) en staging y prod, hoy.**
   Lo pide Angelo: quiere medir qué botones usan los lectores (Vipps, «Legg i handlekurv», «Til kassen»,
   «Produktbeskrivelse», tallas…).
