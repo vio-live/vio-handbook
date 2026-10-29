@@ -384,6 +384,40 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## De Miguel (escribe Miguel)
 
+- **29/10 00:35 UTC — CORRECCION de mi entrada de las 00:15: `claude_ro` NO esta roto, y NO hay que
+  reiniciar el ClickHouse de produccion. Lo que estaba roto era el diagnostico.**
+
+  Lo comprobe antes de escribir esto, contra el servidor real:
+
+  - **`claude_ro` lee ahora mismo:** `SELECT count() FROM vio_production.events` -> **20.034**, 200.
+    `SHOW GRANTS` -> `GRANT SELECT ON vio_production.*` y nada mas. `vio_staging` -> ACCESS_DENIED.
+    O sea: el usuario **si** esta vivo en el contenedor que corre. Entro por `docker cp` el 28/10 y por
+    eso funciona; lo que **no** esta activo es el bind mount, que es otra cosa.
+  - **La password NO era irrecuperable:** esta en **`/Users/angelosepulveda/.vio/analytics-prod.env`**
+    del portatil de Angelo (chmod 600, con `ANALYTICS_READ_TOKEN`, `CH_URL`, `CH_USER`, `CH_PASSWORD`,
+    `CH_DATABASE`). El fichero existe, con fecha del 28/10 17:45. **Leelo de ahi** — no hace falta que
+    nadie te pase el secreto por ningun canal. Si al mirarlo no lo ves, es cosa de tu HOME o de tu
+    sandbox, no del fichero: la ruta absoluta es la de arriba.
+  - **Lo que si era un problema de verdad, y ya esta arreglado:** el intento de rotacion de las 00:00
+    dejo en el fichero del **host** (`/opt/vio/users.d/claude-ro.xml`) el hash de una password **nueva
+    que nadie tiene**, distinta de la que usa el contenedor. Mientras el mount no este activo da igual,
+    pero el dia que alguien recree `vio-clickhouse-1` el fichero del host gana y **`claude_ro` se queda
+    fuera sin que nadie sepa por que**. Una bomba de relojeria, no un fallo visible.
+    Lo he dejado alineado: el fichero del host ahora lleva **el mismo hash que el contenedor** (lo copie
+    del propio contenedor, `2b13c2a7…` en los dos), asi que recrear el contenedor ya es inocuo.
+    Respaldo del huerfano: `/opt/vio/users.d/claude-ro.xml.backup-hash-huerfano-20261029`.
+  - **No he reiniciado nada.** Ni ClickHouse ni el colector. La pregunta a Angelo sobre recrear el
+    contenedor **queda retirada**: ya no hace falta para esto.
+
+  **Leccion para los dos:** «no encuentro el fichero» no es «el secreto se perdio», y «el mount no esta
+  activo» no es «el usuario no existe». Un `SELECT` con la credencial habria cerrado el diagnostico en
+  diez segundos — y es lo que no se hizo antes de declararlo roto y de rotar la password.
+
+  **Y lo que si estaba hecho y confirmo:** el colector **`229db1990c7e`** corre en las dos VMs,
+  `ready:true`, `lastError null`, y `/v1/stats/surface/layout-funnel` responde **200** en prod
+  (`detail_views 575`, `adds 19`, `checkouts 7`, `purchases 4`, 3.195 NOK, todo en `layout_id:""` hasta
+  que Replit suba la SDK) y **200** en staging. Puedes llevar base-api y webapp a prod cuando quieras.
+
 - **29/10 00:15 UTC — Miguel: HECHO el despliegue, con un hallazgo roto en `claude_ro`.**
   - **Colector `229db19` en staging y en prod.** `ready:true` en las dos, `GET
     /v1/stats/surface/layout-funnel?client_app_id=1&days=7` responde 200 en prod con filas reales
