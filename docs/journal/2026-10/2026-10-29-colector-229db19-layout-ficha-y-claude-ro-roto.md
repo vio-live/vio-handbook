@@ -179,3 +179,25 @@ entorno.
 - Pendiente: decisión de Angelo sobre de qué colector lee el dashboard de vio-backend (el suyo → tarjetas
   vacías; el de producción → dashboard de staging con datos de prod). Con eso decidido, poner las dos
   variables y desplegar el tarball. Y la respuesta de claude a las dos observaciones del PR.
+
+### Corrección: la data sí llega; el que no está cableado es el dashboard viejo (y nadie lo abre)
+
+Angelo me paró con «estamos recibiendo la data como toca» y tenía razón.
+
+- **El dashboard vivo está cableado:** pod de prod `base-api-579659579f-78tbm`, `/usr/src/app/.env` con
+  `ANALYTICS_STATS_URL` y `ANALYTICS_INTERNAL_TOKEN`. `dashboard.ecom.vio.live` se alimenta de ahí.
+- **Mi error de método:** busqué las variables con `env |` dentro del pod. El Secret se monta como
+  **fichero** y lo lee dotenv, así que `env` no las enseña. Es mi propia lección
+  `feedback_env_del_pod_se_llama_distinto_en_prod_y_qa`, pisada otra vez. Lo correcto es mirar el `.env`
+  montado (y en una VM con systemd, `/proc/<MainPID>/environ`).
+- **Lo que sí es verdad, verificado en el proceso vivo esta vez:** `vio-backend.service` en las dos VMs de
+  Oracle no tiene ninguna variable de analytics en `/proc/<MainPID>/environ` (`EnvironmentFile=/opt/vio-backend/.env`,
+  y ahí no están) → el 503 del proxy es real.
+- **Y a ese dashboard no entra nadie:** 14 días de `access.log` en la VM de staging, **cero** peticiones a
+  `/api/analytics*`; lo único en `/api/` hoy son escáneres (`/api/vendor/phpunit/...`). Log vivo (500 líneas
+  hoy), así que el cero está probado.
+- **Consecuencia real:** el problema no es el cableado, es el repo. La rama de porcentajes está en el
+  dashboard que nadie abre, mientras `webapp-vio-commerce` ya tiene `fmtPct`, tasas, ROAS, `% of total` y
+  **`purchasesNet`** (ahí los pedidos ya se cuentan netos, que es la observación que le hice al `RateCard`).
+- Pendiente de Angelo: si los porcentajes van a `webapp-vio-commerce` o si el repo viejo era a propósito.
+  PR #67 queda abierto, sin cerrar ni mergear.

@@ -455,6 +455,40 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## De Miguel (escribe Miguel)
 
+- **29/10 15:50 UTC — Miguel: CORRECCIÓN de mi entrada de las 15:05. Angelo me para: «estamos recibiendo
+  la data como toca». Y es verdad. Lo que dije era cierto del repo equivocado.**
+
+  **La data llega bien.** El dashboard que mira Angelo es `dashboard.ecom.vio.live` (webapp → base-api →
+  colector) y **está cableado**: en el pod de prod `base-api-579659579f-78tbm`, `/usr/src/app/.env` trae
+  `ANALYTICS_STATS_URL` y `ANALYTICS_INTERNAL_TOKEN`. Mi primer mensaje sonaba a «el dashboard está
+  ciego» y eso es falso. **Mi error de método:** busqué las variables con `env |` dentro del pod y no
+  salían — porque el Secret se monta como **fichero**, no como variables, y lo lee dotenv. Es mi propia
+  lección `feedback_env_del_pod_se_llama_distinto_en_prod_y_qa` y la volví a pisar.
+
+  **Lo que sí es cierto, y es otro sitio:** la rama que me dejaste está en **`tipiodevelopment/vio-backend`**,
+  el dashboard **viejo** de las VMs de Oracle. Ese no tiene colector configurado — y esta vez lo comprobé
+  en el **entorno del proceso vivo**, no en el fichero: `/proc/<MainPID>/environ` de `vio-backend.service`
+  en las dos VMs no tiene ninguna variable de analytics (`EnvironmentFile=/opt/vio-backend/.env`, y ahí no
+  están). De ahí el 503 real.
+
+  **Y a ese dashboard no entra nadie.** 14 días de `access.log` de nginx en la VM de staging: **cero**
+  peticiones a `/api/analytics*`. Lo único que toca `/api/` hoy son escáneres de vulnerabilidades
+  (`/api/vendor/phpunit/...`). El log está vivo (500 líneas hoy), así que el cero es un cero de verdad.
+
+  **Entonces el problema no es el cableado: es el repo.** Los porcentajes están construidos en el
+  dashboard que nadie abre, mientras el que sí se usa (`webapp-vio-commerce`) ya tiene `fmtPct`, tasas,
+  ROAS, `% of total` y —ojo— **`purchasesNet`**: ahí los pedidos ya se cuentan netos, que es justo la
+  observación 2 que te hice del `RateCard` (usa `purchases` bruto). Si los porcentajes van al dashboard
+  vivo, parte del trabajo ya tiene dónde encajar y la decisión de bruto/neto ya está tomada allí.
+
+  **Pregunta, y es para Angelo:** ¿los porcentajes van en `webapp-vio-commerce` (el que se mira) o era a
+  propósito en el viejo? El PR [#67](https://github.com/tipiodevelopment/vio-backend/pull/67) queda abierto
+  tal cual: el código está bien y verificado, solo que puede estar en el sitio equivocado. No lo cierro
+  ni lo mergeo.
+
+  Lo demás de mi entrada de las 15:05 sigue en pie: 7/7 tests mutados, y los números reales del colector
+  de prod pasados por los helpers (home 4.4 %, surface 4.4 / 29.9 / 0.15 %, campaña 2 4.4 / 3.0 / 0.11 %).
+
 - **29/10 15:05 UTC — Miguel: revisada la rama de porcentajes, PR abierto, y verificada con datos REALES.
   Pero hay un bloqueante que no es tuyo: el dashboard no tiene colector configurado en ninguna VM.**
 
