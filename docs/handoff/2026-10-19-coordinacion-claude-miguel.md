@@ -14,6 +14,43 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **29/10 00:15 UTC — claude: rama lista para que la cojas: `feat/porcentajes-en-el-dashboard` (vio-backend).**
+  Menos urgente que lo del colector de la entrada de abajo — eso primero.
+
+  **Qué es.** Porcentajes como número principal en los tres sitios donde se mira rápido, que es lo
+  que pidió Angelo: home (4º recuadro), surface (fila nueva encima de los absolutos) y campaña
+  (lo primero de la vista). Commit `add09f3`, 6 ficheros.
+
+  **El PR no está abierto**: mi entorno me bloqueó `gh pr create`. La rama está subida, así que lo
+  abre Angelo o lo abres tú desde el enlace que imprime GitHub. El cuerpo del PR que había escrito
+  está en el commit, que va explicado.
+
+  **Lo que te puede sorprender al revisar:**
+  - El 4º recuadro del home («Engagement Rate») tenía `formattedValue="--"` escrito a mano: nunca
+    tuvo fuente de datos. Lo he reemplazado por el click rate real. **Si eso lo iba a llenar
+    alguien, dilo y lo devuelvo y añado un quinto recuadro en vez de reemplazarlo.**
+  - `/v1/stats/campaigns/:id/funnel` ya estaba en el colector y proxied en `analytics-proxy.ts`, y
+    no lo llamaba nadie. Ahora se usa. Para enlazarlo, `/api/analytics/campaigns/:id` devuelve
+    también `clientAppId` (una línea en `server/analytics.ts`).
+  - Las tasas por debajo del 1 % llevan dos decimales a propósito: con uno, una compra real salía
+    como `0.0% of sessions`. Lo pilló el test antes de llegar a pantalla.
+  - Las tasas con menos de 30 eventos de base salen atenuadas y con la fracción cruda al lado
+    (`16.7%` con `1 / 6 checkouts` debajo). Es deliberado: hoy Careless lleva 6 pagos empezados.
+
+  **Verificado:** `npm run build` en verde, `npm run check` con los mismos 24 errores preexistentes
+  de `server/` (ninguno en estos ficheros), y 7 tests nuevos en `__tests__/rates.test.ts`.
+
+  **NO verificado, y es lo que te pido:** no lo he visto con datos reales. Las DB de Azure no se
+  alcanzan desde mi laptop y el colector no tiene datos en local, así que estas secciones se
+  renderizan vacías aquí (devuelven `null` si el colector no contesta, comportamiento aditivo de
+  siempre). **Hace falta mirarlo en staging con la surface 1 (Mote & Livsstil)**, que es la única
+  con tráfico de verdad. Si al desplegar los recuadros salen vacíos o con `--` donde debería haber
+  número, avísame y lo miro.
+
+  **Queda fuera a propósito:** el porcentaje sobre usuarios únicos. El bundle solo devuelve
+  `sessions`; el conteo de navegadores existe en el colector pero no se expone. Eso es trabajo en
+  `vio-analytics` y va en otra rama.
+
 - **29/10 00:05 UTC — claude: URGENTE, lo pide Angelo («dáselo a Miguel ya»). Dos cosas:**
   1. **Desplegar el colector `229db19` (vio-analytics#37) en staging y luego en prod, hoy.**
      - Detalles en la entrada de abajo (`fd41315`) y en `docs/DESPLIEGUE.md` del repo.
