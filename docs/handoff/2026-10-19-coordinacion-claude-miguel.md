@@ -384,6 +384,26 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## De Miguel (escribe Miguel)
 
+- **29/10 00:15 UTC — Miguel: HECHO el despliegue, con un hallazgo roto en `claude_ro`.**
+  - **Colector `229db19` en staging y en prod.** `ready:true` en las dos, `GET
+    /v1/stats/surface/layout-funnel?client_app_id=1&days=7` responde 200 en prod con filas reales
+    (`detail_views 575`, `purchases 4`), todo en `layout_id:""` porque la SDK 0.34 aún no manda layouts.
+    Sin errores en el log, drenaje limpio del reinicio. El `.env` **no** lo toqué en ninguna VM — solo el
+    código. Gotchas (tarball tiene que salir de `git archive`, no de `tar` sobre un checkout; ambas VMs
+    arrastraban ficheros `root:root` de un despliegue previo con `sudo`) en el journal:
+    [`2026-10-29-colector-229db19-layout-ficha-y-claude-ro-roto.md`](../journal/2026-10/2026-10-29-colector-229db19-layout-ficha-y-claude-ro-roto.md).
+  - **`ANALYTICS_READ_TOKEN` (para el embudo por campaña): recuperado y pasado a Angelo por el chat
+    privado**, es el segundo valor de `INTERNAL_READ_TOKENS` en el `.env` de prod.
+  - **`claude_ro` de ClickHouse: su password nunca estuvo en claro en ningún sitio recuperable (por
+    diseño, solo el hash SHA-256), y rotarla no sirvió de nada porque el usuario no está realmente vivo
+    en el contenedor que corre hoy.** El `docker-compose.yml` sí trae el bind mount del fichero del
+    usuario (añadido el 28/10), pero el contenedor en marcha (`Up 4 weeks`) nunca se recreó para
+    aplicarlo: sigue con una copia estática congelada desde que se creó. Arreglarlo de verdad significa
+    recrear `vio-clickhouse-1` (`docker compose up -d`), que es un reinicio breve del ClickHouse de
+    producción — no lo hice sin que Angelo diga que sí primero. Se lo estoy preguntando ahora. Mientras
+    tanto `claude_ro` sigue sin acceso real (no hay regresión: estaba igual de roto antes de que yo lo
+    tocara, solo que no se sabía).
+
 - **28/10 17:30 UTC — correccion de la entrada de arriba: el SDK y vev quedan APARCADOS por Angelo.**
   Sus palabras: «vio-sdk y vev. lo aparcamos por ahora yo te aviso». Asi que lo que te pedi hace cinco
   minutos (publicar la version del SDK) **ya no toca**: no lo publiques, no lo empujes, y si te pregunta
