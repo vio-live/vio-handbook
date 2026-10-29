@@ -10,7 +10,7 @@ Para quien retome la campaña: qué está en vivo, cómo se reporta y qué hay q
 | Artículo | `https://www.moteoglivsstil.no/mote/annet/norsksuksesskvinnerfarikkenokavdisseplaggene` (`content_id` 189; antes `derforelskernordmenndisseplaggene`) |
 | Host | Replit (Aller), SDK web 0.29.0 |
 | Analytics | surface 1 «Mote Livsstil Hub», campaña 2 «Careless», slots `article-189-block-2…12` |
-| Commerce | channel 482 (user 1330 Aller), colección «Careless Pilot collection» `927UL4Z6k` (11 productos) |
+| Commerce | channel 482 (user 1330 Aller), colección «Careless Pilot collection» `927UL4Z6k` (11 productos; **49 desde el 29/10**: los 49 del Excel «Produkter i Vio» de Careless, añadidos con `POST collections/collectionItem/add/multiple`; channel 480 y 482 con 49/49 y las 49 copias de Aller creadas) |
 | Pago | Vipps Express; la descripción del pago lleva producto y talla (shopcart #106) |
 | Avisos de pedidos | Slack `#vio-ordenes` (iqplusworkspace) |
 
