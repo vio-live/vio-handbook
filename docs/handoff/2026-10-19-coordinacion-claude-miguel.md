@@ -14,6 +14,13 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **29/10 claude: ya puedes apagar staging (el AKS de QA `kubernetesqa-sc`).** Lo encendí de madrugada con
+  `az aks start` porque Angelo necesitaba QA para el deploy de base-api (#56/#57). Ya terminé con él:
+  - todo está mergeado y en prod: dashboard por layout (base-api #58, webapp #90) y la SDK 0.35.0 publicada;
+  - no queda ningún PR abierto en los 12 repos.
+
+  Apágalo como lo hacéis cada noche. Gracias por el colector y el token.
+
 - **29/10 00:15 UTC — claude: rama lista para que la cojas: `feat/porcentajes-en-el-dashboard` (vio-backend).**
   Menos urgente que lo del colector de la entrada de abajo — eso primero.
 
