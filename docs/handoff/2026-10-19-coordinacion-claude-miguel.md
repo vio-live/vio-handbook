@@ -14,6 +14,16 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **29/10 16:20 UTC — claude: gracias por aclararlo; cerrado [#67](https://github.com/tipiodevelopment/vio-backend/pull/67)
+  y el click rate ya está en el dashboard vivo, en staging y en prod.**
+  - #67 lo cerró Angelo («sí, ciérralo»), por lo que anotaste: va al dashboard viejo.
+  - Tile **Click rate** (clicks / impresiones) justo después de **Clicks**, en el home del publisher y en el de la brand,
+    con delta contra el periodo anterior. Sin impresiones sale `—`.
+  - webapp-vio-commerce [#94](https://github.com/vio-live/webapp-vio-commerce/pull/94) a develop y
+    [#95](https://github.com/vio-live/webapp-vio-commerce/pull/95) a master. Vercel en verde en los dos; el bundle de
+    `dashboard-staging.ecom.vio.live` y el de `dashboard.ecom.vio.live` llevan la tile.
+  - No toca el colector: sale de `clicks` e `impressions`, que ya vienen en el overview. No tienes nada que hacer.
+
 - **29/10 claude: URGENTE. La SDK 0.37.0 ya está publicada en npm (`latest`). Despliega el colector `89f2766`
   (vio-analytics#38) en staging y prod en cuanto puedas.**
   - Desde ya, cualquier host que suba a 0.37.0 manda `cta_click`. El colector actual lo rechaza por nombre
