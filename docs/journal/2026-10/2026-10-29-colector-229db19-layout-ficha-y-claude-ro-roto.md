@@ -57,3 +57,50 @@ El handoff pedía pasarle a Angelo el `ANALYTICS_READ_TOKEN` y las credenciales 
 
 Nada escrito en prod se tocó aparte del colector. `claude_ro` queda exactamente como estaba (sin acceso real,
 password desconocida); no hay regresión, solo un hallazgo sin cerrar.
+
+---
+
+## CORRECCIÓN 00:35 UTC — `claude_ro` no estaba roto; el diagnóstico sí
+
+Lo de arriba («el usuario no está realmente vivo en el contenedor», «la contraseña nunca se guardó en
+ningún sitio recuperable», «hay que recrear `vio-clickhouse-1`») **es falso**. Comprobado contra el
+servidor antes de escribir esto:
+
+- `claude_ro` **lee ahora mismo**: `SELECT count() FROM vio_production.events` → **20.034**, 200.
+  `SHOW GRANTS` → `GRANT SELECT ON vio_production.*`. `vio_staging` → ACCESS_DENIED.
+- **La password estaba guardada** en `/Users/angelosepulveda/.vio/analytics-prod.env` (chmod 600, mtime
+  28/10 17:45), con `ANALYTICS_READ_TOKEN` y las cuatro `CH_*`. El fichero existe. «No lo encuentro» no
+  es «se perdió».
+
+**Dónde se torció el razonamiento.** Dos hechos ciertos, mal combinados:
+
+1. El bind mount del compose **no está activo** en el contenedor en marcha (`docker inspect` solo lista
+   `/data/clickhouse`). Cierto.
+2. Por eso, editar el fichero del host **no cambia nada** dentro. Cierto.
+
+De ahí se concluyó que el usuario no existía. Pero el usuario entró el 28/10 por **`docker cp`**, no por
+el mount: su fichero vive dentro del contenedor y ClickHouse recarga `users.d` en caliente. Las dos cosas
+son compatibles — *el mount no está activo* **y** *el usuario funciona*. Un `SELECT` con la credencial
+habría cerrado el diagnóstico en diez segundos; se declaró roto sin ejecutarlo.
+
+### El daño real del intento de rotación, y el arreglo
+
+La rotación de las 00:00 escribió en `/opt/vio/users.d/claude-ro.xml` (host) el hash de una **password
+nueva que nadie tiene**, distinta de la del contenedor (`7412a008…` en el host contra `2b13c2a7…` dentro).
+Con el mount inactivo no se nota, pero **el día que alguien recree el contenedor el fichero del host gana
+y `claude_ro` se queda fuera sin motivo aparente**: una bomba de relojería, no un fallo visible.
+
+Arreglado sin reiniciar nada: copié el fichero **del contenedor al host**, así que los dos llevan el mismo
+hash (`2b13c2a7…`) y recrear `vio-clickhouse-1` ya es inocuo. Verificado después del cambio: `claude_ro`
+sigue leyendo (20.034). Respaldo del huérfano en
+`/opt/vio/users.d/claude-ro.xml.backup-hash-huerfano-20261029`.
+
+**La pregunta a Angelo sobre reiniciar el ClickHouse de producción queda retirada: no hace falta.**
+
+### Lo que sí estaba bien y confirmo
+
+Colector **`229db1990c7e`** en las dos VMs, `ready:true`, `lastError null`.
+`GET /v1/stats/surface/layout-funnel?client_app_id=1&days=7` → **200** en prod (`detail_views 575`,
+`adds 19`, `checkouts 7`, `purchases 4`, 3.195 NOK, todo en `layout_id:""` hasta que Replit suba la SDK) y
+**200** en staging. Los dos gotchas del despliegue (el tarball de `git archive` y los árboles `root:root`)
+siguen siendo válidos y útiles.
