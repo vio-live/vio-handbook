@@ -63,3 +63,22 @@ status: live
   - la espera del número de orden en `purchase` (`getOrderReference`);
   - un aviso de «Betaler hele handlekurven» en el Vipps Express de la tarjeta de Vev, que es decisión de producto;
   - las opciones nuevas de la ficha en Vio Config.
+
+## Tarde: faves.no y el resto de QK (prod)
+
+- **faves.no (1301), con el OK de Angelo («esto deberíamos arreglarlo»):**
+  - `brand_name` cambió de `nudebeauty@vio.prod` a **Faves** (el `og:site_name` de la tienda). Lo cambié en la base,
+    con guarda de valor viejo, y borré la caché `USERS/ME:USER-1301`. La ruta de users-ms exige el token de
+    Firebase del propio usuario o de un admin.
+  - Backfill de categorías: 63 productos, 223 enlaces, 23 categorías bajo la raíz «Faves» (6296), sin duplicados.
+  - Comisión y publicación no se tocaron: siguen en 0 y en borrador, a la espera de Angelo, porque la web aún no
+    está lanzada.
+- **QK:** hoy a las 07:00 UTC alguien importó los **73 productos que faltaban** (422077–422149).
+  - **68 entraron ya con categorías**: es el import de Woo de #36 funcionando en prod.
+  - Están los 4 del top 20 que faltaban. El pack de 10 (196622) no se importó.
+  - 5 entraron sin categoría (422107–422111: 3 simples y 2 bundles, todos con categorías en Woo). Los completó el
+    backfill (77 enlaces). **Causa sin aclarar:** los logs de prod no muestran el debug del consumidor. Sospecha: un
+    reintento donde `save` no devuelve `id` y el gancho no corre (`newProduct?.id`). Hay que mirarlo en QA.
+  - Los 73 nuevos siguen con comisión 0 y en borrador.
+- **422005:** la comparación con Woo confirma que es el único de los 45 con datos distintos. El pedido le llega a
+  Woo con `product_id` = `originId` (630) y el nombre y el precio de Vio.
