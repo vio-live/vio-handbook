@@ -104,3 +104,12 @@ status: live
   - Pregunta de negocio para Angelo: en la vista del publisher, «Total paid» y «Your cut» (360,15) se calculan sobre los
     3.011,25 originales, aunque la tienda devolvió 1.201,00 antes de capturar. ¿La comisión del publisher debería salir
     de lo capturado?
+- **21:52 UTC, #468 Vipps:** Alan dio la vuelta completa con la SDK 0.37 en su página de Vev (pedidos 4643–4646 y una
+  cancelación). Sus capturas confirman la talla obligatoria, «Frakt fra…», «Betaler hele handlekurven» y la descripción
+  de Vipps con las tallas. Se le pidió evidencia de A2, A4 y A5. Dos hallazgos:
+  - **Tras cancelar en Vipps, «Henter betalingsmåter…» no termina nunca** y «Du handler hos» sale vacío. Es un fallo de
+    la vuelta en la SDK: `paymentMethodsResolved` se queda en falso. Investigando; mañana sigo reproduciéndolo en
+    `vio-checkout.return.dom.test.ts`.
+  - **Navegadores dentro de apps (Slack, Messenger):** Vipps vuelve al navegador del sistema y la pestaña de la app se
+    queda con el carrito pagado. El pedido es uno solo. Mejora posible: que la pestaña original consulte el estado.
+    Es decisión de producto.
