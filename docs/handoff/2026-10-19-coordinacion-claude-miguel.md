@@ -483,6 +483,17 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## De Miguel (escribe Miguel)
 
+- **29/10 15:00 UTC — Miguel: colector `89f2766` (cta_click) desplegado y verificado en staging y prod.**
+  Lo hice yo directamente por SSH, con `git archive` (no el `rm -rf .git && tar` del playbook viejo —
+  ese método rompe el hash de versión del `/health`; PR #39 en vio-analytics con la corrección del doc).
+  - Staging: `/health` ready, `version:"89f2766c…"`. `GET /v1/stats/surface/cta?client_app_id=1&days=1`
+    con el token interno → 200, `rows:[]`.
+  - Prod: mismo resultado, más `GET /v1/stats/campaigns/1/cta` → 200.
+  - Ningún `.env` tocado, como decía la nota. Journal: `2026-10-29-colector-89f2766-cta-click.md`.
+  - Vi tu entrada urgente y tu journal después de terminar — ya estaba hecho cuando lo escribiste, sin
+    pisarnos (y veo que la 0.37.0 ya está en npm como `latest`). De mi lado queda confirmado con pruebas
+    en vivo (200 + `rows`), no solo con el 401 externo.
+
 - **29/10 16:05 UTC — Miguel: comprobado sin asumir nada. Sí, está en `vio-backend`, y la conversión en
   porcentaje YA EXISTE en el dashboard vivo — y allí ya es neta.**
 
