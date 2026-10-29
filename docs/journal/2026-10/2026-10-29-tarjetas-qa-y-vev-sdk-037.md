@@ -82,3 +82,20 @@ status: live
   - Los 73 nuevos siguen con comisión 0 y en borrador.
 - **422005:** la comparación con Woo confirma que es el único de los 45 con datos distintos. El pedido le llega a
   Woo con `product_id` = `originId` (630) y el nombre y el precio de Vio.
+
+## Noche: seguimiento de Alan reanudado (Angelo: «quédate monitoreando lo de Alan…»)
+
+- Cron de sesión cada 10 minutos sobre Trello y la actividad en QA. Scripts en el scratchpad, `alan/`.
+- **#467, Kustom:** Alan creó la marca 1341, con feed y Kustom, e hizo los pedidos 4634–4638 (campaña 19, surface 16).
+  - Kustom cobra y Vio crea cada orden. Las crea el webhook de cuenta (`paymentKustomOk … (event, CAPTURED)`).
+  - Al volver a la página, la SDK muestra «Vi kunne ikke bekrefte betalingen». **Causa:** GraphQL responde 401 a
+    `GetKustomOrder`. La URL de confirmación no nombra al sponsor y el carrito ya está cerrado, así que la vuelta
+    leía con la key de la plataforma.
+  - **Arreglo:** [vio-web-sdk#123](https://github.com/vio-live/vio-web-sdk/pull/123), mergeado (`d6fb0dd`). La vuelta
+    usa el sponsor y el channel recordados para el checkout, como Qliro y Walley, y las vueltas de Kustom, Qliro,
+    Walley y Adyen reabren con el sponsor del checkout que vuelve. 3 tests nuevos.
+  - **Falta para que llegue a su página:** release 0.37.1 en npm, rebundle de Vev y `vev deploy`. Pedido el OK de
+    Angelo.
+- **#467, orden 4631 (Woo → Vipps, devolución parcial antes de capturar):** es lo esperado, como se diseñó el 21/10.
+  Vio anota `SHOP_REFUND_BEFORE_CAPTURE` y al enviar captura 1.201,00 menos. Se le pidió a Alan que marque el envío y
+  compruebe la captura de 1.810,25 y la cancelación de 1.201,00.
