@@ -183,3 +183,26 @@ tarifa.
   los reportes por campaña.
 - **`claude_ro`** necesita recrear `vio-clickhouse-1` en prod: lo decide Angelo, a pregunta de Miguel.
 
+## 29/10: feedback de Aller, revisión de los bloques de Replit y SDK 0.36.0
+
+- **Feedback de Aller:** «Produktbeskrivelse» cerrada bajo el precio, la talla en la tarjeta y un botón de checkout
+  de la tarjeta que no se entendía.
+  - Se resuelve con el orden de secciones y `description-mode: folded`, más la opción nueva `descriptionLabel`
+    ([vio-web-sdk#117](https://github.com/vio-live/vio-web-sdk/pull/117)).
+- **Promesas de la marca también en el carrito**
+  ([#117](https://github.com/vio-live/vio-web-sdk/pull/117), módulo compartido `src/ui/highlights.ts`).
+- **Envío en el carrito** ([#118](https://github.com/vio-live/vio-web-sdk/pull/118)): «fra» mientras no haya tarifa
+  elegida entre varias, y el aviso «Frakt velger du i Vipps eller i neste steg.».
+- **SDK 0.36.0 publicada** ([#119](https://github.com/vio-live/vio-web-sdk/pull/119)). Un primer `npm publish` dio
+  404 por la sesión de npm; con `npm login` salió.
+- **Revisión de la copia de Replit** (`mote-livsstil-hub-vio.replit.app`, conectada a **prod**, visitada con
+  `?vio_internal=1` y sin carrito):
+  - Ya usan la SDK nueva, con el desplegable en la tarjeta y las tallas en la tarjeta.
+  - Las tallas de la tarjeta salen desordenadas (orden de variantes en vez de `product.options`).
+  - La descripción de la tarjeta se abre entera, sin saltos de línea.
+- **Seguimiento de botones (`cta_click`, `Vio.trackCta`):** SDK, colector y dashboard en curso, para la 0.37.0.
+  Contrato: `cta`, `cta_location` (detail · cart · card · checkout · block · host), `cta_label`, `cta_variant` y
+  `option_value`.
+- **Texto para Replit:** entregado a Angelo en el chat, con la configuración de la ficha, las correcciones de los
+  bloques y dónde va cada `trackBlockCta`, protegido hasta la 0.37.
+
