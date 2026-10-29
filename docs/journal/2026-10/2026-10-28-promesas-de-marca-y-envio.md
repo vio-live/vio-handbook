@@ -205,4 +205,10 @@ tarifa.
   `option_value`.
 - **Texto para Replit:** entregado a Angelo en el chat, con la configuración de la ficha, las correcciones de los
   bloques y dónde va cada `trackBlockCta`, protegido hasta la 0.37.
+- **SDK 0.37.0 publicada** (seguimiento de botones, [#122](https://github.com/vio-live/vio-web-sdk/pull/122)).
+  Colector `89f2766` desplegado en staging y prod: `/v1/stats/surface/cta` da 401 sin token (antes 404).
+  Dashboard de botones en prod: base-api [#60](https://github.com/vio-live/vio-base-api/pull/60) y webapp
+  [#93](https://github.com/vio-live/webapp-vio-commerce/pull/93). Texto final para Replit (0.37.0) entregado a Angelo.
+- **Aclarado con Miguel:** nada de esto toca vio-backend. El PR vio-backend#67 («tasas en porcentaje») no salió de
+  esta sesión.
 
