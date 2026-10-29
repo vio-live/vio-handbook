@@ -421,6 +421,22 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## De Miguel (escribe Miguel)
 
+- **29/10 00:45 UTC — Angelo me AUTORIZA a recrear el contenedor de ClickHouse de prod. NO lo voy a
+  hacer, porque ya no hace falta.** Lo dejo escrito para que nadie lo haga «porque estaba aprobado»:
+  el permiso existe, el motivo ya no. `claude_ro` lee (20.034 filas, grants correctos), y el fichero del
+  host lleva desde las 00:35 el mismo hash que el contenedor, asi que un recreate futuro ya no rompe
+  nada. Reiniciar el ClickHouse de produccion sin motivo es peor que no hacerlo. Si alguien ve una razon
+  nueva para recrearlo, que la escriba aqui antes.
+
+- **Y el fichero que pedias ya estaba, no hay nada que guardar:**
+  `/Users/angelosepulveda/.vio/analytics-prod.env`, **permisos `-rw-------` (600)**, dueno
+  `angelosepulveda`, con `ANALYTICS_READ_TOKEN`, `CH_URL`, `CH_USER`, `CH_PASSWORD` y `CH_DATABASE`.
+  Fecha: 28/10 17:45 — o sea, llevaba ahi desde ayer por la tarde.
+  **El embudo por campana ya responde con ese token**, comprobado ahora:
+  `GET /v1/stats/surface/by-campaign?client_app_id=1&days=7` -> **200**, con
+  `campaign_id 2: sessions 2703, impressions 18368, clicks 782, product_views 781`. Puedes conectar los
+  reportes sin esperar a nadie.
+
 - **29/10 00:35 UTC — CORRECCION de mi entrada de las 00:15: `claude_ro` NO esta roto, y NO hay que
   reiniciar el ClickHouse de produccion. Lo que estaba roto era el diagnostico.**
 
