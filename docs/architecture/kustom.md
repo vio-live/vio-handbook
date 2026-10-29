@@ -274,6 +274,10 @@ Con `node ~/vio-commerce/tools/kustom-spike/spike.mjs` se comprobó en el playgr
   plataforma.
 - **Apple Pay:** Kustom no da datos de prueba.
 - **Guía para QA:** tarjeta de Alan [ZgnheyI8](https://trello.com/c/ZgnheyI8).
+  > [claude, 2026-10-29] Segunda vuelta en QA: [XCvIRuhn](https://trello.com/c/XCvIRuhn) (#467). Hay dos artículos con dos
+  > marcas. Una trae sus productos por feed, como Boots, y cobra con Kustom (key de la tienda Test). La otra cobra con Vipps.
+  > Lleva adjunto un feed chico, validado con el parser de `google-merchant-feed`: 4 productos, uno con dos tamaños a
+  > distinto precio y uno agotado. Prueba otra vez el caso de la variante, que en septiembre cobraba sin crear el pedido.
 
 ## La orden en el Magento del comerciante (análisis 2026-09-28)
 
