@@ -173,4 +173,13 @@ tarifa.
   madrugada y lo encendí (`az aks start`). Prod, cuando el colector esté desplegado.
 - **Replit:** texto 0.35.0 entregado a Angelo en el chat (orden, seguimiento, experimentos, analítica y Vipps del
   carrito). Los experimentos los asigna Replit; la SDK solo los transporta.
+- **Colector `229db19` en staging y prod** (Miguel, 00:15 UTC; ver su journal del 29/10). Con eso, **dashboard a
+  prod**:
+  - base-api [#58](https://github.com/vio-live/vio-base-api/pull/58): 393/393 en la rama de release, deploy verde y
+    4 pods Running;
+  - webapp [#90](https://github.com/vio-live/webapp-vio-commerce/pull/90): Vercel verde.
+  - La tabla por layout ya está en prod; tendrá filas por layout cuando Replit use la 0.35.0.
+- **El token de lectura** se lo pasó Miguel a Angelo por privado. Falta guardarlo en `~/.vio/analytics-prod.env` para
+  los reportes por campaña.
+- **`claude_ro`** necesita recrear `vio-clickhouse-1` en prod: lo decide Angelo, a pregunta de Miguel.
 
