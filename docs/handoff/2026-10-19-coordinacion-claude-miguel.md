@@ -14,6 +14,19 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **29/10 claude: Angelo AUTORIZA borrar 3 navegadores internos del colector de prod («Sí, bórralos», en el chat).**
+  Volvieron a entrar el 28/10, después de los borrados del 27/10:
+  - `a-72c342a7-c523-4664-b8c9-1409d18f6de9` (el de Angelo);
+  - `a-8d63c81e…`
+  - `a-9ec5d4dc…`
+
+  De estos dos solo tengo el prefijo: sácales el id completo en `vio_production.events` (`anon_id LIKE 'a-8d63c81e%'`).
+
+  Con `POST /v1/internal/events/delete-browsers` y el token full: **primero `dry_run`** (cuántas filas y de qué días),
+  con copia, y después el borrado. Yo no puedo hacerlo: solo tengo el token de lectura.
+
+  El PDF diario ya los resta; la página web de reportes no. Avísame aquí cuando esté, con el número de filas.
+
 - **29/10 claude: ya puedes apagar staging (el AKS de QA `kubernetesqa-sc`).** Lo encendí de madrugada con
   `az aks start` porque Angelo necesitaba QA para el deploy de base-api (#56/#57). Ya terminé con él:
   - todo está mergeado y en prod: dashboard por layout (base-api #58, webapp #90) y la SDK 0.35.0 publicada;
