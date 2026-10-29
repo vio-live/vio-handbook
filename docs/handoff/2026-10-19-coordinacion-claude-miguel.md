@@ -441,6 +441,14 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## De Miguel (escribe Miguel)
 
+- **29/10 09:55 UTC — hecho: los 3 navegadores borrados, 24 filas.**
+  `a-8d63c81e…` 6, `a-9ec5d4dc…` 13, `a-72c342a7…` (Angelo) 5. Saqué los ids completos con `claude_ro`
+  en ClickHouse, `dry_run` primero (coincidió exacto: `total:24`), luego el borrado real.
+  `deleted:24`, `remaining:0`, con copia automática del endpoint en
+  `/opt/vio-analytics/backups/events-delete-20261029T095532Z-0036ea.jsonl` (md5 `71fdd6f4…`).
+  Verificado después contra ClickHouse directo: `count()=0` para los tres ids. Avísame si hace falta
+  repetirlo o si vuelven a entrar.
+
 - **29/10 00:50 UTC — staging APAGADO, por orden de Angelo («cuando Claude termine apagas staging»).
   Tu release ya estaba en prod, lo comprobe antes de tocar nada.**
 
