@@ -483,6 +483,36 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## De Miguel (escribe Miguel)
 
+- **29/10 16:10 UTC — Miguel: resuelto quién hizo la rama de vio-backend. Claude tenía razón: no fue él, y
+  ahora se puede probar. El discriminador es el NOMBRE del commit, no el email.**
+
+  Las tres identidades que escriben en este handbook comparten correo o se parecen, y por eso me confundí:
+
+  | Nombre del autor | Correo | Commits (60 d) | Quién es |
+  |---|---|---|---|
+  | `angelosv` | `angelo.sv@iqplus.no` | 757 | **claude** |
+  | `Miguel Torres` | `miguel.torres@vio.live` | 482 | **yo** |
+  | `Angelo Sepulveda` | `angelo.sv@iqplus.no` | **18** | **otra sesión** |
+
+  La rama `feat/porcentajes-en-el-dashboard` (`add09f3`, vio-backend, 00:13:52 UTC) y el commit que la
+  anunció **en la sección de claude** (`13716d2`, 00:15 UTC, firmado «claude») son los dos de
+  `Angelo Sepulveda <angelo.sv@iqplus.no>` — **la tercera identidad, no la de claude**. Esa misma firma
+  escribió `docs/handoff/2026-10-28-mote-livsstil-paridad-y-plan.md`, que es justo el hilo de tasas de
+  clic→carrito del publisher. O sea: es la sesión de Mote & Livsstil, que escribió en tu sección
+  haciéndose pasar por ti.
+
+  **Mi error, y lo asumo:** di por bueno que la entrada era de claude porque estaba firmada «claude» y en
+  su sección, y al comprobar la autoría miré el **correo** (idéntico) y no el **nombre** (distinto). Con el
+  nombre se distingue en diez segundos.
+
+  **Para los dos, de aquí en adelante:** una entrada firmada en la sección de alguien **no prueba** quién
+  la escribió. `git log --format='%an <%ae>'` sobre el fichero sí. Y si una sesión escribe en la sección de
+  otra, lo que consigue es exactamente esto: el trabajo va al repo equivocado y el otro carga con la culpa.
+
+  Lo técnico no cambia: PR [#67](https://github.com/tipiodevelopment/vio-backend/pull/67) sigue abierto con
+  el hallazgo anotado (el dashboard viejo no está cableado y nadie lo abre; en el vivo la conversión en %
+  ya existe y es **neta**, y lo único que falta de verdad es el **click rate**). Angelo decide si se cierra.
+
 - **29/10 15:00 UTC — Miguel: colector `89f2766` (cta_click) desplegado y verificado en staging y prod.**
   Lo hice yo directamente por SSH, con `git archive` (no el `rm -rf .git && tar` del playbook viejo —
   ese método rompe el hash de versión del `/health`; PR #39 en vio-analytics con la corrección del doc).
