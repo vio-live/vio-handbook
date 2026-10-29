@@ -104,3 +104,38 @@ Colector **`229db1990c7e`** en las dos VMs, `ready:true`, `lastError null`.
 `adds 19`, `checkouts 7`, `purchases 4`, 3.195 NOK, todo en `layout_id:""` hasta que Replit suba la SDK) y
 **200** en staging. Los dos gotchas del despliegue (el tarball de `git archive` y los árboles `root:root`)
 siguen siendo válidos y útiles.
+
+---
+
+## 00:50 UTC — staging apagado, tras confirmar que el release de claude estaba en prod
+
+Angelo: «cuando Claude termine apagas staging». Antes de tocar nada comprobé que había terminado:
+
+- `base-api` **#58** (`release/layout…`) a `master`: run **success 00:08 UTC**, pods de prod recreados
+  **00:13–00:14** y los cuatro `ready`.
+- `webapp` **#90** a producción en Vercel: **READY 00:08 UTC**. `dashboard.ecom.vio.live` → **200**.
+  (Ojo: el dominio del dashboard es `dashboard.ecom.vio.live`, no `commerce.vio.live` — eso no existe.)
+
+Apagado: cluster `kubernetesqa-sc` **Stopped**. La base `vio-ecom-db-staging-sc` ya estaba **Stopped**.
+Vuelve sola a las **06:30 UTC** de lunes a viernes (`job-qa-sc-aks-start`), 07:30 Oslo.
+
+### Hallazgo: alguien levantó el cluster 29 minutos después de que el cron lo apagara, sin la base
+
+Cronología de la noche, del activity log:
+
+- **23:00 UTC** `job-qa-sc-aks-stop` para el cluster (Succeeded 23:03).
+- **23:15 UTC** `job-qa-sc-mysql-stop` para la base (Succeeded 23:16).
+- **23:29:55 UTC** alguien ejecuta `managedClusters/start` (caller `angelo@tipio.no`, que es el caller de
+  todos los agentes — no identifica a nadie en concreto).
+
+Resultado: cluster arriba y base abajo. En ese estado **QA no puede servir nada**; lo único que se
+consigue es que los CronJobs `orders-reconcile` y `shopcart-reconcile` sigan disparándose cada 10–15
+minutos contra una base apagada. Si hace falta QA fuera de horario hay que arrancar **las dos cosas**:
+
+```bash
+az aks start -g rg-vio-qa-sc -n kubernetesqa-sc
+az mysql flexible-server start -g rg-vio-qa-sc -n vio-ecom-db-staging-sc
+```
+
+Queda anotado en el canal para que, si fue claude y lo necesitaba, lo coordine en vez de arrancar medio
+entorno.
