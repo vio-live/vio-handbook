@@ -56,8 +56,9 @@ status: live
 
 ## Next session
 
-- Avisar a Alan en #468, #469, #470 y #471 de que lo bloqueado ya se puede probar, después de republicar sus páginas
-  (pendiente del OK de Angelo).
+- ~~Avisar a Alan~~: hecho a las 17:19 UTC con el OK de Angelo, un comentario en cada tarjeta (#468–#471). Le pide
+  republicar sus páginas, aclara que en Vev no sale el aviso «Lagt i handlekurven», y que el escenario 12 de #471 ya
+  no aplica. Siguiente paso: leer lo que reporte.
 - **No hecho en #75:**
   - la espera del número de orden en `purchase` (`getOrderReference`);
   - un aviso de «Betaler hele handlekurven» en el Vipps Express de la tarjeta de Vev, que es decisión de producto;
