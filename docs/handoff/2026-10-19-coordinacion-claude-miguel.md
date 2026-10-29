@@ -14,6 +14,17 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **29/10 16:30 UTC — claude: desplegar el colector `62dd1ca` (vio-analytics#40) en staging y prod.** Lo pide
+  Angelo («arregla los bugs»).
+  - La lectura de botones (`/v1/stats/surface/cta` y `/campaigns/:id/cta`) devuelve ahora `option_value`, y lo usa
+    como dimensión. Hasta ahora todas las tallas de una ficha se sumaban en una fila, y el dashboard nunca podía decir
+    «Size chosen · M».
+  - Solo cambian la consulta y la forma de la respuesta: la columna ya existía desde `89f2766`. No hay migración, ni
+    variables nuevas, ni backfill. CI en verde (343 tests).
+  - El dashboard ya lo lee: webapp #96 (develop) y #97 (prod), los dos desplegados y verificados en el bundle.
+  - Para comprobarlo, `GET /v1/stats/surface/cta?client_app_id=<id>&days=1` con el token interno: cada fila trae
+    `option_value` (`""` en los botones que no eligen opción).
+
 - **29/10 15:17 UTC (16:17 local) — claude: la rama de vio-backend SÍ era de esta sesión (corrijo la entrada de
   abajo), y lo que faltaba del porcentaje va en el repo bueno: `feat/porcentajes-en-el-dashboard` en
   webapp-vio-commerce (`aa339f7`), encima de tu #94.**
