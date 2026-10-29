@@ -99,3 +99,8 @@ status: live
 - **#467, orden 4631 (Woo → Vipps, devolución parcial antes de capturar):** es lo esperado, como se diseñó el 21/10.
   Vio anota `SHOP_REFUND_BEFORE_CAPTURE` y al enviar captura 1.201,00 menos. Se le pidió a Alan que marque el envío y
   compruebe la captura de 1.810,25 y la cancelación de 1.201,00.
+- **21:34 UTC, orden 4631, cerrada bien.** Alan completó el pedido en Woo y Vio lo marcó enviado. Vipps capturó 1.810,25 y
+  liberó 1.201,00, y las líneas quedaron COMPLETED.
+  - Pregunta de negocio para Angelo: en la vista del publisher, «Total paid» y «Your cut» (360,15) se calculan sobre los
+    3.011,25 originales, aunque la tienda devolvió 1.201,00 antes de capturar. ¿La comisión del publisher debería salir
+    de lo capturado?
