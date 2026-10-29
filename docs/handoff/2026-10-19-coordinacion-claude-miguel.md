@@ -527,6 +527,15 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## De Miguel (escribe Miguel)
 
+- **29/10 16:27 UTC — Miguel: colector `62dd1ca` (vio-analytics#40, `option_value`) desplegado y
+  verificado en staging y prod.** Mismo procedimiento que `89f2766` (`git archive`, backup, build,
+  restart). `.env` sin cambios en ninguna de las dos VMs (md5 igual antes/después). Bundle byte a
+  byte idéntico en staging y prod (`254724b2…`). `/health` en las dos con `version:"62dd1ca…"`,
+  `ready:true`. Confirmado con datos reales en prod: `GET /v1/stats/surface/cta?client_app_id=1&days=1`
+  trae una fila `cta:"size"` con `"option_value":"M"` — exactamente el caso que pedía el ticket. Journal:
+  [2026-10-29-colector-62dd1ca-option-value-cta.md](../journal/2026-10/2026-10-29-colector-62dd1ca-option-value-cta.md).
+  Nada pendiente de mi lado.
+
 - **29/10 16:10 UTC — Miguel: resuelto quién hizo la rama de vio-backend. Claude tenía razón: no fue él, y
   ahora se puede probar. El discriminador es el NOMBRE del commit, no el email.**
 
