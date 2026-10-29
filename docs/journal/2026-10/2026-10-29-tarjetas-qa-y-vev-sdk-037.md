@@ -29,7 +29,10 @@ status: live
   - La revisión del layout es un token de texto (`v2`). Leída como número, salía «—».
   - El aviso del plazo de entrega decía que vaciarlo lo conservaba, pero desde products #40 lo borra.
 - **Colector:** [vio-analytics#40](https://github.com/vio-live/vio-analytics/pull/40) (`62dd1ca`). La lectura de botones devuelve `option_value`, así que ahora sale «Size chosen · M». Miguel lo desplegó en staging y en prod y lo verificó con datos reales ([journal](./2026-10-29-colector-62dd1ca-option-value-cta.md)).
-- **Vev a la SDK 0.37:** [vio-live/vev#75](https://github.com/vio-live/vev/pull/75), abierto y sin desplegar.
+- **Vev a la SDK 0.37:** [vio-live/vev#75](https://github.com/vio-live/vev/pull/75), mergeado (`100765e`) y
+  **desplegado a las 17:20 UTC con el OK de Angelo: el paquete `cq1lXld-TA9` va por la versión 0.338.** Fue directo al
+  compartido porque esta máquina no tiene `vev.<nombre>.json` de sandbox. Si hay que volver atrás, `vev restore` a la
+  0.337. Las páginas ya publicadas siguen con su bundle hasta que se republiquen.
   - **Bundle:** `b49ebbb`, igual a npm 0.37.0.
   - **`add_payment_info`:** ahora sale con `checkout_id`. Antes «Went to Vipps» y «Vipps payments» quedaban vacíos para Vev: la SDK anuncia el checkout en `window` y Vev escuchaba en `document`.
   - **`cta_click`:** se manda para los botones de la SDK y para los propios de Vev.
@@ -46,12 +49,15 @@ status: live
 
 ## Blockers
 
-- **`vev deploy` de #75: lo hace Angelo**, porque aquí no hay credenciales de Vev. Primero en el sandbox (`npm run sandbox:on`), y después republicar las páginas. Hasta entonces quedan bloqueadas la parte B de #468, la D de #469, lo de la SDK en #470 y B1, B2 y B4 de #471.
+- ~~`vev deploy` de #75~~: hecho (0.338). Sí había sesión del CLI de Vev en esta máquina; lo que no hay es sandbox.
+  Ojo: `vev deploy` falla con `ENOENT ./.vev` en un checkout recién creado; antes hay que correr `vev build`.
+  Para que se vea en una página hay que republicarla, y lo de Alan necesita que él republique las suyas.
 - **Tienda Woo de Alan:** el 22 y 23/10 daba Cloudflare 1101 en las llamadas autenticadas. Nadie lo volvió a comprobar, y la parte de Woo de #472 depende de eso.
 
 ## Next session
 
-- Cuando Vev esté desplegado, avisar a Alan en #468, #469, #470 y #471 de que ya puede hacer lo bloqueado.
+- Avisar a Alan en #468, #469, #470 y #471 de que lo bloqueado ya se puede probar, después de republicar sus páginas
+  (pendiente del OK de Angelo).
 - **No hecho en #75:**
   - la espera del número de orden en `purchase` (`getOrderReference`);
   - un aviso de «Betaler hele handlekurven» en el Vipps Express de la tarjeta de Vev, que es decisión de producto;
