@@ -139,3 +139,43 @@ az mysql flexible-server start -g rg-vio-qa-sc -n vio-ecom-db-staging-sc
 
 Queda anotado en el canal para que, si fue claude y lo necesitaba, lo coordine en vez de arrancar medio
 entorno.
+
+## Revisión de la rama de porcentajes del dashboard (PR tipiodevelopment#67) — miguel
+
+- Quién: miguel (rama de claude, `feat/porcentajes-en-el-dashboard`, commit `add09f3`)
+- Dónde: `tipiodevelopment/vio-backend` (repo del dashboard viejo, **no** está en la org `vio-live`);
+  lecturas contra el colector de prod `events.vio.live` y las dos VMs de Oracle
+  (`129.151.196.99` staging, `82.70.54.151` prod)
+- Cuándo: 2026-10-29, 14:00–15:05 UTC
+- Contexto: claude dejó la rama subida sin PR (su entorno le bloqueó `gh pr create`) y pidió en el
+  handoff que la revisara y la mirara con datos reales, porque desde su laptop no alcanza las DB.
+- Hecho:
+  - **PR [#67](https://github.com/tipiodevelopment/vio-backend/pull/67) abierto**, `main` ← rama,
+    1 commit, 0 behind. Sin mergear (ADR-0001).
+  - `npm ci` + `npx jest __tests__/rates.test.ts` → **7/7**. Mutación deliberada de `formatPct`
+    (`pct.toFixed(1)` fijo) → el test de `0.05% of sessions` falla. Los tests sirven.
+  - **Verificación con datos reales sin desplegar:** pasé por los helpers reales de la rama
+    (importados desde un test efímero, borrado después) las respuestas de
+    `/v1/stats/operator/bundle?client_app_id=1&range=7d` y
+    `/v1/stats/campaigns/2/funnel?client_app_id=1&days=7` del colector de **producción**. Salida:
+    home 4.4 %; surface 4.4 % / 29.9 % / 0.15 %; subtítulos `6.8 per session`, `325 avg order`;
+    embudo con `begin_checkout 58% (14/24)` y `purchase 21% (3/14)` atenuados por `MIN_RATE_BASE=30`;
+    campaña 2: 4.4 % / 3.0 % / 0.11 %. Sin `--` ni `NaN`; todos los campos que lee la UI existen.
+  - **Dos observaciones de código** pasadas a claude en el PR y en el handoff: `Clicks per reader`
+    enseña un porcentaje que puede pasar de 100 % (existe `perSession()` para eso), y `Conversion`
+    usa `purchases` (bruto, 4) cuando el colector expone `purchases_net` (2) y `cancelled_orders` (2).
+  - **Hallazgo preexistente y bloqueante para verlo en pantalla:** `/opt/vio-backend/.env` **no define
+    `ANALYTICS_EVENTS_URL` ni `ANALYTICS_INTERNAL_TOKEN` en ninguna de las dos VMs** (17 y 16 vars).
+    `curl 127.0.0.1:5000/api/analytics/vio/bundle` → **503 `analytics collector not configured`**.
+    La sección de Vio Commerce del dashboard de vio-backend nunca ha tenido datos en esas máquinas.
+  - **Y «mirarlo en staging» no sirve aunque se configure:** el colector de staging devuelve 200 con
+    todo a 0 para `client_app_id=1` (7 días), y en la Postgres de staging la campaña 2 es «Lyko» bajo
+    el `client_app` 2, así que el guardia de tenant del proxy daría 404 para la campaña 2. Los números
+    reales de la surface 1 («Allermedia Mote Livsstil», id 1 en staging) viven en el colector de prod.
+  - **El deploy de estas VMs es manual** (tarball + `npm ci` + build + `systemctl restart`);
+    `deploy.yml` del repo apunta a Container Apps de Azure que ya no existen.
+  - No se tocó ninguna VM: solo lecturas (`.env` por nombre de variable, un `curl` a loopback y dos
+    `SELECT`). Nada desplegado, nada mergeado.
+- Pendiente: decisión de Angelo sobre de qué colector lee el dashboard de vio-backend (el suyo → tarjetas
+  vacías; el de producción → dashboard de staging con datos de prod). Con eso decidido, poner las dos
+  variables y desplegar el tarball. Y la respuesta de claude a las dos observaciones del PR.

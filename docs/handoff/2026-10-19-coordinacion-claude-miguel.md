@@ -455,6 +455,65 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## De Miguel (escribe Miguel)
 
+- **29/10 15:05 UTC — Miguel: revisada la rama de porcentajes, PR abierto, y verificada con datos REALES.
+  Pero hay un bloqueante que no es tuyo: el dashboard no tiene colector configurado en ninguna VM.**
+
+  **PR [tipiodevelopment#67](https://github.com/tipiodevelopment/vio-backend/pull/67)** (`feat/porcentajes-en-el-dashboard`
+  → `main`, 1 commit, 0 behind). No lo mergeo (ADR-0001). El cuerpo lleva el detalle completo.
+
+  **Tests: 7/7 verdes, y sirven.** Los mutué a propósito: con `formatPct` a un decimal, el test de
+  `0.05% of sessions` falla (`Received: "0.0% of sessions"`). No son tests que nunca fallan.
+
+  **Lo que me pedías — datos reales.** No pude mirarlo en pantalla (ver el bloqueante), así que hice lo
+  siguiente mejor: pasé por **tus helpers de la rama** las respuestas reales del colector de **producción**
+  (`events.vio.live`, surface 1 y campaña 2, 7 días). Lo que saldría en pantalla hoy:
+  - Home, 4º recuadro: `Click Rate · 808 clicks, 7d` → **4.4%**
+  - Surface: Click rate **4.4%** (808/18406 impressions) · Clicks per reader **29.9%** (808/2706) ·
+    Conversion **0.15%** (4/2706)
+  - Subtítulos: `6.8 per session`, `808 clicks · 29.9% of sessions`, `325 avg order`
+  - Embudo: `add_to_cart 24 · 3%`, `begin_checkout 14 · 58% (14/24)` atenuado, `purchase 3 · 21% (3/14)` atenuado
+  - Campaña 2: Click **4.4%** · Cart **3.0%** (24/804) · Conversion **0.11%** (3/2706)
+
+  Ningún `--`, ningún `NaN`, y los campos que lee la UI existen todos en las dos respuestas
+  (`impressions`, `clicks`, `sessions`, `add_to_carts`, `purchase_sessions`). **El segundo decimal hace
+  exactamente lo que dice tu comentario:** con uno, esa conversión sería `0.0%` habiendo 4 compras.
+
+  **Dos cosas del código que te paso, ninguna bloqueante:**
+  1. **`Clicks per reader` enseña un porcentaje.** Son `clicks/sessions`, que **puede pasar de 100 %**
+     (un lector da varios clics): la tarjeta diría «130.0%» bajo una etiqueta que dice *per reader*. En
+     `rates.ts` ya tienes `perSession()` (`"6.8 per session"`). O renombras la tarjeta o enseñas el ratio.
+  2. **`Conversion` cuenta las canceladas.** El colector da `purchases: 4` pero `purchases_net: 2` y
+     `cancelled_orders: 2`. Con las pruebas de Careless canceladas, la tarjeta dice 0.15 % cuando el neto
+     es 0.07 %. El dato neto ya está expuesto; decide cuál es el número de portada. En la campaña,
+     `purchase_sessions` no tiene variante neta.
+
+  Y una respuesta a tu pregunta: **el 4º recuadro del home no lo iba a llenar nadie.** `formattedValue="--"`
+  estaba escrito a mano y `engagementDelta` no tiene fuente. Reemplazarlo está bien. `change={0}` también:
+  `StatCard` solo pinta la flecha con `change > 0`, igual que los otros dos recuadros.
+
+  **EL BLOQUEANTE, y es anterior a tu rama:** **ni la VM de staging (`129.151.196.99`) ni la de prod
+  (`82.70.54.151`) tienen el colector configurado.** `/opt/vio-backend/.env` no define
+  `ANALYTICS_EVENTS_URL` ni `ANALYTICS_INTERNAL_TOKEN` (17 y 16 variables, ninguna de analytics), así que
+  `/api/analytics/vio/bundle` responde **503 `analytics collector not configured`** — comprobado contra
+  `127.0.0.1:5000` en las dos. O sea: **toda la sección de Vio Commerce del dashboard, la que ya existía,
+  nunca ha tenido datos ahí.** Desplegar la rama tal cual no enseña ningún número nuevo.
+
+  Y hay un segundo problema con «mirarlo en staging»: **el colector de staging tiene todo a cero** para
+  `client_app_id=1` en los últimos 7 días (comprobado, 200 con `impressions: 0`). Los números de la
+  surface 1 están en el colector de **producción**. Las ids tampoco casan: en la Postgres de staging
+  `client_apps` 1 = «Allermedia Mote Livsstil» (bien), pero la campaña 2 es «Lyko» y cuelga del
+  `client_app` **2**, así que `CampaignCommerceRates` para la campaña 2 daría 404 del propio proxy
+  (`campaign.clientAppId !== auth.clientAppId`), que es el guardia haciendo su trabajo.
+
+  **Lo que hace falta decidir (es de Angelo, no lo hago yo en un deploy):** de qué colector lee el
+  dashboard de vio-backend. Si lee el suyo, las tarjetas salen vacías; si lee el de producción, un
+  dashboard de staging enseña datos de producción. Yo puedo poner las dos variables y desplegar el
+  tarball en diez minutos en cuanto esté decidido — el deploy de estas VMs es manual, `deploy.yml`
+  apunta a unas Container Apps de Azure que ya no existen.
+
+  **No toqué ninguna VM.** Solo lecturas: `.env` por nombre de variable (sin valores), un `curl` a
+  `127.0.0.1:5000` y dos `SELECT` a la Postgres.
+
 - **29/10 09:55 UTC — hecho: los 3 navegadores borrados, 24 filas.**
   `a-8d63c81e…` 6, `a-9ec5d4dc…` 13, `a-72c342a7…` (Angelo) 5. Saqué los ids completos con `claude_ro`
   en ClickHouse, `dry_run` primero (coincidió exacto: `total:24`), luego el borrado real.
