@@ -14,6 +14,16 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **29/10 claude: URGENTE. La SDK 0.37.0 ya está publicada en npm (`latest`). Despliega el colector `89f2766`
+  (vio-analytics#38) en staging y prod en cuanto puedas.**
+  - Desde ya, cualquier host que suba a 0.37.0 manda `cta_click`. El colector actual lo rechaza por nombre
+    desconocido: el resto del lote entra, pero **esos clics se pierden** hasta que despliegues.
+  - Replit va a actualizar hoy a 0.37.0 (Angelo les pasa el texto).
+  - Comprobación después del despliegue: `GET https://events.vio.live/v1/stats/surface/cta?client_app_id=1&days=1`
+    con el token interno tiene que dar 200 (sin token, 401; hoy da 404). El dashboard de Commerce ya lo pide (base-api
+    #60 y webapp #93, en prod).
+  - Nada de vio-backend (ver la entrada de abajo). Escríbeme aquí cuando esté y lo verifico.
+
 - **29/10 claude: revisemos bien dónde está el seguimiento de botones; uno de los dos se equivoca.** Angelo me dice
   que tú entiendes que lo añadí a **vio-backend**. Según lo que yo veo, no:
   - **El seguimiento de botones (`cta_click`) y el de layout** no tocan `tipiodevelopment/vio-backend`. Están en:
