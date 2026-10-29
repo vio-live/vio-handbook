@@ -483,6 +483,40 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## De Miguel (escribe Miguel)
 
+- **29/10 16:05 UTC — Miguel: comprobado sin asumir nada. Sí, está en `vio-backend`, y la conversión en
+  porcentaje YA EXISTE en el dashboard vivo — y allí ya es neta.**
+
+  Angelo me pidió revisarlo sin dar nada por supuesto. Esto es lo que da la infraestructura, no lo que yo
+  suponía:
+
+  **El dashboard vivo (`dashboard.ecom.vio.live`, Vercel → `webapp-vio-commerce`) está cableado y recibe
+  la data.** base-api en prod: ruta `/api/stats/surfaces/:surfaceId/*` viva (**401** sin token, no 404),
+  `statsService` llama a `/v1/stats/*` del colector, y `ANALYTICS_STATS_URL` + `ANALYTICS_INTERNAL_TOKEN`
+  están en el `.env` montado del pod. Confirmado dentro del pod `base-api-579659579f-78tbm`.
+
+  **Y en ese dashboard la conversión en porcentaje ya está** (`src/lib/analytics.js`, `HOME_KPIS`):
+  `{ key: 'conversion', label: 'Conversion', pct: true, note: 'on net' }`, con `purchasesNet` para
+  Orders y `NET_HELP`. O sea: **el dashboard vivo ya resuelve bruto-vs-neto, y lo resuelve a favor del
+  neto.** El `RateCard` nuevo de la rama calcula la conversión sobre `purchases` **bruto** — mi
+  observación 2 no era un detalle de estilo, es una regresión respecto a lo que ya hay.
+  **Lo que NO existe en el vivo es el click rate como porcentaje:** `HOME_KPIS` trae `impressions` y
+  `clicks` en absoluto, sin tasa. Ese hueco es real.
+
+  **El repo donde está la rama es el dashboard viejo, y el DNS lo confirma** (zona `vio.live`, 68
+  registros): a la VM de staging (`129.151.196.99`) solo apuntan `api-dev`, `events-dev` y
+  `events-staging`; **`api-staging.vio.live` ya se movió a Azure** (`74.158.41.166`). A la VM de prod
+  (`82.70.54.151`) solo apunta **`events.vio.live`**: al backend de prod no apunta ningún nombre.
+  O sea, el dashboard de `vio-backend` hoy solo se alcanza por `api-dev.vio.live`.
+
+  **Y nadie lo abre.** `nginx -T` en la VM de staging: un único `access_log` global para los dos vhosts
+  (no hay log por sitio que se me escapara). En 14 días, **cero** peticiones a `/api/analytics*`; lo
+  único que toca `/api/` hoy son escáneres (`/api/vendor/phpunit/...`). Log vivo, 500 líneas hoy.
+
+  **Lo que no voy a decidir yo:** si los porcentajes van al dashboard vivo o si el viejo se piensa
+  revivir. Son dos trabajos distintos: en el vivo queda el click rate (la conversión ya está, y neta);
+  en el viejo, antes de que se vea un número, hay que cablear el colector y devolverle un nombre DNS.
+  PR [#67](https://github.com/tipiodevelopment/vio-backend/pull/67) abierto, sin cerrar ni mergear.
+
 - **29/10 15:50 UTC — Miguel: CORRECCIÓN de mi entrada de las 15:05. Angelo me para: «estamos recibiendo
   la data como toca». Y es verdad. Lo que dije era cierto del repo equivocado.**
 
