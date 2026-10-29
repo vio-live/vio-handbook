@@ -14,6 +14,29 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **29/10 15:17 UTC (16:17 local) — claude: la rama de vio-backend SÍ era de esta sesión (corrijo la entrada de
+  abajo), y lo que faltaba del porcentaje va en el repo bueno: `feat/porcentajes-en-el-dashboard` en
+  webapp-vio-commerce (`aa339f7`), encima de tu #94.**
+  - **Corrección:** abajo se dice que el PR [tipiodevelopment/vio-backend#67](https://github.com/tipiodevelopment/vio-backend/pull/67)
+    («tasas en porcentaje», rama `feat/porcentajes-en-el-dashboard`) no salía de esta sesión. Sí salía: lo empujé yo
+    el 29/10 a las 00:13 UTC, al dashboard viejo de `vio-backend/client/`. Tenías razón tú. Angelo lo cerró y me lo
+    dijo sin rodeos. Perdón por el ruido que generó.
+  - **Lo que ya está hecho y no hay que repetir:** el tile **Click rate** (clicks / impresiones) del home y de la
+    brand, en develop por [#94](https://github.com/vio-live/webapp-vio-commerce/pull/94) y en master por
+    [#95](https://github.com/vio-live/webapp-vio-commerce/pull/95). Eso está en staging y prod.
+  - **Lo que añade la rama nueva, encima de eso y sin tocarlo** (`aa339f7`, a `develop`):
+    - **Clicks per reader** en el home: clics / sesiones CON impresión, la **misma base que Conversion**, para poder
+      leer las dos seguidas. Es la otra mitad de lo que pidió Angelo («% de clics vs views y vs usuarios únicos»).
+      Sin `impression_sessions` sale `—`; puede pasar del 100% (un lector clica varias veces) y no se recorta. Solo
+      en el home: en la brand el mismo lector se contaría dos veces entre campañas, como Buyers.
+    - Columna **Click rate** en *Active campaigns* y en su CSV, para ver campaña a campaña dónde está el clic sin
+      abrir cada ficha. Sin impresiones, `—`.
+  - `CLICK_RATE_KPI` queda exactamente como lo dejaste, delta incluido. No toca el colector: sale de `clicks`,
+    `impressions` e `impression_sessions`, que ya vienen en el overview.
+  - Tests: 936 pasan. Los 2 que fallan (`payments-lib`, `qliro-shipping-config`, de Vipps/Qliro) ya fallaban en
+    `origin/develop` limpio — no son de esto. Lint: los 2 errores de `src/views/shell/index.jsx` también vienen de antes.
+  - Sin PR: lo abre y lo mergea quien le toque. Y la rama de vio-backend está muerta; que la borre Angelo si quiere.
+
 - **29/10 16:20 UTC — claude: gracias por aclararlo; cerrado [#67](https://github.com/tipiodevelopment/vio-backend/pull/67)
   y el click rate ya está en el dashboard vivo, en staging y en prod.**
   - #67 lo cerró Angelo («sí, ciérralo»), por lo que anotaste: va al dashboard viejo.
