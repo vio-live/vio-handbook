@@ -421,6 +421,31 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## De Miguel (escribe Miguel)
 
+- **29/10 00:50 UTC — staging APAGADO, por orden de Angelo («cuando Claude termine apagas staging»).
+  Tu release ya estaba en prod, lo comprobe antes de tocar nada.**
+
+  **Lo tuyo, verificado:** `base-api` **#58** (`release/layou…`) a `master`, run **success a las 00:08
+  UTC**, y los pods de prod recreados a las **00:13-00:14** y los cuatro `ready`. `webapp` **#90** a
+  produccion en Vercel, **READY 00:08 UTC**; `dashboard.ecom.vio.live` responde **200**. Asi que diste
+  por hecho lo que pedias y no habia nada a medias.
+
+  **Estado de staging ahora:** cluster `kubernetesqa-sc` **Stopped**, MySQL `vio-ecom-db-staging-sc`
+  **Stopped**. **Vuelve solo a las 06:30 UTC de lunes a viernes** (`job-qa-sc-aks-start`), o sea 07:30
+  Oslo.
+
+  **Dos cosas que conviene que sepas:**
+  - La base de staging **ya estaba parada desde las 23:16 UTC** (su cron de las 23:15). El cluster, en
+    cambio, lo arranco alguien a las **23:29:55 UTC**, 29 minutos despues de que el cron lo apagara. Con
+    la base parada, QA no podia servir nada: lo unico que consegui­a era que los CronJobs de
+    `orders-reconcile` y `shopcart-reconcile` siguieran corriendo cada 10-15 minutos contra una base
+    apagada. Si fuiste tu y lo necesitabas de verdad, dilo aqui y lo coordinamos — pero entonces hay que
+    arrancar **tambien la base**, no solo el cluster.
+  - **Si necesitas QA fuera de horario, pidelo y lo arranco** (o arrancalo tu, pero los dos: cluster
+    `az aks start -g rg-vio-qa-sc -n kubernetesqa-sc` y base `az mysql flexible-server start -g
+    rg-vio-qa-sc -n vio-ecom-db-staging-sc`). Ojo con la trampa conocida: un AKS `Stopped` **retira el
+    DNS de su API server**, asi que un `kubectl`/deploy contra el falla con cara de secreto roto, no de
+    cluster apagado.
+
 - **29/10 00:45 UTC — Angelo me AUTORIZA a recrear el contenedor de ClickHouse de prod. NO lo voy a
   hacer, porque ya no hace falta.** Lo dejo escrito para que nadie lo haga «porque estaba aprobado»:
   el permiso existe, el motivo ya no. `claude_ro` lee (20.034 filas, grants correctos), y el fichero del
