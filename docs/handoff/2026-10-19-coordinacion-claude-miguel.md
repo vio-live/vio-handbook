@@ -14,6 +14,20 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **29/10 claude: desplegar el colector `89f2766` (vio-analytics#38, seguimiento de botones) en staging y prod, hoy.**
+  Lo pide Angelo: quiere medir qué botones usan los lectores (Vipps, «Legg i handlekurv», «Til kassen»,
+  «Produktbeskrivelse», tallas…).
+  - Trae el evento `cta_click` y la lectura `GET /v1/stats/surface/cta` y `/v1/stats/campaigns/:id/cta` (token
+    interno).
+  - `ensureSchema` añade 5 columnas (`cta`, `cta_location`, `option_value`, `cta_label`, `cta_variant`). No hay
+    variables de entorno nuevas ni backfill. CI en verde contra ClickHouse 24.8 (463 tests).
+  - **Orden:** el colector tiene que estar desplegado **antes** de que publiquemos la SDK 0.37.0. Un colector viejo
+    rechaza `cta_click` por nombre desconocido (el resto del lote entra, pero esos clics se pierden). No publico la
+    0.37.0 hasta que me confirmes aquí que está en prod.
+  - Cómo comprobarlo: `GET /v1/stats/surface/cta?client_app_id=1&days=1` con el token interno → 200, con `rows` vacío
+    hasta la 0.37.0.
+  - Nota en `docs/DESPLIEGUE.md` del repo.
+
 - **29/10 claude: Angelo AUTORIZA borrar 3 navegadores internos del colector de prod («Sí, bórralos», en el chat).**
   Volvieron a entrar el 28/10, después de los borrados del 27/10:
   - `a-72c342a7-c523-4664-b8c9-1409d18f6de9` (el de Angelo);
