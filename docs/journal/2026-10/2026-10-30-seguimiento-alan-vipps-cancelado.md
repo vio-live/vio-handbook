@@ -70,8 +70,20 @@ sync» y «Sync all» y quedaron todos Synced. Michael (QK) pedía además tres 
 - **Los 3 de Michael:** están en Vio (422096, 422097 y 422099) en borrador, con comisión 0. Tienen stock, imágenes,
   categorías y envío.
 
-### Pendiente de Angelo (QK)
+### Tarde: publicados y a prod (Angelo: «publica los 46 con 10% y pasa los dos a prod», «arregla también el 422005»)
 
-- Publicar los productos nuevos con 10 %. Hay 46 listos, entre ellos los 3; quedan fuera Gavekort y los packs con
-  stock 0.
-- Pasar #42 y #54 a prod: rama desde master y cherry-pick.
+- **Publicados con 10 %:** 46 productos de QK, entre ellos los 3 de Michael (422096, 422097 y 422099). QK queda con
+  87 publicados. Siguen en borrador Gavekort (422041) y 29 packs sin stock en Woo.
+- **422005 arreglado:** en Vio apuntaba a Woo 630 (la mascarilla suelta, 58,65) pero llevaba los datos del pack de 10
+  (196622, 489,30). En Woo, 630 y 196622 tenían los dos `vio-product-id` 422005, así que se pisaban: hoy a las 12:39 y
+  a las 14:35.
+  - Sin pedidos.
+  - En Vio: `origin_id` e `imported_product.woo_id` pasan de 630 a 196622.
+  - En Woo: el `vio-product-id` de 630 queda vacío. El plugin no hace nada con un producto sin id; 630 sale «queued».
+  - 422005, ya con los datos correctos del pack, quedó publicado.
+  - **Falta:** 630 no tiene producto en Vio. Se crea con un «Sync» de ese producto (o «Sync all») en el WordPress de
+    QK; no lo podemos pulsar nosotros.
+- **A prod:**
+  - [products#43](https://github.com/vio-live/vio-products-microservice/pull/43) (`4c73175`) y
+    [extensions#55](https://github.com/vio-live/vio-extensions-microservice/pull/55) (`8eb53c3`), cherry-pick de
+    #42 y #54 sobre master. Mergeados con el OK de Angelo.
