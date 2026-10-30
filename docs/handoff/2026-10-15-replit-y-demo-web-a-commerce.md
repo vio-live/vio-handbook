@@ -510,3 +510,29 @@ que es el valor por defecto del paquete.
 >
 > Probad en la copia de desarrollo con la conexión Staging (Careless en QA tiene ya sus promesas y su
 > «Frakt & retur») y decidnos qué versión queda publicada.
+
+## Datos limpios: pruebas fuera de prod y una campaña por artículo (30/10) — texto para el agente de Replit
+
+Por qué: del 23/10 al 29/10, las páginas de prueba de la copia (`mote-livsstil-hub-vio.replit.app`) mandaron sus eventos con la
+key de prod, y sus bloques quedaron registrados en la campaña de Careless. Los clics, carritos e idas a Vipps de las
+pruebas se mezclaron con los del artículo real. Lo arreglamos a mano: bloques movidos a la campaña de test y navegadores
+de prueba metidos en la lista de internos del colector. Esto es para que no vuelva a pasar con los artículos que vienen. No
+hace falta una versión nueva de la SDK: todo funciona con la 0.37.0.
+
+> 1. **Las páginas de prueba no cuentan.** En la copia de pruebas (`mote-livsstil-hub-vio.replit.app`) y en
+>    cualquier vista previa o borrador, llamad a `Vio.analytics.setInternal(true)` justo después de `Vio.init()`.
+>    Así todos los eventos salen marcados como internos y el colector no los cuenta en ninguna cifra. Si la copia
+>    puede usar la surface de **staging**, mejor todavía: los datos de prueba no llegan a prod.
+> 2. **El equipo editorial tampoco cuenta.** En la web real, cuando hay una sesión de editor (`/api/auth/me` responde
+>    200), llamad a `Vio.analytics.setInternal(true)`. La marca se guarda en ese navegador, así que no hace falta
+>    quitarla al cerrar sesión. Para comprobarlo a mano, sirve abrir cualquier página con `?vio_internal=1`
+>    (`?vio_internal=0` la quita).
+> 3. **Cada artículo declara su campaña.** Poned `data-vio-campaign="<id de la campaña del artículo>"` en el
+>    contenedor del artículo, también en las páginas de prueba (allí, la campaña de test). No dejéis que una página
+>    use la campaña por defecto de la web: un bloque se queda registrado en la campaña con la que se montó por primera
+>    vez.
+> 4. **Una copia de prueba no reutiliza el `contentId` ni los slots del artículo real.** Si duplicáis un artículo para
+>    probar, que la copia tenga su propio `contentId`. Así sus slots (`article-<contentId>-block-N`) serán otros y no
+>    caerán en la campaña real.
+> 5. **Antes de publicar un artículo nuevo** (Villoid, QRK…), abridlo en vista previa con `?vio_internal=1`, comprobad
+>    que la campaña es la suya y que el botón de compra abre la marca correcta, y después publicad.
