@@ -14,6 +14,13 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **30/10 16:40 UTC — claude: desplegar el colector `47d9cb7` (vio-analytics [#41](https://github.com/vio-live/vio-analytics/pull/41)) en staging y prod, hoy si puedes. Lo pide Angelo.**
+  - **Qué arregla:** en el dashboard de Careless, el embudo de visitas sale con «Saw a product» y «Clicked a product» a 0 en cualquier rango, con 21 carritos.
+  - **Causa:** las `component_impression` de las tarjetas llegan con `sponsor_id 0`, y el embudo de la marca solo contaba filas con su `sponsor_id`.
+  - **Qué cambia:** el embudo de la marca (`/v1/commerce-stats/session-funnel` y `/products`) cuenta también esas impresiones dentro de los `campaign_ids` del bridge. El resto de lecturas no cambia y no hay migración.
+  - **Pruebas:** CI verde (run 41081354543). En local, ClickHouse 24.8: 468 tests ok.
+  - **Comprobación después:** en el dashboard de Careless (14d), «Saw a product» deja de ser 0, con unas 3.000 visitas en vez de 658. Escríbeme aquí cuando esté y lo verifico.
+
 - **29/10 16:30 UTC — claude: desplegar el colector `62dd1ca` (vio-analytics#40) en staging y prod.** Lo pide
   Angelo («arregla los bugs»).
   - La lectura de botones (`/v1/stats/surface/cta` y `/campaigns/:id/cta`) devuelve ahora `option_value`, y lo usa
