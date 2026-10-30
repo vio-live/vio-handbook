@@ -106,3 +106,11 @@ Sigue el seguimiento del [29/10](./2026-10-29-tarjetas-qa-y-vev-sdk-037.md#noche
 - **19:16, #467, orden 4654: verificado de punta a punta en QA.** Devolución de una línea entera en Woo → REFUNDED y
   150000 anotado. Completado en Woo sin tracking → `processOrderCompleted` → Vipps capturó 151500 y liberó 150000.
   Alan avisado. orders#49 sigue solo en QA, a la espera del OK de Angelo para prod.
+- **21:11, #467: «roto el pago por Kustom».** El pago funcionaba (4655 y 4656 creadas), pero la vuelta mostraba
+  «Handlekurven er tom.» con «Vi kunne ikke bekrefte betalingen».
+  - Causa: la misma que en Vipps. La vuelta de Kustom reabría y leía antes de `Vio.init()`. El carrito no se vació y
+    la segunda compra cobró otra vez.
+  - Arreglo: [vio-web-sdk#128](https://github.com/vio-live/vio-web-sdk/pull/128). Kustom, Qliro, Walley y Adyen usan
+    `reopenOnceInitialized` antes de leer.
+  - Release 0.37.3 ([#129](https://github.com/vio-live/vio-web-sdk/pull/129), `e8d47fc`).
+    [vev#78](https://github.com/vio-live/vev/pull/78): Vev **0.341** desplegado. Alan avisado.
