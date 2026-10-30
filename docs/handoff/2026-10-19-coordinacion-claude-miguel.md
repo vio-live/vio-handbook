@@ -552,6 +552,35 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## De Miguel (escribe Miguel)
 
+- **30/10 16:42 UTC — Miguel: las dos tareas de la entrada de arriba, hechas.**
+  - **Colector `47d9cb7` (vio-analytics#41):** desplegado y verificado en staging y prod, mismo
+    procedimiento de siempre (`git archive`, backup, `.env` sin cambios, build, restart). Bundle
+    byte a byte idéntico en las dos VMs (`4f485c07…`). `/health` en las dos con
+    `version:"47d9cb7…"`, `ready:true`. Verificado con datos reales: el embudo de Careless
+    (sponsor_id 1327, campaign_ids=2, 14 días) pasó de `saw:0` a `saw:3010` con `visits:3016` —
+    exactamente lo que pedía el ticket. Journal:
+    [2026-10-30-colector-47d9cb7-embudo-marca-impresiones.md](../journal/2026-10/2026-10-30-colector-47d9cb7-embudo-marca-impresiones.md).
+  - **Navegadores internos:** metidos **23 en total** vía `POST /v1/internal/internal-browsers`
+    (token full, dos llamadas separadas con `note` distinta por grupo).
+    - **Grupo 1 (prueba interna): 3 de 9.** Resueltos con `startsWith(anon_id, '<prefijo>')`:
+      `a-8d63c81e-55b2-4d3c-b0e1-5071a14efc67`, `a-72c342a7-c523-4664-b8c9-1409d18f6de9`,
+      `a-fb176d5d-0d04-4131-8d3b-8984d64a0f24`. Los dos primeros son 2 de los 3 que borré el 29/10
+      y que generaron tráfico nuevo desde entonces — por eso tocaba meterlos en la lista ahora en
+      vez de volver a borrarlos. Los otros 6 prefijos (`a-617d26ae`, `a-7ab1f2e2`, `a-9ec5d4dc`,
+      `a-d2ea7af4`, `a-2a42b0eb`, `a-497e65c0`) no tienen **ninguna** fila en `events` ahora mismo
+      (ni quitando el filtro de `client_app_id`) — `a-9ec5d4dc` es el tercero que borré el 29/10 y
+      no volvió a aparecer (correcto saltarlo); los otros 5 puede que hayan rotado de anon_id desde
+      el 26/10. No hay nada que añadir para esos 6.
+    - **Grupo 2 (Replit): 20 encontrados y añadidos.** Por debajo del umbral de ~30 que decía el
+      ticket, y ninguno de los 20 tiene visitas en `www.moteoglivsstil.no` (0 filas al cruzar) —
+      no pisan el artículo real. No hizo falta escribirte antes de meterlos, los dos criterios de
+      seguridad quedaron dentro de rango.
+    - Verificado: `GET /v1/internal/internal-browsers` → `count: 23`. El embudo de Careless hoy
+      (30/10, parcial hasta las 16:50 UTC) ya da `clicked:2`, que coincide con tu objetivo. El
+      cierre del día completo y la resta local del script los compruebas tú, como dijiste. Journal:
+      [2026-10-30-navegadores-internos-lista-grupo1-grupo2.md](../journal/2026-10/2026-10-30-navegadores-internos-lista-grupo1-grupo2.md).
+  - Nada pendiente de mi lado en ninguna de las dos.
+
 - **29/10 16:27 UTC — Miguel: colector `62dd1ca` (vio-analytics#40, `option_value`) desplegado y
   verificado en staging y prod.** Mismo procedimiento que `89f2766` (`git archive`, backup, build,
   restart). `.env` sin cambios en ninguna de las dos VMs (md5 igual antes/después). Bundle byte a
