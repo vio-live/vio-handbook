@@ -38,3 +38,40 @@ Sigue el seguimiento del [29/10](./2026-10-29-tarjetas-qa-y-vev-sdk-037.md#noche
   de fallo ahora dice «Handlekurven er tom.» en lugar del spinner. Reabrirlas tras el init necesita sus propios tests,
   por la guarda de `returningFrom`.
 - Sin verificar: «Du handler hos» salió sin nombre ni logo en la captura de Alan.
+
+## Mañana: QK con 72 productos «Sent · queued» en el plugin de Woo (prod)
+
+Angelo pasó el correo de la agencia de QK: el plugin mostraba 46 Synced y 72 en cola. La agencia pulsó «Finish first
+sync» y «Sync all» y quedaron todos Synced. Michael (QK) pedía además tres productos: 50992, 50998 y 50987.
+
+- **Qué es «Synced»:** el producto de Woo tiene el meta `vio-product-id`. Vio lo escribe al crear el producto
+  (products → extensions `PUT /woo/product/metadata` → Woo REST). Si no llega, el plugin lo deja en «queued».
+- **Causa:**
+  - El 29/10 a las 07:28 UTC el plugin mandó los 73 productos que faltaban. El consumidor de products los guardó
+    todos a la vez (`Promise.all`) y cada guardado esperó su escritura en la tienda.
+  - extensions espera hasta 120 s y contesta `success: false` sin log; products no lo leía. En 72 la escritura no
+    llegó.
+  - Pista: el duplicado 422089 tardó 2 min 21 s entre que se creó su fila y que se rellenó. Los logs de ese día ya
+    rotaron, así que el error exacto de Woo no se ve.
+- **Duplicado:** Woo 37321 llegó dos veces con 69 s de diferencia y se creó dos veces (422089 y 422113). La primera
+  fila todavía no tenía id de Woo. Woo apunta a 422113; 422089 quedó con borrado lógico y `origin_id`
+  `37321-dup-of-422113`, para que un sync futuro no lo resucite. No tenía pedidos ni canales.
+- **Estado en prod, verificado leyendo Woo:** 117 de 118 con el `vio-product-id` correcto, más 37321, que apunta a su
+  producto vivo. Los «Sync all» no crearon duplicados.
+- **Arreglo del código, en develop y desplegado en QA:**
+  - [products#42](https://github.com/vio-live/vio-products-microservice/pull/42) (`4e4531b`): la fila nace con su
+    `origin`/`originId`, y la escritura del id va después de guardar, de una en una por tienda, con reintentos y
+    log (`WooIdWriteback`).
+  - [extensions#54](https://github.com/vio-live/vio-extensions-microservice/pull/54) (`fb96567`): espera de 30 s, log
+    del fallo, y `call()` ya no peta cuando Woo no contesta.
+  - Verificado en QA: el código está en los pods; sin conexión da `success: false` con aviso, y la tienda de Alan
+    (404 «Unknown site») deja la causa en el log. El camino de products no se probó con una importación real: en QA
+    no hay ninguna tienda Woo viva.
+- **Los 3 de Michael:** están en Vio (422096, 422097 y 422099) en borrador, con comisión 0. Tienen stock, imágenes,
+  categorías y envío.
+
+### Pendiente de Angelo (QK)
+
+- Publicar los productos nuevos con 10 %. Hay 46 listos, entre ellos los 3; quedan fuera Gavekort y los packs con
+  stock 0.
+- Pasar #42 y #54 a prod: rama desde master y cherry-pick.
