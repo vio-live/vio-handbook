@@ -536,3 +536,7 @@ hace falta una versión nueva de la SDK: todo funciona con la 0.37.0.
 >    caerán en la campaña real.
 > 5. **Antes de publicar un artículo nuevo** (Villoid, QRK…), abridlo en vista previa con `?vio_internal=1`, comprobad
 >    que la campaña es la suya y que el botón de compra abre la marca correcta, y después publicad.
+
+> 6. **SDK 0.37.1** (publicada el 30/10): subid `@vio-live/web-sdk` a `0.37.1` en este mismo publish. No cambia ninguna
+>    API. Arregla la vuelta de Vipps cuando la página se lee antes de `Vio.init()`: ahora vuelve a abrir el carrito
+>    correcto. También arregla la vuelta de Kustom.
