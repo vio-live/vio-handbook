@@ -103,3 +103,6 @@ Sigue el seguimiento del [29/10](./2026-10-29-tarjetas-qa-y-vev-sdk-037.md#noche
   - **Prod: pendiente del OK de Angelo.** Sin el arreglo, una devolución parcial en Woo con captura al enviar no
     captura nunca.
   - De paso, otra vez: «Your cut» del publisher se calcula sobre el total original. Es decisión de Angelo.
+- **19:16, #467, orden 4654: verificado de punta a punta en QA.** Devolución de una línea entera en Woo → REFUNDED y
+  150000 anotado. Completado en Woo sin tracking → `processOrderCompleted` → Vipps capturó 151500 y liberó 150000.
+  Alan avisado. orders#49 sigue solo en QA, a la espera del OK de Angelo para prod.
