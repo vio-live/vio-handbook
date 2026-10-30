@@ -28,3 +28,12 @@ Un filtro de enmascarado es una red que falla **abierta**: si el formato no es e
 - Nunca `cat`/`grep -n` crudo sobre un `.env`, aunque sea de test.
 
 Contexto: [journal 2026-09-29](../journal/2026-09/2026-09-29-stripe-connect.md).
+
+## También en datos que no parecen secretos
+
+> [claude, 2026-10-30] Al revisar el producto 630 de QK en Woo, filtré los metadatos con
+> `key.startsWith('vio-')` para ver `vio-product-id`. Salió también **`vio-apikey`**, la clave de Vio que el
+> plugin guarda en cada producto sincronizado, y quedó en la salida de la sesión. Filtra siempre por la
+> **clave exacta** que necesitas (`m.key === 'vio-product-id'`), nunca por prefijo. Lo mismo vale para
+> `woo_connection` (`consumer_key`/`consumer_secret`): leerlas en el script, sin imprimirlas
+> ([playbook](../playbooks/woo-productos-en-cola.md)).

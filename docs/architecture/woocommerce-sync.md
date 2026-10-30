@@ -1,6 +1,6 @@
 ---
 title: "Vio WooCommerce Sync — architecture, structure & status"
-last-updated: 2026-10-14
+last-updated: 2026-10-30
 owner: angelo
 status: live
 ---
@@ -25,6 +25,10 @@ status: live
   final data (1.0.2).
   How to ship a version: [release playbook](../playbooks/wordpress-org-plugin-release.md). The
   sections below date from June and keep their dates.
+- **The June blocker is closed:** the backend writes `vio-product-id` back, and since 2026-10-30 it does so one
+  write at a time per store, retried and logged. See
+  [How a product becomes Synced](#how-a-product-becomes-synced-2026-10-30) and, when a store shows products stuck
+  «queued», the [playbook](../playbooks/woo-productos-en-cola.md).
 - **State (2026-06-10):** **v1.0.0**, **public** and on `main` (`00bee82`). A **dedicated Vio admin
   page** (top-level menu) replaces the settings tab; the **connect/disconnect lifecycle works
   end-to-end** (one-step Connect → OAuth; disconnect tears down **both** sides — local *and* the
@@ -48,7 +52,34 @@ and test in a live store. The shippable artifact is **`vio-woocommerce-sync`**.
 > Both repos live in the **`vio-live`** org. **`vio-woocommerce-sync` is now public** (2026-06-10;
 > history audited — no secrets, no AI attribution). `woo-vio` (the dev harness) stays private.
 
-## ⛔ The blocker: the `product-id` never comes back
+## How a product becomes Synced (2026-10-30)
+
+> [claude, 2026-10-30] Replaces the blocker below, which is from June and kept as history.
+
+1. The plugin sends a batch (`POST /api/products/create-sqs`), stores `vio-sqs-id` per product, and the overview says
+   **Sent · queued**.
+2. The products consumer (`product.busConsumer.service.ts`, action `create`) saves the batch. `save()` creates the
+   row **with its `origin`/`originId` from the start**, so a second message for the same Woo product finds it instead
+   of creating another one. Before 30/10 the row was empty until the store answered, and Woo 37321 of QK was created
+   twice.
+3. Once the product is filled in, `WooIdWriteback` (`helpers/woo-id-writeback.ts`) writes `vio-product-id` back
+   through extensions `PUT /woo/product/metadata`: **one write at a time per seller's store**, two retries, and
+   `[wooIdWriteback] gave up …` in the log when it does not land. The import no longer waits on it. extensions waits
+   30 s for the store (`METADATA_TIMEOUT_MS`) and logs why a write failed.
+4. The plugin sees `vio-product-id` and the overview says **Synced**. Its fallback, on opening its page:
+   `GET /api/product/validate-synced/WOOCOMMERCE?originIds=…` (base-api → products) for the products still
+   «queued».
+
+**Why it changed:** QK, prod 29/10. The plugin sent 73 products, the consumer saved them all at once
+(`Promise.all`), and each save waited on its own write to the store. The store did not answer within the
+120 s extensions waited, the failures came back as `success: false` with no log, and 72 products stayed «queued»
+although they were in Vio. Fixed in products #42/#43 and extensions #54/#55
+([journal](../journal/2026-10/2026-10-30-products-woo-qk-en-cola.md)).
+
+**Still true:** the batch itself is still saved in parallel (`Promise.all`), except for the write-backs, which are
+serialized. Woo bundles without stock management arrive with quantity 0.
+
+## ⛔ The blocker: the `product-id` never comes back (June — resolved, see above)
 
 This is the single thing keeping the plugin from being "done". **Read this first.**
 
@@ -246,7 +277,7 @@ OAuth at `/wc-auth/v1/authorize` with callback `…/woo/auth/callback-supplier/`
 
 ## Tech debt / pendientes
 
-1. **Backend `product-id` write-back** (or a filter endpoint) — *the* blocker; Alan/backend.
+1. ~~**Backend `product-id` write-back**~~ — done; serialized and retried since 2026-10-30 (see [How a product becomes Synced](#how-a-product-becomes-synced-2026-10-30)).
 2. **Rename backend webhooks** "Outshifter → Vio" (cosmetic).
 3. **Real backend domain** — flip to `api-commerce.vio.live` once Vio exposes it (one constant / one line). **Alan will set the definitive URLs.**
 4. **Brand assets** — `assets/img/icon.svg` is a placeholder; the menu icon is a placeholder white mark; needs the real Vio logo SVG.
