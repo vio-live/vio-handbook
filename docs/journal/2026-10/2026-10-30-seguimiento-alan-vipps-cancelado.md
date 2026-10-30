@@ -90,3 +90,16 @@ Sigue el seguimiento del [29/10](./2026-10-29-tarjetas-qa-y-vev-sdk-037.md#noche
   - El 4650 es A3 (pagó después de cancelar dos veces).
   - El 4648 es A2, correcto: «3 varer: 2 × …» y el envío una sola vez.
 - **#469** a Done (Alan, 16:25).
+- **#468 a Done** (17:57). A2 (4648), A4 + B8 (4651 con Stripe, `js.stripe.com` solo en marcas con Stripe) y A3, todo
+  correcto. En A3, el formulario vacío solo pasa tras cancelar un Vipps Express (no tiene dirección que recuperar).
+- **18:22, #467, orden 4653:** la devolución ya funciona (la línea queda REFUNDED y se anotan 1.500), pero **Vipps no
+  capturó** al completar.
+  - `completeOrderItem` solo daba el pedido por enviado si todas las líneas estaban COMPLETED, y la REFUNDED lo
+    impedía.
+  - Arreglo: [orders#49](https://github.com/vio-live/vio-orders-microservice/pull/49) (`0dc607e`). `everyLineShipped`
+    trata las líneas anuladas como terminadas y pide al menos una enviada. Desplegado en QA.
+  - Al 4653 se le pidió un tracking (`saveTrackingNumber` → Vipps `shipped`), o repetir la prueba. Esperado: 1.515
+    capturado y 1.500 liberado.
+  - **Prod: pendiente del OK de Angelo.** Sin el arreglo, una devolución parcial en Woo con captura al enviar no
+    captura nunca.
+  - De paso, otra vez: «Your cut» del publisher se calcula sobre el total original. Es decisión de Angelo.
