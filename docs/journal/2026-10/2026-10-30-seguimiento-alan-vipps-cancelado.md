@@ -114,3 +114,13 @@ Sigue el seguimiento del [29/10](./2026-10-29-tarjetas-qa-y-vev-sdk-037.md#noche
     `reopenOnceInitialized` antes de leer.
   - Release 0.37.3 ([#129](https://github.com/vio-live/vio-web-sdk/pull/129), `e8d47fc`).
     [vev#78](https://github.com/vio-live/vev/pull/78): Vev **0.341** desplegado. Alan avisado.
+- **22:20, #467, Kustom con 0.341:** la caja ya reabría con el carrito, pero `GetKustomOrder` seguía dando 401 (orden
+  4657 cobrada).
+  - El log del gateway, comparando hashes de las keys: en la página recién vuelta, todas las llamadas del primer
+    segundo salieron con otra key (`Config`, `GetLineItemsBySupplier`, `GetKustomOrder`). Vev arranca en pasos y la
+    key del canal del checkout todavía no se conoce. A los 45 s ya iba la buena.
+  - Arreglo: [vio-web-sdk#130](https://github.com/vio-live/vio-web-sdk/pull/130). `readOnReturn` reintenta la lectura
+    de Kustom, Qliro, Walley y Adyen a 1,5, 3, 5 y 8 s, solo con key rechazada.
+  - Release 0.37.4 ([#131](https://github.com/vio-live/vio-web-sdk/pull/131), `182a459`).
+    [vev#79](https://github.com/vio-live/vev/pull/79): Vev **0.342**. Alan avisado.
+  - De fondo: la key del canal tarda en resolverse tras una redirección en Vev. Es mitigado, no resuelto en origen.
