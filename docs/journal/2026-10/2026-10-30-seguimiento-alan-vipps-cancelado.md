@@ -127,3 +127,15 @@ Sigue el seguimiento del [29/10](./2026-10-29-tarjetas-qa-y-vev-sdk-037.md#noche
 - **22:42–22:43, Kustom con Vev 0.342 (órdenes 4658 y 4659):** en el gateway, la primera lectura `GetKustomOrder` sale con
   la key de la plataforma y da 401. El reintento, unos 2 s después, va con la key del canal y responde bien, en las dos
   órdenes. Falta el comentario de Alan con lo que vio en pantalla.
+- **23:02, #467:** Kustom correcto (4658 y 4659, con el recibo de Kustom). Alan repasó Vipps: cancelar y volver funcionó.
+  La compra posterior falló porque QA se apagó a las 23:00 UTC. Sigue el lunes; si sale bien, #467 a Done.
+
+### Pendiente al cierre del 30/10
+
+- **Prod:** [orders#49](https://github.com/vio-live/vio-orders-microservice/pull/49), para que una línea devuelta no
+  impida la captura al enviar. Necesita el OK de Angelo.
+- **npm:** publicar 0.37.4. El token da 401; hace falta `npm login`.
+- **Producto:**
+  - «Your cut» del publisher sobre lo devuelto.
+  - Los 25 packs de QK.
+  - Navegadores dentro de apps en Vipps.
