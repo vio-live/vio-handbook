@@ -11,6 +11,7 @@ Para quien retome la campaña: qué está en vivo, cómo se reporta y qué hay q
 | Host | Replit (Aller), SDK web 0.29.0 |
 | Analytics | surface 1 «Mote Livsstil Hub», campaña 2 «Careless», slots `article-189-block-2…12` |
 | Commerce | channel 482 (user 1330 Aller), colección «Careless Pilot collection» `927UL4Z6k` (11 productos; **42 desde el 29/10**: los 49 del Excel «Produkter i Vio» de Careless menos «Active komplettpakke» (421202) y los 6 de hombre (`kjonn:herre` en Shopify: 421226, 421229, 421230, 421232, 421234, 421237), quitados a petición de Angelo; añadidos con `POST collections/collectionItem/add/multiple`; channel 480 y 482 con 42) |
+| Pruebas (30/10) | La copia de Replit (`mote-livsstil-hub-vio.replit.app`) usa la key de prod. Sus bloques `article-146-block-2…5`, `article-131-block-5/6` y `carousel-home` pasan a la campaña 1 «Careless Aller (test)» (channel 480), activa hasta el 30/11 23:59 Oslo. Antes estaban en la 2 y mezclaban pruebas con el artículo (23–25/10, 28–29/10). Los reportes de `~/vio-reportes` cuentan solo `www.moteoglivsstil.no`. |
 | Pago | Vipps Express; la descripción del pago lleva producto y talla (shopcart #106) |
 | Avisos de pedidos | Slack `#vio-ordenes` (iqplusworkspace) |
 
