@@ -81,8 +81,12 @@ sync» y «Sync all» y quedaron todos Synced. Michael (QK) pedía además tres 
   - En Vio: `origin_id` e `imported_product.woo_id` pasan de 630 a 196622.
   - En Woo: el `vio-product-id` de 630 queda vacío. El plugin no hace nada con un producto sin id; 630 sale «queued».
   - 422005, ya con los datos correctos del pack, quedó publicado.
-  - **Falta:** 630 no tiene producto en Vio. Se crea con un «Sync» de ese producto (o «Sync all») en el WordPress de
-    QK; no lo podemos pulsar nosotros.
+  - **630 creado desde Vio:** [claude, 2026-10-30] no hizo falta el «Sync» de QK. Lo creé con `POST /` de products
+    (el mismo `save()` de la importación), con los datos del plugin: 58,65 rebajado de 69, 9889 en stock, 2
+    imágenes, QKCNO-12. Es 422150, con clase de envío, las 8 categorías de Woo (backfill), 10 % y publicado. El id
+    volvió a Woo solo, por el `WooIdWriteback` nuevo (`success: true` a las 15:11:35).
+- **Pantalla de sync de QK:** los 118 productos publicados en Woo tienen su `vio-product-id`, y cada uno apunta a su
+  producto en Vio (118/118). El plugin debería mostrar 118 Synced y 0 en cola.
 - **A prod:**
   - [products#43](https://github.com/vio-live/vio-products-microservice/pull/43) (`4c73175`) y
     [extensions#55](https://github.com/vio-live/vio-extensions-microservice/pull/55) (`8eb53c3`), cherry-pick de
