@@ -76,3 +76,17 @@ Sigue el seguimiento del [29/10](./2026-10-29-tarjetas-qa-y-vev-sdk-037.md#noche
   - Sin explicar: por qué la completación del 4647 mandó a COMPLETED solo una de las dos líneas en PROCESSING. Los
     logs de extensions de esa hora rotaron. Con `lines`, la línea devuelta ya no está en PROCESSING al completar.
 - **#469:** capturas revisadas y correctas; Alan puede pasarla a Done.
+- **17:13, #468: tras cancelar en Vipps, «Betal … med Vipps» sale gris** con «Vennligst fyll ut leveringsadresse».
+  - Causa: la página se recarga al volver y el formulario de envío llega vacío. Desde 0.37.1 la caja reabre, pero sin
+    los datos.
+  - Arreglo: [vio-web-sdk#126](https://github.com/vio-live/vio-web-sdk/pull/126). Si la vuelta no está pagada,
+    rellena los campos vacíos desde `getCheckout` (el pago estándar de Vipps guarda ahí la dirección) con
+    `onFieldChange`.
+  - Release 0.37.2 ([#127](https://github.com/vio-live/vio-web-sdk/pull/127), `c1c21d2`).
+    [vev#77](https://github.com/vio-live/vev/pull/77): Vev **0.340** desplegado. Alan avisado a las 17:19.
+- **Pruebas de Alan con el arreglo de devoluciones:**
+  - El 4649 devolvió en Woo una línea entera. orders-ms la marcó REFUNDED y anotó 150000 (1.500 con IVA, no los
+    1.200 de Woo). Falta que complete el pedido para ver la captura.
+  - El 4650 es A3 (pagó después de cancelar dos veces).
+  - El 4648 es A2, correcto: «3 varer: 2 × …» y el envío una sola vez.
+- **#469** a Done (Alan, 16:25).
