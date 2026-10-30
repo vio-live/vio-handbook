@@ -14,6 +14,24 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **30/10 17:05 UTC — claude: URGENTE, lo pide Angelo («pídeselo a Miguel ya»). Meter navegadores en la lista de internos del colector de PROD (`POST /v1/internal/internal-browsers`, token full).** No es un borrado: se deshace con `DELETE`.
+  - **Para qué:** que el dashboard de Commerce enseñe la cifra real y cuadre con el informe diario a Aller. Hoy el dashboard de Careless cuenta nuestras pruebas: 43 impresiones y 5 clics, cuando lo real es 31 y 2.
+  - **Grupo 1, nuestros navegadores de prueba.** Son prefijos de `anon_id`: resuélvelos a ids completos con `SELECT DISTINCT anon_id FROM events WHERE client_app_id = 1 AND startsWith(anon_id, '<prefijo>')`.
+    - `a-617d26ae`, `a-7ab1f2e2`, `a-8d63c81e`, `a-9ec5d4dc`, `a-d2ea7af4`: Angelo, pruebas del 26/10.
+    - `a-2a42b0eb`: otro teléfono de Angelo.
+    - `a-72c342a7`: Mac de Angelo.
+    - `a-497e65c0`: Michael.
+    - `a-fb176d5d`: navegador de claude.
+    - Si de los 3 que Angelo autorizó borrar el 29/10 alguno ya no existe, sáltalo.
+  - **Grupo 2, los navegadores de las páginas de prueba de Replit:** todos los `anon_id` con eventos en `mote-livsstil-hub-vio.replit.app`:
+    `SELECT DISTINCT anon_id FROM events WHERE client_app_id = 1 AND domain(content_url) = 'mote-livsstil-hub-vio.replit.app' AND received_at >= '2026-10-23'`.
+    - Son pruebas de Replit, Aller y nuestras con la key de prod. Del 23 al 29/10 entraron en la campaña 2 (Careless), con 1–14 visitas al día.
+    - Desde hoy esos bloques están en la campaña 1 (test), pero los días pasados siguen mezclados.
+    - Si alguno de esos navegadores entró también en el artículo real, sus visitas dejan de contar. Son de gente de Aller o de Replit, así que vale.
+  - **Antes de meterlos, mira el tamaño.** Si el grupo 2 pasa de unos 30 navegadores o alguno tiene más de 20 visitas en `www.moteoglivsstil.no`, escríbeme aquí y lo miramos antes.
+  - **Cuando esté**, escríbeme aquí con cuántos ids metiste de cada grupo. Yo quito las restas locales del script del informe, para no restarlos dos veces, y compruebo que el dashboard (Careless, día 30/10) da 31 impresiones y 2 clics.
+  - Va junto con el despliegue de `47d9cb7` (entrada de abajo), que no depende de esto.
+
 - **30/10 16:40 UTC — claude: desplegar el colector `47d9cb7` (vio-analytics [#41](https://github.com/vio-live/vio-analytics/pull/41)) en staging y prod, hoy si puedes. Lo pide Angelo.**
   - **Qué arregla:** en el dashboard de Careless, el embudo de visitas sale con «Saw a product» y «Clicked a product» a 0 en cualquier rango, con 21 carritos.
   - **Causa:** las `component_impression` de las tarjetas llegan con `sponsor_id 0`, y el embudo de la marca solo contaba filas con su `sponsor_id`.
