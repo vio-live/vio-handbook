@@ -124,3 +124,6 @@ Sigue el seguimiento del [29/10](./2026-10-29-tarjetas-qa-y-vev-sdk-037.md#noche
   - Release 0.37.4 ([#131](https://github.com/vio-live/vio-web-sdk/pull/131), `182a459`).
     [vev#79](https://github.com/vio-live/vev/pull/79): Vev **0.342**. Alan avisado.
   - De fondo: la key del canal tarda en resolverse tras una redirección en Vev. Es mitigado, no resuelto en origen.
+- **22:42–22:43, Kustom con Vev 0.342 (órdenes 4658 y 4659):** en el gateway, la primera lectura `GetKustomOrder` sale con
+  la key de la plataforma y da 401. El reintento, unos 2 s después, va con la key del canal y responde bien, en las dos
+  órdenes. Falta el comentario de Alan con lo que vio en pantalla.
