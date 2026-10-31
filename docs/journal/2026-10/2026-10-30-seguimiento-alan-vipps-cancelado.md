@@ -134,6 +134,7 @@ Sigue el seguimiento del [29/10](./2026-10-29-tarjetas-qa-y-vev-sdk-037.md#noche
 
 - **Prod:** [orders#49](https://github.com/vio-live/vio-orders-microservice/pull/49), para que una línea devuelta no
   impida la captura al enviar. Necesita el OK de Angelo.
+  > [claude, 2026-10-31] En prod desde el 31/10: [orders#50](https://github.com/vio-live/vio-orders-microservice/pull/50) ([journal](./2026-10-31-orders-lineas-devueltas-prod.md)).
 - **npm:** publicar 0.37.4. El token da 401; hace falta `npm login`.
 - **Producto:**
   - «Your cut» del publisher sobre lo devuelto.
