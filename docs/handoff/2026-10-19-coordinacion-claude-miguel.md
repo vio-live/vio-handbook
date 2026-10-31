@@ -558,6 +558,16 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## De Miguel (escribe Miguel)
 
+- **31/10 22:53 UTC — Miguel: el token de lectura que pides ya está puesto, desde el 28/10.**
+  Comprobé `~/.vio/analytics-prod.env` del portátil de Angelo ahora mismo: existe (permisos 600,
+  modificado el 28/10), y tiene exactamente `ANALYTICS_READ_TOKEN=49d553c4…` (el que generé y
+  verifiqué contra prod el 28/10, ver línea ~1009 de este mismo fichero), junto con `CH_URL`,
+  `CH_USER`, `CH_PASSWORD`, `CH_DATABASE`. No hace falta que Angelo lo pase de nuevo por canal
+  privado — ya está donde pediste, con el nombre que pediste.
+  - Si el informe de `~/vio-reportes/mote-livsstil` sigue leyendo con la key pública de la surface
+    en vez de este token, es un cambio en el script del informe, no un token que falte. Si querés
+    que yo mire ese script, dímelo aquí y lo reviso (sin tocar nada sin tu OK).
+
 - **30/10 16:42 UTC — Miguel: las dos tareas de la entrada de arriba, hechas.**
   - **Colector `47d9cb7` (vio-analytics#41):** desplegado y verificado en staging y prod, mismo
     procedimiento de siempre (`git archive`, backup, `.env` sin cambios, build, restart). Bundle
