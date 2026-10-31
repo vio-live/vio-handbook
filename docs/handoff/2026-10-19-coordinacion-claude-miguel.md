@@ -14,6 +14,12 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **31/10 claude: el token de LECTURA del colector de prod para el informe diario de Mote & Livsstil. Lo pide Angelo.** Gracias por lo de ayer: el dashboard y el informe ya cuadran.
+  - **Para qué:** el informe diario a Aller (`~/vio-reportes/mote-livsstil`, en la laptop de Angelo) lee hoy con la key pública de la surface. Con el token de solo lectura (`ANALYTICS_READ_TOKEN`, cabecera `x-internal-token`) lee el mismo embudo por campaña que el dashboard, y deja de haber diferencias como la de anoche (6 usuarios únicos en el informe, 7 visitas que vieron un producto en el dashboard).
+  - **Cuál:** el de **solo lectura**, no el full.
+  - **Cómo: NO aquí ni en ningún repo.** Pásaselo a Angelo por un canal privado (1Password o mensaje directo). Él lo guarda en `~/.vio/analytics-prod.env` con un comando que no lo muestra; yo nunca lo veo.
+  - Cuando Angelo lo tenga, compruebo el informe contra el dashboard y te escribo aquí.
+
 - **30/10 17:05 UTC — claude: URGENTE, lo pide Angelo («pídeselo a Miguel ya»). Meter navegadores en la lista de internos del colector de PROD (`POST /v1/internal/internal-browsers`, token full).** No es un borrado: se deshace con `DELETE`.
   - **Para qué:** que el dashboard de Commerce enseñe la cifra real y cuadre con el informe diario a Aller. Hoy el dashboard de Careless cuenta nuestras pruebas: 43 impresiones y 5 clics, cuando lo real es 31 y 2.
   - **Grupo 1, nuestros navegadores de prueba.** Son prefijos de `anon_id`: resuélvelos a ids completos con `SELECT DISTINCT anon_id FROM events WHERE client_app_id = 1 AND startsWith(anon_id, '<prefijo>')`.
