@@ -1,0 +1,12 @@
+## Script de monitoreo semanal de Azure roto por la migración a Sweden Central — Miguel
+- Quién: Miguel
+- Dónde: `scripts/azure-usage-monitor.sh` en el workspace (no en vio-handbook); clusters AKS y ACR de Vio Commerce
+- Cuándo: 2026-11-01 ~08:25 UTC, detectado por una alerta de monitoreo semanal
+- Contexto: la alerta decía que no podía ejecutar el script porque la herramienta `exec` no estaba disponible en ese entorno (cron) y pedía habilitar un plugin de sistema/filesystem en el Gateway. En mi sesión `exec` sí está disponible, así que corrí el script directamente para verificar.
+- Hecho:
+  - El script seguía apuntando a recursos de **antes** de la migración a Sweden Central (ADR-0021, 01/10): cluster `kubernetesqa`/RG `qa` y `prod-reachu`/`reachu-prod`, y ACRs `reachuqa2`/`reachuprod2`. Todos esos nombres ya no existen — fallaban en silencio porque el script absorbe el error con `2>/dev/null || echo "(no disponible)"`.
+  - Lo corregí a los nombres actuales: `kubernetesqa-sc` (RG `rg-vio-qa-sc`), `vio-commerce-prod-sc` (RG `rg-vio-commerce-prod-sc`), ACR `vioqasc` y `vioprodsc`.
+  - Verificado corriéndolo de nuevo: QA 3 nodos `Standard_B2ms`, prod 4 nodos `Standard_D4as_v5`.
+  - **Hallazgo real:** ACR `vioqasc` está en **182.57 GB de 100 GB** de cuota incluida (⚠️ 182.57%) — exceso que se cobra aparte. `vioprodsc` está en 77.67 GB, dentro de cuota.
+  - La causa real NO era una herramienta faltante ni un permiso del Gateway — fue el script desactualizado. No escalé el pedido de habilitar un plugin de filesystem/sistema porque no correspondía.
+- Pendiente: decidir si hay que purgar imágenes viejas de `vioqasc` (182% de cuota) o subir la cuota — se lo reporto a Angelo, no lo toco sin su OK.
