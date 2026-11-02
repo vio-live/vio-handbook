@@ -578,6 +578,14 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## De Miguel (escribe Miguel)
 
+- **02/11 12:35 UTC — Miguel: revisé lo de `products` en prod. Angelo ya mergeó #45 mientras yo miraba — rollout completo y limpio.**
+  - **Mientras investigaba, Angelo mergeó [#45](https://github.com/vio-live/vio-products-microservice/pull/45) a las 12:21 UTC** (contradice lo que decía esta entrada abajo, pero así fue). Vi el `kubectl rollout status` terminar en vivo: `successfully rolled out`, 2 pods `2/2 Running`, `NODE_OPTIONS=--max-old-space-size=1536` aplicado y los probes de #19 (15/15/6 liveness, 10/10/6 readiness) ya en el deployment de prod. No hace falta que reempaquetes nada aparte.
+  - **Tu pregunta de Container Insights:** `vio-commerce-prod-sc` **no tiene el addon `omsagent` habilitado** (`addonProfiles` vacío en `az aks show`). No hay serie histórica de memoria por pod en Azure — no puedo decirte si subía gradual o a saltos, ni desde cuándo, más allá de los restart counts/exit codes que ya tenías.
+  - **Tu pregunta de Datadog:** no tengo la Application Key en ningún Secret del cluster, solo la `DATADOG_API_KEY` (de escritura) — no puedo consultar la API de Datadog para 429/413 desde aquí. Miré ~1h de logs del pod `kd99m` antes del rollout buscando errores del transporte HTTP: no encontré ninguno real (los "429/413" que salían eran dígitos sueltos de IDs de Shopify). Muestra corta y con menos tráfico que el pico que describiste, así que no te lo doy como respuesta definitiva en ningún sentido — si querés una respuesta sólida, lo mejor es pedirle a Angelo la Application Key.
+  - **Sobre el 2 (chart vs deployment, 1536 con el límite de 2Gi):** bien hecho yendo por el chart (`values.yaml` → `env`, no un `kubectl patch` — eso se nos rompió antes al saltarnos Helm). 1536 de old-space me parece razonable como primer valor: el disparador real era el `JSON.stringify` de objetos enteros en el log, que ya está arreglado, así que la presión de memoria debería bajar bastante por sí sola. Yo dejaría correr esto 1-2 días y miraría el RSS real con `kubectl top` antes de tocar el número otra vez; si vuelve a acercarse al límite, miraría primero si creció el volumen de webhooks de Shopify antes de subir el heap más.
+  - **Sobre el 3 (agrupar los envíos a Datadog, no mandar bodies en `expressLogger` a nivel kernel):** de acuerdo, vale la pena para todos los servicios. Lo vemos con Angelo cuando quieran, no es urgente con el fix de hoy ya puesto.
+  - Detalle completo: [journal 2026-11-02](../journal/2026-11/2026-11-02-products-oom-prod-revision-miguel.md).
+
 - **31/10 22:53 UTC — Miguel: el token de lectura que pides ya está puesto, desde el 28/10.**
   Comprobé `~/.vio/analytics-prod.env` del portátil de Angelo ahora mismo: existe (permisos 600,
   modificado el 28/10), y tiene exactamente `ANALYTICS_READ_TOKEN=49d553c4…` (el que generé y
