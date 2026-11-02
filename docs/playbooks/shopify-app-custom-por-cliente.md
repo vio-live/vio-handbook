@@ -241,11 +241,13 @@ team `tipio-2`:
 ```bash
 git clone https://github.com/vio-live/vio-shopify-sync.git && cd vio-shopify-sync
 git checkout custom/client-app && npm ci && npm test
-for p in vio-sync-demo vio-sync-gladkokken vio-sync-makeupmekka vio-sync-client; do
+for p in vio-sync-demo vio-sync-gladkokken vio-sync-makeupmekka vio-sync-client vio-sync-careless vio-sync-floyd; do
   rm -rf .vercel && vercel link --yes --scope tipio-2 --project $p && vercel deploy --prod --yes --scope tipio-2
 done
 ```
 
+Todas las apps privadas van **siempre en la misma versión**: un despliegue va a todos los proyectos (Angelo, 2/11).
+Para comprobar que sirven la misma build sin el CLI, comparar el `manifest-*.js` de `/auth/login` en cada una.
 Después de cada deploy: `healthz` → `ok`, `/internal/sync-tokens` con el `CRON_SECRET` del
 proyecto → `ok:true` y `tokenExpiresAt` con más de 25 minutos, y `vercel crons ls`. Nada de
 `shopify app deploy` salvo que cambie el `toml`.

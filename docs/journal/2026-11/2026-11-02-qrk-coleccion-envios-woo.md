@@ -65,5 +65,10 @@ Lo mismo que se hizo con Careless en Shopify: que el pedido llegue a su tienda y
 - **Desplegado** solo en `vio-sync-client` (Villoid) el 2/11 a las 16:33 (healthz `ok`).
   - La consulta por ids contra su tienda devuelve 136/136, todos ACTIVE.
   - Villoid no tiene que hacer nada: no hay permisos ni `toml` nuevos.
-- **Pendiente:** Gladkokken, Makeup Mekka y la demo llevan 39 días sin desplegarse y no se tocaron. Careless y Floyd,
-  tampoco: tienen pocos productos y no les afecta.
+- **Las seis apps privadas, en la misma versión** (Angelo: «no podemos tener diferentes versiones de apps privadas»):
+  - Desplegado `35d4bb7` en Gladkokken, Makeup Mekka, Careless, Floyd y la demo.
+  - Gladkokken, Makeup Mekka y la demo llevaban 39 días sin desplegarse, pero desde el 24/09 no había cambiado código
+    de `app/`, solo este arreglo.
+  - El `toml` (`refunds/create`) ya estaba activo desde el 21/10, así que no hizo falta `shopify app deploy`.
+  - Las seis responden `healthz` `ok` y sirven la misma build (`manifest-6aa160b4`), sin el aviso de «current page».
+  - Las variables de Vercel están en todos los proyectos (`CRON_SECRET`, `REDIS_URL`, `SHOP_DOMAIN`, …).
