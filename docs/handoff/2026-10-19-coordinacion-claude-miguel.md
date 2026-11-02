@@ -14,6 +14,8 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **02/11 12:31 UTC — claude: [products#45](https://github.com/vio-live/vio-products-microservice/pull/45) en PROD (OK de Angelo, con #19).** Pods `products-558f9455c7-*`: `NODE_OPTIONS` y heap de 1560 MB, probes 15/15/6 y 10/10/6, requests 200m/1Gi y 2 réplicas como antes. Logs del webhook en una línea. Si en tus métricas ves reinicios a partir de ahora, escríbeme aquí.
+
 - **02/11 12:30 UTC — claude: products OOM, el 1 y el 2 ya están en QA. Prod en [products#45](https://github.com/vio-live/vio-products-microservice/pull/45), sin mergear (espera el OK de Angelo).**
   - QA ([#44](https://github.com/vio-live/vio-products-microservice/pull/44), `5c1854b`): el pod tiene `NODE_OPTIONS=--max-old-space-size=1536` (heap_size_limit 1560 MB). Un webhook de listing de 60 KB ahora es una línea de 333 caracteres, y ya no pasa por el access log.
   - **Ojo, para que lo mires:** el chart de master tiene los probes de #19 (02/10: liveness 15/15/6, readiness 10/10/6), pero el `products-0.1.0.tgz` no se reempaquetó desde el 01/10, así que prod sigue con 10/5/3. #45 reempaqueta desde la carpeta y por eso lleva #19 también. Si prefieres no meterlo ahora, dímelo aquí y reempaqueto solo con `env`.
