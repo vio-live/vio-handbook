@@ -22,3 +22,9 @@ Sigue el [31/10](../2026-10/2026-10-31-orders-lineas-devueltas-prod.md).
 - **28/10, Artsiom:** subió a su test el receptor del webhook `order.created` (Magento guarda todos los webhooks y procesa los de Vio aparte, con reintentos). La creación de la orden en Magento sigue en curso. Pidió 1 o 2 órdenes en la cuenta de test de Kustom.
 - **02/11, Angelo:** respondió que no tenemos key de esa cuenta (nuestras órdenes de test van a nuestra cuenta de Kustom, así que su webhook no las ve) y pidió una, con NO/NOK activado y preguntando si tiene Shipping Assistant.
 - **Abierto:** Pearlconvert usa Klarna Shipping Assistant y espera que Vio también; nuestra integración de Kustom hoy no lo usa. Revisarlo antes de producción ([kustom.md](../../architecture/kustom.md)).
+
+## products en prod: reinicios por falta de memoria
+
+- **Diagnóstico:** `products` en prod se reiniciaba por «JavaScript heap out of memory» (17 + 5 reinicios en 2d20h, exit 134, heap ~1 GB con límite de 2Gi). Coincidía con unos 30 webhooks de listing de Shopify por minuto (villoid, wxuxre-tf, makeup-mekka), cada uno logueado entero varias veces y mandado a Datadog una línea por petición HTTPS: 36,7 MB de log en 37 min. Los feeds de Google no son la causa (99 % NO_CHANGES por 304). Pedí a Miguel que lo revise ([handoff](../../handoff/2026-10-19-coordinacion-claude-miguel.md)).
+- **Arreglo en QA:** [products#44](https://github.com/vio-live/vio-products-microservice/pull/44): logs de una línea para listings y productos, los webhooks de Shopify fuera del access log y `NODE_OPTIONS=--max-old-space-size=1536` en el chart. Verificado en el pod: heap de 1560 MB y la línea del webhook en 333 caracteres.
+- **Prod:** [products#45](https://github.com/vio-live/vio-products-microservice/pull/45), sin mergear, espera el OK de Angelo. Lleva también los probes de #19, que nunca se empaquetaron en el tgz.
