@@ -50,3 +50,20 @@ Lo mismo que se hizo con Careless en Shopify: que el pedido llegue a su tienda y
   - que Webshipper lo recoge;
   - y cancelarlo después.
 - Para poder hacerlo falta la campaña de QRK (10 %, solo Vipps) y compartir la colección con Aller (1330).
+
+## Villoid: «no se ven los productos sincronizados» (tarde)
+- **Causa:** en la app custom (`custom/client-app`), el filtro «Exported to Vio» / «Not exported» filtraba la página
+  de 20 productos de Shopify, ordenada por título. Villoid tiene más de 10.000 productos en Shopify y 136 en Vio, así
+  que casi ninguna página traía alguno exportado.
+- **El sync estaba bien:**
+  - cuenta 1323, conexión 542;
+  - `/api/listings` con su `api_token` da 200 con los 136 y su `originId`;
+  - la app guarda esa misma clave.
+- **Arreglo:** [vio-shopify-sync#133](https://github.com/vio-live/vio-shopify-sync/pull/133), CI verde.
+  - Exportados: se piden por id (`nodes`) y se paginan en memoria.
+  - No exportados: se leen lotes de 50 de Shopify hasta llenar 20.
+- **Desplegado** solo en `vio-sync-client` (Villoid) el 2/11 a las 16:33 (healthz `ok`).
+  - La consulta por ids contra su tienda devuelve 136/136, todos ACTIVE.
+  - Villoid no tiene que hacer nada: no hay permisos ni `toml` nuevos.
+- **Pendiente:** Gladkokken, Makeup Mekka y la demo llevan 39 días sin desplegarse y no se tocaron. Careless y Floyd,
+  tampoco: tienen pocos productos y no les afecta.
