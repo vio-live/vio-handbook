@@ -14,6 +14,21 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **02/11 12:20 UTC — claude: products en PROD se reinicia por falta de memoria. Lo pide Angelo: revísalo tú también mientras yo hago el arreglo.**
+  - **Qué pasa:** `products-76b696fb69-kd99m` lleva 17 reinicios en 2d20h y `-h5mr6` lleva 5. Todos son exit 134: «Ineffective mark-compacts near heap limit … JavaScript heap out of memory» con el heap en ~1022 MB. El contenedor tiene `limits.memory: 2Gi` y no hay `NODE_OPTIONS`, así que Node se para en su techo por defecto (~1 GB) y nunca llega al OOMKill de k8s. En reposo está en 550–715 MB de RSS.
+  - **Lo que veo en los logs** (37 min antes de la caída de las 10:56): unos 30 `receiveUpdateShopifyListing`/min, con picos de ~100. Vienen de villoid, wxuxre-tf y makeup-mekka; el 84 % es de productos que no están en Vio. Se loguea el cuerpo entero de cada webhook (hasta ~100 KB) y además el producto entero en `importShopifyProduct`. Salen 36,7 MB de log en 37 min, y el 67 % son 822 líneas de más de 10 KB. Todo va también a Datadog con el `winston.transports.Http` del kernel (una petición HTTPS por línea, sin lotes), y `expressLogger` vuelve a mandar el body. En un pod conté 134 sockets a `http-intake.logs.datadoghq.eu` (34.149.115.174), casi todos en TIME_WAIT.
+  - **Descartado:** los feeds de Google Merchant (1, 2 y 4, cada 5 min) son el 99 % NO_CHANGES por 304: no parsean nada.
+  - **Impacto:** el endpoint contesta 200 antes de procesar, así que cada caída pierde en silencio las actualizaciones de stock y precio que estaban a medias.
+  - **Lo que hago yo (1 y 2, a develop → QA, y a prod con el OK de Angelo):**
+    1. products: dejar de loguear cuerpos y productos enteros (tienda, id y contadores).
+    2. Deployment de products: `NODE_OPTIONS=--max-old-space-size=1536`.
+  - **Lo que te pido a ti:**
+    - **Con las métricas que tengas (Container Insights o Datadog):** ¿sube la memoria de products poco a poco entre reinicios o a saltos? ¿Desde cuándo pasa? Antes del ReplicaSet actual no tengo historial.
+    - **¿Datadog rechaza o frena estos envíos?** Por ejemplo con 413 por tamaño o con 429. Si los rechaza, el transporte acumula peticiones y eso encaja con la memoria.
+    - **Tu opinión sobre el 2:** ¿el valor va en el chart o en el deployment? ¿1536 con un límite de 2Gi te parece bien?
+    - **El 3, más adelante:** agrupar los envíos a Datadog en el logger del kernel y no mandar los bodies en `expressLogger`. Afecta a todos los servicios: si te parece, lo vemos con Angelo.
+  - Escríbeme aquí lo que encuentres. Yo dejo aquí el PR y la verificación en QA.
+
 - **31/10 claude: el token de LECTURA del colector de prod para el informe diario de Mote & Livsstil. Lo pide Angelo.** Gracias por lo de ayer: el dashboard y el informe ya cuadran.
   - **Para qué:** el informe diario a Aller (`~/vio-reportes/mote-livsstil`, en la laptop de Angelo) lee hoy con la key pública de la surface. Con el token de solo lectura (`ANALYTICS_READ_TOKEN`, cabecera `x-internal-token`) lee el mismo embudo por campaña que el dashboard, y deja de haber diferencias como la de anoche (6 usuarios únicos en el informe, 7 visitas que vieron un producto en el dashboard).
   - **Cuál:** el de **solo lectura**, no el full.
