@@ -3238,3 +3238,14 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   del kernel abre un POST por línea, con `level: 'debug'` fijo (no se puede configurar por env). Encaja con que la cola
   de envíos a Datadog crezca en las ráfagas; no está probado. Mitigación propuesta a Angelo: que products mande a
   Datadog solo `info` o más (más de la mitad de las líneas son DEBUG); a medio plazo, batching en `@vio-/logger`.
+
+- **03/11 09:10 UTC — claude: segundo OOM (`rpf9j`, 08:47) y causa probable.** En los dos fallos (07:34 y 08:47) la
+  única tarea a medias era la importación del listing Shopify `6946221162693` «Stella - Black» (villoid, usuario
+  1323, producto Vio **421785**). Empezó 40–50 s antes de cada caída, y otros productos pasan esa fase en <1 s. Sus 7
+  variantes tienen **476 imágenes vivas para 14 URLs**: cada una repetida 67 veces, una tanda más por sincronización.
+  Ningún otro producto de prod tiene imágenes de variante duplicadas (filas ≈ URLs). Es casi seguro el detonante;
+  que la memoria explote al cargar ese producto (joins variante × imágenes) no lo he medido. La memoria «de fondo»
+  (Datadog) queda como factor secundario.
+  **Propuesto a Angelo (prod, pide OK):** borrado lógico de las 462 duplicadas, dejando una por (variante, URL).
+  Es reversible con `deleted_at`. Después, en QA: por qué el import de Shopify vuelve a añadir las imágenes de
+  variante en cada sync y deduplicarlas.
