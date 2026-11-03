@@ -3218,3 +3218,14 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   ficha paga el **carrito entero** sin enseñarlo. Análisis y arreglo en vio-web-sdk [#98](https://github.com/vio-live/vio-web-sdk/pull/98)
   (sin mergear; la parte de producto la decide Angelo mañana). Apple Pay desde la ficha tiene el mismo problema, peor:
   la hoja muestra un importe y cobra otro. Detalle en el journal.
+
+- **03/11 07:40 UTC — claude: products en prod volvió a caer por OOM, una vez, tras 19 h.** Pod
+  `products-558f9455c7-r4rqv`: arrancó 02/11 12:27 y cayó 03/11 07:34, exit 134 «JavaScript heap out of memory». El
+  último Mark-Compact dejó 1499 MB vivos, contra 1536 MB de `--max-old-space-size`: memoria retenida, no un pico
+  transitorio. El otro pod (`rpf9j`, misma edad) está en 398 Mi de working set con el mismo tráfico: ~2.700 webhooks
+  de listing por pod en las últimas 20.000 líneas, mismas tiendas (villoid, wxuxre-tf, makeup-mekka). Antes del fix se
+  caía cada 2–5 h; ahora una vez en 19 h, en un solo pod. Sin serie histórica (Container Insights apagado, sin
+  Application Key de Datadog): desde hoy anoto `kubectl top` de los dos pods en cada vuelta del seguimiento.
+  Siguiente diagnóstico propuesto a Angelo, solo si se repite: `--heapsnapshot-near-heap-limit=1` en `NODE_OPTIONS`
+  (por el chart) para tener un snapshot del heap la próxima vez. Ojo: generar el snapshot pide memoria extra dentro
+  del límite de 2Gi.
