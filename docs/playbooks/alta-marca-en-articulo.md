@@ -110,6 +110,18 @@ foto del canal.
 - posición, producto, ventas, precio, stock, URL de la tienda e ids de Vio y de la tienda;
 - las URL comprobadas una a una con `curl`.
 
+## 2b. Que los productos estén publicados
+
+Un producto importado nace en **Draft** (`product.status = 0`). El dashboard solo deja publicar si tiene imagen, título,
+precio, stock de al menos 1, categoría y **`referralFee` de al menos 1**. Los de Woo llegan con `referral_fee` 0.
+- **Comprobar:** imágenes en la tabla `image` (no en `custom_product_image`, que es la de las copias del publisher),
+  categorías en `product_category`.
+- **Arreglar, por el micro `products`:**
+  1. `PUT http://products/bulk` con `{data: {ids, info: {referralFee: <la comisión de la campaña>}, user: {id: <marca>}}}`.
+     Solo cambia los campos que se mandan.
+  2. `PUT http://products/bulk-publish` con `{data: {ids}}`.
+- **Faves (3/11):** `referralFee` 15 y 53 publicados.
+
 ## 3. Envíos que entienda el 3PL de la marca
 
 Un pedido que Vio crea en la tienda solo lo despacha la app de envíos de la marca si lleva su línea de envío exacta.

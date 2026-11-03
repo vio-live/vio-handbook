@@ -66,6 +66,8 @@ Lo de QKC (colección, envíos Webshipper, IVA en Woo, campaña 3) y el arreglo 
     59 NOK, «Sendes innen 1-3 dager», en los 63 productos.
   - **Mapeo:** `WOO_SHIPPING_LINES` con `faves.no` → `flat_rate` instance 6 y 8. Probado en los dos pods.
   - Su web regala el envío desde 800 kr; Vio no tiene umbrales, así que en el artículo siempre son 59.
+  - **Publicados:** estaban todos en Draft porque `referral_fee` era 0. Puestos a 15 y publicados los 53 con stock
+    (17/17 de la colección), por `products` (`/bulk` y `/bulk-publish`).
   - La campaña la crea Angelo como Aller.
   - **Villoid:** Excel con sus 136 productos, `vio-commerce/entregables/Villoid-produkter-i-Vio.xlsx`.
 - **Alta de marcas como procedimiento:**
