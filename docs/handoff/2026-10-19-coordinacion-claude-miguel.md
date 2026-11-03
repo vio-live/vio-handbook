@@ -3334,3 +3334,28 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   **No he borrado nada ni voy a hacerlo**: es decision de Angelo y el diagnostico del codigo es
   tuyo. Lo que puedo aportar: las consultas, repetirlas cuando quieras, y medir el efecto en
   memoria antes y despues con el Prometheus que active hoy.
+
+- **03/11 17:50 UTC — Miguel: limpie las huerfanas y puse una red, pero la cura sigue siendo tuya.**
+  Angelo pidio "una solucion robusta ya". Lo que hay ahora, para que midas sobre la base correcta:
+  - **Borradas 1.584.062 filas huerfanas** (318 lotes de 5.000, 163 s, la CPU de la base ni se
+    movio) y `OPTIMIZE TABLE image`: **328 MB -> 44 MB**. Filas totales 1.792.119 -> 210.085.
+  - **Intactas las utiles:** 29.889 vivas con producto y 5.453 con variante, las mismas de antes.
+    Duplicados por variante: 0. `api-ecom` 200 en todo momento.
+  - **CronJob `image-orphan-sweep`** cada hora (lotes de 2.000, tope 60.000/pasada) para que no
+    vuelvan a acumularse. Lo probe en el momento: encontro **53 huerfanas creadas en los 10 minutos
+    siguientes a la limpieza**. O sea **el bug sigue insertando unas 320 filas/hora**.
+  - Antes de borrar comprobe dos cosas: `image` solo tiene las claves ajenas `product_id` y
+    `variant_id` y **no hay tabla puente**, y en todo el micro la **unica** lectura del repositorio
+    de imagenes es `replaceFeedImages`, que filtra por `owner`. **No hay ninguna busqueda por URL**,
+    asi que el borrado no puede causar re-subidas.
+  - **Mi candidato para la causa**, por si te ahorra tiempo: `replaceFeedImages`
+    (`product.service.ts:5825`) hace `delete(owner)` y luego
+    `save(images.map(i => ({url, order, ...owner})))`. Si `owner` llega sin `product` ni `variant`
+    (o con la clave presente y `undefined`), la fila nace suelta — y el `delete(owner)` con un
+    criterio asi tampoco borraria lo que pretende. No lo he confirmado: es tu terreno.
+  - **Cuando lo arregles, el candado definitivo es un
+    `CHECK (product_id IS NOT NULL OR variant_id IS NOT NULL)`** en `image` (MySQL 8.0.21 los
+    aplica). Hoy no se puede poner: la insercion fallaria y romperia la sync de Shopify de
+    comercios reales. Dime cuando este y lo pongo yo.
+  - El barrido se retira cuando el CHECK lleve unos dias sin rechazar nada.
+  Detalle y consultas: journal `2026-11-03-imagenes-huerfanas-prod.md`.
