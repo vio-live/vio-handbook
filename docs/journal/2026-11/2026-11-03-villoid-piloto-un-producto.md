@@ -45,6 +45,16 @@ de Vipps aún no esté activa. Comisión 10 %, sin fecha de fin. Procedimiento:
   sin sesión de Ingrid, siguen la misma cadena. Su Vipps Express es una app propia («Vipps VILLOID») que pide los
   envíos a Ingrid; los precios cambian por importe del carrito (Posten PIP 69/29, Helthjem 79/39).
 
+- **Logo** subido por Angelo (`container.vio.live`, AVIF, responde 200).
+- **Estado para Michael** (en noruego, enviado por Angelo): QKC y Faves listas a falta del pedido de prueba; Villoid
+  a falta de Vipps y del pedido de prueba.
+- **Careless en QA (1338), para probar en Replit de QA:** promesas de envío gratis como las de QKC (truck «Rask
+  levering · Med Bring, 2-5 virkedager», mailbox «Gratis frakt · Kun i denne artikkelen», return «Gratis retur ·
+  Innen 14 dager»). Comprobado en la config de las surfaces 13 (campaña 12) y 15 (campaña 14) de staging. Las
+  anteriores, para restaurarlas al acabar: plane «Rask levering · 2-5 virkedager leveringstid», heart «10% av
+  overskuddet går til ME-forskning · ved Haukeland sykehus», shirt «Designet i Norge · Med masse kjærlighet».
+  Replit no las veía porque su página apuntaba a otra key; Angelo la cambia a la de la surface 13 de staging.
+
 ## Decisions
 - Envío fijo de 29 NOK (el precio PIP de Posten a partir de ~1000 NOK) en vez de copiar los códigos de Ingrid.
 
@@ -54,6 +64,7 @@ de Vipps aún no esté activa. Comisión 10 %, sin fecha de fin. Procedimiento:
 - Los pedidos de Vio no llevan etiquetas; si su almacén filtra por las de Ingrid, no los verá. Preguntar a Villoid.
 
 ## Next session
+- Restaurar las promesas de Careless en QA cuando acaben las pruebas en Replit.
 - Integrar Ingrid en el Vipps dinámico de shopcart si el piloto va bien (necesita la API key de Ingrid de Villoid).
 - Cuando Vipps active la unidad: `POST …/accounts/1323/sales-unit` con el MSN 1188223 y comprobar
   `/v2/mobile/config`.
