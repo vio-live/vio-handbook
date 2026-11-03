@@ -235,6 +235,11 @@ Comprobar también que la campaña sale activa en `/v2/mobile/config`.
   margen, subirlo en Settings → Brand de la cuenta de la marca y comprobar `logoUrl` en la config.
   Ejemplo: [QKC](https://trello.com/c/TZ2QXjYn).
 - **Promesas:** las pide Michael a la marca. Las escribe la marca en Settings → Brand → Promises.
+  - Si las da Angelo, se cargan en `brand_profile.highlights` de la marca (si no hay fila, se crea con `brand_user_id`).
+  - Antes se validan con `parseBrandHighlights` de `/usr/src/app/dist/domain/brand-highlights.js` en el pod de
+    `campaigns`. Admite 3 como máximo, con estos iconos: plane heart shirt truck return leaf star shield mailbox home
+    pin clock. El `text` es opcional.
+  - Al releerlas, compara campo a campo: MySQL reordena las claves del JSON.
 
 ## 8. Artículo
 

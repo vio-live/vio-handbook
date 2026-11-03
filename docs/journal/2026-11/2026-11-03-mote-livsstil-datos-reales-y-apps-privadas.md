@@ -72,7 +72,14 @@ Lo de QKC (colección, envíos Webshipper, IVA en Woo, campaña 3) y el arreglo 
     17/17 productos y 17/17 copias de Aller.
   - **Vipps** conectado por Angelo: MSN 1187978, unidad «Faves.no», partner, Express, cobro al enviar.
     `/v2/mobile/config` tardó unos 30 s en enseñar `vipps` (caché). `available-payment-methods/484` da `["Vipps"]`.
-  - Falta: logo y promesas, el artículo con `data-vio-campaign="4"`, el config del informe y el pedido de prueba.
+  - **Promesas** (texto de Angelo, cargadas en `brand_profile` 1301 tras pasar por `parseBrandHighlights` del micro de
+    campañas):
+    - truck: «Rask levering · Sendes innen 1-3 virkedager»;
+    - return: «Angrerett · 14 dagers angrerett»;
+    - home: «Norsk nettbutikk».
+
+    Ya salen en `/v2/mobile/config`. Faves aún tiene que confirmar el envío gratis.
+  - Falta: el logo, el artículo con `data-vio-campaign="4"`, el config del informe y el pedido de prueba.
   - **Villoid:** Excel con sus 136 productos, `vio-commerce/entregables/Villoid-produkter-i-Vio.xlsx`.
 - **Alta de marcas como procedimiento:**
   [playbook `alta-marca-en-articulo`](../../playbooks/alta-marca-en-articulo.md), con 4 scripts en
