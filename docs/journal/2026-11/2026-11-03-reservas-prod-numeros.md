@@ -149,3 +149,34 @@ Plan propuesto: recortar CPU requests a ~6 cores pedidos (2x margen), anadir PDB
 minAvailable 1, bajar el min del autoscaler a 3, **observar una semana con prod en marcha**
 y comprar la reserva de 3 despues. Si en esa semana el 4o nodo se levanta solo mas de una
 vez, se reservan 4 y se acabo la discusion.
+
+## COMPRADAS — 04/11 00:41 y 00:45 (Angelo, con revision mia pantalla a pantalla)
+
+- **`VirtualMachines_RI_04-11-2026_00-45`** — `Standard_D4as_v5`, Sweden Central, **cantidad 3**,
+  3 anos, mensual, **Single subscription**. 539,33 NOK/unidad -> **1.617,99 NOK/mes, -60%**
+- **`MySql_RI_04-11-2026_00-41`** — MySQL Flexible Server General Purpose, Sweden Central,
+  **2 vCores**, 3 anos, mensual, **Single subscription**. **507,72 NOK/mes, -62%**
+- **Today's charge 2.125,71 NOK/mes · Total 76.525,56 NOK** en 36 meses (~7.200 USD)
+- Las dos en **Creating**; Azure avisa de hasta 1 h para aparecer en Reservations y hasta 12 h
+  para ver utilizacion.
+- **Redis NO se reservo**, a proposito: moverlo al cluster vale -53/mes y una reserva de 3 anos
+  sobre algo que vamos a borrar seria tirar el dinero.
+
+**Tres errores que caze revisando las capturas, y que habrian costado dinero o no habrian
+ahorrado nada:**
+1. **Suscripcion equivocada**: el carrito empezo en "Azure subscription 1 (a58c007a-...)", no en
+   la nuestra (`3d276f7e-...`, Microsoft Azure Sponsorship). **La pista era la columna
+   "Recommended quantity: 0"** en todas las filas: si fuera la nuestra, la MySQL que corre 24x7
+   habria salido con cantidad.
+2. **Region UK South** en vez de Sweden Central (misma pista: todo a 0).
+3. **Cantidad de VMs**: primero 1 (cubria un tercio) y luego 4 (un nodo de mas, 3 anos). La
+   correcta es **3**, que es lo que corre y el minimo del autoscaler.
+   Tambien quedo **Scope: Shared** en la fila de VMs hasta el ultimo momento; se cambia con el
+   engranaje de la fila.
+
+**Comprobacion sin preguntar a nadie:** con cantidad 3 el "Today's charge" tenia que bajar de
+2.665,04 a ~2.126 NOK. Salio **2.125,71**. Cuadrar la prediccion con la pantalla antes de pagar
+es lo que convierte "creo que esta bien" en "esta bien".
+
+- Pendiente mio: verificar en los datos de coste (1-2 dias) que el descuento se aplica de verdad
+  a los recursos, y medir el run-rate nuevo.
