@@ -72,3 +72,23 @@ Lo mismo que se hizo con Careless en Shopify: que el pedido llegue a su tienda y
   - El `toml` (`refunds/create`) ya estaba activo desde el 21/10, así que no hizo falta `shopify app deploy`.
   - Las seis responden `healthz` `ok` y sirven la misma build (`manifest-6aa160b4`), sin el aviso de «current page».
   - Las variables de Vercel están en todos los proyectos (`CRON_SECRET`, `REDIS_URL`, `SHOP_DOMAIN`, …).
+
+## QKC: envío gratis en el artículo (3/11)
+- **Decisión:** QKC aprobó el envío gratis (solo en el artículo, no en su web). Única opción de envío.
+- **Envíos en Vio (prod):**
+  - «Bring - Pakke i postkasse» pasa a **0 NOK**, sigue por defecto, en los 119 productos y NO a 0.
+  - «Hente selv i Manger» se borra (shipping, shipping_country y product_shipping marcados como borrados).
+  - Transacción con ensayo.
+- **Webshipper sigue recibiéndolo:**
+  - El mapeo no cambia: el nombre es el mismo, así que la línea va como `WS`, tarifa 16, `carrier_service_code` 3584,
+    total `0`. Es la función real del pod de extensions, y la línea se crea aunque el precio sea 0.
+  - En sus propios pedidos, Webshipper procesa líneas `WS` a 0 (los «Hente selv», tarifa 22, procesados y completados).
+  - En cambio, los pedidos con el «Gratis frakt» nativo de Woo (`free_shipping`) están todos cancelados. No hay que
+    usar ese método.
+- **Promesas** (textos de Angelo), en `brand_profile` 1302:
+  - plane: «Rask levering · Med Bring, 2-5 virkedager»;
+  - truck: «Gratis frakt · Kun i denne artikkelen»;
+  - return: «Gratis retur · Innen 14 dager».
+
+  Ya salen en `/v2/mobile/config`.
+- **Falta:** confirmar con el pedido de prueba que Webshipper lo recoge con total 0.

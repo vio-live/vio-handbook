@@ -144,6 +144,10 @@ Con «Default Shipping» llega sin servicio y nadie lo envía.
 - **Precios y plazo:** los de su checkout (pedir captura) y su web (por ejemplo, «Rask levering med Bring 2-5
   virkedager»).
 
+**Envío gratis solo en el artículo** (QKC, 3/11): se pone a 0 el método de Vio que ya está mapeado (mismo nombre), y
+no se manda el `free_shipping` de Woo. La línea va con el `method_id` y los metadatos del 3PL y total 0, y el 3PL la
+procesa igual.
+
 **3.2. Qué se ofrece.**
 - Los servicios a domicilio o buzón, sí.
 - Los que necesitan elegir punto de recogida (Bring Hentested, Helthjem punto) **no**: Vio no deja elegir el punto.
