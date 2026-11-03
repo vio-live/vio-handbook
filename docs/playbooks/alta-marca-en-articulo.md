@@ -193,6 +193,15 @@ lo pagado, el log dice `shop total … vs Vio …`.
 
 ## 6. Compartir, canal y campaña
 
+**La conexión marca ↔ publisher va siempre por solicitud y aceptación, nunca directa** (Angelo, 3/11: «esto es básico»).
+- La marca envía la solicitud: `POST http://api/request/` con `{data: {sender_id: <marca>, receiver_id: <publisher>}}`.
+  Queda `request.state` 0.
+- El publisher la acepta en su dashboard (o `PUT /request` con `state 1`). Ahí nace `connection` con `request_id`.
+  QKC: request 1456 → conexión 540.
+- `POST /connection/` directo (como se hizo con Careless, la 539) deja la conexión sin solicitud, y el dashboard no la
+  trata como una conexión normal. No usarlo.
+- Para comprobarlo: `connection.request_id` no es null, y `request.state = 1`.
+
 Angelo, desde el dashboard:
 - comparte la colección con el publisher (Aller = **1330**);
 - crea el canal del publisher y le conecta la colección;

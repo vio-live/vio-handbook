@@ -59,8 +59,9 @@ Lo de QKC (colección, envíos Webshipper, IVA en Woo, campaña 3) y el arreglo 
   - Excel `vio-commerce/entregables/Faves-produkter-i-Vio.xlsx`.
   - **Colección «Faves Pilot collection» (`pxCAIn2x5`, prod, de 1301): los 17 en verde** del Sheet de Angelo. Todos
     activos y con stock, creados por el micro, 17/17 dentro.
-  - **Compartida con Aller:** conexión 541 (1301 ↔ 1330, por `POST api/connection/`), `collection_shared` 609 y 17/17
-    copias de Aller.
+  - **Compartida con Aller:** `collection_shared` 609 y 17/17 copias de Aller.
+  - **Conexión:** la primera (541) la creé directa por `POST api/connection/`, sin solicitud, y Angelo no la veía en el
+    dashboard. La quité, y Faves envió la **solicitud 1457** a Aller, que acepta Angelo desde el dashboard.
   - **Envíos en Vio:** «Posten - Pakke i postkassen» 59 NOK (por defecto) y «Posten - Pakke til nærmeste hentested»
     59 NOK, «Sendes innen 1-3 dager», en los 63 productos.
   - **Mapeo:** `WOO_SHIPPING_LINES` con `faves.no` → `flat_rate` instance 6 y 8. Probado en los dos pods.
