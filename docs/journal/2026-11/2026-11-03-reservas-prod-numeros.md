@@ -87,3 +87,29 @@ correcto es **recortar requests -> bajar a 3 nodos (-124/mes a demanda) -> reser
   (la reserva paga 24x7). Si se va a Oracle, con mas razon.
 
 - Pendiente: decision y compra de Angelo. Nada ejecutado.
+
+## Decision de Angelo, 03/11 10:24: "esta bien por dos anyos, o 3"
+
+**Azure no vende termino de 2 anos.** Ni reservas ni savings plans: solo **1 ano y 3 anos**
+(`reservationRecommendations` devuelve unicamente P1Y y P3Y, y la Retail Prices API solo
+publica `reservationTerm` "1 Year" y "3 Years" para VM, MySQL y Managed Redis). Con el OK a
+3 anos, el paquete queda:
+
+- 3x `Standard_D4as_v5` swedencentral, 3 anos, pago mensual: 372 -> 149, **-223/mes**
+- MySQL GP 2 vCore, 3 anos: **-81/mes** · Managed Redis B1 quantity 2, 3 anos: **-29/mes**
+- Con el 4o nodo retirado primero: prod **~940 -> ~460/mes**, suscripcion 1.322 -> ~845
+
+Se reserva **quantity 3, no 4**: es el minimo del autoscaler y el suelo real de memoria
+(35 GB asignables contra 21,7 en uso). El 4o nodo queda a demanda; las reservas son aditivas
+si luego hace falta fijo. A 3 anos, sobre-reservar cuesta el triple.
+
+Parametros de compra (los tiene que meter Angelo, yo no tengo el rol):
+Portal -> Reservations -> Add -> Virtual machines · Sweden Central · `Standard_D4as_v5` ·
+quantity **3** · term **3 years** · billing **monthly** · scope **esta suscripcion** ·
+optimizar por **instance size flexibility** (grupo Dasv5; 3x D4as_v5 = 6 unidades
+normalizadas D2as_v5, asi que vale para cualquier sku de la serie).
+Luego: MySQL Flexible Server reserved capacity, General Purpose, serie Ddsv4, **2 vCores**,
+3 anos; y Azure Managed Redis Balanced **B1 quantity 2**, 3 anos.
+
+- Pendiente: el recorte de requests de prod (mio, en cuanto Angelo lo autorice) y la compra
+  de las tres reservas (de Angelo, despues del recorte).
