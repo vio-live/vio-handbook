@@ -79,7 +79,16 @@ Lo de QKC (colección, envíos Webshipper, IVA en Woo, campaña 3) y el arreglo 
     - home: «Norsk nettbutikk».
 
     Ya salen en `/v2/mobile/config`. Faves aún tiene que confirmar el envío gratis.
-  - Falta: el logo, el artículo con `data-vio-campaign="4"`, el config del informe y el pedido de prueba.
+  - **Logo** subido por Angelo (`brand/FAVES-logo-final-pos-…svg`, responde 200), y los iconos revisados.
+  - **Despacho y correos, comprobado en sus pedidos:**
+    - Faves no tiene 3PL ni app de envíos: gestiona los pedidos desde su Woo («Under behandling» → «Fullført»).
+    - Al pasar a «Fullført», el webhook lleva a extensions a marcarlo como enviado (con el seguimiento de WooCommerce
+      Shipment Tracking, si lo hay), y eso dispara el cobro de Vipps.
+    - Correos: «Ny ordre», «Ordrebekreftelse» y «Ordre fullført».
+    - Pregunta abierta para Faves: si usan WP All Export Pro para mandar pedidos al almacén filtrando por método de
+      pago (el de Vio entra como «Vio»).
+  - **ESTADO: LISTA, a la espera del pedido de prueba** (Angelo, 3/11).
+  - Pendiente aparte: el artículo con `data-vio-campaign="4"`, el config del informe y el envío gratis (por confirmar).
   - **Villoid:** Excel con sus 136 productos, `vio-commerce/entregables/Villoid-produkter-i-Vio.xlsx`.
 - **Alta de marcas como procedimiento:**
   [playbook `alta-marca-en-articulo`](../../playbooks/alta-marca-en-articulo.md), con 4 scripts en
