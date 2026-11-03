@@ -121,6 +121,9 @@ precio, stock de al menos 1, categoría y **`referralFee` de al menos 1**. Los d
      Solo cambia los campos que se mandan.
   2. `PUT http://products/bulk-publish` con `{data: {ids}}`.
 - **Faves (3/11):** `referralFee` 15 y 53 publicados.
+- **Un producto que no está en Vio** (Shopify, piloto de Villoid el 3/11): `POST http://products/shopify/import` con
+  `{user: {id: <marca>}, ids: [<shopify product id>]}`. Trae variantes, stock e imágenes; después, `bulk` +
+  `bulk-publish` como arriba.
 
 ## 3. Envíos que entienda el 3PL de la marca
 
@@ -141,6 +144,12 @@ Con «Default Shipping» llega sin servicio y nadie lo envía.
   elija el punto.
 - **Shopify:** `code` y `source` de la línea de envío de sus pedidos nativos. Careless (Packrooster):
   `helthjem|2|#13435`, `Packrooster`. El guion `scripts/verificar-orden-careless.sh` lee los pedidos.
+- **Shopify sin 3PL y con Ingrid** (Villoid, 3/11): los pedidos de su web llevan códigos de Ingrid **de sesión**
+  (`ingrid[VM2-<sesión>][…]`), que no se pueden copiar. Se mira cómo entran los pedidos **externos** (Miinto en
+  Villoid: código fijo `HELTHJEM-NO-INTEGRATION`) y se replica ese patrón con un código fijo. Villoid despacha a mano
+  desde «Main Warehouse» (fulfillments `Manual`, tracking de Posten): basta con que el pedido entre con su línea de
+  envío y `send_receipt`. Mapeo: «Posten - Til postkasse eller nærmeste utleveringssted» → `brn-pip`, `Vio`, 29 NOK
+  (su precio PIP para pedidos de ≥ ~1000 NOK).
 - **Precios y plazo:** los de su checkout (pedir captura) y su web (por ejemplo, «Rask levering med Bring 2-5
   virkedager»).
 
@@ -190,6 +199,11 @@ lo pagado, el log dice `shop total … vs Vio …`.
 ## 4. Vipps
 
 - Angelo, como admin, conecta la unidad de venta de la marca.
+- **Si la unidad de Vipps aún no está activa** (Villoid, 3/11): se deja preparado por api-ms con
+  `PUT /paymentmethod/vipps-partnership/accounts/<marca>` (`organizationNumber`, `express: true`,
+  `shippingMode: fixed`, `captureMode: shipment`). Queda en `waiting-sales-unit`, sin activar. Cuando Vipps la active,
+  `GET …/sales-units?orgNumber=<org>` la lista y `POST …/accounts/<marca>/sales-unit` con `merchantSerialNumber` la
+  verifica contra Vipps y enciende el método.
 - Comprobar (scripts 1 o 4) que `payment_method` de la marca tiene:
   - `VIPPS`, `mode: partner`, `express: true`, `captureMode: shipment` y `shippingMode: fixed`;
   - `merchantSerialNumber` y `salesUnitName` de la marca.
