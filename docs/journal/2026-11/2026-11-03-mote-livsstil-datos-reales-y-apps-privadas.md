@@ -91,6 +91,8 @@ Lo de QKC (colección, envíos Webshipper, IVA en Woo, campaña 3) y el arreglo 
     (en los 63 productos); «nærmeste hentested» borrado. Como Faves no tiene 3PL, se copia cómo entran **sus** pedidos
     gratis: `WOO_SHIPPING_LINES` → `free_shipping`, `instance_id` 5, mismo título. Comprobado en los dos pods y, en el
     pago, `["vipps"]` en `/v2/mobile/config` y en el canal 484.
+    Promesas nuevas: truck «Gratis frakt · Sendes innen 1-3 virkedager» y return «Angrerett · 14 dagers angrerett»
+    («Norsk nettbutikk» quitada); ya salen en `/v2/mobile/config`.
   - **ESTADO: LISTA, a la espera del pedido de prueba** (Angelo, 3/11).
   - Pendiente aparte: el artículo con `data-vio-campaign="4"` y el config del informe.
   - **Villoid:** Excel con sus 136 productos, `vio-commerce/entregables/Villoid-produkter-i-Vio.xlsx`.
