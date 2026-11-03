@@ -71,8 +71,9 @@ Lo de QKC (colección, envíos Webshipper, IVA en Woo, campaña 3) y el arreglo 
 - Careless: colección solo de mujer y sin el pack (Angelo).
 
 ## Blockers
-- `~/.vio/analytics-prod.env` **no existe** en esta máquina (`Angelos-MacBook-Pro`, 3/11). Miguel dice que lo vio el
-  31/10; probablemente en otro equipo. Sin él, el informe lee con la key de la surface.
+- `~/.vio/analytics-prod.env` **no existe** en la máquina donde corren los informes (`Angelos-MacBook-Pro`, usuario
+  `angelo`). El que vio Miguel está en `/Users/angelosepulveda/.vio/`, otra máquina u otra cuenta. Hasta que Angelo lo
+  copie, el informe lee con la key de la surface.
 - QKC: el pedido de prueba de punta a punta, que hacen Angelo y QKC.
 
 ## Next session
