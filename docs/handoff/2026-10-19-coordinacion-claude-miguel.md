@@ -3420,3 +3420,29 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   **4. Lo de las imagenes de producto que se reinsertan en cada sync** (3.332 borradas logicas y
   1.068 vivas nuevas): si lo metes en el mismo arreglo, perfecto. Cuando este, dime y pongo el
   CHECK, que con eso dejan de poder nacer sueltas.
+
+- **04/11 00:30 UTC — claude, para Miguel: encontré la causa de los abortos de products. Hay una purga de datos que coordinar contigo (Angelo me pidió cerrar esto contigo).**
+  - **Causa (confirmada en código y datos):** `importShopifyProduct` busca el producto anterior con
+    `findOne({ withDeleted: true, ... })`. En TypeORM 0.2.41, `withDeleted` también quita el filtro `deleted_at` de los
+    JOINs de las relaciones eager (`SelectQueryBuilder.js:957`), así que cada import carga **todas las imágenes borradas**
+    del producto y de sus variantes, multiplicadas entre sí por los JOINs. Las borradas se acumulan en cada sync:
+    `reviewImages` guarda el original webp ya borrado, y mi arreglo de ayer retira las duplicadas con un borrado lógico.
+    - «Stella» (421785): 146 imágenes de producto × 3 opciones × 483 de variante ≈ **200.000 filas** en una sola consulta.
+      Es la caída de las 22:01, 29 s después de su import.
+    - gladkokken: 421192 tiene **40.262** filas de imagen para 7 vivas; 421152, 421151, 421153 y 421191, unas 20.000 cada uno.
+    - En total hay **174.950 imágenes con borrado lógico** (174.479 de producto y 471 de variante).
+    - Comprobado: **no hay ninguna clave ajena que apunte a `image`**, y esas filas solo se leen por esos `withDeleted`.
+  - **Lo que propongo para esta noche:** borrar de verdad las imágenes con `deleted_at IS NOT NULL`, por lotes, como
+    hiciste con las huérfanas. Antes exporto las 174.950 filas (id, url, order, medidas, product_id, variant_id,
+    deleted_at) a un archivo, para poder devolverlas si hiciera falta. Con eso deberían parar las caídas sin desplegar
+    nada. **¿Lo haces tú, con tu script de lotes, o lo hago yo?** Si en ~20 min no veo respuesta aquí, lo hago yo con el
+    mismo patrón (lotes de 5.000 con pausa) y te dejo los números aquí.
+  - **Código (PR a develop esta noche, QA cuando despierte y prod después; Angelo dio el OK para llevarlo arriba):**
+    1. Buscar el producto anterior sin sus relaciones eager (en el import de Shopify y en `save()` de Woo), y el
+       producto del webhook solo con su id.
+    2. Imágenes de producto emparejadas por URL, como las de variante (ese es el origen de tus huérfanas: el import
+       borra los ids y la cascada pone a NULL las antiguas). Webp con nombre fijo por URL, para no volver a subirlo
+       en cada sync.
+    3. Tras cada import, borrar de verdad las imágenes retiradas de ese producto, para que no vuelvan a acumularse.
+  - **Tu `CHECK`:** con el punto 2 en prod ya no debería nacer ninguna huérfana. Te aviso aquí cuando esté desplegado
+    para que lo pongas y retires el barrido.
