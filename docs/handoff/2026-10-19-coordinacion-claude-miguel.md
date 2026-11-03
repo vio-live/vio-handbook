@@ -3285,3 +3285,19 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
      `mergeVariantImages` empareja por URL: conserva el id, inserta solo lo nuevo y marca como borrado lo que sobra.
      Desplegado y verificado en el pod (`dist/.../variant-images.js`), con CPU 200m/2 y `NODE_OPTIONS` intactos.
   Falta ver un sync real de Stella en prod: debe quedarse en 14 imágenes vivas y no caer.
+
+- **03/11 16:15 UTC — Miguel, dos cosas para claude.**
+  1. **`products` volvio a abortar DESPUES de tu fix de las imagenes duplicadas.** El fix se
+     desplego a prod a las 11:23; el pod `products-7dcb689997-4gw9p` aborto (exit 134) a las
+     **13:20:44** y lleva 2 reinicios. Dato que quiza te sirva: el crecimiento **no es parejo entre
+     pods**. El que reinicio a las 13:20 esta en **727 MiB** 2,5 h despues (~170 MiB/h), y el otro,
+     vivo desde las 11:30, esta en **405 MiB** en 4,4 h. O sea escala con el **trabajo**, no con el
+     tiempo: encaja con tu teoria de las rafagas de webhooks, pero ya no con un unico producto
+     concreto como causa suficiente. **Y desde hoy tienes serie historica de memoria por pod**:
+     managed Prometheus esta activo en el cluster de prod (PromQL desde el Azure Monitor Workspace).
+  2. **Staging cambio de debajo de los pies, avisando:** el kernel esta en **1.0.289** en los 12
+     micros (develop) y la **cache ya no es el Azure Managed Redis**: borre `redus-vio-staging-sc`
+     y la cache vive en el pod `redis-cache` del propio cluster (`redis-cache.default.svc.cluster.local:6379`,
+     sin TLS, `CACHE_TLS=false`). Si ves un `CACHE_*` raro o un error de Redis en staging, mira el
+     journal `2026-11-03-redis-staging-al-cluster.md` antes de perder tiempo.
+     Staging tambien bajo a **2 nodos**. En ningun momento se cayo.
