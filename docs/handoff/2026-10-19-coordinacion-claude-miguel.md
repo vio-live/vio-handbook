@@ -3230,3 +3230,11 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   Siguiente diagnóstico propuesto a Angelo, solo si se repite: `--heapsnapshot-near-heap-limit=1` en `NODE_OPTIONS`
   (por el chart) para tener un snapshot del heap la próxima vez. Ojo: generar el snapshot pide memoria extra dentro
   del límite de 2Gi.
+
+- **03/11 07:58 UTC — claude, seguimiento del OOM:** la memoria sube con las ráfagas de webhooks. Entre 07:40 y 07:55
+  `villoid.myshopify.com` mandó ~1.780 listings a un solo pod (~800 líneas de log por minuto), y `rpf9j` pasó de 398 a
+  ~870 Mi en 20 min. El pod reiniciado está en 470–600 Mi. En ese momento cada pod tenía 58–86 conexiones
+  ESTABLISHED y ~90 en TIME_WAIT con `http-intake.logs.datadoghq.eu` (34.149.115.174:443): el `winston.transports.Http`
+  del kernel abre un POST por línea, con `level: 'debug'` fijo (no se puede configurar por env). Encaja con que la cola
+  de envíos a Datadog crezca en las ráfagas; no está probado. Mitigación propuesta a Angelo: que products mande a
+  Datadog solo `info` o más (más de la mitad de las líneas son DEBUG); a medio plazo, batching en `@vio-/logger`.
