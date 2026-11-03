@@ -123,6 +123,10 @@ Con «Default Shipping» llega sin servicio y nadie lo envía.
   - si están los webhooks hacia Vio.
 
   QKC (Webshipper): `WS`, `shipping_rate_id` 16 y `carrier_service_code` 3584 para Bring Postkasse.
+  Faves (métodos propios de Woo, sin 3PL): `flat_rate`, `instance_id` 6 (Postkasse) y 8 (nærmeste hentested), sin
+  metadatos. Basta con `method_id` + `instance_id`.
+  «Til nærmeste hentested» (Posten elige el punto) **sí** se puede ofrecer; lo que no se puede es que el comprador
+  elija el punto.
 - **Shopify:** `code` y `source` de la línea de envío de sus pedidos nativos. Careless (Packrooster):
   `helthjem|2|#13435`, `Packrooster`. El guion `scripts/verificar-orden-careless.sh` lee los pedidos.
 - **Precios y plazo:** los de su checkout (pedir captura) y su web (por ejemplo, «Rask levering med Bring 2-5
@@ -155,7 +159,8 @@ Con «Default Shipping» llega sin servicio y nadie lo envía.
 - **Editar el Secret sin imprimirlo:** leer el `.env` en base64 con python, añadir o cambiar la línea y aplicar
   `kubectl patch secret env-sc-extensions --type merge --patch-file`. Después, `kubectl rollout restart
   deploy/extensions`, o el despliegue de la release.
-- **Comprobar:**
+- **Comprobar** (después del `rollout status`, solo en pods `Running`: un pod viejo que se está apagando todavía tiene
+  el `.env` anterior y da un falso negativo):
   - En el log de arranque de los pods: `[wooService] líneas de envío configuradas: <tienda> (N)`, o el de
     `shopifyService`.
   - La función real dentro del pod de extensions (`/usr/src/app/dist/utils/woo-shipping-lines`, o

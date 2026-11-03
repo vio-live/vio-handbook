@@ -59,6 +59,13 @@ Lo de QKC (colección, envíos Webshipper, IVA en Woo, campaña 3) y el arreglo 
   - Excel `vio-commerce/entregables/Faves-produkter-i-Vio.xlsx`.
   - **Colección «Faves Pilot collection» (`pxCAIn2x5`, prod, de 1301): los 17 en verde** del Sheet de Angelo. Todos
     activos y con stock, creados por el micro, 17/17 dentro.
+  - **Compartida con Aller:** conexión 541 (1301 ↔ 1330, por `POST api/connection/`), `collection_shared` 609 y 17/17
+    copias de Aller.
+  - **Envíos en Vio:** «Posten - Pakke i postkassen» 59 NOK (por defecto) y «Posten - Pakke til nærmeste hentested»
+    59 NOK, «Sendes innen 1-3 dager», en los 63 productos.
+  - **Mapeo:** `WOO_SHIPPING_LINES` con `faves.no` → `flat_rate` instance 6 y 8. Probado en los dos pods.
+  - Su web regala el envío desde 800 kr; Vio no tiene umbrales, así que en el artículo siempre son 59.
+  - La campaña la crea Angelo como Aller.
   - **Villoid:** Excel con sus 136 productos, `vio-commerce/entregables/Villoid-produkter-i-Vio.xlsx`.
 - **Alta de marcas como procedimiento:**
   [playbook `alta-marca-en-articulo`](../../playbooks/alta-marca-en-articulo.md), con 4 scripts en
