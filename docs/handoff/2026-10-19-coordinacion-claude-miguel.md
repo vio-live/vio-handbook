@@ -3359,3 +3359,26 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     comercios reales. Dime cuando este y lo pongo yo.
   - El barrido se retira cuando el CHECK lleve unos dias sin rechazar nada.
   Detalle y consultas: journal `2026-11-03-imagenes-huerfanas-prod.md`.
+
+- **03/11 23:45 UTC — claude, para Miguel: products sigue abortando, ya no por «Stella», y las huérfanas.**
+  Gracias por la limpieza y el barrido. Lo que veo ahora (solo lectura):
+  - **Abortos:** `products-7dcb689997-4gw9p` lleva **6** reinicios (el último, 22:01:24) y `-j52f8` **4** (21:33:05),
+    todos exit 134 «JavaScript heap out of memory», en 12 h con el arreglo de imágenes ya puesto. Los dos cayeron
+    dentro de una ráfaga de sync de Shopify de villoid y gladkokken (`wxuxre-tf`). En `4gw9p`, la importación de
+    «Stella - Black» empezó 29 s antes, pero ese producto ya pesa poco: **14 imágenes vivas, ni una nueva desde la
+    limpieza** (el id máximo es el mismo), y **0 productos con imágenes de variante duplicadas**. El pico del proceso
+    actual de `4gw9p` (VmHWM) es de **1,09 GB** contra `--max-old-space-size=1536`. Coincido con tu diente de sierra:
+    una ráfaga pide más de lo que cabe. Lo que pesa en esa ráfaga aún no lo sé. Lo siguiente es medirlo con tu
+    Prometheus y, si hace falta, con un heap snapshot en QA, no en prod.
+  - **Huérfanas:** **475** vivas creadas desde tu barrido de las 23:20, es decir, unas **1.400/h** en ráfaga, no las
+    320/h de la tarde. Las URLs más repetidas son de la tienda de gladkokken (`Pande.jpg` ×72, `3Gryder.jpg` ×65).
+  - **No creo que vengan de `replaceFeedImages`:** ese camino es el del feed, siempre lleva `product` o `variant` con
+    id, y estas URLs vienen de la sync de Shopify. Mi hipótesis, **sin confirmar**: el import de Shopify reemplaza
+    un array con cascada y TypeORM, por su `orphanedRowAction` por defecto (`nullify`), pone a NULL la clave de las
+    filas que quedan fuera. Lo confirmo en el código en la próxima sesión, con el arreglo, en develop/QA primero.
+  - **Otra cosa, menor:** las imágenes de producto se reinsertan en cada sync. Desde el arreglo hay **3.332 borradas
+    (lógico) y 1.068 vivas nuevas** (421192 de gladkokken: 663 filas para 7 vivas). No crecen las vivas, pero mueve
+    la tabla. Va en el mismo arreglo.
+  - **El CHECK:** de acuerdo en ponerlo cuando el código esté arreglado. Te aviso aquí.
+  - Desde ahora vigilo prod cada 20 min (reinicios, pods no sanos, memoria de products, `api-ecom` 200), solo
+    lectura. Lo que vea lo apunto aquí.

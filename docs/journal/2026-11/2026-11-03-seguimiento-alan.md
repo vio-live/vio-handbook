@@ -23,3 +23,19 @@ status: live
 - **«Avbryt» en el overlay «Åpner Vipps …»** (lo que Angelo quería): [vio-web-sdk#137](https://github.com/vio-live/vio-web-sdk/pull/137) a main. En iPhone la app de Vipps se abre sin que la página salga; al cerrar la app quedaba el overlay de pantalla completa sin salida. Ahora, a los 4 s o al volver visible la página, sale «Kom du tilbake fra Vipps uten å betale?» + «Avbryt» (cancel con reason `user`). La página de prueba ya lo lleva; release/Vev pendientes de la prueba de Angelo.
 - **Vev 0.345 desplegado:** SDK 0.37.7 ([vio-web-sdk#138](https://github.com/vio-live/vio-web-sdk/pull/138), `4da2194`; [vev#83](https://github.com/vio-live/vev/pull/83), `53df060`) con «Avbryt» en el overlay «Åpner Vipps …» (#137), que Angelo vio en su teléfono, y en la espera de la vuelta (#136). Las páginas lo toman al republicarse; rollback: `vev restore` a 0.344. npm sigue en 0.37.1.
 - **npm:** Angelo publicó `@vio-live/web-sdk@0.37.7` (`latest`; de la 0.37.2 a la 0.37.6 nunca se publicaron, la 0.37.7 las incluye). Paquete revisado: solo `dist/`, README, LICENSE y CHANGELOG, con `SDK_VERSION` 0.37.7. Siguiente paso: el Replit de Mote & Livsstil, que fija la versión exacta y la sube su propio agente. Desde la 0.37.1 no hace falta cambiar código en el CMS.
+- **23:30 UTC, prod products, al cerrar la sesión:** sigue abortando por heap (`4gw9p` 6 reinicios, `j52f8` 4, en 12 h, en ráfagas de sync de villoid y gladkokken), pero ya no por «Stella» (14 imágenes vivas, ninguna nueva) ni por duplicados de variante (0). Las huérfanas que Miguel barre cada hora vuelven a ~1.400/h en ráfaga. El arreglo en código me toca a mí (Miguel, handoff 03/11 17:50). Estado y medidas en el [handoff con Miguel](../../handoff/2026-10-19-coordinacion-claude-miguel.md) (entrada 23:45).
+
+## Decisions
+- Envío gratis = solo tarifas a 0, mostradas como «Gratis» en el SDK; foco Vipps (Angelo).
+- La tarifa de prueba «Gratis frakt» se queda en «Sofie genser - Brun» (411994) en QA (Angelo).
+- products#47 (validación al publicar) se queda en QA por ahora.
+- Datadog: products sigue mandando DEBUG hasta tener la causa del pico de memoria y preguntar a Miguel.
+
+## Blockers
+- Ninguno mío. Esperan a Angelo: products#47 a prod, el formato de precio «Fra 1501.25 NOK» de la tarjeta de Vev, y el checkout ACTIVE `4e7920ff` que quedó tras la vuelta de Vipps (orden 4672).
+
+## Next session
+1. **products, huérfanas:** encontrar en el import de Shopify qué fila pierde `product_id`/`variant_id` (hipótesis: `orphanedRowAction` `nullify` al reemplazar un array con cascada) y arreglarlo en develop/QA, junto con la reinserción de imágenes de producto. Prod con OK de Angelo; luego avisar a Miguel para el CHECK.
+2. **products, OOM:** medir qué pesa en una ráfaga (Prometheus de prod; heap snapshot en QA). Con eso, decidir lo de DEBUG a Datadog.
+3. **Replit:** que su agente fije `@vio-live/web-sdk@0.37.7` y redespliegue; luego probar «Avbryt» en un artículo desde el móvil.
+4. Seguimiento de Alan: parado; solo si Angelo lo pide.
