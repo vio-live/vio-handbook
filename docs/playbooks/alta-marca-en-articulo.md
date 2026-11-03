@@ -90,6 +90,10 @@ Lo normal en una marca recién conectada es:
   - Avisa de los productos duplicados en Vio (el mismo `woo_id` en dos filas): se usa el que coincide en nombre.
 - **Desde un Excel de la marca:** cruzar por título exacto con `product` de la marca. Los 49 de Careless cruzaron
   uno a uno.
+- **«Los que están en verde» en un Google Sheet:**
+  - El color puede estar en cualquier columna (en Faves estaba en la URL, no en el nombre).
+  - Hay que leer el color **y** el id (o el título) **en la misma llamada** (`get_spreadsheet` con `includeGridData`
+    sobre esas columnas). Nunca emparejar contando filas a mano: el 3/11, con Faves, salieron 5 de 17 mal.
 - **Filtros del negocio:** se aplican si Angelo los pide. Careless quitó el pack y los de hombre; para eso sirve la
   etiqueta `kjonn:herre` de su Shopify, en `/products/<handle>.js`.
 

@@ -57,6 +57,9 @@ Lo de QKC (colección, envíos Webshipper, IVA en Woo, campaña 3) y el arreglo 
   - 63 de 217 productos sincronizados el 22/10. Los otros 154 nunca se mandaron: el plugin los marca «Not synced».
   - Su Woo tiene 7 pedidos en total: no sirve para sacar un top 10.
   - Excel `vio-commerce/entregables/Faves-produkter-i-Vio.xlsx`.
+  - **Colección «Faves Pilot collection» (`pxCAIn2x5`, prod, de 1301): los 17 en verde** del Sheet de Angelo. Todos
+    activos y con stock, creados por el micro, 17/17 dentro.
+  - **Villoid:** Excel con sus 136 productos, `vio-commerce/entregables/Villoid-produkter-i-Vio.xlsx`.
 - **Alta de marcas como procedimiento:**
   [playbook `alta-marca-en-articulo`](../../playbooks/alta-marca-en-articulo.md), con 4 scripts en
   `playbooks/scripts/alta-marca/` y la skill `alta-marca` de claude.
