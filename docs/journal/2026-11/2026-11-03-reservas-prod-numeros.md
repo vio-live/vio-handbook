@@ -113,3 +113,39 @@ Luego: MySQL Flexible Server reserved capacity, General Purpose, serie Ddsv4, **
 
 - Pendiente: el recorte de requests de prod (mio, en cuanto Angelo lo autorice) y la compra
   de las tres reservas (de Angelo, despues del recorte).
+
+## Riesgos medidos de bajar prod a 3 nodos (pregunta de Angelo, 10:27)
+
+Asignable por nodo (`kubectl get nodes -o custom-columns`): **3.860 mCPU y 11,52 GiB**.
+4 nodos = 15,44 cores / 46,1 GiB · 3 nodos = 11,58 / 34,6 · 2 nodos = 7,72 / 23,0.
+
+1. **Hoy no entra en 3 nodos.** Requests de CPU del cluster: **11,69 cores** contra 11,58
+   asignables. Falta por 0,1 core, o sea un pod quedaria Pending. El recorte de requests es
+   condicion previa, no una mejora opcional. De esos 11,69, solo **7,35 son de los
+   deployments**; el resto son los **sidecars de Istio** (se inyectan en admision, no estan
+   en el spec) y los daemonsets (4 juegos: azure-cns, ip-masq, cloud-node-manager, csi x2,
+   kube-proxy).
+2. **Lo que aprieta es la memoria, y por el uso real, no por los requests.** Pide 19,1 GiB
+   y consume **21,7**. En 3 nodos eso es 63% de 34,6: va bien. Pero **si se cae un nodo
+   quedan 23,0 GiB contra 21,7 de uso real: 6% de margen.** Con 4 nodos el mismo escenario
+   deja 34,6. Mitigacion: autoscaler min 3 / max 5 levanta un nodo en 3-5 min ante pods
+   Pending, y ese nodo extra se paga a demanda sin tocar la reserva.
+3. **Actualizaciones del nodepool**: siempre con maxSurge >= 1 (AKS por defecto anade un nodo
+   temporal). Con surge 0 el drenaje deja 2 nodos y cae en el escenario anterior.
+4. **Los 14 microservicios no tienen PodDisruptionBudget** (solo istio y kube-system, con
+   minAvailable 1). En un drenaje se pueden ir las 2 replicas de un servicio a la vez: es el
+   mismo mecanismo de los 62 s de 503 que medi en los deploys. Con 3 nodos es algo mas
+   probable. Se arregla con PDBs en el mismo PR.
+5. **Lo que NO es riesgo, verificado:** no hay HPA en los microservicios (solo `istiod` e
+   `istio-ingressgateway`, al 2% y 0% de CPU con target 80%), asi que recortar requests **no
+   dispara escalado** — el gotcha clasico aqui no aplica. Y **no hay antiafinidad ni
+   topologySpreadConstraints** en ningun servicio de negocio: `base-api` tiene 4 replicas pero
+   pueden convivir en el mismo nodo. Los unicos TSC son de coredns (maxSkew 1, 2 replicas:
+   entra en 3 nodos).
+6. **Los requests de memoria no se tocan.** El uso real ya supera lo pedido; bajarlos es pedir
+   OOMKills. El recorte es solo de CPU, donde pedimos 11,7 cores y usamos 0,9 (5,7%).
+
+Plan propuesto: recortar CPU requests a ~6 cores pedidos (2x margen), anadir PDBs
+minAvailable 1, bajar el min del autoscaler a 3, **observar una semana con prod en marcha**
+y comprar la reserva de 3 despues. Si en esa semana el 4o nodo se levanta solo mas de una
+vez, se reservan 4 y se acabo la discusion.
