@@ -85,3 +85,80 @@ vigilarlo: va a cruzar los 100 GB solo.
 cluster arranca** a las 06:30. No es averia; si molesta, se arregla con `startingDeadlineSeconds`.
 
 - Pendiente: decision de Angelo sobre Redis y los 2 nodos de staging. Y su compra de las reservas.
+
+## Staging a 2 nodos (Angelo: "ve con lo de redis y staging")
+
+**Hecho. -48 a -54 USD/mes** (los 3 B2ms a 17 h/dia eran ~143/mes; con 2 quedan ~95, mas el
+disco OS del nodo retirado, 6,5).
+
+### Lo que habia que recortar y por que
+
+Los requests de staging eran **4,45 cores de 5,7** (78%) con un uso real de 0,52. El desglose
+dijo donde estaba la grasa, y no era la aplicacion:
+
+- **`istiod` pedia 500m de CPU y 2 GiB de memoria** y usa **2m y 43 MiB**. Para un cluster con
+  15 pods de aplicacion. Bajado a **100m/256Mi** (6x de margen sobre lo que usa).
+- **Los sidecars pedian 100m/128Mi cada uno** (15 pods = 1,5 cores). Bajados a **25m/96Mi** en el
+  ConfigMap `istio-sidecar-injector` + `rollout restart` de los 14 deployments para reinyectar.
+  Verificado: **15/15 sidecars con 25m**.
+- Los contenedores de aplicacion (50m) **no se tocaron**: ya estaban bien.
+
+**Istio aqui NO esta en Helm** (`helm list -n istio-system` vacio) **ni hay CRD IstioOperator**:
+se instalo con `istioctl`, asi que nada reconcilia el ConfigMap y el cambio persiste. **Lo
+sobrescribiria un `istioctl install/upgrade` futuro.** Copias en
+`/tmp/staging-nodos/backup-cm-injector-20261103.yaml` y `backup-deploy-istiod-20261103.yaml`.
+
+**Resultado:** requests de **4,45 -> 2,59 cores** y de **8,77 -> 5,84 GiB**. En 2 nodos: CPU 68%,
+memoria de requests 50% y **uso real 58%** (6,75 de 11,58 GiB) — mejor que el 72% que estime
+antes de recortar, porque istiod y los sidecars tambien consumen menos de verdad.
+
+### Dos gotchas que costaron tiempo y conviene no repetir
+
+1. **El autoscaler no baja un nodo que aloje pods de `kube-system`.** Con 3 nodos todos tenian
+   alguno, asi que el estado era `scaleDown: NoCandidates` indefinidamente, aunque un nodo
+   estuviera al 41%. Poner `--min-count 2 --max-count 2` **no fuerza nada**: la cuenta siguio en 3.
+   Lo que funciona es determinista: `--disable-cluster-autoscaler` -> `nodepool scale --node-count 2`
+   -> `--enable-cluster-autoscaler --min-count 2 --max-count 3`.
+2. **El drenaje se quedo colgado en `istiod`**, que tiene **1 replica y un PDB `minAvailable: 1`**
+   (igual que `istio-ingressgateway` y `istio-egressgateway`: los tres con **ALLOWED DISRUPTIONS 0**).
+   Un PDB asi bloquea el desalojo para siempre — exactamente la trampa que evite en los charts de
+   los microservicios con la guarda `if gt replicaCount 1`. Se desbloquea **borrando el pod**
+   (no es un desalojo, el PDB no aplica) y el Deployment lo recrea en un nodo programable.
+   **Los tres PDBs de istio van a bloquear cualquier drenaje futuro de staging.**
+
+### Verificacion
+
+2 nodos Ready, 15/15 pods de `default` Running, 0 Pending, `api-ecom-staging` **200**,
+`graph-ql-staging` 400 (correcto para GET sin query) y los `reconcile` de orders y shopcart
+**vuelven a completar** (los Error son del arranque de las 07:35 y de la ventana del drenaje).
+
+## Redis de staging: cambia de forma, no es config
+
+Al abrir el capo, **no se puede hacer con una variable de entorno**. El cliente de cache
+**fuerza TLS para cualquier host que no sea `localhost`/`127.0.0.1`**, sin escotilla
+(`grep` de `CACHE_TLS` y `rejectUnauthorized` en todo `src/cache/`: cero). Un Redis dentro del
+cluster no puede presentar un certificado firmado por una CA publica para un nombre interno, y
+ioredis verifica por defecto.
+
+Y **son tres clientes distintos con el mismo codigo copiado**, no uno:
+- `package-service` (el kernel) -> lo usan 12 microservicios
+- `vio-base-api` -> `src/service/cacheService.js`, cliente propio
+- `graphql` -> `src/Infra/Redis/RedisService.ts`, cliente propio
+(los dos ultimos **no tienen `@vio-/service` instalado**, lo comprobe en sus pods, pero si tienen
+`ioredis` y 6 variables `CACHE_*` en su `.env`)
+
+**Hecho: PR [package-service#12](https://github.com/vio-live/package-service/pull/12)** —
+`CACHE_TLS`, por defecto `'true'`, asi que sin declararla **no cambia nada para nadie**.
+Lo verifique construyendo los objetos de opciones viejo y nuevo y comparandolos para los tres
+casos de host (remoto, localhost, 127.0.0.1): identicos sin la variable y con `true`, y
+**distintos con `false`** (esa ultima comprobacion es la que prueba que el test no es trivial).
+`tsc --noEmit` limpio.
+
+**Falta, y necesita el OK de Angelo antes de seguir:** el mismo cambio en `vio-base-api` y
+`graphql`, mergear los tres, el Redis en el cluster, cambiar 5 variables del `.env.local` del blob,
+forzar 14 reconstrucciones y borrar `redus-vio-staging-sc`.
+El motivo de parar aqui: el `kernel-release` **dispara solo** un bump a `develop` en 12 repos en
+cuanto se mergea. Solo afecta a staging (prod sigue en 1.0.287 hasta que alguien haga release),
+pero es una cadena automatica sobre la libreria compartida de los 14 servicios, y eso se avisa
+antes, no despues. **El premio no es solo staging: el mismo cambio abre los 53 USD/mes del Redis
+Enterprise de produccion.**
