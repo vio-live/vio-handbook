@@ -156,6 +156,8 @@ Con «Default Shipping» llega sin servicio y nadie lo envía.
 **Envío gratis solo en el artículo** (QKC, 3/11): se pone a 0 el método de Vio que ya está mapeado (mismo nombre), y
 no se manda el `free_shipping` de Woo. La línea va con el `method_id` y los metadatos del 3PL y total 0, y el 3PL la
 procesa igual.
+Sin 3PL (Faves, 3/11) se copia cómo entran los pedidos gratis de la propia tienda: el script 3 los muestra
+(`free_shipping`, su `instance_id` y título), y ese es el mapeo.
 
 **3.2. Qué se ofrece.**
 - Los servicios a domicilio o buzón, sí.

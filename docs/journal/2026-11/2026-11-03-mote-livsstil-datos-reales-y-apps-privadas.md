@@ -87,8 +87,12 @@ Lo de QKC (colección, envíos Webshipper, IVA en Woo, campaña 3) y el arreglo 
     - Correos: «Ny ordre», «Ordrebekreftelse» y «Ordre fullført».
     - Pregunta abierta para Faves: si usan WP All Export Pro para mandar pedidos al almacén filtrando por método de
       pago (el de Vio entra como «Vio»).
+  - **Envío gratis (3/11, noche):** Faves lo confirmó. Queda un solo método, «Posten - Pakke i postkassen» a 0 NOK
+    (en los 63 productos); «nærmeste hentested» borrado. Como Faves no tiene 3PL, se copia cómo entran **sus** pedidos
+    gratis: `WOO_SHIPPING_LINES` → `free_shipping`, `instance_id` 5, mismo título. Comprobado en los dos pods y, en el
+    pago, `["vipps"]` en `/v2/mobile/config` y en el canal 484.
   - **ESTADO: LISTA, a la espera del pedido de prueba** (Angelo, 3/11).
-  - Pendiente aparte: el artículo con `data-vio-campaign="4"`, el config del informe y el envío gratis (por confirmar).
+  - Pendiente aparte: el artículo con `data-vio-campaign="4"` y el config del informe.
   - **Villoid:** Excel con sus 136 productos, `vio-commerce/entregables/Villoid-produkter-i-Vio.xlsx`.
 - **Alta de marcas como procedimiento:**
   [playbook `alta-marca-en-articulo`](../../playbooks/alta-marca-en-articulo.md), con 4 scripts en
