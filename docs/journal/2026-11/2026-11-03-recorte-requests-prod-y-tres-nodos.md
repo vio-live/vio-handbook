@@ -72,3 +72,62 @@ reservas**. Suscripcion: 1.322 -> ~1.160 hoy -> ~830 despues.
 
 - Pendiente: compra de las reservas (Angelo) y la limpieza de staging dentro de Azure (~100/mes),
   que es independiente de todo esto.
+
+## Los dos hallazgos, medidos a fondo (Angelo: "las cosas que encontraste que hacemos?")
+
+### base-api: es una fuga, no un problema de tamano
+
+Los 4 pods nuevos de hoy (09:57) arrancaron en **172-181 MiB**. Los que murieron llevaban
+~5 dias y estaban en **509, 342 y 252 MiB** con el limite en 512. O sea crece con el tiempo
+(y a ritmo distinto segun el pod, asi que depende del trabajo, no solo del uptime).
+
+Subir el limite a 1Gi (PR #61, ya desplegado) **no arregla la fuga**: compra ~2 semanas en vez
+de morir cada 5 dias. El arreglo de verdad es codigo. Lo que yo puedo aportar esta hecho:
+el limite y los numeros.
+
+### products: son DOS problemas distintos, y solo uno era mio
+
+**1. Estrangulamiento de CPU — arreglado hoy.** Leido del cgroup del pod en prod:
+
+```
+nr_periods 10213 · nr_throttled 1480  -> 14,5% de los periodos
+throttled_usec 103412562              -> 103 s de 314 s de CPU usada
+```
+
+Lo causaba el **limite de 1 core**, asi que es anterior al recorte de hoy. Pero confirma que
+products **es el unico de los 14 servicios que consume CPU de verdad** (rafagas de 800m al
+arrancar y en la sincronizacion de Shopify), asi que el recorte general a 50m no le correspondia.
+PR **#49**: request de vuelta a **200m**, limite a **2 cores**. Desplegado y verificado.
+
+**2. Fuga de heap — NO arreglada, y es la que lo mata.** Medido hoy: los pods de las 09:29-09:36
+estaban en **269-284 MiB**; a la hora y media de vida, **621-649 MiB**. Eso es ~**250 MiB/hora**,
+que contra el tope de `--max-old-space-size=1536` da un abort cada **4-5 horas**. Encaja con los
+dos exit 134 de esta manana (09:29:57 y 09:36:35) **a pesar del #45 de ayer**: subir el heap a
+1536 no quito la fuga, solo espacio los abortos.
+
+**Prediccion comprobable:** si no se toca el codigo, products vuelve a abortar esta tarde.
+Subir mas el heap solo hace los abortos mas espaciados y mas grandes. El siguiente paso sigue
+siendo el del journal del 02/11: **mirar si crecio el volumen de webhooks de Shopify** antes de
+tocar el heap otra vez. Es trabajo de codigo, de claude/Alan, no mio.
+
+### Tercer hallazgo: graph-ql no declaraba requests
+
+Era el unico de los 14 contenedores con `resources: {}`. El planificador lo contaba como 0 y,
+bajo presion de memoria, el kubelet ordena los desalojos por consumo **por encima del request**:
+con request 0, todo su consumo cuenta y queda de los primeros candidatos. Con prod en 3 nodos eso
+pesa mas. PR **#37**: requests **50m/192Mi** (usa 2m y 115-140 MiB). **Sin limits a proposito**,
+para no meter un matador donde no habia ninguno.
+
+### Cuarto hallazgo, sin resolver: estamos diagnosticando a ciegas
+
+**Container Insights (`omsagent`) sigue deshabilitado** en `vio-commerce-prod-sc` (ya lo vi el
+02/11). No hay serie historica de memoria por pod: las dos fugas de arriba las tuve que medir
+**a mano, comparando pods de distinta edad en una sola pasada**. Sin historico no se puede decir
+desde cuando crecen ni si el ritmo se acelero. Propuesta: Azure Monitor **managed Prometheus**
+(solo metricas) en vez de Container Insights (que ingesta logs y es lo caro). Pendiente de
+cotizar y de que Angelo lo apruebe.
+
+### Estado final del cluster tras todo
+
+3 nodos. Requests **7,85 cores de 11,58** (68%) y memoria **20,5 GiB de 34,6** (59%).
+0 pods Pending, 0 reinicios nuevos, `api-ecom.vio.live/api/channels` 200.
