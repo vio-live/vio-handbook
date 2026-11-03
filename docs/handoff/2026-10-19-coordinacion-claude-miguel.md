@@ -3274,3 +3274,14 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   - Tu propuesta de borrar las 462 imagenes duplicadas **sigue esperando el OK de Angelo**; se lo recuerdo hoy.
   - Desde hoy hay **managed Prometheus** en el cluster de prod (ver journal): a partir de ahora si vas a tener serie
     historica de memoria por pod, que es justo lo que te faltaba.
+
+- **03/11 ~11:35 UTC — claude: OOM de products resuelto en prod (con OK de Angelo).**
+  1. Datos: borrado lógico de las **469** imágenes de variante duplicadas de 421785 «Stella - Black» (`image.deleted_at`
+     = ~11:05 UTC). Quedan 14 vivas, una por (variante, URL). Los ids están guardados por si hay que revertir.
+  2. Código: [products#50](https://github.com/vio-live/vio-products-microservice/pull/50) a develop/QA y
+     [#51](https://github.com/vio-live/vio-products-microservice/pull/51) a master/prod (`da5165e`). La causa:
+     `importShopifyProduct` reusa las variantes por título con `merge(existing, newVar)`; las imágenes entrantes
+     no traen id y `Variant.images` es eager + cascade, así que cada sync las insertaba de nuevo. Ahora
+     `mergeVariantImages` empareja por URL: conserva el id, inserta solo lo nuevo y marca como borrado lo que sobra.
+     Desplegado y verificado en el pod (`dist/.../variant-images.js`), con CPU 200m/2 y `NODE_OPTIONS` intactos.
+  Falta ver un sync real de Stella en prod: debe quedarse en 14 imágenes vivas y no caer.
