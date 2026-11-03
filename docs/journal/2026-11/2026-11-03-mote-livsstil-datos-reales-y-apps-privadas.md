@@ -68,7 +68,11 @@ Lo de QKC (colección, envíos Webshipper, IVA en Woo, campaña 3) y el arreglo 
   - Su web regala el envío desde 800 kr; Vio no tiene umbrales, así que en el artículo siempre son 59.
   - **Publicados:** estaban todos en Draft porque `referral_fee` era 0. Puestos a 15 y publicados los 53 con stock
     (17/17 de la colección), por `products` (`/bulk` y `/bulk-publish`).
-  - La campaña la crea Angelo como Aller.
+  - **Campaña 4 «Faves»** (Angelo, como Aller): 15 %, desde el 3/11 a las 16:02 UTC, sin fin, en el canal 484. Tiene
+    17/17 productos y 17/17 copias de Aller.
+  - **Vipps** conectado por Angelo: MSN 1187978, unidad «Faves.no», partner, Express, cobro al enviar.
+    `/v2/mobile/config` tardó unos 30 s en enseñar `vipps` (caché). `available-payment-methods/484` da `["Vipps"]`.
+  - Falta: logo y promesas, el artículo con `data-vio-campaign="4"`, el config del informe y el pedido de prueba.
   - **Villoid:** Excel con sus 136 productos, `vio-commerce/entregables/Villoid-produkter-i-Vio.xlsx`.
 - **Alta de marcas como procedimiento:**
   [playbook `alta-marca-en-articulo`](../../playbooks/alta-marca-en-articulo.md), con 4 scripts en

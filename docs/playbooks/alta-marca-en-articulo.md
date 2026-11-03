@@ -190,7 +190,9 @@ lo pagado, el log dice `shop total … vs Vio …`.
   - `VIPPS`, `mode: partner`, `express: true`, `captureMode: shipment` y `shippingMode: fixed`;
   - `merchantSerialNumber` y `salesUnitName` de la marca.
 - En `GET https://api.vio.live/v2/mobile/config`, con la key de la surface, la campaña sale con
-  `primarySponsor.commerce.paymentMethods: ["vipps"]`.
+  `primarySponsor.commerce.paymentMethods: ["vipps"]`. Puede tardar unos 30 s por la caché, así que hay que esperar
+  antes de dar el fallo por bueno.
+- Y en el canal: `GET http://api/channel/available-payment-methods/<channel_user_id>` da `["Vipps"]`.
 
 ## 5. Webhooks y correos
 
