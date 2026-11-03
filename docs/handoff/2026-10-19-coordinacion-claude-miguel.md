@@ -3301,3 +3301,36 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
      sin TLS, `CACHE_TLS=false`). Si ves un `CACHE_*` raro o un error de Redis en staging, mira el
      journal `2026-11-03-redis-staging-al-cluster.md` antes de perder tiempo.
      Staging tambien bajo a **2 nodos**. En ningun momento se cayo.
+
+- **03/11 17:20 UTC — Miguel: me corrijo en lo de la "fuga", y traigo un hallazgo de datos gordo.**
+  Angelo me pidio seguir products y coordinar contigo. Dos cosas.
+
+  **1. Lo que te dije a las 16:15 sobre ~250 MiB/h estaba MAL planteado, y la correccion te importa.**
+  Muestree el mismo pod cada 40 s: `1004 -> 740 -> 301 -> 301 -> 493 -> 344 MiB`. **Y sin reinicio**
+  (`restartCount` sigue en 2, arrancado 13:20:45). O sea **no es una fuga que retiene memoria: es
+  diente de sierra**, el recolector la devuelve. Mis lecturas anteriores cogian puntos distintos de
+  la sierra y las lei como una pendiente. Consecuencia practica: **el abort no llega por acumulacion
+  lenta, llega cuando UNA rafaga pide mas de lo que cabe de golpe en el heap** — que es exactamente
+  tu teoria del producto con 469 imagenes, no otra distinta. Desde el abort de las 13:20 lleva
+  **4 horas sin caerse**.
+
+  **2. Tu arreglo de variantes aguanta, pero hay un problema mayor debajo, a nivel de producto.**
+  Consulte la base de prod (solo lectura, desde un pod de users):
+  - **Duplicados por variante vivos: 0.** Tu limpieza y tu `mergeVariantImages` se sostienen.
+  - **Pero la tabla `image` tiene 1.792.119 filas, 1.619.107 vivas, y 1.583.765 de esas son
+    HUERFANAS: `product_id IS NULL` *y* `variant_id IS NULL`.** El **98%** de lo vivo.
+  - Solo **29.889** filas cuelgan de un producto y **5.453** de una variante.
+  - **Se siguen creando ahora mismo:** de los ultimos 50.000 ids, **42.684 son huerfanas** (85%).
+  - No es que esten enlazadas por otro lado: `image` solo tiene dos claves ajenas (`product_id`,
+    `variant_id`) y **no hay tabla puente** (lo comprobe en `information_schema`). Son inalcanzables.
+  - Las ultimas son URLs reales de `cdn.shopify.com` con `order`, `width` y `height` correctos:
+    parecen imagenes legitimas que **pierden la asociacion al insertarse**.
+  - La tabla ocupa **328 MB** y los huerfanos son ~290 de esos MB.
+  - Peores repeticiones de una misma URL huerfana: **249.601**, **210.033** y **58.620** veces.
+
+  Encaja con la misma familia de bug que arreglaste (insertar en vez de emparejar), pero en el
+  camino de producto, no en el de variante, y viene de lejos (ids desde 238.725).
+
+  **No he borrado nada ni voy a hacerlo**: es decision de Angelo y el diagnostico del codigo es
+  tuyo. Lo que puedo aportar: las consultas, repetirlas cuando quieras, y medir el efecto en
+  memoria antes y despues con el Prometheus que active hoy.
