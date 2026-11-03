@@ -3382,3 +3382,41 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   - **El CHECK:** de acuerdo en ponerlo cuando el código esté arreglado. Te aviso aquí.
   - Desde ahora vigilo prod cada 20 min (reinicios, pods no sanos, memoria de products, `api-ecom` 200), solo
     lectura. Lo que vea lo apunto aquí.
+
+- **04/11 00:55 UTC — Miguel: te dejo el Prometheus servido, con el pico que buscabas.**
+  Leido tu 23:45. Me corriges bien en lo de `replaceFeedImages` y tu hipotesis del
+  `orphanedRowAction: nullify` encaja mucho mejor con que las URLs sean de la sync de Shopify.
+  Dos cosas para que no gastes tiempo de tu proxima sesion en montar la medicion.
+
+  **1. El pico ya esta medido, y pasa del tope.** Rango de 12 h a 10 min de resolucion:
+  - `products-7dcb689997-j52f8`: **pico 1.752 MiB a las 20:20 UTC** — por encima de
+    `--max-old-space-size=1536`, y su abort fue a las 21:33. La rampa previa esta grabada.
+  - `products-7dcb689997-4gw9p`: pico 976 MiB a las 15:30.
+  - La sierra se ve clarisima en `j52f8`: 452 (12:00) 712 652 502 254 267 712 613 571 563 868 373.
+    Ni rastro de pendiente monotona: sube y baja con el trabajo.
+
+  **2. Como consultarlo (probado, funciona desde el Mac con la sesion de az):**
+  ```bash
+  EP="https://defaultazuremonitorworkspace-swedencentral-aebhgvdpazbrexcz.swedencentral.prometheus.monitor.azure.com"
+  TOK=$(az account get-access-token --resource "https://prometheus.monitor.azure.com" --query accessToken -o tsv)
+  # instantanea
+  curl -s -G "$EP/api/v1/query" --data-urlencode 'query=container_memory_working_set_bytes{container="products"}' -H "Authorization: Bearer $TOK"
+  # rango, que es lo que sirve para una rafaga
+  curl -s -G "$EP/api/v1/query_range" \
+    --data-urlencode 'query=max by (pod) (container_memory_working_set_bytes{container="products"})' \
+    --data-urlencode "start=2026-11-03T12:00:00Z" --data-urlencode "end=2026-11-04T00:00:00Z" \
+    --data-urlencode "step=600s" -H "Authorization: Bearer $TOK"
+  ```
+  Con `step=60s` tienes resolucion de minuto para cercar una rafaga concreta. Metricas utiles:
+  `container_memory_working_set_bytes`, `container_cpu_usage_seconds_total` (con `rate`) y
+  `kube_pod_container_status_restarts_total` para casar el pico con el abort.
+  Ojo: el working set **no es el heap de V8**, incluye mas cosas. Para el heap sigue haciendo
+  falta tu snapshot en QA; esto sirve para saber **cuando** y **cuanto**, no **que**.
+
+  **3. Tu dato de 1.400 huerfanas/h en rafaga manda sobre mi 320/h**, que lo medi en una tarde
+  tranquila. El barrido tiene tope de 60.000 por pasada y corre cada hora, asi que aguanta
+  1.400/h de sobra; si os parece poco margen lo bajo a cada 30 min, es cambiar una linea.
+
+  **4. Lo de las imagenes de producto que se reinsertan en cada sync** (3.332 borradas logicas y
+  1.068 vivas nuevas): si lo metes en el mismo arreglo, perfecto. Cuando este, dime y pongo el
+  CHECK, que con eso dejan de poder nacer sueltas.
