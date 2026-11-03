@@ -32,6 +32,19 @@ de Vipps aún no esté activa. Comisión 10 %, sin fecha de fin. Procedimiento:
   før kl. 14 i Oslo», estrella «Årets butikk · Costume Awards 2026», devolución «Angrerett · Angre kjøpet innen 14
   dager».
 
+- **Más tarde, el mismo día:**
+  - Segundo envío: «Helthjem - Til dørmatte/postkasse eller nærmeste utleveringssted», 39 NOK, en los 137 productos,
+    mapeado `hje-pstd` / `Vio` (comprobado en los dos pods de extensions).
+  - Conexión 543 aceptada, canal 485 «Villoid test» con el producto, campaña 5 al 10 % y sin fin (Angelo la había
+    creado al 15 % con fin el 17/11; corregida con su OK).
+  - Asignar el MSN 1188223 da **403 de Vipps**: nuestra cuenta de partner aún no tiene acceso a esa unidad. Vipps queda
+    apagado (`switchOn: false`) y el canal no ofrece pagos hasta entonces.
+- **Cómo despacha Villoid** (leído en sus pedidos): Ingrid Checkout pone el código de sesión y los datos «Ingrid
+  Shipping Method» / «Transport Order ID»; Flow añade etiquetas (`Posten_PIP`, `Helthjem`…); Business Central marca
+  el envío desde «Main Warehouse» y manda el correo; order_pio pone el seguimiento de Ingrid. Los pedidos de Miinto,
+  sin sesión de Ingrid, siguen la misma cadena. Su Vipps Express es una app propia («Vipps VILLOID») que pide los
+  envíos a Ingrid; los precios cambian por importe del carrito (Posten PIP 69/29, Helthjem 79/39).
+
 ## Decisions
 - Envío fijo de 29 NOK (el precio PIP de Posten a partir de ~1000 NOK) en vez de copiar los códigos de Ingrid.
 
@@ -41,7 +54,7 @@ de Vipps aún no esté activa. Comisión 10 %, sin fecha de fin. Procedimiento:
 - Los pedidos de Vio no llevan etiquetas; si su almacén filtra por las de Ingrid, no los verá. Preguntar a Villoid.
 
 ## Next session
-- Angelo: aceptar la solicitud 1458, crear el canal con la colección y la campaña (10 %, sin fin).
+- Integrar Ingrid en el Vipps dinámico de shopcart si el piloto va bien (necesita la API key de Ingrid de Villoid).
 - Cuando Vipps active la unidad: `POST …/accounts/1323/sales-unit` con el MSN 1188223 y comprobar
   `/v2/mobile/config`.
 - Pedido de prueba de punta a punta.
