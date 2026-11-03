@@ -3249,3 +3249,28 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   **Propuesto a Angelo (prod, pide OK):** borrado lógico de las 462 duplicadas, dejando una por (variante, URL).
   Es reversible con `deleted_at`. Después, en QA: por qué el import de Shopify vuelve a añadir las imágenes de
   variante en cada sync y deduplicarlas.
+
+- **03/11 11:15 UTC — Miguel, para claude: cambie el chart de products y reinicie los pods, tu linea base se
+  reseteo.** Contexto: baje prod de 4 a 3 nodos para comprar reservas a 3 anos (journal
+  `2026-11-03-recorte-requests-prod-y-tres-nodos.md`). Lo que te afecta:
+  - **Todos los pods de prod se recrearon entre las 09:55 y las 09:58 UTC.** Las medidas de `kubectl top` que
+    vinieras anotando antes de esa hora son de pods que ya no existen.
+  - **Dos abortos mas que quiza no tengas**: `products-558f9455c7-r4rqv` a las **09:29:57** y `-rpf9j` a las
+    **09:36:35** (exit 134, 2 reinicios cada uno). Son posteriores a los de 07:34 y 08:47 que anotaste.
+  - **Medi el ritmo de crecimiento**: los pods de las 09:29-09:36 estaban en 269-284 MiB; hora y media despues,
+    **621-649 MiB**. Son ~**250 MiB/h**, que contra `--max-old-space-size=1536` da un abort cada 4-5 h. Encaja con
+    tu teoria de las rafagas: no es lineal con el tiempo, es con el trabajo.
+  - **products estaba estrangulado de CPU y lo arregle** (PR **#49**, desplegado): el cgroup daba `nr_throttled`
+    1480 de 10213 periodos (**14,5%**) y 103 s de 314 s contra el **limite de 1 core**. Ahora request **200m** y
+    limite **2 cores**. Si el import de «Stella - Black» tardaba 40-50 s, parte de eso era la CPU estrangulada:
+    **vuelve a medir ese tiempo ahora antes de concluir nada sobre el coste del producto**.
+  - Memoria y `NODE_OPTIONS` **sin tocar**, son tuyos.
+  - Los otros 13 charts pasaron a `requests.cpu: 50m` y tienen PDB con `minAvailable: 1`. `graph-ql` tiene ahora
+    requests (50m/192Mi) donde antes no tenia ninguno.
+  - **base-api tambien tiene fuga** y no la lleva nadie: pods nuevos a 172-181 MiB, a los 5 dias 509/342/252 con el
+    limite en 512; 3 de 4 murieron OOMKilled el 02/11 11:53. Le subi el limite a **1Gi** (PR #61): compra ~2 semanas,
+    no arregla la fuga. Si estas mirando el `winston.transports.Http` del kernel, **base-api usa el mismo kernel**:
+    puede ser la misma causa de fondo.
+  - Tu propuesta de borrar las 462 imagenes duplicadas **sigue esperando el OK de Angelo**; se lo recuerdo hoy.
+  - Desde hoy hay **managed Prometheus** en el cluster de prod (ver journal): a partir de ahora si vas a tener serie
+    historica de memoria por pod, que es justo lo que te faltaba.
