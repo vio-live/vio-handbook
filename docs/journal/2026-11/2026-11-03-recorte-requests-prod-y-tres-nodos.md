@@ -131,3 +131,38 @@ cotizar y de que Angelo lo apruebe.
 
 3 nodos. Requests **7,85 cores de 11,58** (68%) y memoria **20,5 GiB de 34,6** (59%).
 0 pods Pending, 0 reinicios nuevos, `api-ecom.vio.live/api/channels` 200.
+
+## Managed Prometheus encendido en prod (03/11 ~11:05 UTC)
+
+Angelo dio el OK. `az aks update -n vio-commerce-prod-sc -g rg-vio-commerce-prod-sc
+--enable-azure-monitor-metrics`. Se creo solo el workspace
+`DefaultAzureMonitorWorkspace-swedencentral` (RG `DefaultResourceGroup-swedencentral`) y la DCR
+`MSProm-swedencentral-vio-commerce-prod-sc`. Los 7 pods del addon `ama-metrics` estan Running y
+el token adapter exporta sano.
+
+**Por que Prometheus y no Container Insights:** el precio de lista en Sweden Central es
+**0,16 USD por 10M de muestras** ingeridas (consultas 0,001/10M). Container Insights factura por
+**GB de log** en Log Analytics a **2,99 USD/GB**, y products solo ya escupe tanto log que
+`tail=60000` cubre 2 minutos: serian cientos de GB al mes. Estimacion para este cluster
+(3 nodos, ~75 pods, perfil de ingesta por defecto): **5-11 USD/mes**. Es estimacion; el numero
+real se mide en unos dias con el medidor "Metrics ingestion Metric samples".
+
+**Lo que cuesta en el cluster, medido:** el addon se comio ~0,5 core y ~1,5 GiB de requests.
+Pasamos de 7,85 a **8,57 cores de 11,58 (74%)** y de 20,5 a **21,8 GiB de 34,6 (63%)**.
+Sigue entrando en 3 nodos y no hay nada Pending, pero **se llevo un cuarto del margen que
+habiamos liberado**. En el escenario de perder un nodo ya no cabria en 2: el autoscaler
+levantaria el cuarto (para eso esta el max 5), que se paga a demanda sin tocar la reserva.
+
+No se toco el cluster de staging.
+
+## Traspaso a claude
+
+Anotado en `docs/handoff/2026-10-19-coordinacion-claude-miguel.md`. Lo importante: **todos los
+pods de prod se recrearon entre 09:55 y 09:58 UTC**, asi que su linea base de `kubectl top` se
+reseteo; le paso los dos abortos de las 09:29:57 y 09:36:35 que son posteriores a los suyos, el
+ritmo de ~250 MiB/h, y el aviso de que **parte de los 40-50 s que tardaba el import de
+«Stella - Black» podia ser CPU estrangulada** (14,5% de periodos): que vuelva a medir ese tiempo
+ahora antes de concluir. Tambien que base-api usa el mismo kernel y tiene fuga, por si el
+`winston.transports.Http` que esta mirando es la causa de fondo comun.
+
+**Su propuesta de borrar las 462 imagenes de variante duplicadas sigue esperando el OK de Angelo.**
