@@ -37,6 +37,9 @@ Foco de Angelo desde hoy: **Replit, Vipps y Kustom**.
   surface 18; órdenes **4675** (1343, pagada en `/test`, que ahora lleva la campaña 24) y **4676** (1333, pagada en
   `/woo-origin`, sin campaña → default 22). Las dos pagadas desde el artículo de su propia marca: sigue sin ser el cruce.
   Contestado con tabla y las dos compras exactas (añadir en un artículo, pagar en el otro; se verifica por `content_url`).
+- **14:37 UTC, Villoid (prod, aviso de Angelo «Vipps de Villoid parece activo»):** unidad 1188223 asignada a 1323 por
+  api-ms (ayer 403); canal 485 → `["Vipps"]`; config pública: campaña 5 con `["vipps"]`. Detalle en el
+  [journal de Villoid](./2026-11-03-villoid-piloto-un-producto.md). Falta el pedido de prueba.
 
 ## Decisions
 - La guardia es diaria mientras Alan trabaje; foco Replit, Vipps y Kustom (Angelo, 4/11).

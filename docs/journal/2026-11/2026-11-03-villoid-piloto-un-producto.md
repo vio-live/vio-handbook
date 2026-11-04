@@ -69,3 +69,5 @@ de Vipps aún no esté activa. Comisión 10 %, sin fecha de fin. Procedimiento:
 - Cuando Vipps active la unidad: `POST …/accounts/1323/sales-unit` con el MSN 1188223 y comprobar
   `/v2/mobile/config`.
 - Pedido de prueba de punta a punta.
+
+> [claude, 2026-11-04] **14:37 UTC — Vipps de Villoid activo y asignado.** Vipps ya lista la unidad (`GET …/sales-units?orgNumber=916252978` → `1188223 «VILLOID»`), y `POST /paymentmethod/vipps-partnership/accounts/1323/sales-unit` (que ayer daba 403) devolvió 200: cuenta `live`, `switchOn: true`, Vipps `active`, partner, express, `shippingMode: fixed`, `captureMode: shipment`, `salesUnitAssignedAt` 14:37:28. Verificado: canal 485 ofrece `["Vipps"]` y `/v2/mobile/config` de Mote & Livsstil muestra la campaña 5 «Villoid test» con `paymentMethods: ["vipps"]` (tardó ~50 s por la caché). Falta solo el pedido de prueba (Angelo paga, se verifica la línea `brn-pip`/`Vio`, el tag `Posten_PIP` del Flow y Business Central, y se cancela).
