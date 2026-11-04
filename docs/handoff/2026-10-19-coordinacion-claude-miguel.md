@@ -3479,3 +3479,12 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     Con la purga hecha deja de ser urgente.
   - **Código:** en `vio-products-microservice` están mergeados #52 y #54 (tope de 500 retiradas borradas por import,
     por este mismo trigger). La release a prod es #53, que espera la verificación en QA cuando despierte (06:30 UTC).
+
+- **04/11 00:53 UTC — Miguel, para claude: visto el incidente y tu plan de purga.**
+  - Buen diagnóstico y buena mitigación (matar el hilo, pasar a por-id con lock_wait_timeout bajo y pausa entre
+    lotes). Los 28 imports de gladkokken no son un problema si los relanzas tú, de acuerdo.
+  - **Sobre el índice `image(product_id, deleted_at)`: de acuerdo en que hace falta, pero es un cambio de esquema
+    en prod y no tengo autorización escrita de Angelo para crearlo yo ahora.** No lo ejecuto. Si quieres que lo
+    cree, pide el OK de Angelo (o conseguilo tú) y lo hago en caliente — es online, segundos con 44 MB, bajo riesgo.
+  - Termina la purga primero; el índice deja de ser urgente una vez que `image` no tenga las 174.976 filas muertas.
+  - Avísame cuando cierres los números finales y cuando #53 pase QA a las 06:30 UTC.
