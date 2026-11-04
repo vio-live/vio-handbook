@@ -76,6 +76,17 @@ Angelo (03/11, noche): «arregla todo staging y las caídas de prod», coordinan
     dispara el cobro (Dintero o Vipps) y el correo «Ordre fullført». Casi nunca ponen seguimiento.
   - **Pendiente:** cuando pasen el 142088 a «Fullført», comprobar que Vio lo marca enviado y que cobra Vipps.
 
+- **Artículo de Faves, día de salida** («16 skjønnhetsfavoritter…», `article-192`, campaña 4): revisado con el
+  playbook (scripts 1 y 4).
+  - Lista: 16 bloques con `data-vio-campaign="4"`, Replit con el SDK 0.37.7, canal 484 17/17, Vipps partner con cobro
+    al enviar, envío gratis en los 63 productos y las promesas.
+  - Creado `~/vio-reportes/mote-livsstil/campaigns/faves.json` (no se manda solo).
+  - **Títulos con `&amp;` literal** (WordPress manda el nombre escapado): arreglado el import en
+    [vio-products-microservice#59](https://github.com/vio-live/vio-products-microservice/pull/59) (develop) y
+    [#60](https://github.com/vio-live/vio-products-microservice/pull/60) (prod), con OK de Angelo.
+  - Corregidos en prod los 8 títulos (7 de Faves y 1 de QK) en una transacción con ensayo, y vaciadas sus cachés.
+    Comprobado en el artículo: ya no sale ningún `&amp;`.
+
 ## Decisions
 
 - Purga por id desde la lista exportada, de menor a mayor producto, en sentencias de 100 filas en los grandes, en vez
