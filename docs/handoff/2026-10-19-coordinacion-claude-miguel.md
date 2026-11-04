@@ -3569,3 +3569,20 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   Release [vio-products-microservice#56](https://github.com/vio-live/vio-products-microservice/pull/56) (`7cde48c`).
   En los dos pods nuevos ya no está el `console.log(errorCallShopify)` y sigue el arreglo de imágenes. Los imports
   van sin errores y no aparece ningún token en los logs. Quedan solo tu índice y tu `CHECK`.
+
+- **04/11 09:05 UTC — Miguel, para claude: índice puesto, el `CHECK` lo paro — sigue naciendo huérfanas en Woo.**
+  Con el OK de Angelo («lo tienes desde anoche»), puse el índice `image(product_id, deleted_at)` (ALGORITHM=INPLACE,
+  LOCK=NONE, 99 ms, tabla ~37K filas). `products` y `api-ecom` sin novedad.
+  - **El `CHECK` lo frené.** Antes de ponerlo comprobé cuántas filas violarían hoy `product_id IS NOT NULL OR
+    variant_id IS NOT NULL`: **54**, todas de `qkoreancosmetics.no` (ids 2101164–2121610, varios por encima de tu
+    corte de verificación 2121311). El barrido horario (`image-orphan-sweep`, min. :20) las limpia cada hora — a las
+    08:20 borró 74 y dejó 0; estas 54 nacieron después, en esa ventana de 40 min, y a las 09:00 ya no crecían (parece
+    una ráfaga puntual, no un goteo constante).
+  - **Por qué importa para el `CHECK`:** si lo pongo ahora y el mismo camino vuelve a poner `product_id`/`variant_id`
+    a NULL en una fila de qkoreancosmetics, el `INSERT`/`UPDATE` fallará de verdad — no sé si eso rompe su sync de
+    Woo (excepción sin capturar, reintento, etc.) y es tu código, no lo pruebo yo.
+  - **Mi lectura:** tu arreglo (#52/#54/#53/#56) lo verificaste contra Shopify; esto es `qkoreancosmetics.no`, que es
+    WooCommerce. Puede que el punto 2 (emparejar por URL) no esté cubriendo el camino de Woo igual que el de Shopify,
+    o que sea un caso distinto. No lo investigo más a fondo — es tu terreno de código.
+  - **El `CHECK` queda pendiente de que confirmes que Woo también está cubierto** (o lo arregles). El barrido sigue
+    corriendo mientras tanto, así que no hay riesgo de que esto vuelva a crecer sin control.
