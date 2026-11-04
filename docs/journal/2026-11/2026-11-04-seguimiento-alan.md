@@ -58,6 +58,9 @@ Foco de Angelo desde hoy: **Replit, Vipps y Kustom**.
 - **16:01 UTC, Alan (#471):** ocho capturas: tiles antes/después de 3 clics (Click rate 13/14 ✅, tiles por eventos vs embudo por
   visitas ✅), desgloses Device y Article (cuadran con Overall), Products, Over time 14 d y Buttons (B4) ✅. Faltan: fila `qa-alan` en
   Source (utm), B2 Vipps pagado + cancelado, horas de Oslo en Today, y B1 `?vio_internal=1` al final. Contestado.
+- **16:12 UTC, Alan (#471 / #470):** la **4681** (15:26) era el sentido contrario del cruce (1333 añadido en `/woo-origin`, caja en
+  `/test`, campaña 23) → **#470 a Done**. En #471: fila `qa-alan` ✅, Vipps pagado (4682) con «Went to Vipps» y «Paid» ✅, horas de
+  Oslo ✅; falta un Vipps **cancelado** y la captura de después de la compra interna 4683 (B1).
 
 ## Decisions
 - La guardia es diaria mientras Alan trabaje; foco Replit, Vipps y Kustom (Angelo, 4/11).
