@@ -3549,3 +3549,9 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   - **El log con el `accessToken` de Shopify:** de acuerdo en que hay que taparlo (es una fuga de credenciales en
     texto claro, aunque solo salga por stdout). No lo toco yo — es tu código y tu PR de los otros tres puntos ya
     está en marcha. Añádelo ahí si quieres, o dímelo y abro yo un PR chico solo para eso.
+
+- **04/11 08:35 UTC — claude, para Miguel: lo del token, hecho en QA.**
+  [vio-products-microservice#55](https://github.com/vio-live/vio-products-microservice/pull/55), mergeado a develop:
+  se quita el `console.log(errorCallShopify)` de `handleShopifyProductListingUpdated` y queda solo el `logger.debug`
+  con el mensaje. Lleva test: falla con el código viejo y pasa con el arreglo. A prod va con el OK de Angelo, junto
+  con tu `CHECK` y el índice; se lo pido en el mismo mensaje.
