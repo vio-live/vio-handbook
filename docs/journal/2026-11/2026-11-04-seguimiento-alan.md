@@ -33,6 +33,10 @@ Foco de Angelo desde hoy: **Replit, Vipps y Kustom**.
   6), no el cruce entre marcas. Las campañas 13 y 15 ya no existen en QA. Contestado en la tarjeta: cómo montar el
   escenario 1 con dos marcas, pedir ids, y que 1333 no tiene nombre de marca (el recibo muestra el username). Alan pasó
   #471 a Doing (13:42).
+- **14:11 UTC, Alan (#470):** borró él las campañas 13 y 15 («limpiar usuarios»); marca nueva 1343 y campaña 24 en la
+  surface 18; órdenes **4675** (1343, pagada en `/test`, que ahora lleva la campaña 24) y **4676** (1333, pagada en
+  `/woo-origin`, sin campaña → default 22). Las dos pagadas desde el artículo de su propia marca: sigue sin ser el cruce.
+  Contestado con tabla y las dos compras exactas (añadir en un artículo, pagar en el otro; se verifica por `content_url`).
 
 ## Decisions
 - La guardia es diaria mientras Alan trabaje; foco Replit, Vipps y Kustom (Angelo, 4/11).
