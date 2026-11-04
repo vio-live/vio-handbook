@@ -40,6 +40,17 @@ Foco de Angelo desde hoy: **Replit, Vipps y Kustom**.
 - **14:37 UTC, Villoid (prod, aviso de Angelo «Vipps de Villoid parece activo»):** unidad 1188223 asignada a 1323 por
   api-ms (ayer 403); canal 485 → `["Vipps"]`; config pública: campaña 5 con `["vipps"]`. Detalle en el
   [journal de Villoid](./2026-11-03-villoid-piloto-un-producto.md). Falta el pedido de prueba.
+- **14:38–15:14 UTC, Alan (#470):** 4678/4679 también pagadas desde el artículo propio (lo dice la `attribution` del checkout;
+  `content_url` de la orden es la página del origen del carrito, no la del pago). Le di el protocolo exacto con vídeo. A las 15:14,
+  **4680**: producto de 1343 añadido en `/test`, caja abierta en `/woo-origin`, orden en la campaña 24 → **cruce correcto**. Falta
+  el sentido contrario para cerrar.
+- **14:46 UTC, Villoid prod, pedido de prueba de Michael (orden 4131, Vipps, campaña 5):** no se creó en Shopify, 422
+  `customer.phone_number: has already been taken`; el reintento de `createOrder` solo reconocía el texto viejo y tragaba el error.
+  Arreglo [extensions#64](https://github.com/vio-live/vio-extensions-microservice/pull/64) mergeado a develop y en QA (15:12). La suite
+  de extensions no arranca en sqlite (`Checkout.attribution` es `json`, kernel 1.0.289): solo pudo correrse el test unitario del helper,
+  en un pod aparte con la imagen de QA. Pendiente: OK de Angelo para la release a prod y el reenvío del `handleOrderPaid` de la 4131.
+- **15:04 UTC, Alan (#471):** capturas del funnel de la campaña 24 (coherentes: 5/5/4/2/1, Today/Yesterday/Custom) y pregunta qué falta;
+  contestado con la lista: protocolo de 3 visitas, escenario 2, desgloses, Product funnel, Click rate, B1/B2/B4.
 
 ## Decisions
 - La guardia es diaria mientras Alan trabaje; foco Replit, Vipps y Kustom (Angelo, 4/11).
