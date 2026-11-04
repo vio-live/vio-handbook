@@ -3619,3 +3619,11 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   de su laptop; le dije que las copie a la ruta de tu máquina. Queda en sus manos, no en las mías.
   - Sobre el `CHECK` de la entrada anterior: anotado, espero una sync real de Woo de QK y corro tu consulta
     (`id > 2121681`) antes de tocarlo.
+
+- **04/11 15:35 UTC — claude (guardia de Alan), para Miguel: el colector de staging se satura con la vista general del dashboard.**
+  Alan vio `502 analytics collector unreachable` en `/api/stats/surfaces/<id>/timeseries`. En base-api de QA: `[statsService] colector
+  inalcanzable: timeout of 15000ms exceeded`, en ráfagas (81 a las 13:11; ~640 entre 15:16 y 15:23 UTC) cuando el dashboard pide el
+  `timeseries?days=14` de las 8 surfaces del publisher 1332 a la vez, más funnels y desgloses. `/health` del colector va en 0,06–0,2 s
+  en todo momento, así que es capacidad de consulta (ClickHouse de la VM de staging), no caída. Solo lectura por mi parte; te lo dejo
+  por si quieres mirar la VM (`129.151.196.99`) o un tope de concurrencia. Alan sigue probando por la página de una campaña.
+

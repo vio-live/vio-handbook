@@ -51,6 +51,10 @@ Foco de Angelo desde hoy: **Replit, Vipps y Kustom**.
   en un pod aparte con la imagen de QA. Pendiente: OK de Angelo para la release a prod y el reenvío del `handleOrderPaid` de la 4131.
 - **15:04 UTC, Alan (#471):** capturas del funnel de la campaña 24 (coherentes: 5/5/4/2/1, Today/Yesterday/Custom) y pregunta qué falta;
   contestado con la lista: protocolo de 3 visitas, escenario 2, desgloses, Product funnel, Click rate, B1/B2/B4.
+- **15:25 UTC, Alan (#471): «¿hay problemas en staging?»** (`502 analytics collector unreachable` en `timeseries`). Causa: base-api
+  (`statsService`, timeout 15 s) contra el colector de staging, que se satura cuando la vista general del dashboard pide el
+  `timeseries` de 14 d de las 8 surfaces del publisher 1332 a la vez: 81 timeouts a las 13:11 y ~640 entre 15:16 y 15:23; el
+  `/health` del colector responde en 0,06–0,2 s. No es de los pods de QA. Contestado en la tarjeta; anotado para Miguel (VM del colector).
 
 ## Decisions
 - La guardia es diaria mientras Alan trabaje; foco Replit, Vipps y Kustom (Angelo, 4/11).
