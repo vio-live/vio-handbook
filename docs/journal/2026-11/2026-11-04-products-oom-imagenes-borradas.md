@@ -62,6 +62,20 @@ Angelo (03/11, noche): «arregla todo staging y las caídas de prod», coordinan
 - **Índice `image (product_id, deleted_at)`** creado por Miguel (09:05, 99 ms). El `CHECK` lo pone cuando vea
   limpia su consulta tras una sync de QK.
 
+- **Pedido de prueba de Faves (11:40 UTC, prod):** pedido 4130 (canal 484, campaña 4, Vipps MSN 1187978, «Posten - Pakke i
+  postkassen» a 0 kr, 299 NOK). Llegó a su Woo como el pedido **142088**: «Under behandling», `free_shipping` instancia
+  5, pago «Vio», stock descontado y los correos «Ny ordre» y «Ordrebekreftelse» enviados.
+  - **Fallo:** justo después de crear el pedido en Woo, `handleOrderPaid` dio un 500
+    (`expectedTotal.toFixed is not a function`): la comprobación del total del 02/11 sumaba el envío como texto
+    (299 + "0.00"). Vio no guardó el id del pedido de Woo ni escribió la nota.
+  - **Arreglo:** [vio-extensions-microservice#62](https://github.com/vio-live/vio-extensions-microservice/pull/62)
+    (develop) y [#63](https://github.com/vio-live/vio-extensions-microservice/pull/63) (prod, mergeado por Angelo).
+  - **Pedido 4130 arreglado a mano** (OK de Angelo): `order_item` 4610 → `supplier_woo_order_id` 142088, y la nota
+    «order id: 4130 -> aller» en Woo. Era el primer pedido de Woo desde el 02/11; no hay más afectados.
+  - **Cómo despacha Faves** (visto en sus pedidos): sin 3PL. Marcan «Fullført» a mano, por tandas por la mañana, y eso
+    dispara el cobro (Dintero o Vipps) y el correo «Ordre fullført». Casi nunca ponen seguimiento.
+  - **Pendiente:** cuando pasen el 142088 a «Fullført», comprobar que Vio lo marca enviado y que cobra Vipps.
+
 ## Decisions
 
 - Purga por id desde la lista exportada, de menor a mayor producto, en sentencias de 100 filas en los grandes, en vez
