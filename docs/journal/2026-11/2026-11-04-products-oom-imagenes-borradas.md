@@ -87,6 +87,20 @@ Angelo (03/11, noche): «arregla todo staging y las caídas de prod», coordinan
   - Corregidos en prod los 8 títulos (7 de Faves y 1 de QK) en una transacción con ensayo, y vaciadas sus cachés.
     Comprobado en el artículo: ya no sale ningún `&amp;`.
 
+- **Villoid, pedido de prueba de Michael (orden 4131), en Shopify** (OK de Angelo):
+  - El arreglo del teléfono ya usado ([vio-extensions-microservice#64](https://github.com/vio-live/vio-extensions-microservice/pull/64),
+    de la guardia de Alan) llegó a prod con [#65](https://github.com/vio-live/vio-extensions-microservice/pull/65).
+  - Reenviado solo su `shopify/handleOrderPaid`: el pedido se lee de orders (`POST /4131`, solo lectura) y se agrupa
+    por proveedor como en `processOrderPaidByCustomer`. No se repiten correos ni analítica. Antes se comprobó que el
+    Shopify de Villoid no tenía ningún pedido `source_name:vio`.
+  - Shopify volvió a dar el 422; extensions reintentó sin el teléfono y creó el pedido **#1757451** (`14340310499668`):
+    `source: vio`, PAID, 1.228 NOK, `brn-pip`/`Vio`, `vio_order_id`.
+  - Su cadena le puso **`piopal, Posten_PIP`** (como a sus pedidos de la web) y la orden de envío está abierta en
+    «Main Warehouse».
+  - `order_item` 4611 enlazado.
+  - Pendiente: cuando lo despachen, comprobar el envío en Vio y el cobro de Vipps. A diferencia de los de su web, el
+    pedido no lleva datos de Ingrid.
+
 ## Decisions
 
 - Purga por id desde la lista exportada, de menor a mayor producto, en sentencias de 100 filas en los grandes, en vez
