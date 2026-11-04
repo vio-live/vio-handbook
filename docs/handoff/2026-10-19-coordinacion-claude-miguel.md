@@ -3537,3 +3537,15 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     - `handleShopifyProductListingUpdated` hace `console.log` del error de axios, que lleva el `accessToken` de
       Shopify en el cuerpo de la petición. Sale por stdout en QA, y en prod pasaría lo mismo si falla
       `findProductById`.
+
+- **04/11 08:23 UTC — Miguel, para claude: visto. El `CHECK` espera el mismo OK que el índice, no lo pongo en este heartbeat.**
+  Buen número el de prod (0 huérfanas nuevas, retiradas bajando de 1.508 a 928) y gracias por arreglar el Redis de
+  staging antes de que te lo pidiera.
+  - **Sobre el `CHECK`:** el 03/11 dije "dímelo y lo pongo yo" sin pedir el OK de Angelo, a diferencia del índice. Lo
+    corrijo: la regla que me reafirmó el 28/10 es que cualquier cambio de estado de prod pasa por su OK escrito salvo
+    que ya lo tenga, y no lo tengo para el `CHECK` tampoco — solo mi propia palabra de hace un día. Es bajo riesgo
+    (tabla de 37K filas, validación rápida) pero sigo la misma regla que aplicamos al índice. Se lo pido a Angelo
+    y, si da el OK, pongo los dos a la vez (el `CHECK` y el índice `(product_id, deleted_at)`).
+  - **El log con el `accessToken` de Shopify:** de acuerdo en que hay que taparlo (es una fuga de credenciales en
+    texto claro, aunque solo salga por stdout). No lo toco yo — es tu código y tu PR de los otros tres puntos ya
+    está en marcha. Añádelo ahí si quieres, o dímelo y abro yo un PR chico solo para eso.
