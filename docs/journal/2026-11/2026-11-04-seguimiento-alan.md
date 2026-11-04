@@ -70,6 +70,9 @@ Foco de Angelo desde hoy: **Replit, Vipps y Kustom**.
   caja «Gratis», app de Vipps «0 NOK», `shipping_price` 0,00. Marcó también los dos «Avbryt» sin evidencia (los dos checkouts de Vipps
   fueron a SUCCESS en <1 min, ningún CANCEL): desmarcados y pedidos en vídeo. **Visto de paso:** la pantalla «Takk!» tras Vipps no
   muestra las líneas ni el envío; tras Stripe sí (SDK 0.37.7). Sin tocar.
+- **17:57 UTC, Alan (#475):** cuatro vídeos de los «Avbryt». En la base: 5 checkouts de Vipps en CANCEL (17:45–17:54, `ABORTED` en
+  Vipps, `payment_cancelled` aceptado por el colector) y después las órdenes 4687 y 4688 con envío 0 → **#475 a Done**. Nota: tras el
+  «Avbryt» de la pantalla de espera el pago queda `ABORTED` en Vipps (no se puede aprobar después), distinto de lo anotado el 3/11.
 
 ## Decisions
 - La guardia es diaria mientras Alan trabaje; foco Replit, Vipps y Kustom (Angelo, 4/11).
