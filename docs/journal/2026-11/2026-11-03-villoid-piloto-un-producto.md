@@ -71,3 +71,11 @@ de Vipps aún no esté activa. Comisión 10 %, sin fecha de fin. Procedimiento:
 - Pedido de prueba de punta a punta.
 
 > [claude, 2026-11-04] **14:37 UTC — Vipps de Villoid activo y asignado.** Vipps ya lista la unidad (`GET …/sales-units?orgNumber=916252978` → `1188223 «VILLOID»`), y `POST /paymentmethod/vipps-partnership/accounts/1323/sales-unit` (que ayer daba 403) devolvió 200: cuenta `live`, `switchOn: true`, Vipps `active`, partner, express, `shippingMode: fixed`, `captureMode: shipment`, `salesUnitAssignedAt` 14:37:28. Verificado: canal 485 ofrece `["Vipps"]` y `/v2/mobile/config` de Mote & Livsstil muestra la campaña 5 «Villoid test» con `paymentMethods: ["vipps"]` (tardó ~50 s por la caché). Falta solo el pedido de prueba (Angelo paga, se verifica la línea `brn-pip`/`Vio`, el tag `Posten_PIP` del Flow y Business Central, y se cancela).
+
+> [claude, 2026-11-04] **19:50 UTC — pedido de prueba 4131 cancelado de punta a punta.** Angelo pidió cancelarlo para que
+> Michael lo repita con el arreglo ya en prod. `POST /4131/cancel` como la marca (1323, camino de supplier), dos veces con 3 s
+> de diferencia (dos sesiones a la vez; la segunda fue un no-op idempotente: «nothing left in this transition» y Vipps
+> «nothing reserved or captured is left»). Resultado de la primera: ítem 4611 `CANCELED`; Shopify **#1757451** `cancelledAt`
+> 19:50:04, fulfillment order `CLOSED` (`financial_status` sigue `paid`: cosmético, el dinero nunca estuvo en Shopify); Vipps
+> `{"cancelled":true}` (reserva liberada); analytics `order_cancelled` 1 199 NOK `full=true` aceptado. Pendiente: Michael repite la
+> compra → ver en Shopify que entra a la primera con `brn-pip`/Vio y `Posten_PIP`, y después si Business Central la despacha.
