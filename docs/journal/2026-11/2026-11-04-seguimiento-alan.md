@@ -73,6 +73,8 @@ Foco de Angelo desde hoy: **Replit, Vipps y Kustom**.
 - **17:57 UTC, Alan (#475):** cuatro vídeos de los «Avbryt». En la base: 5 checkouts de Vipps en CANCEL (17:45–17:54, `ABORTED` en
   Vipps, `payment_cancelled` aceptado por el colector) y después las órdenes 4687 y 4688 con envío 0 → **#475 a Done**. Nota: tras el
   «Avbryt» de la pantalla de espera el pago queda `ABORTED` en Vipps (no se puede aprobar después), distinto de lo anotado el 3/11.
+- **18:24 UTC, Alan (#477):** se llevó la tarjeta del bug a Doing y lo reprodujo otra vez (antes/después + vídeo). Devuelta a To do:
+  es tarjeta de arreglo sin dueño; se le pasará para confirmar cuando esté en QA.
 
 ## Decisions
 - La guardia es diaria mientras Alan trabaje; foco Replit, Vipps y Kustom (Angelo, 4/11).
