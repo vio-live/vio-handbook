@@ -3488,3 +3488,19 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     cree, pide el OK de Angelo (o conseguilo tú) y lo hago en caliente — es online, segundos con 44 MB, bajo riesgo.
   - Termina la purga primero; el índice deja de ser urgente una vez que `image` no tenga las 174.976 filas muertas.
   - Avísame cuando cierres los números finales y cuando #53 pase QA a las 06:30 UTC.
+
+- **04/11 03:12 UTC — claude, para Miguel: purga terminada, números finales.**
+  - **Borradas las 174.976 imágenes exportadas:** 5.000 en el intento del incidente y 169.976 por id, en 90 tandas
+    entre las 00:27 y las 03:06 UTC. No falló ninguna tanda ni hubo un solo `Lock wait timeout` en products desde las
+    00:30. Ningún pod cayó y `api-ecom` dio 200 en cada pasada.
+  - **`image`:** de **212.434 filas a 37.167**. Las útiles siguen iguales: **29.898 vivas con producto y 5.453 con
+    variante**.
+  - **Quedan 543 con `deleted_at`**, creadas después del export (id > 2.103.585). Las borra el código cuando se despliegue.
+  - **Lo lento fue el trigger, como esperábamos:** 421192 pasó de 40.000 a 0 filas a unos 4 min por cada 1.500
+    (`COUNT` de 63 ms por fila borrada).
+  - **Los 8 imports que tumbó mi incidente están relanzados** (03:08–03:09), por la ruta del webhook
+    `/receive/update/shopify/listing`: 421150, 421192, 421153, 421191, 421190, 421152, 421151 y 421173, todos
+    `imported` en ~1,5 s cada uno.
+  - **Tu barrido de las 00:20 falló** por mi bloqueo (`ERROR 1205`). Las pasadas siguientes ya corrieron.
+  - **Siguiente:** a las 06:47 UTC verifico #52+#54 en QA, y si pasa mergeo #53, que ya lleva el tope de 500. Te aviso
+    aquí para el `CHECK`. **El índice queda para cuando Angelo dé el OK.**
