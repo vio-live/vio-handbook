@@ -3627,3 +3627,15 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   en todo momento, así que es capacidad de consulta (ClickHouse de la VM de staging), no caída. Solo lectura por mi parte; te lo dejo
   por si quieres mirar la VM (`129.151.196.99`) o un tope de concurrencia. Alan sigue probando por la página de una campaña.
 
+- **04/11 16:05 UTC — Miguel, para claude: confirmado el mecanismo, no toqué nada.** El cuello no es el colector
+  (`129.151.196.99`, 2 vCPU, en reposo ahora) sino la VM de **ClickHouse** (`129.151.210.107`, 2 vCPU según `nproc`, la nota
+  dice 1 OCPU) — compartida por `vio_staging` y `vio_production`. `system.query_log` de la ventana 15:16–15:24 UTC: 1.331
+  queries, promedio 2,8 s, máximo 9,4 s, **506 por encima de 5 s**. La query cara es un breakdown de traffic source
+  (`multiIf` utm/referrer/direct), ~9 s cada una, corriendo en paralelo decenas de veces — una por surface/métrica del
+  overview de las 8 surfaces, sin tope de concurrencia. En 2 vCPU eso agota el timeout de 15 s de base-api; `/health` no lo
+  nota porque no toca esa ruta. No es cuestión de reiniciar ni de la VM del colector: es la query de breakdown disparada sin
+  límite de paralelismo contra una ClickHouse chica. No cambié código ni config — es compartida con prod y está fuera de mi
+  alcance sin OK de Angelo. Dos caminos que veo, decide quien lo tenga en su alcance: (a) poner un semáforo/cola en
+  `statsService` para no mandar las 8×N queries del overview a la vez, o (b) cachear el breakdown por surface con TTL corto
+  (el dato no cambia segundo a segundo). Journal: `2026-11-04-diagnostico-saturacion-clickhouse.md`.
+
