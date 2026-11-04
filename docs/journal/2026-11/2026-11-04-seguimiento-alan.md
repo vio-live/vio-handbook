@@ -88,6 +88,12 @@ Foco de Angelo desde hoy: **Replit, Vipps y Kustom**.
   p3 sin categoría), escenario 2 ✅, escenario 4 ✅ (pedido propio 25 de su Woo descartado: `has no Vio products: ignored`; Alan lo
   reportó como «no llega a Vio», que es lo esperado). Visto de paso: al guardar la ficha de p2 (`newUpdate`, 20:26:22) las categorías se
   reescriben a **una** (la ficha tiene un solo selector); límite del formulario, no del import. Quedan 3, 5 y 6.
+- **21:45 UTC, QA, demo (pedido de Angelo):** los 17 productos de la colección de Faves de prod (`pxCAIn2x5`) copiados a Careless QA
+  (1338) como productos nativos (ids 416043–416059, marca «Faves», precio NOK, imágenes, SKU, tope de stock 100), con las tarifas
+  «Default Shipping» 10 y «Gratis frakt» 0, publicados y añadidos a la colección `CVs9DoYPX` → canal 513 **22/22**, copias 22/22, el
+  canal entrega los 22 (`channel/all-items/1312?channelUserId=513`). Campaña 14 «WEb test» (surface 15) **termina el 5/11 13:40 UTC**:
+  avisado a Angelo por si la demo es después. Scripts: scratchpad `qa-faves-to-careless.js` + volcado `faves-collection-prod.json`
+  (datos de producto, sin PII).
 
 ## Decisions
 - La guardia es diaria mientras Alan trabaje; foco Replit, Vipps y Kustom (Angelo, 4/11).
