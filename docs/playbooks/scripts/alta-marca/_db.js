@@ -1,6 +1,7 @@
 // Conexión a la MySQL de Commerce desde el pod de `users` (prod: /usr/src/app/.env; QA: ENV_FILE=/usr/src/app/.env.local).
 // Lo requieren los demás scripts de esta carpeta. Nunca imprime credenciales.
-require('dotenv').config({ path: process.env.ENV_FILE || '/usr/src/app/.env' });
+// El contenedor de prod trae ENV_FILE=.env relativo (desde el 3/11): se resuelve contra /usr/src/app, no contra el cwd.
+require('dotenv').config({ path: require('path').resolve('/usr/src/app', process.env.ENV_FILE || '.env') });
 const mysql = require('mysql2/promise');
 const e = process.env;
 module.exports.db = () =>
