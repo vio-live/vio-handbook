@@ -66,6 +66,10 @@ Foco de Angelo desde hoy: **Replit, Vipps y Kustom**.
   que la sesión era interna. Pendiente de decidir dueño y arreglo (colector/shopcart). Falta el Vipps cancelado para cerrar #471.
 - **16:54 UTC, Alan (#471):** Vipps cancelado verificado (checkout `1f4e4721` en CANCEL a las 16:53; shopcart emitió `payment_cancelled`,
   aceptado por el colector) → **#471 a Done**. El hallazgo de la compra interna queda en una tarjeta de bug propia (To do, sin dueño).
+- **17:10 UTC, Alan (#475, saltándose #472):** tarifa «Zero» a 0 en 1343; envío gratis OK con Stripe (4684) y Vipps (4685, 4686):
+  caja «Gratis», app de Vipps «0 NOK», `shipping_price` 0,00. Marcó también los dos «Avbryt» sin evidencia (los dos checkouts de Vipps
+  fueron a SUCCESS en <1 min, ningún CANCEL): desmarcados y pedidos en vídeo. **Visto de paso:** la pantalla «Takk!» tras Vipps no
+  muestra las líneas ni el envío; tras Stripe sí (SDK 0.37.7). Sin tocar.
 
 ## Decisions
 - La guardia es diaria mientras Alan trabaje; foco Replit, Vipps y Kustom (Angelo, 4/11).
