@@ -2,7 +2,7 @@
 date: 2026-11-04
 session: seguimiento-alan
 participants: [angelo, claude]
-status: live
+status: closed
 ---
 
 # Seguimiento de Alan — 04/11
@@ -99,7 +99,14 @@ Foco de Angelo desde hoy: **Replit, Vipps y Kustom**.
 - La guardia es diaria mientras Alan trabaje; foco Replit, Vipps y Kustom (Angelo, 4/11).
 
 ## Blockers
-- Compra interna (`?vio_internal=1`) cuenta como pedido en analytics (4683): hay que decidir si lo arregla esta guardia o la sesión de analytics.
+- Ninguno propio. Esperan decisión de Angelo: #477, el «Takk!» de Vipps, la re-sincronización de categorías de Woo.
 
 ## Next session
-- Ver «Done» de las vueltas de la guardia de hoy, abajo.
+1. `/guardia-alan` al abrir QA (06:30 UTC). Cola de Alan: **#472** (quedan escenarios 3, 5 y 6; reconectar su Shopify antes del 6) →
+   **#476** (estrés del alta). Cerradas hoy: #470, #471, #475, #474.
+2. **Villoid:** vigilar en prod si Business Central despacha el pedido 4132 / Shopify #1757827 (fulfillment + tracking de Posten) y que Vio
+   lo marque enviado y capture Vipps. Avisar a Angelo.
+3. **Demo Faves en Careless QA:** la campaña 14 termina el 5/11 13:40 UTC; mover la fecha si Angelo lo pide.
+4. Decisiones de Angelo pendientes: dueño del bug **#477** (compra interna cuenta como pedido), el «Takk!» de Vipps sin líneas (SDK
+   0.37.7), y si la re-sincronización de Woo debe actualizar categorías de productos existentes (products#61 solo cubre el alta).
+5. Suite de tests de extensions rota en sqlite (`Checkout.attribution` es `json`, kernel 1.0.289): decidir con Miguel.
