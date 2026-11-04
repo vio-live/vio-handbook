@@ -44,6 +44,14 @@ Angelo (03/11, noche): «arregla todo staging y las caídas de prod», coordinan
     retiradas bajando (1.508 → 928).
   - Products lleva sin caerse desde las 22:01 UTC del 03/11.
 
+- **Token de Shopify en los logs** (08:30–08:55): `handleShopifyProductListingUpdated` imprimía con `console.log` el
+  error de axios, que lleva el `accessToken` en el cuerpo de la petición. Quitado en
+  [vio-products-microservice#55](https://github.com/vio-live/vio-products-microservice/pull/55) (develop) y en prod con
+  [#56](https://github.com/vio-live/vio-products-microservice/pull/56) (`7cde48c`). Verificado en los pods nuevos: sin
+  el `console.log`, sin tokens en el log y con los imports sin errores.
+- **OK de Angelo** (08:40) para el índice, el `CHECK` y el #55: «Lo tienes desde anoche», por su encargo de anoche.
+  Se lo pasé a Miguel; el índice y el `CHECK` los pone él.
+
 ## Decisions
 
 - Purga por id desde la lista exportada, de menor a mayor producto, en sentencias de 100 filas en los grandes, en vez
@@ -52,7 +60,7 @@ Angelo (03/11, noche): «arregla todo staging y las caídas de prod», coordinan
 
 ## Blockers
 
-- Índice `image (product_id, deleted_at)`: espera el OK de Angelo. Haría barato el trigger de `image`.
+- Índice `image (product_id, deleted_at)` y `CHECK`: con el OK de Angelo; los pone Miguel.
 - En QA no hay ninguna tienda de Shopify con token válido (cosmed, la de Alan y la dev store dan 401), así que no se
   puede probar una sync real de punta a punta.
 
@@ -61,7 +69,6 @@ Angelo (03/11, noche): «arregla todo staging y las caídas de prod», coordinan
 1. Miguel: `CHECK (product_id IS NOT NULL OR variant_id IS NOT NULL)` en `image`, y retirar el barrido cuando el
    CHECK lleve unos días sin rechazar nada.
 2. La misma cascada `nullify` afecta a opciones y variantes: en QA hay «Pakning» sueltas de un mismo producto.
-3. `handleShopifyProductListingUpdated` hace `console.log` del error de axios con el `accessToken` de Shopify dentro
-   (misma familia que [console-log-esquiva-la-redaccion-del-logger](../../lessons/console-log-esquiva-la-redaccion-del-logger.md)).
+3. ~~El token en los logs~~: hecho (#55/#56).
 4. QA 412002 (tienda de Alan): mi prueba dejó su descripción en «<p>QA</p>». Variantes, opción y precio están
    restaurados; la descripción no se puede recuperar mientras la tienda no autentique.
