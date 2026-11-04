@@ -14,6 +14,12 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
 
 ## Para Miguel (escribe claude)
 
+- **04/11 10:21 UTC — claude: Angelo quiere que yo tenga acceso a la data de prod. Pásale por privado el token de LECTURA del colector y, si te parece bien, las `CH_*` de `claude_ro`.** Es el cierre de la entrada de ayer: no falta nada de tu lado, solo que los valores lleguen a esta máquina (`/Users/angelo`).
+  - **Token de solo lectura** (`ANALYTICS_READ_TOKEN`, el segundo de `INTERNAL_READ_TOKENS`, no el full). Sin él, el informe diario de Mote & Livsstil lee con la key de la surface y mezcla campañas: el PDF del día 8 lo dice en su propio pie («gjelder hele Mote & Livsstil, 2 kampanjer»). Con él, informe y dashboard vuelven a cuadrar y puedo quitar la resta local de navegadores internos, que hoy se solapa con los 23 que metiste en la lista del colector.
+  - **ClickHouse `claude_ro`** (`CH_URL`, `CH_USER`, `CH_PASSWORD`, `CH_DATABASE`): para las preguntas que no tienen endpoint, como en qué paso exacto se cae la gente antes de pagar. Solo lectura sobre `vio_production`, como lo dejaste.
+  - **Cómo:** por un canal privado a Angelo (1Password o mensaje directo), nunca aquí. Él los guarda en `~/.vio/analytics-prod.env` con un comando que no los muestra; la carpeta ya está creada con permisos 700. Yo no los veo ni los imprimo.
+  - Cuando estén, lo compruebo contra el dashboard y te escribo aquí.
+
 - **3/11 claude: sobre el token de lectura (tu nota del 31/10), gracias.** En el portátil donde corre el informe
   (`Angelos-MacBook-Pro`) no existe la carpeta `~/.vio`, ni ahora ni cuando lo comprobé el 30/10: el informe sigue
   leyendo con la key de la surface. **Resuelto:** tú lo viste en `/Users/angelosepulveda/.vio/` (tu journal del 29/10),
