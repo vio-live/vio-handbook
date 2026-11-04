@@ -3504,3 +3504,36 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   - **Tu barrido de las 00:20 falló** por mi bloqueo (`ERROR 1205`). Las pasadas siguientes ya corrieron.
   - **Siguiente:** a las 06:47 UTC verifico #52+#54 en QA, y si pasa mergeo #53, que ya lleva el tope de 500. Te aviso
     aquí para el `CHECK`. **El índice queda para cuando Angelo dé el OK.**
+
+- **04/11 07:35 UTC — claude, para Miguel: el arreglo está en prod; ya puedes poner el `CHECK`.**
+  - **QA (06:48–07:10):**
+    - products con #52 + #54. Probé el `importShopifyProduct` real contra la base de QA con un listing armado para
+      412002, en tres pasadas:
+      1. la misma imagen: fila conservada y nada nuevo;
+      2. con una imagen extra: una fila nueva;
+      3. sin la extra: retirada y borrada de verdad.
+    - Ninguna huérfana nueva. No había ninguna tienda de QA con token de Shopify válido (cosmed, la de Alan y la
+      dev store dan 401), por eso el listing armado.
+  - **Staging estaba roto desde tu cambio de Redis, y ya está arreglado:** el cliente Redis propio de extensions
+    (`src/utils/redis-client.ts`, el lock del token de Shopify) ponía TLS a todo host que no fuera localhost e
+    ignoraba `CACHE_TLS`.
+    - Con tu `redis-cache` sin TLS daba «connect ETIMEDOUT» cada 12 s, y `findProductById` se quedaba colgado, así
+      que **ningún import de Shopify terminaba en staging**.
+    - Arreglado en [vio-extensions-microservice#61](https://github.com/vio-live/vio-extensions-microservice/pull/61),
+      mergeado y desplegado en QA: «[RedisClient] Connected to Redis successfully» y 0 errores.
+    - Prod no cambia: no define `CACHE_TLS`, el valor por defecto sigue siendo TLS, y su Redis es Azure con TLS.
+  - **Prod:** release [vio-products-microservice#53](https://github.com/vio-live/vio-products-microservice/pull/53)
+    (`e876a2c`), desplegada a las ~07:15 con el heap igual (1536). En los 10 min siguientes:
+    - 222 imports, 0 errores, 0 `Lock wait`;
+    - **0 huérfanas nuevas** (id > 2.121.311) y solo 25 filas de imagen nuevas;
+    - retiradas de 1.508 a 928: el tope de 500 por import las va vaciando;
+    - las vivas, iguales.
+  - **Para ti:** cuando quieras, el `CHECK (product_id IS NOT NULL OR variant_id IS NOT NULL)` en `image`, y retirar
+    el barrido cuando el CHECK lleve unos días sin rechazar nada, como dijiste. El índice
+    `(product_id, deleted_at)` sigue esperando el OK de Angelo.
+  - **Visto de paso, sin tocar:**
+    - Las opciones y variantes tienen la misma cascada `nullify`: en QA hay varias «Pakning» con `product_id`
+      NULL de un mismo producto.
+    - `handleShopifyProductListingUpdated` hace `console.log` del error de axios, que lleva el `accessToken` de
+      Shopify en el cuerpo de la petición. Sale por stdout en QA, y en prod pasaría lo mismo si falla
+      `findProductById`.
