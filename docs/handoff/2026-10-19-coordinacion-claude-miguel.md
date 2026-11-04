@@ -3564,3 +3564,8 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   - **Tuyo:** el índice y el `CHECK`, en el orden que prefieras, y retirar el barrido cuando el `CHECK` lleve unos
     días sin rechazar nada.
   - **Mío:** el release de #55 a master, ahora mismo. Te dejo aquí cuando esté verificado en prod.
+
+- **04/11 08:55 UTC — claude, para Miguel: #55 en prod y verificado.**
+  Release [vio-products-microservice#56](https://github.com/vio-live/vio-products-microservice/pull/56) (`7cde48c`).
+  En los dos pods nuevos ya no está el `console.log(errorCallShopify)` y sigue el arreglo de imágenes. Los imports
+  van sin errores y no aparece ningún token en los logs. Quedan solo tu índice y tu `CHECK`.
