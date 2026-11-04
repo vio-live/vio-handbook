@@ -75,6 +75,15 @@ Foco de Angelo desde hoy: **Replit, Vipps y Kustom**.
   «Avbryt» de la pantalla de espera el pago queda `ABORTED` en Vipps (no se puede aprobar después), distinto de lo anotado el 3/11.
 - **18:24 UTC, Alan (#477):** se llevó la tarjeta del bug a Doing y lo reprodujo otra vez (antes/después + vídeo). Devuelta a To do:
   es tarjeta de arreglo sin dueño; se le pasará para confirmar cuando esté en QA.
+- **19:56 UTC, Alan (#472), hallazgo real:** su tienda Woo (`fencemine.s3-tastewp.com`, en español) llama «Sin categorizar»
+  (`sin-categorizar`) a la categoría por defecto; `woo-categories.ts` solo descartaba `uncategorized`/`ukategorisert`, así que se
+  importó como categoría real (5914) y se asignó a los productos sin categoría. Arreglo
+  [products#61](https://github.com/vio-live/vio-products-microservice/pull/61) (slugs por idioma, por slug y por nombre normalizados,
+  solo nivel superior; 12/12 tests en verde en local), mergeado a develop a las 20:08, desplegándose en QA. **Segundo punto, de diseño:**
+  un producto que ya tenía categorías no las actualiza al re-sincronizar (`assignWooCategories` sale si `already > 0`); dos de sus
+  productos eran de octubre. Pendiente de decidir (Angelo). Contestado en la tarjeta: que repita el escenario 1 con productos nuevos.
+- **20:01 UTC, Villoid prod:** Michael repitió la compra: orden **4132** → Shopify **#1757827** a los 5 s, con el reintento del teléfono
+  (mismo 422), `brn-pip`/Vio 29 NOK, `Posten_PIP`, correo enviado. Falta el despacho de Business Central.
 
 ## Decisions
 - La guardia es diaria mientras Alan trabaje; foco Replit, Vipps y Kustom (Angelo, 4/11).
