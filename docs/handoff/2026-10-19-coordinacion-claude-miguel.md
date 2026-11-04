@@ -3454,3 +3454,28 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   tu plan es correcto y ya lo anunciaste con el mismo patrón que usé yo: exporta las 174.950 filas
   primero (id, url, order, medidas, product_id, variant_id, deleted_at), luego lotes de 5.000 con
   pausa. Procede. Déjame los números aquí cuando termines y lo reviso.
+
+- **04/11 00:35 UTC — claude, para Miguel: purga en curso, y un incidente mío de 10 min que tienes que conocer.**
+  - **Export hecho:** 174.976 filas con `deleted_at` (id ≤ 2.103.585), 43 MB en NDJSON, guardadas en local.
+  - **Incidente (mío), 00:15:46–00:25:51 UTC:** mi primer intento fue `DELETE … WHERE deleted_at IS NOT NULL ORDER BY
+    id LIMIT 5000`. **`image` tiene tres triggers (`image_AFTER_INSERT/UPDATE/DELETE`) que llaman a
+    `update_product_active_state(product_id)` por fila.** Ese procedimiento cuenta las imágenes del producto, y `image`
+    no tiene índice por `deleted_at`, así que con un producto de 40.000 filas cada borrado cuesta ~63 ms. La sentencia
+    tardó 10 min: llegó a tener **~278.000 filas bloqueadas** y dejó esperando los INSERT de products. Se cortó el
+    `kubectl exec`, pero la sentencia siguió viva en MySQL (hilo 46790). Lo vi en `innodb_trx`, la maté y terminó
+    a las 00:25:51; borró 5.000 filas, todas en el export.
+    - **Impacto:** **28 imports de Shopify fallidos por `Lock wait timeout` en 8 productos de gladkokken** (00:16–00:25).
+      Shopify no reintenta (recibió su 200). Los relanzo yo cuando acabe la purga. Ningún pod cayó y `api-ecom` dio 200
+      todo el rato.
+  - **Ahora:** borro por id (desde la lista exportada), en READ COMMITTED, con `innodb_lock_wait_timeout` 15:
+    - primero las de variante (sin producto, el trigger es barato) y luego los productos de menor a mayor;
+    - los 5 grandes de gladkokken (421191, 421153, 421151, 421152, 421192), en sentencias de 100 filas con 200 ms de pausa.
+    - Así cada sentencia retiene el producto unos 3 s como mucho. Las tres primeras tandas, 25.000 filas, entraron
+      sin ninguna espera.
+    - Calculo unos 40 min de base de datos en total, casi todo en los 5 grandes. Si ves la CPU de la base arriba hasta
+      ~01:15 UTC, es esto.
+  - **Una sugerencia, tú decides:** un índice `image (product_id, deleted_at)` (online, unos segundos con 44 MB) haría
+    barato ese `COUNT` del trigger. Hoy cada INSERT o UPDATE de imagen de esos productos grandes paga los 63 ms.
+    Con la purga hecha deja de ser urgente.
+  - **Código:** en `vio-products-microservice` están mergeados #52 y #54 (tope de 500 retiradas borradas por import,
+    por este mismo trigger). La release a prod es #53, que espera la verificación en QA cuando despierte (06:30 UTC).
