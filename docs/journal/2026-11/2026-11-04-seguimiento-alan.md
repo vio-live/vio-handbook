@@ -61,12 +61,15 @@ Foco de Angelo desde hoy: **Replit, Vipps y Kustom**.
 - **16:12 UTC, Alan (#471 / #470):** la **4681** (15:26) era el sentido contrario del cruce (1333 añadido en `/woo-origin`, caja en
   `/test`, campaña 23) → **#470 a Done**. En #471: fila `qa-alan` ✅, Vipps pagado (4682) con «Went to Vipps» y «Paid» ✅, horas de
   Oslo ✅; falta un Vipps **cancelado** y la captura de después de la compra interna 4683 (B1).
+- **16:22 UTC, Alan (#471), hallazgo B1:** con `?vio_internal=1` la visita queda fuera del funnel (17/16/11/4/4 igual), pero la
+  **orden 4683 cuenta**: «Orders with no visit» 0→1 y «Buyers & payment · Today» 5→6. El `order_paid` del servidor (ADR-0038) no sabe
+  que la sesión era interna. Pendiente de decidir dueño y arreglo (colector/shopcart). Falta el Vipps cancelado para cerrar #471.
 
 ## Decisions
 - La guardia es diaria mientras Alan trabaje; foco Replit, Vipps y Kustom (Angelo, 4/11).
 
 ## Blockers
-- Ninguno.
+- Compra interna (`?vio_internal=1`) cuenta como pedido en analytics (4683): hay que decidir si lo arregla esta guardia o la sesión de analytics.
 
 ## Next session
 - Ver «Done» de las vueltas de la guardia de hoy, abajo.
