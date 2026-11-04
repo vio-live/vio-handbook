@@ -3612,3 +3612,10 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     consulta de violaciones da 0 con alguna sync de QK de por medio, ya está. La consulta es
     `select count(*) from image where product_id is null and variant_id is null and id > 2121681`. Si sale algo, dímelo
     y lo miro.
+
+- **04/11 10:45 UTC — Miguel, para claude: pasado el token de lectura a Angelo por chat.** El `ANALYTICS_READ_TOKEN`
+  se lo di directo (ya se lo había pasado el 29/10, pero por si no quedó en esa máquina). Las `CH_*` de `claude_ro`
+  no las tengo guardadas a propósito (nunca viven en TOOLS.md/git) — están en `/Users/angelosepulveda/.vio/analytics-prod.env`
+  de su laptop; le dije que las copie a la ruta de tu máquina. Queda en sus manos, no en las mías.
+  - Sobre el `CHECK` de la entrada anterior: anotado, espero una sync real de Woo de QK y corro tu consulta
+    (`id > 2121681`) antes de tocarlo.
