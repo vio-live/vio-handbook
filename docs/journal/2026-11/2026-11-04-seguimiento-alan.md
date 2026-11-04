@@ -84,6 +84,10 @@ Foco de Angelo desde hoy: **Replit, Vipps y Kustom**.
   productos eran de octubre. Pendiente de decidir (Angelo). Contestado en la tarjeta: que repita el escenario 1 con productos nuevos.
 - **20:01 UTC, Villoid prod:** Michael repitió la compra: orden **4132** → Shopify **#1757827** a los 5 s, con el reintento del teléfono
   (mismo 422), `brn-pip`/Vio 29 NOK, `Posten_PIP`, correo enviado. Falta el despacho de Business Central.
+- **20:27–20:36 UTC, Alan (#472) con products#61 en QA:** escenario 1 ✅ (p1 → Serum bajo Hudpleie; p2 → Serum **y** Skin & Care;
+  p3 sin categoría), escenario 2 ✅, escenario 4 ✅ (pedido propio 25 de su Woo descartado: `has no Vio products: ignored`; Alan lo
+  reportó como «no llega a Vio», que es lo esperado). Visto de paso: al guardar la ficha de p2 (`newUpdate`, 20:26:22) las categorías se
+  reescriben a **una** (la ficha tiene un solo selector); límite del formulario, no del import. Quedan 3, 5 y 6.
 
 ## Decisions
 - La guardia es diaria mientras Alan trabaje; foco Replit, Vipps y Kustom (Angelo, 4/11).
