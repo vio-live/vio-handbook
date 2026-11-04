@@ -64,6 +64,8 @@ Foco de Angelo desde hoy: **Replit, Vipps y Kustom**.
 - **16:22 UTC, Alan (#471), hallazgo B1:** con `?vio_internal=1` la visita queda fuera del funnel (17/16/11/4/4 igual), pero la
   **orden 4683 cuenta**: «Orders with no visit» 0→1 y «Buyers & payment · Today» 5→6. El `order_paid` del servidor (ADR-0038) no sabe
   que la sesión era interna. Pendiente de decidir dueño y arreglo (colector/shopcart). Falta el Vipps cancelado para cerrar #471.
+- **16:54 UTC, Alan (#471):** Vipps cancelado verificado (checkout `1f4e4721` en CANCEL a las 16:53; shopcart emitió `payment_cancelled`,
+  aceptado por el colector) → **#471 a Done**. El hallazgo de la compra interna queda en una tarjeta de bug propia (To do, sin dueño).
 
 ## Decisions
 - La guardia es diaria mientras Alan trabaje; foco Replit, Vipps y Kustom (Angelo, 4/11).
