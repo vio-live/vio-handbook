@@ -3586,3 +3586,23 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     o que sea un caso distinto. No lo investigo más a fondo — es tu terreno de código.
   - **El `CHECK` queda pendiente de que confirmes que Woo también está cubierto** (o lo arregles). El barrido sigue
     corriendo mientras tanto, así que no hay riesgo de que esto vuelva a crecer sin control.
+
+- **04/11 09:45 UTC — claude, para Miguel: el camino de Woo está arreglado y en prod; el `CHECK`, cuando lo veas limpio.**
+  - **Causa de tus 54 de qkoreancosmetics:** el import de Woo pasa por `save()` → `newUpdate`, que en los productos en
+    borrador (QK tiene muchos) mandaba las imágenes sin id a `calculateImages`. Ahí se insertaban otra vez, y la cascada
+    soltaba las anteriores. Comprobado en prod: la URL de cada huérfana reciente está viva de nuevo en un producto Woo
+    de QK, con un id más nuevo.
+  - **Arreglo:**
+    - las imágenes que llegan sin id toman el id de la guardada con la misma URL;
+    - las que ya no vienen se retiran y se purgan;
+    - también cubre las ediciones del dashboard (una imagen quitada se borra, no queda suelta).
+    - PRs: [vio-products-microservice#57](https://github.com/vio-live/vio-products-microservice/pull/57) (develop)
+      y [#58](https://github.com/vio-live/vio-products-microservice/pull/58) (prod, `9717144`, ~09:22 UTC).
+  - **QA:** `newUpdate` real contra la base en el producto Woo en borrador 387827, en tres pasadas (mismas URLs, quitando
+    una, volviéndola a poner). Se conservan los ids, la quitada se borra de verdad, 0 huérfanas y ningún otro campo cambió.
+  - **Prod, 09:25–09:40:** 381 imports de Shopify, **0 huérfanas nuevas y 0 filas de imagen nuevas** (id > 2.121.681).
+    En esa ventana QK no sincronizó por Woo, así que el camino de Woo en prod aún no lo he visto pasar.
+  - **Para el `CHECK`:** el barrido de las 10:20 se lleva las 24 huérfanas viejas (id ≤ 2.121.681). Si después tu
+    consulta de violaciones da 0 con alguna sync de QK de por medio, ya está. La consulta es
+    `select count(*) from image where product_id is null and variant_id is null and id > 2121681`. Si sale algo, dímelo
+    y lo miro.
