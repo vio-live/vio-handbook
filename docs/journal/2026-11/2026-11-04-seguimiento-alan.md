@@ -27,6 +27,13 @@ Foco de Angelo desde hoy: **Replit, Vipps y Kustom**.
 - Prod, de paso: Faves (1301) y QKC (1302) tienen un solo envío vivo a 0 NOK en todos sus productos, y el mapeo
   Woo de extensions coincide. `_db.js` del playbook de alta corregido (`ENV_FILE` relativo en el pod).
 
+- **13:28 UTC, Alan (#470):** «escenario 1 con campañas nuevas y limpias», órdenes **4673** y **4674**. Verificado en QA:
+  surface 18 «Escenario 1», campañas 22 (default) y 23, **las dos de la marca 1333**, canal 508, Stripe; 4673 desde
+  `/woo-origin` → campaña 22 y 4674 desde `/test` → campaña 23. Es el caso «cada artículo vende por su campaña» (escenario
+  6), no el cruce entre marcas. Las campañas 13 y 15 ya no existen en QA. Contestado en la tarjeta: cómo montar el
+  escenario 1 con dos marcas, pedir ids, y que 1333 no tiene nombre de marca (el recibo muestra el username). Alan pasó
+  #471 a Doing (13:42).
+
 ## Decisions
 - La guardia es diaria mientras Alan trabaje; foco Replit, Vipps y Kustom (Angelo, 4/11).
 
