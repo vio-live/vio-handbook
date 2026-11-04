@@ -55,6 +55,9 @@ Foco de Angelo desde hoy: **Replit, Vipps y Kustom**.
   (`statsService`, timeout 15 s) contra el colector de staging, que se satura cuando la vista general del dashboard pide el
   `timeseries` de 14 d de las 8 surfaces del publisher 1332 a la vez: 81 timeouts a las 13:11 y ~640 entre 15:16 y 15:23; el
   `/health` del colector responde en 0,06–0,2 s. No es de los pods de QA. Contestado en la tarjeta; anotado para Miguel (VM del colector).
+- **16:01 UTC, Alan (#471):** ocho capturas: tiles antes/después de 3 clics (Click rate 13/14 ✅, tiles por eventos vs embudo por
+  visitas ✅), desgloses Device y Article (cuadran con Overall), Products, Over time 14 d y Buttons (B4) ✅. Faltan: fila `qa-alan` en
+  Source (utm), B2 Vipps pagado + cancelado, horas de Oslo en Today, y B1 `?vio_internal=1` al final. Contestado.
 
 ## Decisions
 - La guardia es diaria mientras Alan trabaje; foco Replit, Vipps y Kustom (Angelo, 4/11).
