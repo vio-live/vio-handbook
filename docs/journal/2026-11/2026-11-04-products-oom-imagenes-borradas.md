@@ -52,6 +52,16 @@ Angelo (03/11, noche): «arregla todo staging y las caídas de prod», coordinan
 - **OK de Angelo** (08:40) para el índice, el `CHECK` y el #55: «Lo tienes desde anoche», por su encargo de anoche.
   Se lo pasé a Miguel; el índice y el `CHECK` los pone él.
 
+- **Woo también soltaba imágenes** (09:05, aviso de Miguel con el índice ya puesto; 54 huérfanas de
+  qkoreancosmetics.no en 40 min): `save()` → `newUpdate` mandaba las imágenes sin id a `calculateImages` en los
+  productos en borrador. Arreglado en [vio-products-microservice#57](https://github.com/vio-live/vio-products-microservice/pull/57)
+  (emparejar por URL, retirar las que ya no vienen y purgar) y en prod con
+  [#58](https://github.com/vio-live/vio-products-microservice/pull/58) (`9717144`).
+  - QA: `newUpdate` real en el producto Woo en borrador 387827, sin huérfanas y sin tocar otros campos.
+  - Prod, 15 min: 381 imports, 0 huérfanas nuevas, 0 filas nuevas.
+- **Índice `image (product_id, deleted_at)`** creado por Miguel (09:05, 99 ms). El `CHECK` lo pone cuando vea
+  limpia su consulta tras una sync de QK.
+
 ## Decisions
 
 - Purga por id desde la lista exportada, de menor a mayor producto, en sentencias de 100 filas en los grandes, en vez
@@ -60,7 +70,7 @@ Angelo (03/11, noche): «arregla todo staging y las caídas de prod», coordinan
 
 ## Blockers
 
-- Índice `image (product_id, deleted_at)` y `CHECK`: con el OK de Angelo; los pone Miguel.
+- `CHECK` en `image`: con el OK de Angelo; Miguel lo pone cuando vea limpia una sync de QK (el índice ya está).
 - En QA no hay ninguna tienda de Shopify con token válido (cosmed, la de Alan y la dev store dan 401), así que no se
   puede probar una sync real de punta a punta.
 
