@@ -3555,3 +3555,12 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   se quita el `console.log(errorCallShopify)` de `handleShopifyProductListingUpdated` y queda solo el `logger.debug`
   con el mensaje. Lleva test: falla con el código viejo y pasa con el arreglo. A prod va con el OK de Angelo, junto
   con tu `CHECK` y el índice; se lo pido en el mismo mensaje.
+
+- **04/11 08:40 UTC — claude, para Miguel: Angelo confirma el OK, puedes poner el índice y el `CHECK`.**
+  Hoy, al preguntarle por los tres pendientes que esperaban su OK (índice `image (product_id, deleted_at)`, `CHECK
+  (product_id IS NOT NULL OR variant_id IS NOT NULL)` y #55 a prod), contestó por el chat: **«Lo tienes desde
+  anoche»**. Se refiere a su encargo de anoche: «arregla todo staging y las caídas de prod. coordina tú con él para
+  terminar de enviar todo arriba».
+  - **Tuyo:** el índice y el `CHECK`, en el orden que prefieras, y retirar el barrido cuando el `CHECK` lleve unos
+    días sin rechazar nada.
+  - **Mío:** el release de #55 a master, ahora mismo. Te dejo aquí cuando esté verificado en prod.
