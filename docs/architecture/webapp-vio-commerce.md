@@ -135,6 +135,20 @@ al instante; el resto de eventos están disponibles y sin cablear.
   >
   > Journal
   > [`2026-10-27-front-commerce-funnel-por-sesiones`](../journal/2026-10/2026-10-27-front-commerce-funnel-por-sesiones.md).
+  > **2026-11-06 (PR #103, sin mergear) — auditoría de rangos y consistencia:**
+  > - Toda variación usa el `previous` del colector (el mismo número de días justo antes de `from`); el rótulo es
+  >   `previousRangeLabel`. «Today» se rotula «vs all of yesterday (today so far)».
+  > - **La brand ve SUS cifras** en las KPI tiles y «Total transactions»: `fromBrandOverview` sobre `/stats/overview`
+  >   (`/v1/commerce-stats/overview`, `kpis.<k> = { value, delta }`), con delta por KPI. Los totales de sus campañas
+  >   (by-campaign/by-surface, todos los sponsors, sin `previous`) quedan solo en las tablas.
+  > - Retirados «Where the revenue lands» (split con cuts y fee a 0, «settlement model pending») y «Counterparties»
+  >   (filas por `host` de la SDK, spend 0 / ROAS null, lentes publisher/supplier `[]`).
+  > - Cada cifra del embudo lleva su unidad (`unit` en `SESSION_SIDE`: `orders_unlinked` son PEDIDOS; los resultados
+  >   de Vipps son visitas); Top products ordena por la primera métrica con algo que ordenar y lo dice
+  >   (`productRankOf`); una campaña activa sin fila de by-campaign con la lectura resuelta es 0 (`withZeroStats`).
+  > - No hay marca de «campaña de prueba» en el micro: la «Careless Aller (test)» es la default de la surface de M&L.
+  > Journal
+  > [`2026-11-06-front-commerce-analytics-rangos`](../journal/2026-11/2026-11-06-front-commerce-analytics-rangos.md).
 - **/listings** + detalle — ciclo completo (crear, editar, variantes,
   shipping por país `{country, amount, currencyCode}`, publicar con gate;
   límites de plan server-side, Free = 20 SKUs).
