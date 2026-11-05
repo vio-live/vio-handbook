@@ -92,6 +92,12 @@ Cloudflare Stream. Hoy, la fase 2 (entidad, API y subida).
   la publica Angelo con `npm publish --access public --tag beta` (`latest` queda en 0.37.8). Decisión de
   Angelo: el demo `/demo/vio-reel` de Replit se queda como está (se usa con clientes); Replit conecta lo real
   al lado con la beta y después se mezcla (mensaje en el handoff de modo remoto).
+- **Acceso al publisher** (webapp [#102](https://github.com/vio-live/webapp-vio-commerce/pull/102), en
+  `develop` → staging): Angelo entró al dashboard con la cuenta publisher de Mote & Livsstil (usuario 1312 en
+  QA; sus cuentas `@reachu.io` son todas brand y las únicas `internal` son `vio-admin` y la de Alan) y no veía
+  las tarjetas. Decisión: «quiero que Aller (aunque ahora somos nosotros) pueda agregar ese componente en
+  Replit y se registre y se active en el dashboard» → `canManageExperiences` = publisher e internal; la brand
+  no. Es el estado final del ADR, no un adelanto.
 - Handoff para Replit: [vio-reel-replit-modo-remoto](../../handoff/2026-11-05-vio-reel-replit-modo-remoto.md).
   Script de la migración en QA: `docs/handoff/assets/2026-11-05-vio-reel/m-surface-experience-qa.js`.
 
