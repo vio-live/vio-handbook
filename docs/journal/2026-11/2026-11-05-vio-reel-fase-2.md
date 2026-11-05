@@ -56,6 +56,14 @@ Cloudflare Stream. Hoy, la fase 2 (entidad, API y subida).
   401 de extensions son la tienda de prueba de Alan desconectada (tarjeta #472), de antes.
   `collections` fue el único con un pod nuevo colgado en `istio-init` (el init terminó y nunca salió):
   borrado el pod, el ReplicaSet lo recreó y el rollout cerró bien.
+- **Dashboard (fase 5 mínima, tarde):** webapp
+  [#98](https://github.com/vio-live/webapp-vio-commerce/pull/98) mergeado en `develop` y ya en el
+  bundle de `dashboard-staging.ecom.vio.live` (deployment `dpl_5cBjUiJW…`, 13:17 UTC): tarjeta
+  **Management key** en el detalle de la surface (generar, rotar, revocar, copiar) y tarjeta
+  **Experiences** en el detalle de la campaña (lista, alta por título, publicar con `If-Match`,
+  borrar). Solo cuentas `internal` (`canManageExperiences`); **sin flags de entorno**, por decisión de
+  Angelo («es como hacer todo a medias»): a `main` no va hasta que esté completo. Detalle del agente
+  front en [front-commerce-vio-reel-dashboard](./2026-11-05-front-commerce-vio-reel-dashboard.md).
 - Handoff para Replit: [vio-reel-replit-modo-remoto](../../handoff/2026-11-05-vio-reel-replit-modo-remoto.md).
   Script de la migración en QA: `docs/handoff/assets/2026-11-05-vio-reel/m-surface-experience-qa.js`.
 
@@ -80,4 +88,6 @@ Cloudflare Stream. Hoy, la fase 2 (entidad, API y subida).
 2. Fase 3: que Replit pase su bloque a modo remoto con el handoff de arriba, contra la experiencia 1
    de la surface 13 (la key de gestión se rota desde `POST /api/client-apps/13/management-key`).
 3. Fase 4 en paralelo: `<vio-reel>` en la web SDK con `hls.js` bajo demanda.
+5. Editor completo en el dashboard (vídeos con subida directa, productos del canal del sponsor,
+   cues, tema, vista previa con `<vio-reel>`), en `/campaigns/:id/experiences/:expId`.
 4. Prod: la migración `1792900000000` antes del próximo release de campaigns a `main`.
