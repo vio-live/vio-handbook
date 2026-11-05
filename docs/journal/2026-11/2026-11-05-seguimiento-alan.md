@@ -145,11 +145,22 @@ Shipping Assistant de Kustom (#479), con el correo a Pearlconvert en borrador cu
 ## Decisions
 - La evidencia para Pearlconvert sale de Kustom Order Management, como tabla y JSON. Las capturas quedan solo para lo
   que Kustom no guarda: qué opciones ofreció el widget.
+- El arreglo de precios de Woo sin IVA va a QA con el OK de Angelo. Prod, aparte.
 
 ## Blockers
-- Pearlconvert: que importen las 4690–4693 y contesten las dos preguntas (después de que Angelo mande el correo).
+- Pearlconvert: que importen las 4690–4693 y contesten las dos preguntas (peso y respaldo). El correo lo manda Angelo
+  desde el borrador, con el JSON adjunto.
+- Decisiones de Angelo pendientes:
+  - #77 (precios Woo sin IVA) a prod: tiendas 1300 y, quizá, 1303 y 1321;
+  - enlace de seguimiento con AfterShip en orders (`saveTrackingNumber` → `API_BASE_HOST`, también en prod);
+  - si guardar en Woo debe mandar las categorías o basta con el Sync;
+  - pantalla para dejar de compartir una colección (B3).
+- El arreglo del aviso «No Vio user…» espera la respuesta de Alan sobre qué escribió.
 
 ## Next session
-1. ~~#479~~: hecho. Pendiente de la respuesta de Pearlconvert (peso y respaldo) y `termsUrl` de Boots en prod.
-2. ~~Arreglo del tachado con precios sin IVA, a QA~~: hecho (#77). Prod: pedir el OK a Angelo.
-3. Alan: ~~#472~~ y ~~#478~~ hechas; quedan #477 (repetir la compra interna) y #476.
+1. Alan: #476 desde la parte C (C–H; en la H, los hallazgos de hoy), responder lo del aviso de invitación y #477.
+   Cola dejada en #476 a las 22:50.
+2. Con el OK de Angelo: el enlace de AfterShip, el aviso de invitación (webapp `connections.js`), y #77 y Boots
+   (`termsUrl`, `providerShipping`) en prod.
+3. Datos menores: un producto borrado sigue en `collection_item` (416070 en dos colecciones). Ver si al añadir otra
+   vez esa colección a un channel se cuela.
