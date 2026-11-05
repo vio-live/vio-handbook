@@ -42,17 +42,30 @@ Shipping Assistant de Kustom (#479), con el correo a Pearlconvert en borrador cu
   - Prod: la tienda 1300 tiene precios sin IVA, y la 1303 y la 1321 no lo tienen guardado (se pregunta a Woo).
     QK (1302) y Faves (1301) usan precios con IVA y no están afectadas.
 
+- **#479 cerrada (14:41–14:52 UTC): cuatro órdenes, todas autorizadas y sin capturar.** Todas llevan
+  `vio_checkout` y `tms_reference`, y la orden de Vio cuadra con Kustom en envío, líneas y cantidades.
+  - **4690:** «Utlevering i Boots Apotek» (`PICKUPSTORE`, Boots Apotek Oslo S, 0 kr). La recogida en tienda sí se
+    ofrece.
+  - **4691:** «Postnord – Utleveringssted» (`PICKUPPOINT`, 49 kr).
+  - **4692:** «Postnord – Hjemlevering» (`HOME`, 89 kr).
+  - **4693:** 999143 × 2 + 999874 × 1, punto de recogida (488,78 NOK).
+  - En Order Management, el envío del Shipping Assistant lleva `carrier`, `carrier_product`, `method`, `type`,
+    `tms_reference` y `location` (con dirección). La orden de Vio guarda la dirección del comprador, no la del punto
+    de recogida: a Boots no le hace falta, porque lee de Kustom.
+  - El widget mostraba los términos de Vio: «Boots test» no tiene `termsUrl`. En prod hay que poner
+    `boots.no/generelle-vilkar`.
+  - Borrador en Gmail a Artsiom (14:55), como respuesta en el hilo, con Michael y Thomas en copia: tabla, JSON de
+    Order Management sin datos del comprador, y las preguntas de peso y respaldo. Lo manda Angelo. Tarjeta a Done.
+
 ## Decisions
 - La evidencia para Pearlconvert sale de Kustom Order Management, como tabla y JSON. Las capturas quedan solo para lo
   que Kustom no guarda: qué opciones ofreció el widget.
 
 ## Blockers
-- #479: esperando las cuatro órdenes de Alan.
+- Pearlconvert: que importen las 4690–4693 y contesten las dos preguntas (después de que Angelo mande el correo).
 
 ## Next session
-1. #479: con las cuatro bien, borrador en Gmail a Artsiom (respuesta en el hilo «Investigate how to receive Tipio
-   orders in Magento (Boots.no)», con Michael y Thomas en copia), con tabla, JSON y las dos preguntas: peso y medidas
-   por línea, y tarifas de respaldo. Lo manda Angelo.
+1. ~~#479~~: hecho. Pendiente de la respuesta de Pearlconvert (peso y respaldo) y `termsUrl` de Boots en prod.
 2. Arreglo del tachado con precios sin IVA en api-ms (`formatPricesAndTax` y `formatVariantPricesAndTax`), a QA.
    **OK de Angelo (14:30): «arréglalo en QA cuando acabe Boots».** Prod, aparte.
 3. Alan: #472 (escenarios 3, 5.7 y 6), #478 («Takk!»), #477 (repetir la compra interna) y #476.
