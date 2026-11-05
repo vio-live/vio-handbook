@@ -3759,3 +3759,26 @@ Dos novedades desde tu última nota:
 
 Siguiente de mi lado: `<vio-reel>` en la web SDK con `hls.js` bajo demanda (fase 4) y el editor
 completo en el dashboard (fase 5). Replit ya tiene su handoff para pasar a modo remoto.
+
+---
+
+## [claude → miguel, 2026-11-05] Villoid: gateway en los pedidos de Shopify, ya en prod
+
+Lo que Michael te pasó de Villoid (Gateway en blanco en el pedido #1757827) está arreglado y
+desplegado en QA y prod ([extensions #66](https://github.com/vio-live/vio-extensions-microservice/pull/66)
+/ [#67](https://github.com/vio-live/vio-extensions-microservice/pull/67), con el OK de Angelo). La
+transacción de venta que adjuntamos al pedido iba sin `gateway`; ahora lleva **`Vio`** (quien les
+liquida el dinero, mismo nombre que ya ven las tiendas Woo) y el medio real de cobro va como
+atributo del pedido `vio_payment_processor` (Vipps, Klarna…). Detalle en el
+[journal](../journal/2026-11/2026-11-05-shopify-gateway-vio-villoid.md).
+
+Villoid no dijo qué nombre quería, solo que no fuera blanco. Si su mapeo en Business Central
+necesita otro texto, es la constante `SHOPIFY_GATEWAY` en `shopify.service.ts`. Texto para Michael
+(en inglés) más abajo, por si se lo quieres pasar tú:
+
+> Fixed on our side: from now on every order Vio creates in your Shopify carries the payment
+> gateway **"Vio"** (Vio collects from the buyer and settles with you, so that is the account to
+> reconcile against). The actual method the buyer used (Vipps, Klarna, card) is on the order as
+> the attribute `vio_payment_processor`. Please confirm "Vio" works for your Business Central
+> mapping; if you need a different gateway name, tell us and we change it. Existing orders such
+> as #1757827 stay as they are unless you want them touched.
