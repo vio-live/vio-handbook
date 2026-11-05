@@ -71,8 +71,9 @@ solo en el campo `exports` del paquete y **jest 27 no lo lee**:
 Cannot find module '@typespec/ts-http-runtime/internal/util' from '.../@azure/core-util/dist/commonjs/index.js'
 ```
 
-No falta ningún archivo (el pod lo tiene igual). Se arregla añadiendo al `moduleNameMapper` de la
-config inline de arriba:
+No falta ningún archivo (el pod lo tiene igual). Desde [extensions #68](https://github.com/vio-live/vio-extensions-microservice/pull/68)
+(`develop`) el mapeo está en el `jest.moduleNameMapper` del `package.json`; si corrés con la config
+inline de arriba (o en un repo que aún no lo tenga), añadilo vos:
 
 ```json
 "^@typespec/ts-http-runtime/internal/(.*)$": "<rootDir>/node_modules/@typespec/ts-http-runtime/dist/commonjs/$1/internal.js"
