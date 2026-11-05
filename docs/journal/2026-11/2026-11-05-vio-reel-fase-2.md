@@ -48,6 +48,12 @@ Cloudflare Stream. Hoy, la fase 2 (entidad, API y subida).
   `ETag W/"exp-1-r1"`, `Cache-Control` público y 304 → preview con la key de gestión, 401 sin key y
   con otra. Subidas a Stream: 503 `MEDIA_UPLOADS_NOT_CONFIGURED` (sin credenciales en QA). La
   experiencia 1 queda en QA como base para la fase 3 de Replit.
+- **Aviso del bump a los 12:** seis `deploy.yml` (api, collection, extensions, shopcart, tracking,
+  users) salieron rojos por `exceeded its progress deadline` en el `kubectl rollout status` de 10
+  minutos: once micros rodando a la vez en el nodo de QA. Los pods nuevos quedaron 2/2 sin reinicios
+  y `rollout status` posterior dice «successfully rolled out» en todos; catálogo (GraphQL + products)
+  y métodos de pago (api) responden. Es un timeout del pipeline, no un fallo del kernel. Los errores
+  401 de extensions son la tienda de prueba de Alan desconectada (tarjeta #472), de antes.
 - Handoff para Replit: [vio-reel-replit-modo-remoto](../../handoff/2026-11-05-vio-reel-replit-modo-remoto.md).
   Script de la migración en QA: `docs/handoff/assets/2026-11-05-vio-reel/m-surface-experience-qa.js`.
 
