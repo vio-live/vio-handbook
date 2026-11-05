@@ -46,7 +46,8 @@ Angelo vio pedidos entrando y tráfico en prod; comprobar salud y qué pedidos s
 - **Fix del colector**: [vio-analytics#43](https://github.com/vio-live/vio-analytics/pull/43) (`main` `6b14e5c`,
   CI verde, test nuevo contra ClickHouse real `compra-navegador-vacia`): un `purchase` del navegador con valor 0
   y sin líneas ya no tapa el `order_paid`. Falta desplegarlo (Miguel, por SSH a las VMs; pedido en el canal).
-  Causa raíz en la SDK web pendiente: por qué manda ese `purchase` vacío al volver de Vipps.
+  Causa raíz en la SDK web: [vio-web-sdk#143](https://github.com/vio-live/vio-web-sdk/pull/143), ver
+  [journal](2026-11-05-sdk-purchase-vacio-tras-vipps.md).
 - **Informe PDF de Faves**: `~/vio-reportes/mote-livsstil/pdf.py` tiene ahora conversión (kjøp/besøk), la
   comparación con el día anterior en cada sección y en el embudo, y la tabla de botones (`/stats/surface/cta`).
   Borrador de dag 2 (5/11) entregado a Angelo; se regenera tras el deploy del colector (omsetning 2.946 kr).
