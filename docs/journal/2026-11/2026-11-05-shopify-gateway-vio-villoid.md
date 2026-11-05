@@ -30,6 +30,10 @@ contabilidad (Business Central) no sabe de dónde viene el dinero.
   ([extensions #68](https://github.com/vio-live/vio-extensions-microservice/pull/68) en `develop`,
   [#69](https://github.com/vio-live/vio-extensions-microservice/pull/69) en `master`) y en la lección
   [tests-commerce-necesitan-db-local](../../lessons/tests-commerce-necesitan-db-local.md).
+- **Pedido de prueba (21:17Z)**: Michael puso una orden en Villoid tras el deploy; pedido Vio **4140** →
+  Shopify **14343781253460**, `201 Created` en `orders.json`, creado por el pod `extensions-578d7ccdb4-r994l`
+  (posterior a #67 y #69), así que lleva `gateway: Vio`. Falta que Villoid confirme que el campo Gateway
+  les aparece como «Vio» en ese pedido.
 
 ## Decisions
 
