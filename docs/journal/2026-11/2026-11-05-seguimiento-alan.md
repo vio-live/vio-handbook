@@ -89,6 +89,20 @@ Shipping Assistant de Kustom (#479), con el correo a Pearlconvert en borrador cu
     borrado el 03/11. La app solo usa Redis para la conexión automática (`LOGIN_TOKEN_<shop>`) y la auditoría: con
     `REDIS_URL` vacío se salta Redis y ofrece conectar pegando la API key. Instrucciones a Alan a las 16:51.
 
+- **#472 completa (17:48):**
+  - **Escenario 7 ✅** (4694 y 4695, enviadas desde Shopify). Vio guardó el seguimiento, la línea quedó en
+    COMPLETED y no hizo un segundo envío («already fulfilled»).
+  - **Escenario 6 ✅** (4696). Alan probó primero con el publisher (allermedia), que no puede añadir seguimiento;
+    lo hizo después con la marca `Alan-brand-stg@vio.live`. Vio creó un envío en Shopify (fulfillment
+    7327727943838), no lo duplicó al volver el aviso, y Vipps capturó al enviar (5.490 øre).
+  - **Paso 5.7 ✅:** QA-D publicado y en la colección, y entró solo al channel 521 (17:12:52).
+  - **Visto de paso, sin arreglar:** con un transportista de la lista de AfterShip, orders guarda como enlace de
+    seguimiento `API_BASE_HOST`, no un enlace del transportista. Es un parche de Alan del 14/07 (`1e471e2`), también
+    en `master`, en `orders saveTrackingNumber`, y el enlace llega a Shopify. Propuesto a Angelo.
+  - Los WARN «webhook NOT created … ARN de EventBridge es de otra app» al reconectar `vio-client-dev` son esperados:
+    sus avisos llegan por la suscripción de la app, y los `orders/fulfilled` llegaron bien.
+  - Cola de Alan: #478 y después #477. Pedida la comprobación de precios de p1 (125/150) antes de pasar #472 a Done.
+
 ## Decisions
 - La evidencia para Pearlconvert sale de Kustom Order Management, como tabla y JSON. Las capturas quedan solo para lo
   que Kustom no guarda: qué opciones ofreció el widget.
