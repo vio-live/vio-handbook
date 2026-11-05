@@ -116,3 +116,16 @@ Reglas para el reproductor (son las del ADR, puntos 6 a 8):
 
 Lo que pide SDK nueva, no config: cualquier layout o gesto que no quepa en `videos`, `products`,
 `cues` y `theme`.
+
+## Mensaje enviado a Replit (2026-11-05, tarde): instalar la beta y conectar lo real
+
+Decisión de Angelo: **el demo `/demo/vio-reel` se queda como está** (se usa con clientes); Replit conecta la
+integración real al lado, con `@vio-live/web-sdk@0.38.0-beta.1` (dist-tag `beta`, `latest` sigue en 0.37.8) y
+`<vio-reel experience-id="1">` contra la experiencia 1 de la surface 13 de QA; después se mezcla todo.
+
+Resumen de lo que se le pidió: instalar la beta; renderizar el reel en un artículo con el mismo contexto de
+página que los demás bloques (`data-vio-scope`, `data-vio-campaign`); no reimplementar el reproductor; respetar
+las reglas del componente (una sola fuente de verdad con ETag y revisión fija por carga, la campaña de la página
+decide y una incompatible no pinta nada, tema solo por tokens, `hls.js` desde `cdn.jsdelivr.net` → CSP); crear
+experiencias solo desde su servidor con la key de gestión (apartado de arriba); devolver una URL de QA con el
+reel por la SDK y los avisos de consola.
