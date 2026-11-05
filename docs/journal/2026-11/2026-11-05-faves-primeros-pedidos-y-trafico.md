@@ -35,8 +35,8 @@ Angelo vio pedidos entrando y tráfico en prod; comprobar salud y qué pedidos s
   este último a las 22:11 UTC). **Conversión: 2,0 % pedidos/visita, 1,2 % compradores/visita, AOV 330 NOK.**
   El 60 % de las visitas llegan referidas por `www.dagbladet.no`, 79 % móvil, todas las compras en móvil.
   Compradores: 4 dominios de correo de consumidor, ciudades distintas, sin pedidos previos, sin dominios
-  internos; un mismo comprador hizo 4 pedidos seguidos (un producto por checkout). El 4141 (Frogner,
-  correo `yahoo.es`) está por confirmar si es interno.
+  internos; un mismo comprador hizo 4 pedidos seguidos (un producto por checkout). Angelo confirma que el 4141 no es suyo: los 8 son
+  reales.
 - **Bug del colector**: los 8 `order_paid` están en ClickHouse con `campaign_id=4` e `internal=0`, pero el
   funnel/breakdown de la campaña 4 suma solo 1.817 NOK (faltan 4133, 4136 y 4139 = 819 NOK) y dice
   «purchases 7 / buyers 2». El dashboard y el informe diario infravaloran Faves. Pista: 4136 y 4139
