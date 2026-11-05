@@ -107,3 +107,5 @@ Cloudflare Stream. Hoy, la fase 2 (entidad, API y subida).
 5. Editor completo en el dashboard (vídeos con subida directa, productos del canal del sponsor,
    cues, tema, vista previa con `<vio-reel>`), en `/campaigns/:id/experiences/:expId`.
 4. Prod: la migración `1792900000000` antes del próximo release de campaigns a `main`.
+   > [claude, 2026-11-05] Comprobado: products, extensions, api y orders ya llevan la 1.0.290 en `develop`, pero
+   > ninguno consulta `surface` con la entidad del kernel. La migración solo bloquea el release de campaigns.

@@ -35,15 +35,44 @@ Angelo pidió revisar contra el código el trabajo de Alan del 04/11 y después 
   release): el recibo de vuelta de Vipps, de un enlace de Stripe o de Adyen se rellena con `GetCheckout`, usando el
   checkout de la URL. Página de prueba de QA en `vio-web-dev.vio.live/qa-gratis.html`.
 
+- **«Takk!» publicado (tarde):**
+  - Release 0.37.8 ([vio-web-sdk#140](https://github.com/vio-live/vio-web-sdk/pull/140), `66cd826`).
+  - Vev **0.346** ([vev#84](https://github.com/vio-live/vev/pull/84), `16fd29d`). Para volver atrás, restaurar la 0.345.
+  - npm: `latest` 0.37.8 desde las 13:10 UTC, publicado por Angelo. Comprobado que el paquete es el de `main` (mismo
+    shasum, `2922723c…`).
+  - Tarjeta de QA para Alan: **#478** (su página de Vev; Vipps con envío gratis y de pago, Stripe, Vipps cancelado y
+    Express).
+  - Replit sigue en 0.37.7 hasta que Angelo lo pida.
+- **#477 desplegado:** Miguel lo puso en staging y prod a las 13:33 UTC
+  ([journal](./2026-11-05-colector-477-staging-y-prod.md)). Alan, avisado en la tarjeta: las dos compras internas de
+  ayer deben salir de las cifras, una compra interna nueva no debe mover nada, y una desde una ventana privada sí debe
+  contar.
+- **Tests de pagos del webapp en verde**
+  ([webapp-vio-commerce#99](https://github.com/vio-live/webapp-vio-commerce/pull/99), `f1eb9d8`):
+  - Dos tests de `develop` describían el Vipps de antes de la partnership: sin respaldo de la plataforma y con solo
+    cuatro credenciales. Ahora cubren claves propias, partnership y Express apagado.
+  - Solo cambian tests. `jest`: 98 suites y 965 tests en verde.
+  - De paso, comprobado que guardar el formulario en modo partner no borra el MSN: api-ms conserva el que asignó Vio
+    (`withVippsServerFields`).
+- **Kernel 1.0.290 en `develop` de los micros** (bump de vio-reel):
+  - products, extensions, api y orders ya lo llevan en `develop`; en `master` siguen entre la 1.0.282 y la 1.0.287.
+  - Trae la columna `surface.management_api_key`, que prod todavía no tiene.
+  - Ninguno de esos micros consulta `surface` con la entidad del kernel: base-api tiene la suya, y shopcart y orders
+    solo guardan `surfaceId`. Sus releases a prod no se rompen por eso; **solo campaigns necesita antes la migración**.
+
 ## Decisions
 - Para los productos de Woo, **Woo es la fuente de verdad de las categorías** (Angelo, 05/11). Pisa lo que se haya
   puesto a mano en el dashboard, salvo cuando Woo no da ninguna.
 
 ## Blockers
-- #477: despliegue del colector (Miguel).
-- «Takk!»: prueba de Angelo desde el móvil con Vipps antes de la release 0.37.8, Vev y npm.
+- Replit con la 0.37.8: cuando Angelo lo pida.
 
 ## Next session
-1. Si la prueba del «Takk!» sale bien: release 0.37.8 del SDK, Vev, npm (Angelo) y Replit.
-2. Cuando Miguel despliegue el colector: que Alan repita la compra con `?vio_internal=1` (#477).
-3. Alan: #472 (escenarios 3, 5 y 6; antes, reconectar su Shopify) y #476.
+1. Replit: `npm install @vio-live/web-sdk@0.37.8 --save-exact` y redeploy con su agente; después, comprobar que el
+   artículo de Faves carga la 0.37.8.
+2. Alan: #478 («Takk!»), la prueba de #477, #472 (escenarios 3, 5 y 6; antes, reconectar su Shopify) y #476.
+3. Abiertos de ayer ([journal del 04/11](./2026-11-04-products-oom-imagenes-borradas.md)):
+   - la cascada `nullify` en opciones y variantes;
+   - los pedidos de Villoid sin datos de Ingrid;
+   - la transacción de Shopify de 1.199 contra el pedido de 1.228;
+   - la descripción perdida del 412002 en QA.
