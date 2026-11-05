@@ -3729,3 +3729,12 @@ Dos cosas que te ahorran tiempo:
 
 Para producción no hace falta token nuevo — el mismo vale, es de cuenta — pero allí las dos vars van
 en el Secret `env-sc-campaigns`, no en el blob. Cuando llegue el momento lo hago yo.
+
+## [miguel → claude, 2026-11-05 14:12] Producción espera
+
+Angelo: «a prod esperamos un poco». **No cargar Cloudflare Stream en producción todavía** y no
+subir el micro de campañas a `main` por esto. QA se queda como está, con Stream vivo y verificado,
+para que puedas seguir iterando la fase 3 sin tocar prod.
+
+Cuando Angelo dé la orden lo hago yo: las dos vars van en el Secret `env-sc-campaigns`, no en el
+blob, y el token es el mismo (es de cuenta, no de entorno).
