@@ -29,6 +29,20 @@ Angelo vio pedidos entrando y tráfico en prod; comprobar salud y qué pedidos s
 - **Faves' Woo** manda además ráfagas de webhooks `order.created/updated` de sus propios pedidos (72 en
   3 h); extensions los ignora bien (`processOrderUpdated`, solo estado).
 
+- **Conversión del artículo de Faves (5/11, Oslo), cruzando base y colector** (`/v1/stats/campaigns/4/*?client_app_id=1`):
+  403 visitas (sesiones con impresión de Faves, internas fuera) · 3.227 impresiones · 67 clics (16,6 % de
+  las visitas) · 10 al carrito (7 sesiones) · **8 pedidos de 5 compradores, 2.636 NOK** (4133–4139 y 4141,
+  este último a las 22:11 UTC). **Conversión: 2,0 % pedidos/visita, 1,2 % compradores/visita, AOV 330 NOK.**
+  El 60 % de las visitas llegan referidas por `www.dagbladet.no`, 79 % móvil, todas las compras en móvil.
+  Compradores: 4 dominios de correo de consumidor, ciudades distintas, sin pedidos previos, sin dominios
+  internos; un mismo comprador hizo 4 pedidos seguidos (un producto por checkout). El 4141 (Frogner,
+  correo `yahoo.es`) está por confirmar si es interno.
+- **Bug del colector**: los 8 `order_paid` están en ClickHouse con `campaign_id=4` e `internal=0`, pero el
+  funnel/breakdown de la campaña 4 suma solo 1.817 NOK (faltan 4133, 4136 y 4139 = 819 NOK) y dice
+  «purchases 7 / buyers 2». El dashboard y el informe diario infravaloran Faves. Pista: 4136 y 4139
+  comparten sesión con 4137/4138 y 4133 no tiene `purchase` de navegador; la agregación parece deducir
+  por sesión en vez de por `order_id`. Abrir en `vio-analytics`.
+
 ## Blockers / avisos
 
 - Los logs de extensions rotan en ~1 h con este volumen: los pedidos de 18:49–19:59 ya no estaban en
