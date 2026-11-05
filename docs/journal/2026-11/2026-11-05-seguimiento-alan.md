@@ -115,6 +115,33 @@ Shipping Assistant de Kustom (#479), con el correo a Pearlconvert en borrador cu
     Los campos de dirección vacíos están bien: era Express y el checkout nunca tuvo dirección.
   - Tarjeta a Done. Siguiente: #477.
 
+- **#476 Estrés del alta (desde 19:03):**
+  - **Parte A ✅ (A1–A6 marcados):**
+    - Alta de la marca 1344 y conexión con el publisher 1346 (solicitud aceptada a las 20:33).
+    - 6 productos de Woo publicados, tarifa de 10 kr y Stripe.
+    - Colección «5 NOV» (yFo0We67x) compartida, y sus productos en el channel 523.
+    - Campaña 27 en la surface 19, con 15 %. Perfil de marca con logo.
+    - Orden 4701 con Stripe (1.260 kr) y el «Takk!» completo.
+  - **Aviso falso al invitar:** «No Vio user with that username or ID — try their email instead», aunque en la base
+    todas las invitaciones y comparticiones salieron bien (`validateExist` 200, `share-multiple-collection` 200). En
+    el webapp (`src/lib/connections.js`) hay dos causas posibles:
+    - `invitePartnerWithCollections` convierte en «not-found» cualquier 400/404 de `shareCollections`, que lanza
+      cuando la colección no se pudo compartir;
+    - con colecciones marcadas, un email que aún no existe no va a `inviteExternal` y pide «try their email».
+
+    Preguntado a Alan qué escribió.
+  - **Parte B:**
+    - B1 ✅: un producto añadido a la colección entra en el channel en 1 s.
+    - B2 ✅: el producto quitado sale del channel.
+    - B5 ✅: compartir dos veces, colección vacía y mismo producto en dos colecciones, sin duplicados.
+    - **B3, hallazgo:** no hay ninguna pantalla para dejar de compartir una colección. Existen `DELETE
+      /collection/shared` y `stopUsingShared` en `src/lib/collections.js`, pero nada los usa.
+    - B4, a medias: la colección borrada nunca estuvo en el channel.
+    - B6, sin hacer: «Unsync» del plugin deja el producto en Vio a propósito (`class-ajax.php`); el borrado es
+      «Delete from Vio».
+
+    Pedido a Alan repetir B4 y B6. Visto también: «Showing 8 of 8» con paginación «1 / 2».
+
 ## Decisions
 - La evidencia para Pearlconvert sale de Kustom Order Management, como tabla y JSON. Las capturas quedan solo para lo
   que Kustom no guarda: qué opciones ofreció el widget.
