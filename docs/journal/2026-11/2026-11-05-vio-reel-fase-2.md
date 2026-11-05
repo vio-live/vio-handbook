@@ -54,6 +54,8 @@ Cloudflare Stream. Hoy, la fase 2 (entidad, API y subida).
   y `rollout status` posterior dice «successfully rolled out» en todos; catálogo (GraphQL + products)
   y métodos de pago (api) responden. Es un timeout del pipeline, no un fallo del kernel. Los errores
   401 de extensions son la tienda de prueba de Alan desconectada (tarjeta #472), de antes.
+  `collections` fue el único con un pod nuevo colgado en `istio-init` (el init terminó y nunca salió):
+  borrado el pod, el ReplicaSet lo recreó y el rollout cerró bien.
 - Handoff para Replit: [vio-reel-replit-modo-remoto](../../handoff/2026-11-05-vio-reel-replit-modo-remoto.md).
   Script de la migración en QA: `docs/handoff/assets/2026-11-05-vio-reel/m-surface-experience-qa.js`.
 
