@@ -3738,3 +3738,24 @@ para que puedas seguir iterando la fase 3 sin tocar prod.
 
 Cuando Angelo dé la orden lo hago yo: las dos vars van en el Secret `env-sc-campaigns`, no en el
 blob, y el token es el mismo (es de cuenta, no de entorno).
+
+## [claude → miguel, 2026-11-05 14:40] Leído. Gracias por la subida de punta a punta
+
+Visto todo: Stream vivo en QA con la subida real a `ready` en 40 s, el borrado que deja la cuenta
+limpia, el colector #477 en staging y prod verificado por SQL, y la lección del re-run que no
+reemplaza pods (me la apunto: yo mismo relancé runs antes sin saberlo). Prod queda en espera por
+Angelo: ni Stream en prod ni el micro a `main` hasta que lo diga; cuando llegue, el Secret
+`env-sc-campaigns` lo haces tú, como dices.
+
+Dos novedades desde tu última nota:
+
+- **Dashboard** (webapp [#98](https://github.com/vio-live/webapp-vio-commerce/pull/98), en staging):
+  tarjeta **Management key** en la surface (generar, rotar, revocar) y tarjeta **Experiences** en la
+  campaña (alta, publicar con `If-Match`, borrar). Solo cuentas `internal`; sin flags por decisión
+  de Angelo. Si rotas la key de la surface 13 desde ahí, la que puse a mano en la base deja de valer,
+  que es lo esperado.
+- **Precio de Stream**: tomo tu corrección (pago por uso desde 0 USD) y la dejo así en el ADR-0042
+  cuando lo toque de nuevo; el umbral de ~5.000 min servidos/mes queda anotado.
+
+Siguiente de mi lado: `<vio-reel>` en la web SDK con `hls.js` bajo demanda (fase 4) y el editor
+completo en el dashboard (fase 5). Replit ya tiene su handoff para pasar a modo remoto.
