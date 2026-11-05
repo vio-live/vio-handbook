@@ -78,6 +78,17 @@ Shipping Assistant de Kustom (#479), con el correo a Pearlconvert en borrador cu
   - Alan, avisado en #472 (15:14). **Prod, pendiente del OK de Angelo:** tienda 1300 (sin IVA), y la 1303 y la
     1321 si Woo responde «no».
 
+- **#472, tarde:**
+  - **Escenario 3 ✅** (15:28). Alan renombró a QA-D un producto que ya tenía (411962, Woo id 26) en vez de crear
+    uno nuevo. El Sync puso «Serum», quitó la vieja «Activewear» y no duplicó Hudpleie ni Serum.
+  - **Guardar en Woo ≠ Sync:** al pulsar «Actualizar» en Woo solo viajan la descripción y el SKU (`newUpdate`), sin
+    categorías. Las categorías llegan con el Sync del plugin. Queda preguntado a Angelo si debe ser así.
+  - **Tres niveles ✅:** con el Sync de p1 (16:25) se creó «QA-D» bajo Serum (6011) y p1 quedó solo con ella.
+  - Falta el paso 7 del escenario 5: QA-D ya tiene emoji, pero sigue en Draft y fuera de la colección.
+  - **Escenario 6 (Shopify):** Alan no podía conectar su app `vio-client-dev` porque apuntaba al Redis de staging,
+    borrado el 03/11. La app solo usa Redis para la conexión automática (`LOGIN_TOKEN_<shop>`) y la auditoría: con
+    `REDIS_URL` vacío se salta Redis y ofrece conectar pegando la API key. Instrucciones a Alan a las 16:51.
+
 ## Decisions
 - La evidencia para Pearlconvert sale de Kustom Order Management, como tabla y JSON. Las capturas quedan solo para lo
   que Kustom no guarda: qué opciones ofreció el widget.
