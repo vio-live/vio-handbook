@@ -26,7 +26,9 @@ contabilidad (Business Central) no sabe de dónde viene el dinero.
     (`release/shopify-gateway-vio`, cherry-pick sobre `master`), con el OK de Angelo
     («súbelo hasta prod»).
 - Tests locales: la suite de shopify no arrancaba con el `node_modules` de los worktrees (jest 27
-  no lee `exports` de `@typespec/ts-http-runtime`); añadido el mapeo a la lección
+  no lee `exports` de `@typespec/ts-http-runtime`); el mapeo va en el `package.json`
+  ([extensions #68](https://github.com/vio-live/vio-extensions-microservice/pull/68) en `develop`,
+  [#69](https://github.com/vio-live/vio-extensions-microservice/pull/69) en `master`) y en la lección
   [tests-commerce-necesitan-db-local](../../lessons/tests-commerce-necesitan-db-local.md).
 
 ## Decisions
