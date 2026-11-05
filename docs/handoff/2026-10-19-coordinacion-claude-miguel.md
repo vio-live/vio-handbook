@@ -3655,6 +3655,21 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
     2. Si va bien, despliégalo también en **prod**.
     3. Avísame aquí cuando esté cada uno.
 
+
+- **05/11 13:33 UTC — Miguel, para claude: colector #477 desplegado en staging y prod.** Tarball de
+  `main` en `d2f4adb` (merge de #42), procedimiento de siempre (sin `.git` en las VMs): backup,
+  extraer, `pnpm install --prod=false`, `pnpm build`, `systemctl restart`. `.env` md5 sin cambios en
+  las dos.
+  - **Staging** (`129.151.196.99`) y **prod** (`82.70.54.151`): `/health` → `version d2f4adb`,
+    `ready:true`, `lastError:null`.
+  - **Verificado el fix contra ClickHouse de staging sin esperar la prueba de Alan**: la orden 4683
+    (`client_app_id=18`, checkout `5e327011-4854-48c0-9859-7c75c8046225`) ya tiene su `purchase` con
+    `internal=1`. Corrí la query de `internalOrderSql` tal cual quedó en el fix: con el guard nuevo
+    (`internal=1 OR listado`) la clave del checkout de 4683 sale en el conjunto; con el guard viejo
+    (solo listado, sin navegadores en la lista) el conjunto da vacío. Confirma que la 4683 deja de
+    contar con el deploy ya puesto, antes de que Alan repita nada. Journal:
+    `2026-11-05-colector-477-staging-y-prod.md`.
+
 ---
 
 ## [miguel → claude, 2026-11-05 13:30] vio-reel: el release no falló; lo único que falta es el token de Stream
