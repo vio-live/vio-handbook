@@ -79,6 +79,19 @@ Cloudflare Stream. Hoy, la fase 2 (entidad, API y subida).
   decide el scroll del feed y un observador de página pausa al salir de pantalla, con un fallback a
   400 ms. 23 tests nuevos; los fallos de `cart-manager.quantity` y `vio-cart.stepper` son previos en
   `main` en esta máquina (`localStorage` ausente en ese jsdom).
+- **Fase 5, editor en el dashboard** (webapp [#101](https://github.com/vio-live/webapp-vio-commerce/pull/101),
+  mergeado en `develop` → staging): `/campaigns/:id/experiences/:expId` con subida directa a Cloudflare
+  Stream (URL de un solo uso del micro, progreso, sondeo hasta `ready`) o URL pegada, productos del canal
+  del sponsor en la surface con imagen sustituida y punto focal, cues desde el segundo del reproductor,
+  tema por tokens, vista previa del borrador resuelto, Save con `If-Match` (409 recarga y avisa), Publish
+  con los errores del micro resaltados, History con Restore. Solo `internal`. 272 tests en las áreas
+  tocadas. Pendiente de probar a mano en staging con la cuenta de Angelo (yo no tengo sesión de Firebase).
+  Detalle del agente front en
+  [front-commerce-vio-reel-editor](./2026-11-05-front-commerce-vio-reel-editor.md).
+- **SDK beta** `0.38.0-beta.1` en `main` de vio-web-sdk ([#142](https://github.com/vio-live/vio-web-sdk/pull/142));
+  la publica Angelo con `npm publish --access public --tag beta` (`latest` queda en 0.37.8). Decisión de
+  Angelo: el demo `/demo/vio-reel` de Replit se queda como está (se usa con clientes); Replit conecta lo real
+  al lado con la beta y después se mezcla (mensaje en el handoff de modo remoto).
 - Handoff para Replit: [vio-reel-replit-modo-remoto](../../handoff/2026-11-05-vio-reel-replit-modo-remoto.md).
   Script de la migración en QA: `docs/handoff/assets/2026-11-05-vio-reel/m-surface-experience-qa.js`.
 
@@ -104,8 +117,8 @@ Cloudflare Stream. Hoy, la fase 2 (entidad, API y subida).
    de la surface 13 (la key de gestión se rota desde `POST /api/client-apps/13/management-key`).
 3. Publicar la SDK cuando Angelo lo decida (`SDK_VERSION` + package.json; CHANGELOG ya en Unreleased) y
    actualizar Replit; Vev fuera del flujo.
-5. Editor completo en el dashboard (vídeos con subida directa, productos del canal del sponsor,
-   cues, tema, vista previa con `<vio-reel>`), en `/campaigns/:id/experiences/:expId`.
+5. Probar el editor en staging a mano (subir un clip, publicar, verlo en `examples/reel.html` de la SDK) y
+   cambiar su vista previa por `<vio-reel>` cuando el webapp consuma la 0.38.
 4. Prod: la migración `1792900000000` antes del próximo release de campaigns a `main`.
    > [claude, 2026-11-05] Comprobado: products, extensions, api y orders ya llevan la 1.0.290 en `develop`, pero
    > ninguno consulta `surface` con la entidad del kernel. La migración solo bloquea el release de campaigns.
