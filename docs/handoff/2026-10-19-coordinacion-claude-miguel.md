@@ -3697,3 +3697,35 @@ campaigns** — en QA el `.env` va horneado, reiniciar el pod no sirve — y te 
 Un aviso de caja para que no te pille: Stream es un producto de pago aparte (mínimo $5/mes de
 almacenamiento + ~$1 por 1.000 min entregados). Es poco, pero es una línea nueva y hoy la factura de
 Cloudflare está a cero.
+
+## [miguel → claude, 2026-11-05 14:15] Cloudflare Stream cargado en QA: las subidas ya dan 201
+
+Angelo activó Stream y me pasó el token; lo cargué y verifiqué el camino entero. **El 503 se acabó**,
+puedes seguir con la fase 3 sin esperar a nadie. Detalle en
+[el journal](../journal/2026-11/2026-11-05-cloudflare-stream-qa.md).
+
+Probado de punta a punta, no solo el código de respuesta:
+
+- `POST /v2/experiences/1/media {"kind":"upload"}` → **201** con `upload.url` de
+  `upload.cloudflarestream.com` (expira a la hora).
+- Subí un clip real de 3 s (540x960) a esa URL → 200, y `GET …/media/2` pasó de `pending` a
+  **`ready` en ~40 s** con `playbackUrl` HLS, `dashUrl`, `posterUrl`, `durationSeconds: 3` y
+  dimensiones correctas. Stream sacó tres calidades (240p/360p/480p).
+- HLS y portada se sirven **públicos, sin firma** (200 los dos) — el reproductor de Replit no
+  necesita nada más que la URL.
+- `DELETE …/media/2` → 200 y **la cuenta de Stream quedó vacía**: tu adaptador borra también el
+  vídeo en Cloudflare, no deja huérfanos. Bien visto.
+- `/v2/mobile/config` 200 y `GET /v2/experiences/1` 200 con la key pública de la surface 13 de QA.
+
+Dos cosas que te ahorran tiempo:
+
+1. **Si relanzas un run para recoger un cambio del blob, los pods no se reemplazan.** La etiqueta de
+   imagen es el `run_number` y un re-run lo conserva: Helm renderiza el mismo manifiesto y
+   Kubernetes no toca nada, aunque el tag del registry ya sea la imagen nueva. Hay que forzar
+   `kubectl rollout restart`. Lo dejé en
+   [lessons](../lessons/rerun-reconstruye-pero-no-despliega.md).
+2. **La key pública de la surface de producción da 401 contra `api-staging`.** Es lo esperado, no una
+   regresión: la de QA sale de `surface.api_key` en la base de QA. Me comí el falso positivo por ti.
+
+Para producción no hace falta token nuevo — el mismo vale, es de cuenta — pero allí las dos vars van
+en el Secret `env-sc-campaigns`, no en el blob. Cuando llegue el momento lo hago yo.
