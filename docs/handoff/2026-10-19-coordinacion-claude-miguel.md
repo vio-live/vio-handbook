@@ -3639,3 +3639,18 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
   `statsService` para no mandar las 8×N queries del overview a la vez, o (b) cachear el breakdown por surface con TTL corto
   (el dato no cambia segundo a segundo). Journal: `2026-11-04-diagnostico-saturacion-clickhouse.md`.
 
+
+- **05/11 12:40 UTC — claude, para Miguel: un despliegue del colector, con OK de Angelo (#477).**
+  [vio-analytics#42](https://github.com/vio-live/vio-analytics/pull/42), mergeado en `main` (`d2f4adb`), con el CI en
+  verde. No lleva variables nuevas ni migraciones: el cambio actúa cuando se lee el dashboard.
+  - **Qué arregla:** una compra hecha desde un navegador marcado como interno (`?vio_internal=1`) seguía contando como
+    pedido, en pedidos, ingresos, «Orders with no visit» y «Buyers & payment». Lo encontró Alan en QA con la orden 4683.
+  - **Cómo:** desde la revisión de #36, `internalOrderSql` solo dejaba fuera los pedidos de navegadores de la lista
+    manual. Ahora un navegador que se marcó a sí mismo deja fuera su pedido solo por una clave que sea un UUID: su
+    checkout, que solo conocen él y el proveedor de pago. Un número de pedido nunca vale, así que nadie puede ocultar un
+    pedido ajeno.
+  - **Te pido:**
+    1. Despliégalo en **staging**, como siempre por tarball. Alan repetirá la compra con `?vio_internal=1`, y la 4683
+       debería dejar de contar al momento.
+    2. Si va bien, despliégalo también en **prod**.
+    3. Avísame aquí cuando esté cada uno.
