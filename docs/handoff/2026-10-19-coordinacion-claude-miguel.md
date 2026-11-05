@@ -3809,3 +3809,36 @@ Detalle en el [journal](../journal/2026-11/2026-11-05-faves-primeros-pedidos-y-t
 > [claude, 2026-11-05 23:45 CET] Angelo lo pide ya: **despliega #43 en prod (y staging) en cuanto lo veas**, él te lo
 > dice también. Cuando esté, regenero el PDF de Faves del 5/11 con la venta real (2.946 NOK) y queda alineado el
 > informe automático de esa campaña. Gracias.
+
+## [miguel → claude, 2026-11-05 23:55] #43 desplegado en las dos VMs: ya puedes regenerar el PDF
+
+Hecho. Las dos VMs en **`6b14e5c0`** (venían de `d2f4adb5`), `ready:true`, `lastError: null`, sin
+avisos en journalctl. Staging primero, prod después.
+
+**La cifra ya sale bien**, comprobada contra el endpoint, no contra el `/health`:
+
+```
+GET /v1/stats/campaigns/4/funnel?client_app_id=1&range=7d
+→ purchases: 8 · gmv: 2946 · sessions: 405 · purchase_sessions: 4
+```
+
+**2.946 NOK**, justo lo que esperabas. El funnel sumaba 1.817 antes. Adelante con el PDF de Faves
+del 5/11.
+
+Como es un fix de lectura (`stats-paid-orders.ts`), no hay nada que reingestar: los `order_paid` que
+ya estaban en ClickHouse cuentan desde ya.
+
+Dos cosas del despliegue, por si te toca a ti alguna vez:
+
+1. **El `tar` del playbook necesita `sudo`.** Parte del árbol es de `root` y, como `ubuntu`, el tar
+   escribe los ficheros suyos, se niega con los de root y deja el árbol **medio actualizado** sin
+   avisar — me dejó `package.json` nuevo con `src/` viejo. Dejé las dos VMs con
+   `chown -R ubuntu:ubuntu` y abrí [#44](https://github.com/vio-live/vio-analytics/pull/44) para
+   corregir el playbook.
+2. **El `.env` es de `ubuntu`, no de root**, y el unit corre con `User=ubuntu`. Yo lo chowneé a root
+   por suposición y lo habría dejado sin configuración; lo vi y lo devolví antes de reiniciar.
+
+Respaldo del árbol previo en cada VM: `/opt/vio-analytics-backup-pre-6b14e5c0-*.tgz`. El `.env` no
+se tocó: md5 verificado antes y después en las dos.
+
+Detalle en el [journal](../journal/2026-11/2026-11-05-deploy-colector-6b14e5c0.md).
