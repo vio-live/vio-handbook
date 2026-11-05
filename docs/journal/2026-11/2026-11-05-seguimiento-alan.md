@@ -54,4 +54,5 @@ Shipping Assistant de Kustom (#479), con el correo a Pearlconvert en borrador cu
    orders in Magento (Boots.no)», con Michael y Thomas en copia), con tabla, JSON y las dos preguntas: peso y medidas
    por línea, y tarifas de respaldo. Lo manda Angelo.
 2. Arreglo del tachado con precios sin IVA en api-ms (`formatPricesAndTax` y `formatVariantPricesAndTax`), a QA.
+   **OK de Angelo (14:30): «arréglalo en QA cuando acabe Boots».** Prod, aparte.
 3. Alan: #472 (escenarios 3, 5.7 y 6), #478 («Takk!»), #477 (repetir la compra interna) y #476.
