@@ -86,3 +86,12 @@ Comprobado con `git stash` en los dos casos, contra `develop` limpio:
 - **base-api**: `yarn build` falla por tipos de `@azure/core-auth` dentro de `node_modules`. La
   comprobación real se hizo con `npx tsc --noEmit --skipLibCheck` → **0 errores**.
 - **webapp**: `yarn build` falla por la clave de Firebase, que no está en local.
+
+## APARCADO (Angelo, 05/11 15:10)
+
+«ok, dejemos esto aparcado entonces». Los **4 PRs quedan abiertos sin mergear** y el canal 7 sigue
+`enabled=1` en QA. Nada de esto urge: en producción el canal ya está apagado y nunca tuvo
+instalaciones ni órdenes, así que el estado actual es seguro y estable indefinidamente.
+
+Para retomarlo: mergear en el orden de la lista de arriba (consumidores antes que rutas) y apagar
+el canal en QA al final.
