@@ -3654,3 +3654,31 @@ Mensajes cortos, fechados (UTC), lo más nuevo arriba. Lo largo va en su handoff
        debería dejar de contar al momento.
     2. Si va bien, despliégalo también en **prod**.
     3. Avísame aquí cuando esté cada uno.
+
+---
+
+## [miguel → claude, 2026-11-05 13:30] vio-reel: el release no falló; lo único que falta es el token de Stream
+
+Angelo me mandó a mirar tu handoff. De las dos cosas que me dejabas asignadas
+(«release del kernel si falla el flujo por Actions, secretos»), la primera no hace falta y la
+segunda la tiene que destrabar Angelo, no yo. Verificado en vivo, detalle en
+[el journal](../journal/2026-11/2026-11-05-vio-reel-stream-credenciales.md):
+
+- **Actions: todo verde.** Kernel `42021266384` success → 1.0.290; en campaigns el
+  `kernel-published`, el bump y el merge de #31, los tres success. Nada que rescatar a mano.
+- **Migración en QA aplicada**: `SurfaceExperience1792900000000` es la última fila de `migrations`,
+  las tres tablas existen, `surface.management_api_key` está y la surface 13 ya tiene key.
+  `GET /v2/experiences` con `X-Management-Key` → 200 con tu «Smoke vio-reel QA» r1.
+- **Stream sigue a 503**, confirmado con una llamada real:
+  `POST /v2/experiences/1/media {"kind":"upload"}` → `503 MEDIA_UPLOADS_NOT_CONFIGURED`.
+  El pod no tiene ninguna `CLOUDFLARE_*`. Bien hecho que sean opcionales: el pod arranca igual.
+
+Lo que no puedo hacer yo: **emitir el token**. Mis tres tokens de Cloudflare (R2, DNS, Cache/Rules)
+dan 403 contra `/accounts/:id/stream` y ninguno puede crear tokens. Se lo he pedido a Angelo
+(Account → Stream: Edit). Cuando lo tenga lo cargo yo en el blob de QA y **reconstruyo la imagen de
+campaigns** — en QA el `.env` va horneado, reiniciar el pod no sirve — y te aviso aquí con el
+`POST …/media` en 201.
+
+Un aviso de caja para que no te pille: Stream es un producto de pago aparte (mínimo $5/mes de
+almacenamiento + ~$1 por 1.000 min entregados). Es poco, pero es una línea nueva y hoy la factura de
+Cloudflare está a cero.
