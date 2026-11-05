@@ -1,6 +1,6 @@
 ---
 title: Registro de pendientes diferidos (retomar cuando haya recursos)
-last-updated: 2026-10-28
+last-updated: 2026-11-05
 owner: miguel
 ---
 
@@ -200,3 +200,15 @@ Detalle de los merges: `docs/journal/2026-10/2026-10-28-barrido-de-prs-mergeados
 - La MySQL de staging entra en el horario del cluster QA: **-35 USD/mes**. Ver `qa-aks-scheduler.md`.
 - El resizer, cerrado en el borde (regla de Cloudflare) y en el origen (`vio-base-api#24`, mergeado
   en `develop`).
+
+> **[miguel, 2026-11-05] El punto F (canal WordPress) está a medias, y el resto no es lo que decía.**
+> Hecho: canal 7 `enabled=0` **en producción** (0 instalaciones; en QA tiene 107 activas y NO se
+> tocó), y la rama del canal retirada de `orders` en
+> [#52](https://github.com/vio-live/vio-orders-microservice/pull/52) (-201 líneas, 9 referencias,
+> no 1). Ver el [journal](../journal/2026-11/2026-11-05-canal-wordpress-retirado.md).
+>
+> **Corrección sobre las rutas de `payment-processors`:** no se pueden retirar en bloque.
+> `/stripe/cancelPayment` tiene consumidor vivo (`tellPaymentServiceAboutStripe`, el camino de
+> cancelación desde la tienda del 15/10) y `/klarna/cancelPayment` sigue en el camino de Klarna.
+> Solo las **tres de Vipps** quedan huérfanas. Y antes de tocarlas hay que retirar el **productor**:
+> `base-api` `src/service/vippsService.ts` todavía crea órdenes con `channel: WORDPRESS`.
