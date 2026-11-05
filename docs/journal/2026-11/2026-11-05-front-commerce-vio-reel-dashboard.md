@@ -36,7 +36,11 @@ surface (la key del CMS del publisher) y la tarjeta **Experiences** del detalle 
   `#campaign-settings`; la tarjeta decide sola si la cuenta la ve.
 - Tests: `test/experiences/experiences-lib.test.js` (14), `test/experiences/experiences-card.test.jsx`
   (9), `test/surfaces/management-key-card.test.jsx` (5), más casos en `surfaces-lib.test.js` y
-  `access-matrix.test.js`. Suite completa en verde; eslint limpio sobre lo tocado.
+  `access-matrix.test.js`. `npx jest`: 98 suites / 962 tests, 960 en verde; los 2 que fallan
+  (`test/payments/payments-lib.test.js` «Vipps manda sus cuatro credenciales» y
+  `test/settings/qliro-shipping-config.test.js` «los que NO tienen fallback siguen sin él») son de
+  `src/lib/payments.js`, sin tocar e idéntico a `origin/develop` 7c60a21: ya fallan en develop.
+  Eslint limpio sobre lo tocado.
 
 ## Decisions
 - ADR-0042 (fase 5 mínima). Dos ajustes de alcance de Angelo durante la sesión:
