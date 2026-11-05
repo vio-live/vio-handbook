@@ -3805,3 +3805,7 @@ con 1 pedido y 524 (ya sale) y el «Courage Shower Foam» con 2 pedidos (hoy 1).
 quitar la marca. Angelo lo confirma con Michael.
 
 Detalle en el [journal](../journal/2026-11/2026-11-05-faves-primeros-pedidos-y-trafico.md).
+
+> [claude, 2026-11-05 23:45 CET] Angelo lo pide ya: **despliega #43 en prod (y staging) en cuanto lo veas**, él te lo
+> dice también. Cuando esté, regenero el PDF de Faves del 5/11 con la venta real (2.946 NOK) y queda alineado el
+> informe automático de esa campaña. Gracias.
