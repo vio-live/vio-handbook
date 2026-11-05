@@ -57,6 +57,27 @@ Shipping Assistant de Kustom (#479), con el correo a Pearlconvert en borrador cu
   - Borrador en Gmail a Artsiom (14:55), como respuesta en el hilo, con Michael y Thomas en copia: tabla, JSON de
     Order Management sin datos del comprador, y las preguntas de peso y respaldo. Lo manda Angelo. Tarjeta a Done.
 
+- **Precios de las tiendas Woo sin IVA, arreglados en QA**
+  ([vio-api-microservice#77](https://github.com/vio-live/vio-api-microservice/pull/77), merge `9982488`, desplegado
+  15:12 UTC).
+  - Al tirar del tachado salió algo peor. El carrito cobraba bien (125 = 100 + 25 %, tachado 150), pero
+    `GetProductsByIds`, que usa la tarjeta de Vev, daba **100**. Solo selecciona `product.origin` si la consulta lo
+    pide, y sin él la comprobación del IVA de Woo nunca se cumplía.
+  - Tres commits:
+    1. `vatOnTop()`: cada importe con su propio IVA. El tachado estaba mal en tres sitios.
+    2. `origin` siempre seleccionado; se quita de la respuesta si no se pidió.
+    3. Misma regla que el carrito (`cart.service`): solo la conexión Woo más reciente del vendedor, y con
+       `originId`.
+  - El tercer commit salió de una revisión independiente del diff. La regla anterior miraba cualquier conexión
+    Woo del vendedor, así que una conexión vieja sin IVA habría hecho que la tarjeta y el carrito vuelvan a no
+    cuadrar.
+  - Verificado en QA por GraphQL: `GetProductsByIds` y `Products` dan p1 125/150, p2 350/375 y p3 375/400, como el
+    carrito.
+  - Tests: `jest.unit` 38 suites en verde; las 3 de `paymentMethod` fallan igual en `develop`. `tsc` sin errores
+    nuevos.
+  - Alan, avisado en #472 (15:14). **Prod, pendiente del OK de Angelo:** tienda 1300 (sin IVA), y la 1303 y la
+    1321 si Woo responde «no».
+
 ## Decisions
 - La evidencia para Pearlconvert sale de Kustom Order Management, como tabla y JSON. Las capturas quedan solo para lo
   que Kustom no guarda: qué opciones ofreció el widget.
@@ -66,6 +87,5 @@ Shipping Assistant de Kustom (#479), con el correo a Pearlconvert en borrador cu
 
 ## Next session
 1. ~~#479~~: hecho. Pendiente de la respuesta de Pearlconvert (peso y respaldo) y `termsUrl` de Boots en prod.
-2. Arreglo del tachado con precios sin IVA en api-ms (`formatPricesAndTax` y `formatVariantPricesAndTax`), a QA.
-   **OK de Angelo (14:30): «arréglalo en QA cuando acabe Boots».** Prod, aparte.
+2. ~~Arreglo del tachado con precios sin IVA, a QA~~: hecho (#77). Prod: pedir el OK a Angelo.
 3. Alan: #472 (escenarios 3, 5.7 y 6), #478 («Takk!»), #477 (repetir la compra interna) y #476.
