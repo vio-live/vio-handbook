@@ -1,6 +1,6 @@
 ---
 title: "La suite de Commerce falla entera sin MySQL: no es tu cambio"
-last-updated: 2026-09-24
+last-updated: 2026-11-05
 owner: miguel
 ---
 
@@ -60,3 +60,23 @@ Actions sobre `develop` es la verificación de verdad. Mirá ese run antes de da
 
 Los paquetes `@vio-/*` son privados en npmjs.org (ADR-0011). Sin el token en `~/.npmrc` el
 `yarn install` ni arranca. El de Miguel ya está configurado — ver `reference_npm_vio_token`.
+
+## Jest 27 y los `exports` de `@typespec/ts-http-runtime` (2026-11-05)
+
+Con el kernel actual, importar `ShopifyService` arrastra `@vio-/service` → `@azure/storage-blob` →
+`@azure/core-util`, que hace `require('@typespec/ts-http-runtime/internal/util')`. Esa ruta existe
+solo en el campo `exports` del paquete y **jest 27 no lo lee**:
+
+```
+Cannot find module '@typespec/ts-http-runtime/internal/util' from '.../@azure/core-util/dist/commonjs/index.js'
+```
+
+No falta ningún archivo (el pod lo tiene igual). Se arregla añadiendo al `moduleNameMapper` de la
+config inline de arriba:
+
+```json
+"^@typespec/ts-http-runtime/internal/(.*)$": "<rootDir>/node_modules/@typespec/ts-http-runtime/dist/commonjs/$1/internal.js"
+```
+
+Con eso `create-order-shipping-line.unit.spec.ts` (el cuerpo del POST a `orders.json`) corre sin
+base, 9/9.
