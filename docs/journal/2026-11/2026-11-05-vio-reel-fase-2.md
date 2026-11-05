@@ -64,6 +64,21 @@ Cloudflare Stream. Hoy, la fase 2 (entidad, API y subida).
   borrar). Solo cuentas `internal` (`canManageExperiences`); **sin flags de entorno**, por decisión de
   Angelo («es como hacer todo a medias»): a `main` no va hasta que esté completo. Detalle del agente
   front en [front-commerce-vio-reel-dashboard](./2026-11-05-front-commerce-vio-reel-dashboard.md).
+- **Fase 4, `<vio-reel>` en la web SDK** (vio-web-sdk [#141](https://github.com/vio-live/vio-web-sdk/pull/141),
+  mergeado en `main`, **sin publicar en npm**; CHANGELOG en Unreleased): feed vertical con snap, bucle,
+  autoplay silenciado, precarga solo del siguiente, tarjetas compactas que abren `<vio-product-detail>`
+  sin parar el vídeo, badge de cue, mute, pantalla completa, progreso; HLS con `hls.js` del CDN solo
+  cuando hay un reel; la revisión montada se mantiene y la nueva se guarda para la siguiente apertura;
+  última revisión válida en `localStorage`; una experiencia de otra campaña no pinta nada
+  (`sdk_error reel_incompatible`); tema solo por tokens `--vio-*`. `Vio.api.experience()` con ETag,
+  `core/experience`, `observeImpression({ props })`, slot kind `reel`, wrapper React `VioReel`, demo
+  `examples/reel.html`. Probado en el navegador contra staging con la experiencia 1 de la surface 13:
+  vídeo, tarjetas de Faves, click → ficha abierta y el vídeo sigue. Dos tropiezos reales que salieron
+  solo en el navegador: había que esperar al bootstrap antes de `Vio.commerceFor` (como hace el
+  carrusel) y el `IntersectionObserver` con `root` en el feed se quedaba mudo; ahora el vídeo activo lo
+  decide el scroll del feed y un observador de página pausa al salir de pantalla, con un fallback a
+  400 ms. 23 tests nuevos; los fallos de `cart-manager.quantity` y `vio-cart.stepper` son previos en
+  `main` en esta máquina (`localStorage` ausente en ese jsdom).
 - Handoff para Replit: [vio-reel-replit-modo-remoto](../../handoff/2026-11-05-vio-reel-replit-modo-remoto.md).
   Script de la migración en QA: `docs/handoff/assets/2026-11-05-vio-reel/m-surface-experience-qa.js`.
 
@@ -87,7 +102,8 @@ Cloudflare Stream. Hoy, la fase 2 (entidad, API y subida).
 1. Cloudflare Stream en el `.env` de campaigns de QA (Angelo/Miguel) y probar una subida real.
 2. Fase 3: que Replit pase su bloque a modo remoto con el handoff de arriba, contra la experiencia 1
    de la surface 13 (la key de gestión se rota desde `POST /api/client-apps/13/management-key`).
-3. Fase 4 en paralelo: `<vio-reel>` en la web SDK con `hls.js` bajo demanda.
+3. Publicar la SDK cuando Angelo lo decida (`SDK_VERSION` + package.json; CHANGELOG ya en Unreleased) y
+   actualizar Replit; Vev fuera del flujo.
 5. Editor completo en el dashboard (vídeos con subida directa, productos del canal del sponsor,
    cues, tema, vista previa con `<vio-reel>`), en `/campaigns/:id/experiences/:expId`.
 4. Prod: la migración `1792900000000` antes del próximo release de campaigns a `main`.
