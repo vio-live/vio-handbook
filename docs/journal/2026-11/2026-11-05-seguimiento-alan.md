@@ -103,6 +103,18 @@ Shipping Assistant de Kustom (#479), con el correo a Pearlconvert en borrador cu
     sus avisos llegan por la suscripción de la app, y los `orders/fulfilled` llegaron bien.
   - Cola de Alan: #478 y después #477. Pedida la comprobación de precios de p1 (125/150) antes de pasar #472 a Done.
 
+- **#472 a Done (18:13)**, tras ver los precios arreglados en su página: ficha de p1 a 125, tachado 150, y Vipps
+  cobra 135 (125 + 10).
+- **#478 «Takk!» tras Vipps, completa (18:20–18:51):**
+  - Alan tuvo que volver a publicar su página para coger la SDK 0.37.8; antes de eso su bundle seguía en 0.37.7 y
+    el «Takk!» de la 4697 salió sin líneas.
+  - **4698**, Vipps con envío de pago: línea, «Frakt – Default Shipping 10 Kr» y Totalt 135.
+  - **4699**, Stripe: igual.
+  - **4700**, Vipps Express con envío gratis: «Frakt – Gratis frakt · Gratis» y Totalt 125.
+  - **Vipps cancelado** (checkout de las 18:48): CANCEL sin orden, de vuelta en la caja con el aviso y sin recibo.
+    Los campos de dirección vacíos están bien: era Express y el checkout nunca tuvo dirección.
+  - Tarjeta a Done. Siguiente: #477.
+
 ## Decisions
 - La evidencia para Pearlconvert sale de Kustom Order Management, como tabla y JSON. Las capturas quedan solo para lo
   que Kustom no guarda: qué opciones ofreció el widget.
@@ -113,4 +125,4 @@ Shipping Assistant de Kustom (#479), con el correo a Pearlconvert en borrador cu
 ## Next session
 1. ~~#479~~: hecho. Pendiente de la respuesta de Pearlconvert (peso y respaldo) y `termsUrl` de Boots en prod.
 2. ~~Arreglo del tachado con precios sin IVA, a QA~~: hecho (#77). Prod: pedir el OK a Angelo.
-3. Alan: #472 (escenarios 3, 5.7 y 6), #478 («Takk!»), #477 (repetir la compra interna) y #476.
+3. Alan: ~~#472~~ y ~~#478~~ hechas; quedan #477 (repetir la compra interna) y #476.
