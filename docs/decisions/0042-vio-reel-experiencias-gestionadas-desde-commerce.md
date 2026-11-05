@@ -1,7 +1,7 @@
 ---
 title: "0042 — Vio reel: experiencias de vídeo shoppable gestionadas desde Commerce, editables desde Replit y desde Vio"
 date: 2026-11-05
-status: proposed
+status: accepted
 owner: angelo
 deciders: [angelo]
 related: ["0025", "0026", "0027", "0034", "0041"]
@@ -39,6 +39,13 @@ declarativa. Angelo añadió dos cosas que la propuesta no decía:
    dos lados, como se gestionaban los componentes de iOS y Android desde el dashboard viejo.
 2. **El vídeo necesita infraestructura de verdad**: descarga por trozos, calidades y CDN,
    no un mp4 en un blob.
+
+> [claude, 2026-11-05] Aceptado por Angelo el mismo día («pues ve con ello»). Dos precisiones de la
+> implementación (campaigns `feat/vio-reel-experiencias`): la key de gestión es **por surface**
+> (`surface.management_api_key`, cabecera `X-Management-Key`, se emite y rota desde el dashboard), no por
+> publisher, porque el alcance de una experiencia es la surface y así el CMS no puede tocar otra; y la
+> revisión publicada congela también el **título y el sponsor**, no solo los vídeos, para que ningún cambio
+> del borrador llegue a los lectores. Mux descartado; la analítica de reproducción es nuestra.
 
 ## Decisión
 
