@@ -74,7 +74,9 @@ Angelo (03/11, noche): «arregla todo staging y las caídas de prod», coordinan
     «order id: 4130 -> aller» en Woo. Era el primer pedido de Woo desde el 02/11; no hay más afectados.
   - **Cómo despacha Faves** (visto en sus pedidos): sin 3PL. Marcan «Fullført» a mano, por tandas por la mañana, y eso
     dispara el cobro (Dintero o Vipps) y el correo «Ordre fullført». Casi nunca ponen seguimiento.
-  - **Pendiente:** cuando pasen el 142088 a «Fullført», comprobar que Vio lo marca enviado y que cobra Vipps.
+  - **05/11 06:55 UTC, cerrado:** Faves pasó el 142088 a «Fullført» en su tanda de la mañana. Vio lo marcó enviado
+    (COMPLETED, seguimiento 11930) y shopcart cobró Vipps: `capture` → 200, **299,00 NOK** en el MSN 1187978, con el
+    webhook CAPTURED de vuelta. De punta a punta, bien.
 
 - **Artículo de Faves, día de salida** («16 skjønnhetsfavoritter…», `article-192`, campaña 4): revisado con el
   playbook (scripts 1 y 4).
