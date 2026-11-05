@@ -50,7 +50,13 @@ habría mezclado versiones sin avisar.
 
 Arreglado en las dos VMs: extracción con `sudo` y después `chown -R ubuntu:ubuntu`, así que el
 árbol queda homogéneo y el comando del playbook ya funcionará tal cual la próxima vez.
-PR para corregir el playbook: [vio-analytics#44](https://github.com/vio-live/vio-analytics/pull/44).
+Playbook corregido: [vio-analytics#44](https://github.com/vio-live/vio-analytics/pull/44),
+mergeado (`c7eef0b7`) con el OK de Angelo. El comando documentado ya lleva `sudo tar` + `chown`, y
+avisa de que el `.env` es de `ubuntu`.
+
+**No se redesplegó por esto**: es solo docs, y reiniciar el colector de producción a medianoche por
+un cambio de documentación no compensa. Las VMs se quedan en `6b14e5c0`, un commit por detrás de
+`main`; el siguiente despliegue de código lo recoge.
 
 ## Error mío, detectado antes de romper nada
 
