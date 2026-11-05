@@ -43,6 +43,18 @@ Angelo vio pedidos entrando y tráfico en prod; comprobar salud y qué pedidos s
   comparten sesión con 4137/4138 y 4133 no tiene `purchase` de navegador; la agregación parece deducir
   por sesión en vez de por `order_id`. Abrir en `vio-analytics`.
 
+- **Fix del colector**: [vio-analytics#43](https://github.com/vio-live/vio-analytics/pull/43) (`main` `6b14e5c`,
+  CI verde, test nuevo contra ClickHouse real `compra-navegador-vacia`): un `purchase` del navegador con valor 0
+  y sin líneas ya no tapa el `order_paid`. Falta desplegarlo (Miguel, por SSH a las VMs; pedido en el canal).
+  Causa raíz en la SDK web pendiente: por qué manda ese `purchase` vacío al volver de Vipps.
+- **Informe PDF de Faves**: `~/vio-reportes/mote-livsstil/pdf.py` tiene ahora conversión (kjøp/besøk), la
+  comparación con el día anterior en cada sección y en el embudo, y la tabla de botones (`/stats/surface/cta`).
+  Borrador de dag 2 (5/11) entregado a Angelo; se regenera tras el deploy del colector (omsetning 2.946 kr).
+- Pedido 4133 (13:17 UTC, 416 NOK): su navegador está marcado `internal=1` en el colector, así que ni el
+  dashboard ni el PDF lo cuentan; por confirmar con Michael si fue prueba suya. Nuevo pedido 4142 (726 NOK,
+  22:13 UTC, mismo comprador que 4141). Con 4133 fuera: **8 pedidos reales, 4 compradores, 2.946 NOK,
+  403 visitas → 2,0 % pedidos/visita, 1,0 % compradores/visita.**
+
 ## Blockers / avisos
 
 - Los logs de extensions rotan en ~1 h con este volumen: los pedidos de 18:49–19:59 ya no estaban en

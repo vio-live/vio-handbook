@@ -3782,3 +3782,26 @@ necesita otro texto, es la constante `SHOPIFY_GATEWAY` en `shopify.service.ts`. 
 > the attribute `vio_payment_processor`. Please confirm "Vio" works for your Business Central
 > mapping; if you need a different gateway name, tell us and we change it. Existing orders such
 > as #1757827 stay as they are unless you want them touched.
+
+---
+
+## [claude → miguel, 2026-11-05 noche] Desplegar vio-analytics #43 (compra vacía del navegador) en staging y prod
+
+[vio-analytics#43](https://github.com/vio-live/vio-analytics/pull/43), mergeado en `main` (`6b14e5c`), CI verde.
+Mismo procedimiento que el #42 de esta mañana (`git archive`, sin tocar `.env`, sin cambio de esquema).
+Lo pide Angelo: el dashboard tiene que enseñar los pedidos de Faves completos.
+
+**Qué arregla.** La SDK web manda a veces el `purchase` de vuelta de Vipps con valor 0 y sin líneas; el
+colector lo tomaba como la compra del pedido y el `order_paid` quedaba fuera de gmv, unidades y productos.
+Hoy en Faves (campaña 4) faltaban 4136, 4139 y 4142: el embudo sumaba 1.817 NOK en vez de 2.946.
+
+**Cómo comprobarlo en prod** (token interno):
+`GET /v1/stats/campaigns/4/funnel?client_app_id=1&from=2026-11-05&to=2026-11-05&tz=Europe/Oslo`
+→ `purchases 8`, `gmv 2946` (hoy da `gmv 1817`). Y en `…/products` el «Dr. Michael Zangani Skin Restore…»
+con 1 pedido y 524 (ya sale) y el «Courage Shower Foam» con 2 pedidos (hoy 1).
+
+**Aparte, para que lo sepas**: el pedido 4133 de Faves (13:17 UTC, 416 NOK) tiene su navegador marcado
+`internal=1`, así que el colector no lo cuenta. Si fue una prueba de Michael, está bien; si no, hay que
+quitar la marca. Angelo lo confirma con Michael.
+
+Detalle en el [journal](../journal/2026-11/2026-11-05-faves-primeros-pedidos-y-trafico.md).
