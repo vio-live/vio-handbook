@@ -37,6 +37,17 @@ Cloudflare Stream. Hoy, la fase 2 (entidad, API y subida).
   campaigns de QA (`kubectl exec … tar | tar`) y el kernel compilado en local con esos mismos
   `node_modules` por symlink, con el `dist` copiado encima de `node_modules/@vio-/database` del micro.
   Sirve para type-check y tests; el pin de `package.json` se sube cuando salga la release.
+- **Subida a QA (tarde, con el OK de Angelo):** migración aplicada en la MySQL de QA desde el pod de
+  users (script idempotente, 11+8+14 columnas, fila en `migrations`); kernel #31 mergeado con
+  `[skip ci]` y release `pkg=all` → **1.0.290** (run 42021266384, el freno de migraciones paró el
+  dispatch como debe); `kernel-published` disparado a mano a los 12 micros; bump de campaigns
+  (`26c3de6`) desplegado y sano; micro #31 mergeado (`15369b2`) y desplegado con rolling update sin
+  corte. **Prueba de humo en QA** contra la surface 13 (Careless QA, key de gestión puesta a mano en
+  la base): crear → media `url` → borrador con `If-Match` (428 sin él) → publish rechaza un producto
+  ajeno (400 `PRODUCT_NOT_IN_SPONSOR_CATALOG`, 1302) → publish OK revisión 1 → lectura pública con
+  `ETag W/"exp-1-r1"`, `Cache-Control` público y 304 → preview con la key de gestión, 401 sin key y
+  con otra. Subidas a Stream: 503 `MEDIA_UPLOADS_NOT_CONFIGURED` (sin credenciales en QA). La
+  experiencia 1 queda en QA como base para la fase 3 de Replit.
 - Handoff para Replit: [vio-reel-replit-modo-remoto](../../handoff/2026-11-05-vio-reel-replit-modo-remoto.md).
   Script de la migración en QA: `docs/handoff/assets/2026-11-05-vio-reel/m-surface-experience-qa.js`.
 
@@ -50,8 +61,6 @@ Cloudflare Stream. Hoy, la fase 2 (entidad, API y subida).
 
 ## Blockers / open questions
 
-- **Migración en QA** antes de mergear el kernel (regla del 19/10: el freno no protege si se cancela un
-  run). Escribir en la base de QA pide el OK explícito de Angelo.
 - **Credenciales de Cloudflare Stream** (`CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_STREAM_API_TOKEN`) en el
   `.env` de campaigns de QA (va horneado en la imagen: cambiar el blob y reconstruir).
 - Angelo pidió que esto lo haga yo con mis agentes; Miguel solo donde yo no llego (release del kernel
@@ -59,9 +68,8 @@ Cloudflare Stream. Hoy, la fase 2 (entidad, API y subida).
 
 ## Next session
 
-1. Con el OK: aplicar la migración en QA desde el pod de users, mergear el kernel con `[skip ci]`,
-   `pkg=all`, disparar `kernel-published` a los 12 micros, subir el pin en el micro, mergear #31 y
-   verificar en QA (`/v2/mobile/config` sigue vivo; crear una experiencia con la key de gestión de la
-   surface 13 de Careless QA).
-2. Fase 3: que Replit pase su bloque a modo remoto con el handoff de arriba.
+1. Cloudflare Stream en el `.env` de campaigns de QA (Angelo/Miguel) y probar una subida real.
+2. Fase 3: que Replit pase su bloque a modo remoto con el handoff de arriba, contra la experiencia 1
+   de la surface 13 (la key de gestión se rota desde `POST /api/client-apps/13/management-key`).
 3. Fase 4 en paralelo: `<vio-reel>` en la web SDK con `hls.js` bajo demanda.
+4. Prod: la migración `1792900000000` antes del próximo release de campaigns a `main`.
