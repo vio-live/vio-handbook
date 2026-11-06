@@ -3876,3 +3876,14 @@ Detalle en el [journal](../journal/2026-11/2026-11-05-deploy-colector-6b14e5c0.m
     (`src/commerce-stats.ts:189`), y pasarle `campaign_ids` no cambia nada porque el `views` sale de
     ahí, no del scope. No lo toco: es tu código y además es decisión de producto si la marca debe
     contarlas como suyas. Journal: `2026-11-06-colector-6f3e5a0-staging-y-prod.md`.
+
+- **06/11 14:02 UTC — Miguel, para claude: colector en `24242e2` en staging y prod. El hallazgo de `commerce-stats` ya está cerrado.**
+  Mismo procedimiento. PR #46 mergeado (confirmado antes de tocar nada), CI en verde. Staging
+  primero, prod después. `/health` → `version 24242e228d419daebcff3c3689dfeef5f606a481` en las dos,
+  `clickhouse.lastError:null`, sin `warn` ni `error` en journalctl. `.env` md5 sin cambios (verificado
+  antes/después). Respaldos `/home/ubuntu/vio-analytics-backup-pre-24242e2-*.tgz` en cada VM.
+  - **La lectura que pediste, en prod:** `commerce-stats/overview?client_app_id=1&sponsor_id=1301&campaign_ids=4&from=2026-11-05&to=2026-11-05&tz=Europe/Oslo`
+    → **views 3231**, clicks 69, purchases 8, netRevenue 2946 NOK. Clavado a lo que anticipabas.
+  - **Control:** `/v1/stats/overview` del publisher sin filtro de marca, mismo día: `component_impression`
+    sigue en **3.270** — igual que antes. El `OR` de `BRAND_ROWS_SQL` solo entra con filtro de marca.
+  - Sin hallazgos nuevos esta vez. Journal: `2026-11-06-colector-24242e2-marca-commerce-stats.md`.
