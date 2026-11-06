@@ -68,10 +68,14 @@ Pendiente de decidir o de otro deploy:
 
 1. **Artículos del detalle de Faves**: «16 skjønnhetsfavoritter…» 7 pedidos / kr 2.2K y un segundo
    artículo con 3 pedidos / kr 0 (10 en total) frente a 8 / kr 2.9K en las KPI; y en «Components»
-   dos filas `—` (block-10, block-13) con 0 vistas y 1 pedido. Son los `purchase` vacíos del
-   navegador (4136/4139/4142) contados por artículo. **vio-analytics #43** (mergeado el 5/11, sin
-   desplegar) arregla el dinero; tras el deploy comprobar que el pedido vacío tampoco cuenta como
-   pedido en `content`/`slots`.
+   dos filas `—` (block-10, block-13) con 0 vistas y 1 pedido. **Corrección (tarde):** #43 ya estaba
+   en prod desde el 5/11 a las 23:48 CET (Miguel) y esto sigue igual después de #45: no es el dinero,
+   es la **clave de artículo**. El `purchase` vacío de la vuelta de Vipps llega sin `content_id` (clave
+   `url:…`) y la fila que el colector monta con el `order_paid` toma el artículo del
+   `add_payment_info` (clave `id:192`): el mismo pedido cuenta en los dos «artículos» (7 + 3 = 10) y
+   las dos filas `—` son los cortes por slot sin artículo. Arreglo pendiente en el colector
+   (stats-paid-orders / `ARTICLE_KEY_SQL`): que el `purchase` vacío no cuente como pedido en las
+   lecturas agrupadas y que la fila del `order_paid` herede su artículo.
 2. **Orders del detalle de campaña**: «9 orders yesterday» (Commerce) frente a 8 (analytics): el
    4133 es interno y Commerce no lo sabe. Decidir si se marca como prueba en Commerce o se acepta.
 3. **Privacidad**: la tabla Orders del detalle de campaña enseña al publisher el **nombre completo
@@ -101,7 +105,23 @@ Pendiente de decidir o de otro deploy:
 - **Vipps «Still open 4»**: shopcart #109 está en prod desde el 27/10 y el colector recibe
   `payment_cancelled` / `payment_expired` (3 y 1 en las últimas 24 h); los cuatro abiertos de 14d son
   pagos que nunca tuvieron cierre. No hay nada que hacer.
-- **Artículos 7+3 de Faves**: espera el deploy del colector (#43).
+- **Artículos 7+3 de Faves**: ~~espera el deploy del colector (#43)~~ — no era eso, ver el punto 1 de arriba.
+
+## Tercera ronda (tarde): Miguel desplegó, base-api a prod, y el dashboard de la marca
+
+- **Miguel** ([su journal](2026-11-06-colector-6f3e5a0-staging-y-prod.md), 13:35 UTC): colector
+  `6f3e5a0` en staging y prod; la lectura de comprobación da **3.231 impresiones** por marca (antes 0).
+  Dos correcciones a mi encargo: **#43 ya estaba desplegado desde el 5/11 por la noche**, y la
+  omsetning de Faves daba 2.946 antes del deploy — el 2.220 salía del camino filtrado por marca.
+- **base-api a prod**: [#66](https://github.com/vio-live/vio-base-api/pull/66) → `master`, release con
+  solo el commit de #65 (OK de Angelo «a prod tras Miguel»; `develop` lleva otros 13 commits que no
+  van). Deploy por Actions.
+- **Hallazgo de Miguel: el dashboard de la propia marca seguía a 0** (`commerce-stats/overview`:
+  `views 0`): `BRAND_WHERE` y `brandOwnScope` filtraban con `sponsor_id IN (...)` a secas.
+  [vio-analytics#46](https://github.com/vio-live/vio-analytics/pull/46): `BRAND_ROWS_SQL`, la regla
+  del embudo de la marca, para todas sus lecturas (overview, serie, campañas, productos, content,
+  entry, breakdown). Decisión de producto implícita: la marca ve como suyas las impresiones sin sponsor
+  de sus campañas, igual que ya en su embudo. Necesita otro deploy del colector.
 
 ## Lecciones
 
