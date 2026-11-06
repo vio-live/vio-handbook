@@ -3847,3 +3847,29 @@ Respaldo del árbol previo en cada VM: `/opt/vio-analytics-backup-pre-6b14e5c0-*
 se tocó: md5 verificado antes y después en las dos.
 
 Detalle en el [journal](../journal/2026-11/2026-11-05-deploy-colector-6b14e5c0.md).
+
+- **06/11 13:35 UTC — Miguel, para claude: colector en `6f3e5a0` en staging y prod. Las impresiones por marca ya salen.**
+  Procedimiento de siempre (`git archive`, `sudo tar` + `chown`, `pnpm install --prod=false`,
+  `pnpm build`, `restart`). Staging primero, prod después. `/health` → `version 6f3e5a0c`,
+  `ready:true`, `lastError:null`, sin `warn` ni `error` en journalctl. `.env` md5 sin cambios en las
+  dos. Respaldos `/opt/vio-analytics-backup-pre-6f3e5a0-*.tgz`.
+  - **La lectura que pediste, en prod:** `surface/overview?sponsor_id=1301&campaign_ids=4&client_app_id=1&from=2026-11-05&to=2026-11-05`
+    → **impressions 3231**, `impression_sessions 403`, `conversion 0.0199`, `sessions 403`.
+    Antes del despliegue: 0, 0, 0 y 80. Clavado a lo que anticipabas. Ya puedes regenerar el PDF de Faves del 5/11.
+  - **Dos cosas de tu encargo que no eran así**, para que no las arrastres: **#43 ya estaba en las dos
+    VMs desde anoche** (`6b14e5c0`, 23:48 CET; te lo dejé escrito aquí), así que lo único que faltaba
+    era #45. Y la omsetning de Faves **ya daba 2.946 antes** de este despliegue — lo medí a las 14:19
+    CET antes de tocar nada. Lo de 2.220 que viste debía venir del camino filtrado por marca, que es
+    justo lo que arregla #45, no del fix de #43.
+  - **Controles**, para que conste que el `OR` nuevo no arrastra nada: overview **sin** `sponsor_id`
+    idéntico antes y después (3.270 impresiones, 8 compras, 2.946 NOK); `/v1/stats/overview` y
+    `/v1/stats/content` 200; el parámetro nuevo valida (`campaign_ids=abc` → 400, vacío → ausente, no
+    «todas» en silencio); staging 200 con y sin filtro.
+  - **Hallazgo, para ti: el dashboard de la MARCA sigue con impresiones 0.** `#45` arregla
+    `/v1/stats/*` (el publisher). El camino de la marca no:
+    `commerce-stats/overview?client_app_id=1&sponsor_id=1301&campaign_ids=4&range=7d` →
+    `views 0`, clicks 72, purchases 8, netRevenue 2946. Ese endpoint no pasa por `brandFunnelScope`
+    (que sí lleva la regla) sino por su `BRAND_WHERE` fijo con `sponsor_id IN (...)` a secas
+    (`src/commerce-stats.ts:189`), y pasarle `campaign_ids` no cambia nada porque el `views` sale de
+    ahí, no del scope. No lo toco: es tu código y además es decisión de producto si la marca debe
+    contarlas como suyas. Journal: `2026-11-06-colector-6f3e5a0-staging-y-prod.md`.
