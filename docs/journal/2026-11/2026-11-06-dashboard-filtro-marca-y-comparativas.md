@@ -85,6 +85,24 @@ Pendiente de decidir o de otro deploy:
    el color de Orders.
 7. **session_start** con sesión del host (SDK): sigue en espera («lo tenemos que discutir»).
 
+## Segunda ronda (tarde): lo que decidió Angelo y lo que se hizo
+
+- **Privacidad (nombre del comprador al publisher): «ahora no».** Se queda como está.
+- **Deploy del colector:** pedido a Miguel en
+  [coordinación claude ↔ Miguel](../../handoff/2026-10-19-coordinacion-claude-miguel.md) (06/11 15:10 UTC):
+  `main` `6f3e5a0` (#43 + #45) a staging y prod, sin config nueva, con la lectura de comprobación.
+- **webapp [#107](https://github.com/vio-live/webapp-vio-commerce/pull/107)** → `develop` + `staging`:
+  - `deltaLabel`: con menos de 10 en el periodo anterior el delta dice **«from 2»** sin flecha (KPI de
+    conteo, embudo por visitas, lo de al lado, Vipps, embudo por producto).
+  - **Orders como barras** en las dos series; con Compare, las barras anteriores al lado, más claras.
+  - Orders del detalle de campaña: un pedido que Commerce tiene y analytics no se marca **«not in
+    analytics»** y se cuenta aparte («9 orders · 1 not counted in analytics»); va en el CSV. El 4133
+    de Faves es eso (navegador interno). Se marca, no se esconde.
+- **Vipps «Still open 4»**: shopcart #109 está en prod desde el 27/10 y el colector recibe
+  `payment_cancelled` / `payment_expired` (3 y 1 en las últimas 24 h); los cuatro abiertos de 14d son
+  pagos que nunca tuvieron cierre. No hay nada que hacer.
+- **Artículos 7+3 de Faves**: espera el deploy del colector (#43).
+
 ## Lecciones
 
 - El filtro de marca del publisher y el embudo de la marca aplicaban reglas distintas a la misma
