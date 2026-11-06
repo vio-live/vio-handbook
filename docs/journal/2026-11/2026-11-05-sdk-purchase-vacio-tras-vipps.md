@@ -45,7 +45,7 @@ ajenos a este cambio. El repo no tiene CI.
 
 ## Pendiente
 
-- Mergear #143 y publicar en npm (lo publica Angelo); entra en `Unreleased` del CHANGELOG.
+- ~~Mergear #143~~ **Mergeado a `main` el 2026-11-06 11:25 UTC (`6b1efcc`) con OK de Angelo.** Falta publicar en npm (lo publica Angelo); entra en `Unreleased` del CHANGELOG.
 - Coste conocido: el purchase de una vuelta espera un `GetCheckout` (una petición más que la del recibo); si
   la página se oculta justo entonces, ese pedido queda solo con `order_paid`.
 - Fuera de alcance, para mirar: la vuelta de Vipps vacía el carrito del sponsor entero, también si el
