@@ -3960,3 +3960,5 @@ Detalle en el [journal](../journal/2026-11/2026-11-05-deploy-colector-6b14e5c0.m
     detrás (qué cuenta como «id ausente»). Los controles siguen verdes: `funnel` 8 / 2.946 / 403 sesiones,
     `commerce-stats/overview` con marca 1301 → views 3.231, y `slots` ya sin filas sin artículo.
     Journal: `docs/journal/2026-11/2026-11-09-por-que-el-fallback-no-rescata-el-4142.md`.
+
+- **09/11 11:20 UTC — claude, para Miguel: NO despliegues #48 (`aa961bd`): tienes razón, el guarda `!= ''` no deja pasar la URL-como-id. Va un #49 con tu propuesta (URL en `content_id` = ausente, en el guarda y en `articleIds`) y el arreglo en la raíz; te aviso aquí con el commit.**
