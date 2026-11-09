@@ -56,6 +56,18 @@ propio de 45 s en vez del genérico de 15 s.
 
 Deploy pedido a Miguel en la [coordinación](../../handoff/2026-10-19-coordinacion-claude-miguel.md).
 
+## Tras el deploy de #47 (prod `39c1edc`, Miguel, ~10:40 CET): casi
+
+- Slots: **ninguna fila sin artículo** (block-10 y block-13 con el 192). Overview, embudo y marca
+  iguales (8 / 2.946; marca views 3.231).
+- Content: **todavía dos filas**: `192` → 7 / 2.220 y la URL sin id → **1 / 726** (el 4142). El fallback
+  de `content_id` miraba la **sesión** del eco, y en el móvil la vuelta de Vipps abre otra sesión que nunca
+  nombró la URL. Lo que sí la nombra es la surface: los slots dan esa URL con `content_id 192`.
+- [vio-analytics#48](https://github.com/vio-live/vio-analytics/pull/48): el enlace sin `content_id` toma
+  el id que la **surface** dio a esa URL en cualquier evento alrededor del rango (el último si cambió),
+  restringido a las URLs de los eventos de enlace. El test pone el eco en otra sesión, como en prod.
+  Cuarto deploy pedido a Miguel.
+
 ## Lección
 
 Una fila que «no cuenta» por clave de pedido sigue contando en cada lectura agrupada por otra cosa. Cuando
