@@ -1,6 +1,6 @@
 ---
 title: "«Deployment was blocked» en Vercel: casi siempre es membresía del team, no cuota"
-last-updated: 2026-10-20
+last-updated: 2026-11-09
 author: miguel
 ---
 
@@ -133,3 +133,30 @@ manana, pero desde entonces la regla se aplica.
 
 **Consecuencia que queda abierta:** `alanvsimpson` **ya no esta en el team**. Si Alan necesita ver
 previews o que sus pushes desplieguen, hay que volver a darle asiento — y entonces son 40 otra vez.
+
+## Actualización 06/11: el GitHub `angelosv` ahora está vinculado a la cuenta de iqplus
+
+> [claude, 2026-11-09]
+
+Un login de GitHub solo puede estar vinculado a **una** cuenta de Vercel, y Vercel resuelve al
+autor del commit por ese vínculo, no por el mail del commit. Hasta el 06/11, `angelosv` estaba
+vinculado a `angelo@reachu.io` (vio-live). Eso bloqueaba los deploys en otro team donde solo
+estaba la cuenta `angelo.sv@iqplus.no` (un proyecto de un cliente de IQplus, fuera de Vio).
+
+Angelo lo cambió así, sin pagar asientos nuevos:
+
+1. En **Tipio 2**, `angelo.sv@iqplus.no` pasó de Developer a **Owner**. Ya ocupaba un asiento,
+   así que no cuesta más.
+2. Desconectó GitHub de la cuenta `angelo@reachu.io` y lo conectó a la de `angelo.sv@iqplus.no`.
+3. La CLI local de Vercel quedó logueada con iqplus (`vercel whoami` → `angelosv`). Ve los teams
+   Tipio 2, Fixsea AS, Iqplus y outshifter-test.
+
+**Esto cambia la nota del 20/10.** Los commits de `angelosv` ahora se resuelven a la cuenta de
+iqplus, que es Owner en Tipio 2, y por eso los deploys de Vio siguen pasando. La recomendación de
+entrar con `angelo@reachu.io` en vez de con iqplus ya no vale. Las dos cuentas son Owner en Tipio 2.
+
+**Queda abierto:** los teams Hobby de reachu (`reachu's projects`) no admiten miembros. Los
+proyectos de esos teams conectados a git dejan de desplegar solos con commits de `angelosv`.
+Afecta sobre todo a `v0-b2-b-saa-s-website` (repo `vio-website`). El 09/11 ese proyecto todavía no
+estaba en Tipio 2 (`vercel project inspect v0-b2-b-saa-s-website --scope tipio-2` → no existe).
+Si sigue vivo, hay que transferirlo a Tipio 2 desde Project → Settings → General → Transfer.
