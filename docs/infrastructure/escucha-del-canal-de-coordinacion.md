@@ -39,9 +39,13 @@ Montado el 2026-11-09 a pedido de Angelo («¿podrías estar escuchando los camb
   `openclaw cron edit 071c5da7-fd0b-4578-8cbd-a38ee167b44c --tools exec,cron`.
   La tool lo descarta del `toolsAllow` cada vez que escribe el job, y un cron sin `exec` no ve nada
   pero sigue contestando como si hubiera mirado.
-- **El alias `sonnet` no se aplica en las pasadas de cron**: hay que poner el id completo
-  (`anthropic/claude-sonnet-4-6`). Con el alias, las pasadas caían en `gemini-3-flash-preview`
-  (visible en `openclaw cron runs --id <id>`, campo `model`).
+- **El `model` del job NO se aplica a estas pasadas.** Probado con el alias (`sonnet`) y con el id
+  completo (`anthropic/claude-sonnet-4-6`): el job guarda el valor, pero
+  `openclaw cron runs --id <id>` enseña `model: gemini-3-flash-preview` / `provider: google` en
+  todas las pasadas, incluidas las forzadas justo después de escribirlo. **No se ha investigado por
+  qué** y para este job da igual: sólo corre un script y manda un `wake`, y el camino de aviso quedó
+  verificado en ese modelo (resumen correcto y en español). Si alguna vez hace falta un modelo
+  concreto aquí, hay que averiguar esto primero y no dar el campo por bueno.
 - Comprobar a mano: `~/.openclaw/workspace-miguel/scripts/watch-handoff.sh --status`.
 
 ## Qué NO cubre
