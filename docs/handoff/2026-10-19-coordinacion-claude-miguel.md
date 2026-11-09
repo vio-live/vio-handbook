@@ -3929,3 +3929,34 @@ Detalle en el [journal](../journal/2026-11/2026-11-05-deploy-colector-6b14e5c0.m
     SQL.
   - No toqué código ni reintenté nada — dejo la lectura y los datos para que lo mires. Journal con el detalle y las
     filas crudas: `docs/journal/2026-11/2026-11-09-deploy-47-pedido-4142-sigue-huerfano.md`.
+
+- **09/11 11:15 CET — Miguel, para claude: remate de la nota de arriba. Ya sé por qué el fallback por URL no resuelve el 4142: `content_id` NO viene vacío, viene con la URL dentro.**
+  La entrada anterior (otra sesión mía, 11:01) dejó esa pregunta abierta. Esto la cierra, medido contra el
+  código desplegado (`/opt/vio-analytics/src/stats-paid-orders.ts` en la VM de prod) y los datos crudos.
+  - **El guarda del fallback es `l_content_id != ''`** (`sessionLinkSql`, la línea
+    `if(k.l_content_id != '', k.l_content_id, a.a_content_id) AS l_content_id`). El eco del 4142 **sí trae
+    `content_id`**: trae `https://www.moteoglivsstil.no/skjonnhet/trender/16-skjonnhetsfavoritter-…`, la URL
+    como id. Al no estar vacío, el `if` se queda con él y el `LEFT JOIN` de `articleIds` no se usa nunca.
+    De ahí la fila huérfana cuyo `content_id` es literalmente la URL.
+  - **Los datos para resolverlo están ahí.** Corrí a mano lo que haría el join para esa sesión:
+    `argMin(content_id, ts)` por (sesión, `cutQueryStringAndFragment(content_url)`) con la ventana del día
+    ± 1 → **`192`** para `f5646557-…` (y también para `63d42ca4-…`). O sea: en cuanto el guarda deje pasar
+    este caso, el 4142 cae en el artículo 192 y la fila huérfana desaparece. No hace falta nada más.
+  - **Propuesta (tu código, tú decides):** que el guarda trate como ausente un `content_id` que sea una URL,
+    no solo la cadena vacía — p. ej. `if(l_content_id != '' AND NOT startsWith(l_content_id, 'http'), …)`,
+    o comparar contra el propio `content_url`. Y, por simetría, **el mismo filtro en `articleIds`**: hoy
+    filtra sólo `content_id != ''`, así que un `argMin` cuyo evento más temprano fuese el eco devolvería la
+    URL otra vez. Aquí no pasa (el `argMin` da 192 porque antes hubo pageviews del artículo), pero es la
+    misma trampa a un evento de distancia.
+  - **Por qué el 4139 sí cayó bien y el 4142 no** (completa el «checkout_id distinto» de la nota anterior):
+    el checkout del 4139 (`5a1f0094-…`) **tiene** su `add_payment_info` con `content_id 192`, y `LINK_RANK`
+    prefiere el `add_payment_info` al eco. El checkout del 4142 (`72d46429-…`) no tiene ninguno — el
+    `add_payment_info` de esa sesión justo antes es de otro checkout (`d7b1df16-…`, el abandonado) — así que
+    su único evento de enlace es el eco. El `checkout_id` nuevo en la vuelta de Vipps es la causa primera;
+    el guarda del `!= ''` es el motivo de que el plan B no lo rescate.
+  - **Escala del caso, para dimensionar:** en los últimos 7 días sólo **4 eventos** traen la URL en
+    `content_id` (frente a 8.064 con un id de verdad). Es raro, pero cae justo en el camino de los pedidos.
+  - Lo que **no** hice: tocar el código. Es tuyo y el arreglo es de una línea con un criterio de producto
+    detrás (qué cuenta como «id ausente»). Los controles siguen verdes: `funnel` 8 / 2.946 / 403 sesiones,
+    `commerce-stats/overview` con marca 1301 → views 3.231, y `slots` ya sin filas sin artículo.
+    Journal: `docs/journal/2026-11/2026-11-09-por-que-el-fallback-no-rescata-el-4142.md`.
