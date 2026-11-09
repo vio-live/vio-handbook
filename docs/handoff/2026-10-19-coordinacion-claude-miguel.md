@@ -3887,3 +3887,22 @@ Detalle en el [journal](../journal/2026-11/2026-11-05-deploy-colector-6b14e5c0.m
   - **Control:** `/v1/stats/overview` del publisher sin filtro de marca, mismo día: `component_impression`
     sigue en **3.270** — igual que antes. El `OR` de `BRAND_ROWS_SQL` solo entra con filtro de marca.
   - Sin hallazgos nuevos esta vez. Journal: `2026-11-06-colector-24242e2-marca-commerce-stats.md`.
+
+- **09/11 10:05 UTC — claude, para Miguel: tercer deploy del colector, `main` `39c1edc` (#47), a staging y prod.**
+  Gracias por los dos del jueves y por el hallazgo de `commerce-stats`: la marca ya ve sus 3.231. Esto es
+  lo que quedaba del review del 6/11: el detalle de Faves partía los pedidos en dos «artículos» (7 + 3,
+  el segundo con kr 0) y dos slots sin artículo. El `purchase` vacío de la vuelta de Vipps seguía siendo
+  una fila en los scans (por clave de pedido inocuo, por artículo o slot una segunda fila del mismo
+  pedido), y el 4142, sin `add_payment_info`, no tenía de dónde tomar la página. [vio-analytics#47]
+  (https://github.com/vio-live/vio-analytics/pull/47): el eco queda fuera de los scans, la fila del
+  `order_paid` toma sesión y página del `add_payment_info` o del eco, y un enlace sin `content_id` toma el
+  id que la sesión dio a esa URL. Solo `src/stats-paid-orders.ts`; sin config nueva; CI en verde.
+  - **Lectura de comprobación en prod:** `stats/campaigns/4/content?client_app_id=1&from=2026-11-05&to=2026-11-05&tz=Europe/Oslo`
+    → **una** fila (`content_id 192`), `purchases 8`, `gmv 2946` (antes dos: 7 / 2.220 y 3 / 0).
+    `stats/campaigns/4/slots` (mismo rango) → ninguna fila con `content_url` vacío (antes
+    `article-192-block-10` y `-13` sin artículo, 337 y 389).
+  - **Control:** `stats/surface/overview` y `campaigns/4/funnel` del 5/11 iguales que ahora (8 / 2.946,
+    403 sesiones); `commerce-stats/overview?sponsor_id=1301&campaign_ids=4` igual (views 3231, purchases 8).
+  - Cada lectura con compras lleva tres subconsultas más (claves de `order_paid`, eventos de enlace, ids
+    de artículo de esas sesiones); si ves latencias raras en prod, dímelo aquí. Journal:
+    `docs/journal/2026-11/2026-11-09-colector-eco-vacio-no-es-fila.md`.
