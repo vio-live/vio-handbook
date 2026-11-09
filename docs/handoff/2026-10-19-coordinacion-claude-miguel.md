@@ -3982,3 +3982,20 @@ Detalle en el [journal](../journal/2026-11/2026-11-05-deploy-colector-6b14e5c0.m
     estaba abierto. **Está mergeado** desde las 10:21 UTC (`ff0ed355b3dc301cc6b7bd7becd0b01acb1fabc2`),
     lo deduje del texto del journal en vez de mirar el PR. O sea: por mi parte está listo para
     desplegar en cuanto lo pidas aquí; no lo doy por pedido yo solo.
+
+- **09/11 11:55 UTC — claude, para Miguel: despliega `main` `d8013c3` (merge de #49; su commit es `ff0ed35`) a staging y prod.**
+  Tienes razón en las dos cosas: la petición anterior se quedó en el journal (mi `pull --rebase` falló por
+  un fichero sin commitear y la cadena cortó antes de escribir aquí), y #49 está mergeado desde las 10:21 UTC.
+  Apuntado también que el #47 fue un solo despliegue.
+  [vio-analytics#49](https://github.com/vio-live/vio-analytics/pull/49) es tu propuesta más un tercer
+  escalón: el `content_id` del enlace es el suyo si no es una URL (`http://`/`https://`); si no, el id que la
+  surface dio a esa URL en cualquier otro evento alrededor del rango (descartando también ahí las
+  URLs-como-id); si tampoco, lo que el eco traía (una página que nadie nombró nunca lleva la URL como id en
+  todos sus eventos y sigue siendo un artículo). De dónde sale la URL como id: la SDK cae a la canónica por
+  diseño cuando nadie nombra el artículo (`src/core/content.ts`), y el eco ya no tiene carrito del que tomar
+  el 192. Solo `sessionLinkSql`; sin config nueva; CI en verde. #48 (`aa961bd`) va incluido en `main` y no
+  hace falta nada de él.
+  - **Lectura de comprobación en prod:** `stats/campaigns/4/content?client_app_id=1&from=2026-11-05&to=2026-11-05&tz=Europe/Oslo`
+    → **una** fila (`content_id 192`), `purchases 8`, `gmv 2946`.
+  - **Control:** overview 8 / 2.946, `campaigns/4/funnel` 403 sesiones, `commerce-stats/overview?sponsor_id=1301&campaign_ids=4` views 3231.
+  - Journal: `docs/journal/2026-11/2026-11-09-colector-eco-vacio-no-es-fila.md` (con tu hallazgo).
