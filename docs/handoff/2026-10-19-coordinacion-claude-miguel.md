@@ -3906,3 +3906,26 @@ Detalle en el [journal](../journal/2026-11/2026-11-05-deploy-colector-6b14e5c0.m
   - Cada lectura con compras lleva tres subconsultas más (claves de `order_paid`, eventos de enlace, ids
     de artículo de esas sesiones); si ves latencias raras en prod, dímelo aquí. Journal:
     `docs/journal/2026-11/2026-11-09-colector-eco-vacio-no-es-fila.md`.
+
+- **09/11 ~10:00 UTC — Miguel, para claude: #47 (`39c1edc`) desplegado en staging y prod, pero el resultado no es el esperado — orden 4142 sigue huérfana.**
+  Staging primero (`.env` md5 sin cambios, health `39c1edc...`, sin warn/error en journalctl), después prod (mismo
+  procedimiento, backups `/home/ubuntu/vio-analytics-backup-pre-39c1edc-*.tgz` en las dos VMs). PR #47 verificado
+  mergeado (`9:38 UTC`) y CI en verde antes de tocar nada.
+  - **Lectura de comprobación en prod (la misma del journal):** `campaigns/4/content` sigue en **dos** filas, no
+    una: `content_id 192` → 7 pedidos / 2.220 (igual que antes), y una fila huérfana (`content_id` = la URL) →
+    **1 pedido / 726** (antes era 3 pedidos / kr 0). Mejoró — las dos filas vacías de kr 0 desaparecieron, eso sí
+    funcionó — pero el pedido real **4142** (726 NOK) sigue sin caer en el artículo 192. `campaigns/4/slots`
+    confirma: `block-10` y `block-13` aparecen DOS veces cada uno, una con `content_id 192` (correcta, con su
+    producto) y otra huérfana con el mismo producto/valor. Los controles (`funnel`, `commerce-stats/overview`)
+    siguen iguales que antes del deploy (8/2.946, 403 sesiones) — sin regresión ahí.
+  - **Por qué, mirando los eventos crudos del pedido 4142 en ClickHouse:** el `order_paid`/eco de 4142 llevan
+    `checkout_id = 72d46429-…`. Pero el `add_payment_info` de esa misma sesión (f5646557-…) justo antes de ese
+    pedido lleva `checkout_id = d7b1df16-…` — **distinto**. La sesión hizo DOS compras seguidas (orden 4141 primero,
+    checkout `d9257c1b-…`, esa sí casa con su `add_payment_info`), y para la segunda compra (4142) el SDK/Vipps
+    generó un `checkout_id` nuevo en la vuelta que no es el que llevaba el `add_payment_info` anterior. El join de
+    `sessionLinkSql` por `checkout_id` (`l.l_checkout = p.checkout_id`) solo encuentra, para `72d46429-…`, el eco
+    (sin `add_payment_info` en ese grupo) — y de ahí en adelante no sé si el fallback por URL (`a_url`/`a_session`)
+    debería resolver a 192 o por qué no lo hace; no seguí la query completa, son datos crudos, no un análisis del
+    SQL.
+  - No toqué código ni reintenté nada — dejo la lectura y los datos para que lo mires. Journal con el detalle y las
+    filas crudas: `docs/journal/2026-11/2026-11-09-deploy-47-pedido-4142-sigue-huerfano.md`.
