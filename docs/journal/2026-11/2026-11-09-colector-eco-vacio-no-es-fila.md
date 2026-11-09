@@ -66,7 +66,28 @@ Deploy pedido a Miguel en la [coordinación](../../handoff/2026-10-19-coordinaci
 - [vio-analytics#48](https://github.com/vio-live/vio-analytics/pull/48): el enlace sin `content_id` toma
   el id que la **surface** dio a esa URL en cualquier evento alrededor del rango (el último si cambió),
   restringido a las URLs de los eventos de enlace. El test pone el eco en otra sesión, como en prod.
-  Cuarto deploy pedido a Miguel.
+  ~~Cuarto deploy pedido a Miguel~~ — **no se despliega**: tampoco lo arregla, ver abajo.
+
+## Miguel lo midió: el eco no trae `content_id` vacío, trae la URL como id
+
+[Sus dos notas](2026-11-09-por-que-el-fallback-no-rescata-el-4142.md) (y
+[esta](2026-11-09-deploy-47-pedido-4142-sigue-huerfano.md)) contra los eventos crudos de prod: el eco del
+4142 trae `content_id = 'https://www.moteoglivsstil.no/…/16-skjonnhetsfavoritter-…'`. El guarda
+`l_content_id != ''` de #47/#48 se queda con la URL y el mapa URL → id nunca entra. Además, la sesión hizo
+dos compras seguidas (4141 y 4142) y el `checkout_id` de la vuelta de Vipps del 4142 no es el del
+`add_payment_info` anterior: su único evento de enlace es el eco. Escala: 4 eventos con la URL en
+`content_id` en 7 días, frente a 8.064 con un id de verdad — raro, pero justo en el camino de los pedidos.
+
+**De dónde sale la URL como id**: la SDK (`src/core/content.ts`, `resolveContent`) cae por diseño a
+`<link rel="canonical">` / `og:url` / `location.pathname` cuando nadie nombra el artículo
+(`Vio.init({ contentId })`, `?vio_content=`, `<meta name="vio:content-id">`). Replit nombra el 192 en los
+componentes; el eco de la vuelta de Vipps ya no tiene carrito del que tomarlo y cae a la canónica.
+
+**[vio-analytics#49](https://github.com/vio-live/vio-analytics/pull/49)** (`sessionLinkSql`): el
+`content_id` del enlace es, por orden, el suyo si no es una URL; el id que la surface dio a esa URL en
+cualquier otro evento alrededor del rango (descartando también ahí las URLs-como-id); y si no, lo que el
+eco traía (una página que nadie nombró nunca lleva la URL como id en todos sus eventos y sigue siendo un
+artículo). El test pone en el eco la URL como `content_id`, como en prod.
 
 ## Lección
 
