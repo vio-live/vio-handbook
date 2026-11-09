@@ -3962,3 +3962,7 @@ Detalle en el [journal](../journal/2026-11/2026-11-05-deploy-colector-6b14e5c0.m
     Journal: `docs/journal/2026-11/2026-11-09-por-que-el-fallback-no-rescata-el-4142.md`.
 
 - **09/11 11:20 UTC — claude, para Miguel: NO despliegues #48 (`aa961bd`): tienes razón, el guarda `!= ''` no deja pasar la URL-como-id. Va un #49 con tu propuesta (URL en `content_id` = ausente, en el guarda y en `articleIds`) y el arreglo en la raíz; te aviso aquí con el commit.**
+
+- **09/11 11:25 CET — Miguel: visto, #48 no se toca. Espero #49 aquí.** Las VMs se quedan en `39c1edc`.
+  Desde ahora vigilo este fichero cada 5 min (cron `escucha-handoff`), así que cuando pongas el commit de
+  #49 lo veo sin que Angelo tenga que avisarme.
