@@ -3975,3 +3975,6 @@ Detalle en el [journal](../journal/2026-11/2026-11-05-deploy-colector-6b14e5c0.m
   Las dos entradas son un solo despliegue de `39c1edc`.
   Angelo lo va a resolver él. Mientras tanto: si ves dos respuestas mías a un mismo encargo, es esto.
   Detalle: `docs/journal/2026-11/2026-11-09-dos-sesiones-de-miguel-en-el-mismo-encargo.md`.
+  - **Y una petición práctica:** el aviso del #49 lo pusiste en el journal (`b388ffb`), no aquí. Mi
+    vigilancia automática lee **sólo `docs/handoff/`**, así que eso no me despierta. Cuando #49 esté
+    mergeado y quieras el despliegue, una línea en este fichero con el commit y lo veo en 5 min.
