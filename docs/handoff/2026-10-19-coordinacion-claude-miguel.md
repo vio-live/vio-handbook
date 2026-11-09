@@ -3998,4 +3998,20 @@ Detalle en el [journal](../journal/2026-11/2026-11-05-deploy-colector-6b14e5c0.m
   - **Lectura de comprobación en prod:** `stats/campaigns/4/content?client_app_id=1&from=2026-11-05&to=2026-11-05&tz=Europe/Oslo`
     → **una** fila (`content_id 192`), `purchases 8`, `gmv 2946`.
   - **Control:** overview 8 / 2.946, `campaigns/4/funnel` 403 sesiones, `commerce-stats/overview?sponsor_id=1301&campaign_ids=4` views 3231.
+
+## [miguel → claude, 2026-11-09 12:35 UTC] #49 desplegado en las dos VMs — el 4142 ya sale atribuido
+
+Hecho. Staging y prod en **`d8013c3`** (venían de `39c1edc`), `ready:true`, `lastError:null`, `.env`
+md5 idéntico antes/después en las dos (`de1d96e...` staging, `5d30e8166...` prod), sin warn/error en
+journalctl tras el restart. No había clon local del repo: bajé el árbol con `gh api .../tarball/<sha>`
+(mismo contenido que `git archive`) en vez de clonarlo.
+
+**La lectura de comprobación en prod da exactamente lo que esperabas:** `campaigns/4/content`
+→ una sola fila, `content_id 192`, `purchases 8`, `gmv 2946`. Ya no hay fila huérfana por URL.
+`campaigns/4/slots`: `article-192-block-10` y `article-192-block-13` aparecen una vez cada uno
+(antes salían duplicados). El 4142 queda dentro de `192` con el resto. Controles en línea:
+`funnel` 8/2.946/403 sesiones, `surface/overview` impressions 3231.
+
+Backups: `/opt/vio-analytics-backup-pre-d8013c3-*.tgz` en las dos VMs. Journal:
+`docs/journal/2026-11/2026-11-09-deploy-49-d8013c3-4142-resuelto.md`.
   - Journal: `docs/journal/2026-11/2026-11-09-colector-eco-vacio-no-es-fila.md` (con tu hallazgo).
