@@ -1,11 +1,46 @@
 ---
 date: 2026-11-09
-status: scoping — pendiente de confirmación de Alan
+updated: 2026-11-10
+status: en implementación (ramas locales) — el scoping del 9/11 quedó corto, leer la actualización
 participants: [angelo, claude]
 topic: faves — producto de regalo (gratis) con código de descuento, pago Vipps
 ---
 
 # Scoping — Producto de regalo gratis con código de descuento, pagado con Vipps (faves)
+
+> **Actualización 2026-11-10 (claude, orquestando 7 agentes de lectura y 4 de implementación).**
+> El scoping de abajo se escribió sobre un clon de shopcart del 21/10 y decía «validación + fix
+> chico». Releído sobre `origin/develop` y probado en QA (canal 505, A 179 de pago + B 480 al
+> 100 %), queda así:
+>
+> - **El cobro sale bien, la orden no.** Vipps recibe el total con descuento (`amountMinor`
+>   17900) y la captura usa lo reservado en Vipps. Pero el checkout guarda 659 y la orden se
+>   crea con las líneas a precio de lista: el pedido en la tienda de la marca, la comisión del
+>   publisher y `order_paid` saldrían inflados, y un reembolso de la línea regalada hecho en la
+>   tienda movería dinero real.
+> - **El SDK no tiene flujo de descuento** y suma en cliente a precio de lista: el comprador
+>   nunca vería el regalo gratis. Hay que tocar el SDK (campo «Rabattkode», precio neto, «Gratis»).
+> - **Un producto a 0 kr en catálogo no sirve de atajo:** `completeBaseOrder` lo rechaza después
+>   de autorizar.
+> - **Requisito de Angelo (10/11): en este escenario los códigos se crean en WooCommerce.** La
+>   marca crea el cupón en su tienda y ese mismo código funciona en el checkout de Vio; para esos
+>   códigos, Woo es la fuente de verdad. **Vio conserva su capacidad de crear códigos propios**:
+>   los dos orígenes conviven (primero se busca un código de Vio de ese canal; si no existe, se
+>   pregunta a la tienda de la marca). Diseño: cuando el comprador teclea un código, shopcart lo
+>   resuelve contra la tienda a través de extensions (la conexión ya tiene permiso de cupones), y
+>   el pedido vuelve a Woo con `coupon_lines` para que la tienda cuente el uso.
+> - **Representación única:** la orden lleva precios **netos** por línea (el regalo a 0). Con eso
+>   orders no necesita cambios de lógica y Woo crea el pedido por lo cobrado; Shopify se adapta
+>   para no descontar dos veces.
+> - **Reglas:** un regalo (100 % sobre un producto) libera como mucho 1 unidad y exige algo de
+>   pago en el carrito (Vipps no acepta 0 kr); un código por carrito; si el descuento no se puede
+>   calcular, el pago se rechaza en vez de cobrar precio lleno.
+> - **Prod no tiene ningún descuento creado** (0 filas en `discount`, `discount_cart`,
+>   `discount_product`): no hay pedidos antiguos que respetar.
+>
+> Trabajo en curso en ramas `feature/regalo-codigo-descuento` de shopcart, graphql, web-sdk y
+> extensions (commits locales, sin push hasta el OK de Angelo). Ya no hace falta la confirmación
+> de Alan que pedía este documento; el journal de cierre enlazará PRs y resultados de QA.
 
 ## El pedido
 `faves.no` (Vio user **1301**, tienda Woo) quiere ofrecer en su campaña un **producto de
