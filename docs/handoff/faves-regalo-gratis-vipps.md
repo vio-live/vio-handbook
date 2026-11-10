@@ -1,7 +1,7 @@
 ---
 date: 2026-11-09
 updated: 2026-11-10
-status: en implementación (ramas locales) — el scoping del 9/11 quedó corto, leer la actualización
+status: en QA desde el 10/11 (backend en develop; SDK en PR sin publicar) — estado en el journal del 10/11
 participants: [angelo, claude]
 topic: faves — producto de regalo (gratis) con código de descuento, pago Vipps
 ---
@@ -41,6 +41,10 @@ topic: faves — producto de regalo (gratis) con código de descuento, pago Vipp
 > Trabajo en curso en ramas `feature/regalo-codigo-descuento` de shopcart, graphql, web-sdk y
 > extensions (commits locales, sin push hasta el OK de Angelo). Ya no hace falta la confirmación
 > de Alan que pedía este documento; el journal de cierre enlazará PRs y resultados de QA.
+>
+> **[claude, 2026-11-10] En QA:** el backend está mergeado a `develop` y el SDK está en un PR sin
+> publicar. PRs, banco de pruebas y tarjeta de estrés de Alan:
+> [journal del 10/11](../journal/2026-11/2026-11-10-faves-regalo-codigo-en-qa.md).
 
 ## El pedido
 `faves.no` (Vio user **1301**, tienda Woo) quiere ofrecer en su campaña un **producto de
