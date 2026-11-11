@@ -540,3 +540,31 @@ hace falta una versión nueva de la SDK: todo funciona con la 0.37.0.
 > 6. **SDK 0.37.1** (publicada el 30/10): subid `@vio-live/web-sdk` a `0.37.1` en este mismo publish. No cambia ninguna
 >    API. Arregla la vuelta de Vipps cuando la página se lee antes de `Vio.init()`: ahora vuelve a abrir el carrito
 >    correcto. También arregla la vuelta de Kustom.
+
+## SDK 0.38.0 y el regalo de faves (11/11): texto para el agente de Replit
+
+Por qué: faves (campaña 4, artículo «16 skjønnhetsfavoritter vi ikke får nok av») regala una mascarilla con su cupón
+de Woo `gratis_face_mask`. El código no va en la página: Vio lo configura en la campaña, por marca, y la SDK 0.38.0 lo
+aplica sola al carrito de esa marca. Con 0.38.0 en Replit no cambia nada visible hasta que Vio active el código en
+producción (sin código en el bootstrap, la SDK hace lo mismo que la 0.37.8). Contexto:
+[journal del 11/11](../journal/2026-11/2026-11-11-faves-codigo-por-campana-en-qa.md).
+
+> 1. **Versión:** `npm i --save-exact @vio-live/web-sdk@0.38.0` y publicad. No hace falta cambiar código.
+> 2. **No pongáis ningún código de descuento en la página**: ni `discountCode` en `Vio.init()`, ni `?vio_discount=`, ni
+>    `discountField`. Vio configura el código de faves en su campaña y la SDK lo aplica sola al carrito de faves. Si la
+>    marca cambia o quita el código, vosotros no tenéis que hacer nada.
+> 3. **El artículo de faves declara su campaña:** comprobad que su contenedor tiene `data-vio-campaign="4"` (como
+>    pedimos el 30/10). Así la SDK sabe qué código toca.
+> 4. **No añadáis la mascarilla al artículo.** Entra sola en el carrito, como «Gratis», en cuanto hay algo de pago.
+> 5. **Si pintáis vuestro propio precio o total del carrito** (con `vio:cart-updated` o con las líneas): `unitPrice` sigue
+>    siendo el precio de lista; restad `discount` para enseñar lo que se paga. Si usáis el carrito y la ficha de la SDK,
+>    no hay nada que hacer.
+> 6. **`<vio-reel>`** viene en esta versión, pero su backend aún está solo en staging: no lo uséis en páginas de producción.
+> 7. **Qué comprobar después de publicar**, en la copia de pruebas con `?vio_internal=1`: los artículos se ven y venden
+>    igual que con la 0.37.8, y Vipps y el recibo funcionan como antes. Hasta que Vio active el código en producción no
+>    veréis ningún descuento: es lo esperado. Cuando lo activemos os avisamos. Entonces, en el artículo de faves, al añadir
+>    un producto, el carrito debe enseñar la mascarilla «Gratis» y una fila «Rabatt», y Vipps cobra solo lo de pago.
+>
+> Esta versión también arregla dos cosas de las cifras, sin cambios para vosotros: las impresiones del carrusel ya dicen
+> de qué marca son (antes salían sin marca y, filtrando por marca, la conversión daba 0 %), y la compra que vuelve de
+> Vipps se cuenta con lo que se pagó.
