@@ -541,14 +541,14 @@ hace falta una versión nueva de la SDK: todo funciona con la 0.37.0.
 >    API. Arregla la vuelta de Vipps cuando la página se lee antes de `Vio.init()`: ahora vuelve a abrir el carrito
 >    correcto. También arregla la vuelta de Kustom.
 
-## SDK 0.38.0: códigos de descuento desde la campaña (11/11) — texto para el agente de Replit
+## SDK 0.39.0: códigos de descuento desde la campaña (11/11) — texto para el agente de Replit
 
-Por qué: desde la 0.38.0 los códigos de descuento son configuración de Vio. Se ponen en el dashboard, en la campaña y por
+Por qué: desde la 0.39.0 los códigos de descuento son configuración de Vio. Se ponen en el dashboard, en la campaña y por
 marca, y la SDK los aplica sola al carrito de esa marca. Es el flujo estándar para cualquier marca y cualquier
 artículo: la página no nombra códigos, ni campañas concretas, ni productos de regalo. Sin código en la campaña, la SDK
-hace lo mismo que la 0.37.8. Contexto: [journal del 11/11](../journal/2026-11/2026-11-11-faves-codigo-por-campana-en-qa.md).
+hace lo mismo que la 0.37.8. (La 0.38.0 ya no recibe el código de campaña: hay que ir a la 0.39.0.) Contexto: [journal del 11/11](../journal/2026-11/2026-11-11-faves-codigo-por-campana-en-qa.md).
 
-> 1. **Versión:** `npm i --save-exact @vio-live/web-sdk@0.38.0` y publicad. No hace falta cambiar código.
+> 1. **Versión:** `npm i --save-exact @vio-live/web-sdk@0.39.0` y publicad. No hace falta cambiar código.
 > 2. **Los códigos de descuento los configura Vio** en cada campaña, por marca. La SDK los aplica sola al carrito de esa
 >    marca. Si se cambian o se quitan, la página no se toca. **No pongáis códigos en la página**: ni `discountCode` en
 >    `Vio.init()`, ni `?vio_discount=`, ni `discountField`. Esas opciones existen solo para probar un código a mano.

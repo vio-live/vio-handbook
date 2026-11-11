@@ -88,13 +88,13 @@ Además, el código no puede quedar público en el bootstrap: un cupón de la ti
   - hay que desplegar la configuración de la app con el scope nuevo, y cada tienda tiene que aprobarlo;
   - falta comprobar en la dev store que Shopify cuenta el uso del código en los pedidos que crea Vio.
 - **La tienda Woo de QA** de la marca de pruebas no responde. El selector lo dice («no responde»).
-- **SDK:** la 0.38.0 publicada ya no recibe el código de campaña del backend nuevo. Hace falta publicar la versión
-  siguiente.
+- **SDK 0.39.0 publicada en npm** (14:25 UTC, `latest`, gitHead `0fb00a1`). La 0.38.0 ya no recibe el código de
+  campaña: Replit tiene que subir a la 0.39.0.
 
 ## Next session
 1. Alan estresa los checklists 9 y 10.
 2. Desplegar la app de Shopify con `read_discounts` y probar un código real en la dev store.
-3. Publicar la siguiente versión del SDK y pedir el bump a Replit (sin código en la página).
+3. Pedir a Replit el bump a la 0.39.0 (sin código en la página): texto en el handoff de Replit.
 4. Prod, siguiendo los pasos de la nota privada de Angelo: migración antes que los micros, y después los micros en
    orden.
 5. Fase 2 de pagos.
