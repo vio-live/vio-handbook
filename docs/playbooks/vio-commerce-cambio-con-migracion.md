@@ -96,3 +96,21 @@ el kernel (ya está).
 > (`gh workflow run 350049503 --repo vio-live/package-database --ref develop -f pkg=all`): publica los siete alineados y,
 > como no hay migración nueva, despacha el bump a los 12 micros solo. Comprobar después que `develop` de cada micro pina
 > la versión nueva. De noche QA está apagado: los deploys de develop salen rojos y se relanzan por la mañana.
+
+## Nota 2026-11-11 — deploys rojos por la descarga simultánea de imágenes
+
+> [claude, 2026-11-11] Con el bump a 1.0.291, 9 de los 12 deploys de QA salieron rojos con `Progress deadline
+> exceeded`. No estaban rotos. Las 12 imágenes (~850 MB) se descargaron a la vez en un solo nodo, la descarga tardó
+> ~10 min 40 s y el `progressDeadlineSeconds` (600 s) venció antes de que los pods arrancaran. Helm dio el upgrade por
+> fallido, pero Kubernetes no revierte: el rollout siguió y los 12 terminaron bien. Mientras tanto los pods viejos
+> siguieron sirviendo.
+>
+> Qué hacer cuando la tanda sale roja:
+> 1. **No relanzar.** Primero `kubectl rollout status deploy/<micro> --timeout=240s` en cada uno.
+> 2. Mirar los eventos del pod nuevo: `Pulled … in 10m…` confirma que fue la descarga.
+> 3. Revisar los reinicios: un `exit 137` en el arranque es el liveness matando un pod que arrancaba con la CPU
+>    repartida entre nueve; si a la segunda arranca limpio, no hay que hacer nada.
+> 4. Revisar los logs de arranque, sin `Unknown column` ni `Cannot find module`.
+>
+> Arreglo de fondo pendiente: subir `progressDeadlineSeconds` en los charts, o escalonar los dispatches de
+> `kernel-published`.

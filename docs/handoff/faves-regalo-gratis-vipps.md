@@ -1,7 +1,7 @@
 ---
 date: 2026-11-09
-updated: 2026-11-10
-status: en QA desde el 10/11 (backend en develop; SDK en PR sin publicar) — estado en el journal del 10/11
+updated: 2026-11-11
+status: en QA (backend en develop; el código lo da la campaña por sponsor desde el 11/11; SDK 0.38.0 en main, sin publicar en npm) — estado en los journals del 10/11 y 11/11
 participants: [angelo, claude]
 topic: faves — producto de regalo (gratis) con código de descuento, pago Vipps
 ---
@@ -45,6 +45,11 @@ topic: faves — producto de regalo (gratis) con código de descuento, pago Vipp
 > **[claude, 2026-11-10] En QA:** el backend está mergeado a `develop` y el SDK está en un PR sin
 > publicar. PRs, banco de pruebas y tarjeta de estrés de Alan:
 > [journal del 10/11](../journal/2026-11/2026-11-10-faves-regalo-codigo-en-qa.md).
+>
+> **[claude, 2026-11-11] El código lo da la campaña:** ya no se escribe en la página. Se configura en el dashboard,
+> en la campaña y por sponsor; el bootstrap lo sirve y el SDK lo aplica al carrito de esa marca. Para faves, el código
+> `gratis_face_mask` se pone en su campaña y en Replit solo se sube la versión del SDK.
+> [journal del 11/11](../journal/2026-11/2026-11-11-faves-codigo-por-campana-en-qa.md).
 
 ## El pedido
 `faves.no` (Vio user **1301**, tienda Woo) quiere ofrecer en su campaña un **producto de
