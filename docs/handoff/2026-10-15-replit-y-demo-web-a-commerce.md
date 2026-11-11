@@ -541,54 +541,15 @@ hace falta una versión nueva de la SDK: todo funciona con la 0.37.0.
 >    API. Arregla la vuelta de Vipps cuando la página se lee antes de `Vio.init()`: ahora vuelve a abrir el carrito
 >    correcto. También arregla la vuelta de Kustom.
 
-## SDK 0.39.0: códigos de descuento desde la campaña (11/11) — texto para el agente de Replit
+## SDK 0.39.0 (11/11) — texto para el agente de Replit
 
-Por qué: los códigos de descuento son configuración de Vio (dashboard, por campaña y marca). La SDK los aplica sola al
-carrito de esa marca antes del checkout. Es el flujo estándar para cualquier marca y artículo: la página no nombra
-códigos, campañas concretas ni productos de regalo. Contexto:
+Replit solo sube de versión. Los códigos de descuento se configuran en Vio (dashboard, por campaña y marca) y el
+carrito de la SDK los aplica solo. Cómo funciona por dentro: README de la SDK y
 [journal del 11/11](../journal/2026-11/2026-11-11-codigos-descuento-plataforma.md).
 
-> **1. Versión.** `npm i --save-exact @vio-live/web-sdk@0.39.0` y publicad. No hace falta cambiar código. La 0.38.0
-> ya no recibe el código de campaña.
+> Subid la SDK a la 0.39.0 exacta y publicad: `npm i --save-exact @vio-live/web-sdk@0.39.0`.
 >
-> **2. Cómo funciona.**
-> - El código lo configura Vio en el dashboard, en la campaña y por marca. Solo se aplica si esa campaña tiene un
->   código para esa marca; si no, la página funciona igual que hoy.
-> - La SDK lo aplica sola al carrito de esa marca **antes del checkout**: en cuanto el carrito tiene productos. El
->   servidor lo vuelve a validar antes de cobrar.
-> - **El código nunca llega a la página.** La SDK recibe solo una referencia opaca y Vio aplica el código en el
->   servidor.
-> - Si la marca cambia o quita el código en el dashboard, el carrito lo sigue. Ocurre al volver a la pestaña tras
->   5 minutos, o en la siguiente carga.
-> - **No pongáis códigos en la página**: ni `discountCode` en `Vio.init()`, ni `?vio_discount=`. Son solo para
->   pruebas a mano.
+> No hay que cambiar código. Los códigos de descuento se configuran en Vio, por campaña y marca, y el carrito de la
+> SDK los aplica solo. No pongáis códigos de descuento en la página.
 >
-> **3. Lo único que necesita la SDK: la campaña del artículo.** `data-vio-campaign="<id>"` en el contenedor del
-> artículo, como ya hacéis desde el 30/10. Sin él, la SDK usa la campaña por defecto de la web.
->
-> **4. Lo que ve el comprador.**
-> - En las líneas con descuento, el precio de lista sale tachado y debajo el precio con descuento.
-> - Hay una fila «Rabatt» entre «Sum» y «Totalt» en el carrito, el resumen del checkout y el recibo. No muestra el
->   código.
-> - Si el código regala un producto, entra solo en el carrito como «Gratis», 1 unidad, en cuanto hay algo de pago.
->   No lo pongáis en el artículo.
-> - **Con un código en el carrito solo se puede pagar con Vipps.** Los otros botones quedan desactivados, con la nota
->   «Med rabattkode kan du bare betale med Vipps.». A una marca sin Vipps no se le aplica ningún código. Si un
->   carrito tiene un código y ningún método lo admite, sale «Fjern» para quitarlo.
-> - «Kjøp nå med Vipps» espera a que el descuento y el regalo estén en el carrito antes de ir a Vipps. Mientras
->   tanto se ve «Legger til gave …».
-> - El campo «Rabattkode» está oculto por defecto. Si queréis que el comprador pueda teclear códigos de la marca,
->   poned `Vio.init({ discountField: true })`.
->
-> **5. Analítica (sin cambios por vuestra parte).**
-> - `purchase`, `begin_checkout`, `add_payment_info` y `view_cart` cuentan lo que se paga; un regalo vale 0.
-> - Los clics en el campo envían `cta_click` con `discount_apply` o `discount_remove`.
-> - En la copia de pruebas seguid llamando a `Vio.analytics.setInternal(true)` justo después de `Vio.init()`.
->
-> **6. `<vio-reel>`.** Viene en esta versión, pero su backend solo está en staging: no lo uséis en páginas de
-> producción.
->
-> **7. Qué comprobar tras publicar** (copia de pruebas, `?vio_internal=1`).
-> - Sin código en la campaña: los artículos se ven y venden igual que con la 0.37.8; Vipps y el recibo, como antes.
-> - En producción no veréis descuentos hasta que Vio active los códigos allí. Os avisamos, y entonces comprobáis la
->   fila «Rabatt», el regalo «Gratis» si lo hay y que Vipps cobra lo neto.
+> Después de publicar, comprobad en la copia de pruebas que los artículos se ven y venden igual que antes.
