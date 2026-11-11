@@ -71,6 +71,7 @@ Boots y el estrés (importes, envío, envío gratis) con nuestra cuenta de Kusto
   (`fix/kustom-un-carrito-un-pago`, `cdf9f46`): la validación rechaza checkout no ACTIVE o carrito ya pagado (mensaje
   en el widget, nb-NO/inglés) y la finalización toma un lock por carrito antes del de checkout. 3 tests nuevos; suites de
   Kustom y guardas 54/54. Esperando OK de Angelo para mergear a develop y desplegar en QA.
+- **18:59 UTC, parte E (visto en QA):** Alan cambia el Kustom de «Boots test» a nuestra cuenta de test (la misma key que su marca 1299; no es la de Boots ni la de 1341), sin `providerShipping` (envío calculado por Vio) y con `autoCapture` (captura al pagar en nuestra cuenta; la de Boots nunca capturó). Envíos y envío gratis de la marca: sin cambios a las 19:20. La configuración de Boots sigue guardada en `22b909d1`.
 ## Decisions
 - Con la cuenta de Kustom de Boots, solo 2 órdenes (llegan al Magento de test de Boots); el resto con nuestra
   cuenta de test (PM00876249), con el envío calculado por Vio para poder probar tarifas y envío gratis (Angelo).
