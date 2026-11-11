@@ -52,6 +52,14 @@ Boots y el estrés (importes, envío, envío gratis) con nuestra cuenta de Kusto
   (4706–4709), dos más de lo pactado: todas llegan al Magento de test de Boots.
 - **18:37 UTC:** respuesta en la #481: D2 verificada, ninguna orden más con la cuenta de Boots, adelante con E y F; le
   pregunto qué vio.
+- **18:39 UTC, hallazgo de Alan (confirmado):** con el artículo de Boots y su copia «test» abiertos en dos pestañas,
+  pagó en «test» y Kustom lo devolvió al de Boots. En QA: el checkout de VIO-4707 (`3cd63d0f`, 18:27:44) lleva la
+  atribución `/mote/annet/test` (sale del origen de la línea del carrito), pero su orden de Kustom `1ae5cf4c` tiene
+  `merchant_urls.confirmation` = el artículo de Boots. Causa: el carrito se sincroniza entre pestañas (`storage` en
+  `cart-manager.ts`); la pestaña de Boots, con el checkout abierto, reaccionó al cambio creando su propio checkout y
+  su orden de Kustom con su `href` (`kustomCleanHref()`), lo que dejó INACTIVE el de la pestaña «test» (`2828e795`,
+  6 s antes). La orden y los importes están bien; falla la página de vuelta. Riesgo a comprobar: si las dos órdenes
+  de Kustom siguen pagables, ¿dos órdenes de un mismo carrito? Pedido a Alan en F14 con nuestra cuenta.
 ## Decisions
 - Con la cuenta de Kustom de Boots, solo 2 órdenes (llegan al Magento de test de Boots); el resto con nuestra
   cuenta de test (PM00876249), con el envío calculado por Vio para poder probar tarifas y envío gratis (Angelo).
