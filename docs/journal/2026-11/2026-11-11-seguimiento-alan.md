@@ -60,6 +60,17 @@ Boots y el estrés (importes, envío, envío gratis) con nuestra cuenta de Kusto
   su orden de Kustom con su `href` (`kustomCleanHref()`), lo que dejó INACTIVE el de la pestaña «test» (`2828e795`,
   6 s antes). La orden y los importes están bien; falla la página de vuelta. Riesgo a comprobar: si las dos órdenes
   de Kustom siguen pagables, ¿dos órdenes de un mismo carrito? Pedido a Alan en F14 con nuestra cuenta.
+- **18:47 UTC, hallazgo de Alan (confirmado): doble cobro.** Mismo carrito `30a144e4` en dos pestañas, Kustom abierto
+  en las dos y pago simultáneo → dos checkouts (`23ae602e` 18:44:10, `d49acccc` 18:44:18) completados con 23 ms de
+  diferencia: **VIO-4710 y 4711**, 458,90 cada una, AUTHORIZED. Las guardas de «un carrito, un pago» (09/10) no lo
+  pararon: (1) `validateKustomOrder` no rechaza un checkout INACTIVE (el `23ae602e` lo era desde las 18:44:18);
+  (2) `paymentKustomOk` hace la pregunta del hermano pagado bajo un lock **por checkout**, así que dos checkouts del
+  mismo carrito pasan a la vez. Además Alan **no hizo la parte E**: todo F fue con la cuenta de Boots (ya 6 órdenes
+  suyas ahí, 4706–4711) y el envío gratis quedó sin probar. 18:49 UTC: se lo dije en la #481 (sin compras hasta E).
+- **Arreglo:** [vio-shopcart-microservice#119](https://github.com/vio-live/vio-shopcart-microservice/pull/119)
+  (`fix/kustom-un-carrito-un-pago`, `cdf9f46`): la validación rechaza checkout no ACTIVE o carrito ya pagado (mensaje
+  en el widget, nb-NO/inglés) y la finalización toma un lock por carrito antes del de checkout. 3 tests nuevos; suites de
+  Kustom y guardas 54/54. Esperando OK de Angelo para mergear a develop y desplegar en QA.
 ## Decisions
 - Con la cuenta de Kustom de Boots, solo 2 órdenes (llegan al Magento de test de Boots); el resto con nuestra
   cuenta de test (PM00876249), con el envío calculado por Vio para poder probar tarifas y envío gratis (Angelo).
