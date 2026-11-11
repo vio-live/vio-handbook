@@ -46,6 +46,12 @@ Boots y el estrés (importes, envío, envío gratis) con nuestra cuenta de Kusto
   reabrir, `checkout.open()` empieza otra sesión y `mountKustomCheckout` crea checkout nuevo. No rompe nada (las
   incompletas caducan en Kustom y no disparan `order.created` a Boots), pero se aparta de ADR-0020 («nueva solo cuando
   Kustom no puede»). Usó también 999143 y 999880, que no están en el test de Boots (sin comprar).
+- **18:29–18:35 UTC, D2:** Alan hace **tres** órdenes iguales con la cuenta de Boots: VIO-4707, 4708 y 4709 (surface 13,
+  campaña 30), cada una 1 × 998640 409,90 + «Postnord - Utleveringssted» 49 = 458,90, AUTHORIZED, sin capturar, iguales
+  en Vio y en Kustom. Dice que creyó ver algo y lo descartó al repetir. Con D1 son 4 órdenes en la cuenta de Boots
+  (4706–4709), dos más de lo pactado: todas llegan al Magento de test de Boots.
+- **18:37 UTC:** respuesta en la #481: D2 verificada, ninguna orden más con la cuenta de Boots, adelante con E y F; le
+  pregunto qué vio.
 ## Decisions
 - Con la cuenta de Kustom de Boots, solo 2 órdenes (llegan al Magento de test de Boots); el resto con nuestra
   cuenta de test (PM00876249), con el envío calculado por Vio para poder probar tarifas y envío gratis (Angelo).
