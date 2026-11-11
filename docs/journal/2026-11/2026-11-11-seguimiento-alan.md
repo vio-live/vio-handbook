@@ -85,16 +85,39 @@ Boots y el estrés (importes, envío, envío gratis) con nuestra cuenta de Kusto
 - **20:27 UTC, F10 verificada:** VIO-4714 = Kustom `1d22a248-…` CAPTURED: 1 × 998640 409,90 + «Free to Test» 0 = 409,90 en Vio y en Kustom (abandonar y volver no rompe la compra). Todos los puntos A–F hechos; faltan MEJORAS y repetir el doble pago tras #119.
 - **20:32 UTC, F11 forzado:** con productos de Careless y Boots el carrito pide elegir marca; cada una paga con lo suyo (Kustom / Vipps). VIO-4715 = Kustom `a78fb5c2-…` CAPTURED: 1 × 992508 129,90 + 2 × 996406 169,90 + «Free to Test» 0 = 299,80 en Vio y en Kustom (Careless no se pagó, como pedía la tarjeta).
 - **22:25 UTC, MEJORAS de Alan:** una sola: el CMS del Replit solo en noruego (pide inglés). 22:28 UTC: le dejo en la #481 la lista completa con lo hallado hoy, con gravedad: (1) doble pago dos pestañas, bloquea, #119; (2) vuelta de Kustom al otro artículo, molesta; (3) orden nueva de Kustom en cada reapertura, detalle; (4) sin envío gratis por importe, molesta; (5) un artículo = una marca, detalle; (6) carrito por campaña en el Replit, molesta; (7) Remote Reel rechaza la clave de administración, bloquea ese bloque; (8) CMS solo en noruego, detalle; (9) le pregunto qué le llevó a crear una surface nueva. «Boots test» queda con nuestra cuenta hasta repetir el doble pago.
+
+- **22:34 UTC:** Alan repite el doble pago antes del despliegue y vuelve a salir: VIO-4716 y 4717 (199,90 cada una,
+  45 ms de diferencia, nuestra cuenta). 22:37 UTC: le digo que el arreglo aún no está en QA y que no lo repita hasta
+  mi aviso. Guardia cerrada a las 22:38 UTC (bucle y monitor parados).
+
 ## Decisions
 - Con la cuenta de Kustom de Boots, solo 2 órdenes (llegan al Magento de test de Boots); el resto con nuestra
-  cuenta de test (PM00876249), con el envío calculado por Vio para poder probar tarifas y envío gratis (Angelo).
-- El artículo «antiguo» es el de Careless (Angelo); Alan lo deja como estaba al final.
-- Restaurar «Boots test» a la cuenta de Boots lo hago yo, no Alan.
+  cuenta de test, con el envío calculado por Vio para poder probar tarifas y envío gratis (Angelo). Alan hizo 6 con
+  la de Boots (4706–4711).
+- El artículo «antiguo»: primero el de Careless (Angelo); a las 17:17 UTC Angelo cambia a «una copia de Alan u otro
+  que ya exista» para no tocar el original.
+- Restaurar «Boots test» a la cuenta de Boots lo hago yo, no Alan, y solo después de repetir el doble pago con el
+  arreglo desplegado.
+- El arreglo del doble cobro va como PR a develop ([shopcart#119](https://github.com/vio-live/vio-shopcart-microservice/pull/119))
+  y se despliega en QA solo con el OK de Angelo.
 
 ## Blockers
-- Las compras (D, E, F) esperan a que el agente de Replit aplique el soporte de Kustom en staging (prompt entregado
-  a Angelo el 11/11). Angelo avisa y entonces le escribo a Alan en la tarjeta.
+- **OK de Angelo para mergear #119 a develop y desplegarlo en QA.** Sin él, el doble pago con dos pestañas sigue
+  abierto (reproducido tres veces: 4710/4711, 4716/4717).
+- El prompt de Kustom para el agente de Replit fijaba la SDK en 0.37.8, y otra sesión pidió hoy subir el Replit a la
+  0.38.0. Al final no hizo falta: el Replit de staging ya aceptaba Kustom (primera orden 4706, 16:34 UTC).
 
 ## Next session
-- Avisar a Alan en la #481 cuando el Replit tenga Kustom. Verificar cada orden de 1342 contra Kustom (importes, envío).
-- Restaurar `b843da58` desde `22b909d1` cuando Alan termine.
+- Con el OK: mergear #119, desplegar shopcart en QA, verificarlo en el pod y avisar a Alan en la #481 para que
+  repita el doble pago una vez (la segunda pestaña tiene que ver «Handlekurven ble åpnet i en annen fane…» dentro de
+  Kustom y no cobrar).
+- Después: restaurar el Kustom de «Boots test» (`payment_method` `b843da58` ← opciones de la copia `22b909d1`:
+  cuenta de Boots PM47345027, `captureMode` account, `providerShipping` on) y dejar al artículo de Boots con su
+  Shipping Assistant.
+- Decidir (Angelo): avisar a Artsiom en el borrador de que 4706–4711 son pruebas nuestras; envío gratis por importe
+  (no existe); la clave de administración del Remote Reel en staging.
+- Seguimientos técnicos, sin urgencia: (1) una pestaña con el checkout abierto no debería crear su propio checkout
+  cuando el carrito cambia en otra (vuelta de Kustom al artículo equivocado, VIO-4707); (2) cada reapertura del
+  checkout crea una orden nueva en Kustom en vez de actualizar la abierta (ADR-0020); (3) el mismo lock por carrito en
+  las finalizaciones de Vipps, Qliro y Walley; (4) soltar en Kustom la autorización de un duplicado que se cuele.
+- Pendiente de Alan: responder la pregunta 9 de MEJORAS (por qué creó una surface nueva al montar Boots).
