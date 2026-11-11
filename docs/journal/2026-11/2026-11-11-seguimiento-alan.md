@@ -79,6 +79,7 @@ Boots y el estrés (importes, envío, envío gratis) con nuestra cuenta de Kusto
   base-api, products ni api-ms); el envío gratis es un envío a 0 kr («Gratis» en la SDK). F1–F4 de la #481 reescritos
   (envío de pago, envío a 0 kr, cambiar de uno a otro con Kustom abierto, productos con envíos distintos); E3 también.
   El umbral va a la lista de mejoras.
+- **19:50 UTC, Alan (F con la lista vieja):** F1, F4, F6 OK; «F2/F3 toman mis envíos y no los de Boots» (esperado: con nuestra cuenta Kustom muestra los envíos de Vio; los de Boots salen de su KSA); F5 hecho con la cuenta de Boots; F7 cambio de precio de Avène (la copia del canal 525 sigue en 84,95). 19:53 UTC: le pido F2/F3 nuevos (compra con «Free to Test» y cambio de envío con Kustom abierto) y que diga si el precio nuevo llegó al artículo.
 ## Decisions
 - Con la cuenta de Kustom de Boots, solo 2 órdenes (llegan al Magento de test de Boots); el resto con nuestra
   cuenta de test (PM00876249), con el envío calculado por Vio para poder probar tarifas y envío gratis (Angelo).
