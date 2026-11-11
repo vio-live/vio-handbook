@@ -39,6 +39,13 @@ Boots y el estrés (importes, envío, envío gratis) con nuestra cuenta de Kusto
 - **17:14 UTC:** respuesta en la #481: D2 a domicilio (1 × Cosmica + 1 × Weleda) y ninguna más con la cuenta de Boots;
   usar el artículo de Careless original (C1/C6); C esperado → mejoras; Remote Reel fuera de alcance; OK para la parte E.
 - **17:17 UTC (Angelo):** el artículo antiguo ya no es el de Careless original: Alan se crea su copia en el CMS o usa otro que ya exista. Comentario en la #481 y tarjeta actualizada (C1, C5, C6, D2, F11, F17).
+- **17:05–17:15 UTC (visto en QA, Alan no lo comentó):** estrés del carrito con Kustom: 2 carritos, 13 checkouts, sin
+  compra. **Cada vez que vuelve a abrir el checkout tras cambiar el carrito nace un checkout nuevo de Vio y una orden
+  nueva de Kustom** (`checkout_incomplete`, `previousOrderIds` vacío); el anterior queda INACTIVE. La SDK solo actualiza
+  la misma orden (`syncKustomIfStale` → `syncKustomOrder`) si el carrito cambia **con el widget montado**; al cerrar y
+  reabrir, `checkout.open()` empieza otra sesión y `mountKustomCheckout` crea checkout nuevo. No rompe nada (las
+  incompletas caducan en Kustom y no disparan `order.created` a Boots), pero se aparta de ADR-0020 («nueva solo cuando
+  Kustom no puede»). Usó también 999143 y 999880, que no están en el test de Boots (sin comprar).
 ## Decisions
 - Con la cuenta de Kustom de Boots, solo 2 órdenes (llegan al Magento de test de Boots); el resto con nuestra
   cuenta de test (PM00876249), con el envío calculado por Vio para poder probar tarifas y envío gratis (Angelo).
