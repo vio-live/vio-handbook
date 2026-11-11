@@ -38,6 +38,7 @@ Boots y el estrés (importes, envío, envío gratis) con nuestra cuenta de Kusto
   con `tms_reference`. **Primera orden con Kustom desde el Replit de staging.**
 - **17:14 UTC:** respuesta en la #481: D2 a domicilio (1 × Cosmica + 1 × Weleda) y ninguna más con la cuenta de Boots;
   usar el artículo de Careless original (C1/C6); C esperado → mejoras; Remote Reel fuera de alcance; OK para la parte E.
+- **17:17 UTC (Angelo):** el artículo antiguo ya no es el de Careless original: Alan se crea su copia en el CMS o usa otro que ya exista. Comentario en la #481 y tarjeta actualizada (C1, C5, C6, D2, F11, F17).
 ## Decisions
 - Con la cuenta de Kustom de Boots, solo 2 órdenes (llegan al Magento de test de Boots); el resto con nuestra
   cuenta de test (PM00876249), con el envío calculado por Vio para poder probar tarifas y envío gratis (Angelo).
