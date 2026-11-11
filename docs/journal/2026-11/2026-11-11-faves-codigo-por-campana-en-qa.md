@@ -31,8 +31,9 @@ campaña puede tener varias marcas, cada una con su cupón. Contexto:
 - **web-sdk** [vio-web-sdk#147](https://github.com/vio-live/vio-web-sdk/pull/147), en `main`:
   - el carrito de cada marca recibe el código que la campaña de la página le da a esa marca;
   - prioridad: el tecleado, luego el de la página (override) y luego el de la campaña;
-  - si el código cambia o se quita en el dashboard, el carrito lo sigue en el siguiente refresco del bootstrap;
-  - **0.38.0 sigue sin publicar en npm.**
+  - si el código cambia o se quita en el dashboard, el carrito lo sigue en el siguiente refresco del bootstrap.
+- **web-sdk 0.38.0 publicado en npm** (Angelo, 11/11 ~11:45 UTC): `latest` = 0.38.0, `gitHead` `52ac57e` (`main`),
+  24 archivos, con el código de campaña dentro.
 - **Orden en QA:**
   1. Migración por script desde el pod de users (09:12 UTC), verificada con `information_schema`.
   2. Merge del micro y del dashboard.
@@ -67,10 +68,8 @@ campaña puede tener varias marcas, cada una con su cupón. Contexto:
   Angelo.
 
 ## Next session
-1. Angelo publica 0.38.0 en npm (`npm login` y `npm publish --access public` desde `main`). Después se verifican
-   los dist-tags.
-2. Alan conecta su TasteWP como 1331. Claude crea los cupones y le pasa los ids de producto. Estrés hasta el «OK».
-3. **Prod**, en este orden:
+1. Alan conecta su TasteWP como 1331. Claude crea los cupones y le pasa los ids de producto. Estrés hasta el «OK».
+2. **Prod**, en este orden:
    1. migración (script de prod ya preparado);
    2. release de los micros, campañas incluido;
    3. el código `gratis_face_mask` en el dashboard, campaña 4 × faves;
