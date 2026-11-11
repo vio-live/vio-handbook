@@ -72,6 +72,13 @@ Boots y el estrés (importes, envío, envío gratis) con nuestra cuenta de Kusto
   en el widget, nb-NO/inglés) y la finalización toma un lock por carrito antes del de checkout. 3 tests nuevos; suites de
   Kustom y guardas 54/54. Esperando OK de Angelo para mergear a develop y desplegar en QA.
 - **18:59 UTC, parte E (visto en QA):** Alan cambia el Kustom de «Boots test» a nuestra cuenta de test (la misma key que su marca 1299; no es la de Boots ni la de 1341), sin `providerShipping` (envío calculado por Vio) y con `autoCapture` (captura al pagar en nuestra cuenta; la de Boots nunca capturó). Envíos y envío gratis de la marca: sin cambios a las 19:20. La configuración de Boots sigue guardada en `22b909d1`.
+- **19:34 UTC, primera orden con nuestra cuenta:** VIO-4712 = Kustom `ee38713f-…` CAPTURED (autoCapture): 3 × 998640
+  1229,70 + «Test to NO» 59 = 1288,70 en Vio y en Kustom. 19:40 UTC: Alan crea el envío «Free to Test» (0 kr) y lo
+  asigna a los productos de Boots.
+- **Corrección mía:** en Vio **no hay envío gratis por importe** (tabla `shipping`: `amount`, sin umbral; nada en
+  base-api, products ni api-ms); el envío gratis es un envío a 0 kr («Gratis» en la SDK). F1–F4 de la #481 reescritos
+  (envío de pago, envío a 0 kr, cambiar de uno a otro con Kustom abierto, productos con envíos distintos); E3 también.
+  El umbral va a la lista de mejoras.
 ## Decisions
 - Con la cuenta de Kustom de Boots, solo 2 órdenes (llegan al Magento de test de Boots); el resto con nuestra
   cuenta de test (PM00876249), con el envío calculado por Vio para poder probar tarifas y envío gratis (Angelo).
