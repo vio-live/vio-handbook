@@ -580,27 +580,15 @@ códigos, campañas concretas ni productos de regalo. Contexto:
 > - El campo «Rabattkode» está oculto por defecto. Si queréis que el comprador pueda teclear códigos de la marca,
 >   poned `Vio.init({ discountField: true })`.
 >
-> **5. Si pintáis vuestro propio carrito o precios.**
-> - `vio:cart-updated` lleva `discount`, `discountCode` y `discountSource`. `discountSource` es `'CAMPAIGN'` cuando
->   el código viene de la campaña, y entonces `discountCode` va vacío.
-> - El `unitPrice` de cada línea sigue siendo el precio de lista: restad su `discount`.
-> - Ayudas disponibles:
->   - `Vio.cart.totalForSponsor(id)`: lo que se paga;
->   - `Vio.cart.subtotalForSponsor(id)`: precios de lista;
->   - `Vio.cart.discountForSponsor(id)`;
->   - `Vio.cart.hasDiscountCode(id)`;
->   - `Vio.cart.discountSourceForSponsor(id)`.
-> - Si usáis el carrito y el checkout de la SDK, no hay nada que hacer.
->
-> **6. Analítica (sin cambios por vuestra parte).**
+> **5. Analítica (sin cambios por vuestra parte).**
 > - `purchase`, `begin_checkout`, `add_payment_info` y `view_cart` cuentan lo que se paga; un regalo vale 0.
 > - Los clics en el campo envían `cta_click` con `discount_apply` o `discount_remove`.
 > - En la copia de pruebas seguid llamando a `Vio.analytics.setInternal(true)` justo después de `Vio.init()`.
 >
-> **7. `<vio-reel>`.** Viene en esta versión, pero su backend solo está en staging: no lo uséis en páginas de
+> **6. `<vio-reel>`.** Viene en esta versión, pero su backend solo está en staging: no lo uséis en páginas de
 > producción.
 >
-> **8. Qué comprobar tras publicar** (copia de pruebas, `?vio_internal=1`).
+> **7. Qué comprobar tras publicar** (copia de pruebas, `?vio_internal=1`).
 > - Sin código en la campaña: los artículos se ven y venden igual que con la 0.37.8; Vipps y el recibo, como antes.
 > - En producción no veréis descuentos hasta que Vio active los códigos allí. Os avisamos, y entonces comprobáis la
 >   fila «Rabatt», el regalo «Gratis» si lo hay y que Vipps cobra lo neto.
