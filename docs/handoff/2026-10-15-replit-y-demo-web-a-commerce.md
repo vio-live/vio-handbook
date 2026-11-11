@@ -541,29 +541,30 @@ hace falta una versión nueva de la SDK: todo funciona con la 0.37.0.
 >    API. Arregla la vuelta de Vipps cuando la página se lee antes de `Vio.init()`: ahora vuelve a abrir el carrito
 >    correcto. También arregla la vuelta de Kustom.
 
-## SDK 0.38.0 y el regalo de faves (11/11): texto para el agente de Replit
+## SDK 0.38.0: códigos de descuento desde la campaña (11/11) — texto para el agente de Replit
 
-Por qué: faves (campaña 4, artículo «16 skjønnhetsfavoritter vi ikke får nok av») regala una mascarilla con su cupón
-de Woo `gratis_face_mask`. El código no va en la página: Vio lo configura en la campaña, por marca, y la SDK 0.38.0 lo
-aplica sola al carrito de esa marca. Con 0.38.0 en Replit no cambia nada visible hasta que Vio active el código en
-producción (sin código en el bootstrap, la SDK hace lo mismo que la 0.37.8). Contexto:
-[journal del 11/11](../journal/2026-11/2026-11-11-faves-codigo-por-campana-en-qa.md).
+Por qué: desde la 0.38.0 los códigos de descuento son configuración de Vio. Se ponen en el dashboard, en la campaña y por
+marca, y la SDK los aplica sola al carrito de esa marca. Es el flujo estándar para cualquier marca y cualquier
+artículo: la página no nombra códigos, ni campañas concretas, ni productos de regalo. Sin código en la campaña, la SDK
+hace lo mismo que la 0.37.8. Contexto: [journal del 11/11](../journal/2026-11/2026-11-11-faves-codigo-por-campana-en-qa.md).
 
 > 1. **Versión:** `npm i --save-exact @vio-live/web-sdk@0.38.0` y publicad. No hace falta cambiar código.
-> 2. **No pongáis ningún código de descuento en la página**: ni `discountCode` en `Vio.init()`, ni `?vio_discount=`, ni
->    `discountField`. Vio configura el código de faves en su campaña y la SDK lo aplica sola al carrito de faves. Si la
->    marca cambia o quita el código, vosotros no tenéis que hacer nada.
-> 3. **El artículo de faves declara su campaña:** comprobad que su contenedor tiene `data-vio-campaign="4"` (como
->    pedimos el 30/10). Así la SDK sabe qué código toca.
-> 4. **No añadáis la mascarilla al artículo.** Entra sola en el carrito, como «Gratis», en cuanto hay algo de pago.
+> 2. **Los códigos de descuento los configura Vio** en cada campaña, por marca. La SDK los aplica sola al carrito de esa
+>    marca. Si se cambian o se quitan, la página no se toca. **No pongáis códigos en la página**: ni `discountCode` en
+>    `Vio.init()`, ni `?vio_discount=`, ni `discountField`. Esas opciones existen solo para probar un código a mano.
+> 3. **La SDK solo necesita saber la campaña de cada artículo, y eso ya lo hacéis**: `data-vio-campaign` en el
+>    contenedor del artículo, como desde el 30/10. Si algún artículo no la declara, la SDK usa la campaña por defecto de
+>    la web.
+> 4. **Si un código regala un producto**, el producto entra solo en el carrito como «Gratis», en cuanto hay algo de pago.
+>    No hace falta ponerlo en el artículo.
 > 5. **Si pintáis vuestro propio precio o total del carrito** (con `vio:cart-updated` o con las líneas): `unitPrice` sigue
 >    siendo el precio de lista; restad `discount` para enseñar lo que se paga. Si usáis el carrito y la ficha de la SDK,
 >    no hay nada que hacer.
 > 6. **`<vio-reel>`** viene en esta versión, pero su backend aún está solo en staging: no lo uséis en páginas de producción.
 > 7. **Qué comprobar después de publicar**, en la copia de pruebas con `?vio_internal=1`: los artículos se ven y venden
->    igual que con la 0.37.8, y Vipps y el recibo funcionan como antes. Hasta que Vio active el código en producción no
->    veréis ningún descuento: es lo esperado. Cuando lo activemos os avisamos. Entonces, en el artículo de faves, al añadir
->    un producto, el carrito debe enseñar la mascarilla «Gratis» y una fila «Rabatt», y Vipps cobra solo lo de pago.
+>    igual que con la 0.37.8, y Vipps y el recibo funcionan como antes. Cuando una campaña tenga un código, el carrito de
+>    esa marca enseña la fila «Rabatt» (y el regalo «Gratis», si lo hay). Mientras haya un código en el carrito solo se
+>    ofrece Vipps. Os avisamos cuando haya un código activo en producción.
 >
 > Esta versión también arregla dos cosas de las cifras, sin cambios para vosotros: las impresiones del carrusel ya dicen
 > de qué marca son (antes salían sin marca y, filtrando por marca, la conversión daba 0 %), y la compra que vuelve de
