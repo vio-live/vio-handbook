@@ -21,6 +21,12 @@ Boots y el estrés (importes, envío, envío gratis) con nuestra cuenta de Kusto
 - **12:53 UTC:** copia de seguridad de la configuración de Kustom de «Boots test» (1342) en QA: fila
   `payment_method` `22b909d1-…` (inactiva y borrada lógicamente), copia de `b843da58-…` (MID PM47345027,
   captureMode account, providerShipping on). Sirve para restaurarla cuando Alan termine la parte F con nuestra cuenta.
+- **14:19–14:24 UTC:** Alan monta en QA: comparte la colección de Boots que ya existía (\`Q07Qbp-vr\`, 9 productos) con
+  el publisher 1312 → conexión \`channel_user\` 525 «Boots Alan Test»; crea una **surface nueva** 20 «Boots Alan» y en
+  ella la campaña 29 «Campaign Boots Alan» (por defecto en esa surface). La tarjeta pedía la surface 13 «Mote Livestill
+  Hub» (la que tiene conectada el Replit de staging, y la del artículo de Careless) y una colección nueva con los 4.
+- **14:39 UTC:** comentario en la #481: campaña en la surface 13, sin marcarla por defecto; colección nueva con los 4;
+  en las compras solo los 4 SKUs (los otros 5 no existen en el test de Boots).
 
 ## Decisions
 - Con la cuenta de Kustom de Boots, solo 2 órdenes (llegan al Magento de test de Boots); el resto con nuestra
