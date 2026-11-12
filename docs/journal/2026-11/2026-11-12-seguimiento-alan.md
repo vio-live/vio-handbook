@@ -119,13 +119,23 @@ códigos de descuento con Vipps; Alan montó una tienda Woo local en Docker, pub
     `COUPON_CHANGED`.
   - El segundo va a Vipps con el valor nuevo (760).
   - Falta que Alan confirme que vio «Handlekurven er oppdatert – prøv igjen.» en la página. No lo marqué.
+- **16:59, Alan:** no vio el aviso en ningún sitio.
+  - **Causa:** el SDK no tenía `COUPON_CHANGED` en `COUPON_REASONS`, así que `discountReasonOfError` no devolvía
+    nada. El botón de Vipps del carrito no mostraba aviso y abría el checkout, donde el precio ya estaba actualizado.
+  - **Arreglo:** [web-sdk#155](https://github.com/vio-live/vio-web-sdk/pull/155). El motivo ya está en la lista y no
+    es final (el código se queda con sus condiciones nuevas). Tiene texto propio, «Rabatten er endret av
+    butikken.», y el carrito no abre el checkout. Los 3 tests nuevos fallan sin el arreglo.
+  - **Release y despliegue:** 0.39.3 ([#156](https://github.com/vio-live/vio-web-sdk/pull/156), `ad038a0`) y
+    [vev#87](https://github.com/vio-live/vev/pull/87): Vev **0.349**. Desplegado con la indicación de Angelo de ir
+    mergeando y desplegando para que Alan pueda seguir.
+  - Alan, avisado para que republique y lo repita.
 
 ## Decisions
 - Lo que queda de la #481 se prueba en Vev, en la página propia de Alan; el Replit ya no.
 - La tienda Woo local de Alan (`woo-dev-local`, admin por defecto) es cosa suya: no se le pide cambiarla.
 
 ## Blockers
-- Publicar en npm la 0.39.2, que incluye la 0.39.1: lo hace Angelo desde un checkout limpio en `e4983c1`.
+- Publicar en npm la 0.39.3, que incluye la 0.39.1 y la 0.39.2: lo hace Angelo desde un checkout limpio en `ad038a0`.
 
 ## Next session
 - Verificar en QA y en Kustom lo que reporte Alan en Vev. Después, devolver «Boots test» a la cuenta de Kustom de
