@@ -99,6 +99,13 @@ códigos de descuento con Vipps; Alan montó una tienda Woo local en Docker, pub
     carga). Le pedí republicar.
 - **15:20, otra sesión** (también como Angelo) le pidió en la #480 montar los códigos de Shopify (vio-shopify-sync#136).
   Esa parte la lleva esa sesión; no la toco.
+- **~16:00:** Alan republicó su página y Vev ya sirve la 0.39.2 (comprobado en el paquete que carga).
+- **16:13 #480, checklist 3:** la imagen del regalo ya sale.
+  - **Quitar lo de pago, también borrándolo en la base de datos:** el carrito se vacía solo, y `CreateCheckout`
+    responde `CART_EMPTY`. No hay forma de pagar solo el regalo.
+  - **«Fjern» y cambiar cantidades:** totales correctos (5 125 − 1 375 + 10 = 3 760) y el regalo sigue en 1.
+  - **Lo que marqué a petición suya:** 4 casos del checklist 3. Quedan los 2 de código tecleado, que van en la
+    página local.
 
 ## Decisions
 - Lo que queda de la #481 se prueba en Vev, en la página propia de Alan; el Replit ya no.
