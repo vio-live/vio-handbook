@@ -175,6 +175,9 @@ códigos de descuento con Vipps; Alan montó una tienda Woo local en Docker, pub
     Ahora 526 → 6 productos, y 516 y 519 → 2 cada uno.
   - **Bug abierto en el Backlog:** [#489](https://trello.com/c/FAQlozGG). Reconectar la tienda no rehace el catálogo
     de los canales.
+- **20:59 #480, revocar la clave REST:** 401 de su Woo → `COUPON_UNAVAILABLE` (20:55:34). OK. **Checklist 4 completo.**
+  - Al reconectar otra vez (conexión 512) se repitió el catálogo vacío. Lo reconstruí de nuevo y lo anoté en #489,
+    junto con que la conexión nueva quedó con `prices_include_tax = null` (los precios no cambiaron).
 
 ## Decisions
 - Lo que queda de la #481 se prueba en Vev, en la página propia de Alan; el Replit ya no.
