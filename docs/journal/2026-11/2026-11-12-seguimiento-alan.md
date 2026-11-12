@@ -188,14 +188,39 @@ códigos de descuento con Vipps; Alan montó una tienda Woo local en Docker, pub
     plataforma de QA no vale (16 intentos de la marca 1331 en 12 h, todos 401). No tiene que ver con los códigos;
     hace falta una clave de playground válida (Angelo).
 
+- **21:51:** Alan pidió un resumen del día y deja los checklists 6 en adelante para mañana. Se lo dejé en la #480:
+  - lo probado: checklists 1, 3 y 4 completos, el 5 salvo Klarna;
+  - los 4 fallos arreglados;
+  - lo pendiente de nuestro lado y su plan para mañana.
+- **~21:55:** guardia cerrada (bucle y monitor parados).
+
 ## Decisions
 - Lo que queda de la #481 se prueba en Vev, en la página propia de Alan; el Replit ya no.
 - La tienda Woo local de Alan (`woo-dev-local`, admin por defecto) es cosa suya: no se le pide cambiarla.
+- **Durante la guardia, los arreglos se mergean y se despliegan en QA y en Vev sin pedir OK uno a uno.** Angelo,
+  12/11: «ves mergeando y desplegando para que alan pueda continuar». Así fueron la 0.39.3, vev#87 y graphql#42.
+  Producción sigue necesitando su OK.
+- **Un inicio de pago no se reintenta en el gateway.** Hecho para Vipps en graphql#42; ver la
+  [lección](../../lessons/el-gateway-no-reintenta-un-inicio-de-pago.md).
 
 ## Blockers
-- La clave de Klarna de plataforma en QA (`KLARNA_AUTH_KEY`) devuelve 401: Klarna con «Use Vio's account» no funciona en QA.
-- Publicar en npm la 0.39.3, que incluye la 0.39.1 y la 0.39.2: lo hace Angelo desde un checkout limpio en `ad038a0`.
+- **Klarna con «Use Vio's account» no funciona en QA:** la clave de plataforma (`KLARNA_AUTH_KEY`) devuelve 401.
+  Hace falta una clave válida del playground de Klarna (Angelo).
+- **npm:** Angelo publicó la 0.39.2 (15:29 UTC). Falta la 0.39.3 (`COUPON_CHANGED`), desde un checkout limpio en
+  `ad038a0`. Vev ya la lleva.
+- **Campo «Rabattkode» en Vev:** los bloques de Vev no exponen `discountField`. Decisión pendiente de Angelo; mientras
+  tanto, los casos de código tecleado van en la página local del SDK.
 
 ## Next session
-- Verificar en QA y en Kustom lo que reporte Alan en Vev. Después, devolver «Boots test» a la cuenta de Kustom de
-  Boots (la configuración guardada está en `payment_method` 22b909d1).
+- **Alan, #480:**
+  - checklists 6 (después de pagar), 7, 8, 9 y 10;
+  - los casos de código tecleado en la página local (`&discountField=true`);
+  - Klarna sin código, cuando haya clave.
+- **Alan, #481 (Kustom en Vev):** sin empezar.
+  - Pasos: doble pago con dos pestañas, vuelta a la página correcta, reapertura y producto añadido con Kustom abierto.
+  - Después, devolver «Boots test» a la cuenta de Kustom de Boots (configuración guardada en `payment_method`
+    22b909d1).
+- **Código:**
+  - [#489](https://trello.com/c/FAQlozGG): reconectar el Woo vacía el catálogo de los canales;
+  - quitar el reintento del gateway en los inicios de pago de Stripe, Klarna, Kustom, Qliro, Walley, Nexi y Adyen;
+  - la preview local `sdk-qa-kustom-pestanas` y el túnel `vio-web-dev` siguen levantados.
