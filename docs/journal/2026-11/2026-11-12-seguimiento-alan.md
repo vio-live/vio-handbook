@@ -140,6 +140,18 @@ códigos de descuento con Vipps; Alan montó una tienda Woo local en Docker, pub
 - **17:50:** Alan no encuentra «Bruk» en Vev. Vev no expone `discountField`, y es la segunda vez hoy que eso le
   bloquea casos; la decisión sigue pendiente de Angelo. Le indiqué que en Vev haga solo el doble clic en pagar y que
   «Bruk» se pruebe en la página local.
+- **17:54–18:03 #480, checklist 4:** doble clic en pagar, dos pestañas y cancelar en la app de Vipps, todo OK.
+  - Órdenes: VIO-4721 (sin código, 1 260), VIO-4722 y VIO-4723 (`QAVIO15`, 1 072,50), con sus pedidos de Woo 49–51 y
+    sin duplicados.
+  - La cancelación queda como `ABORTED` → `payment_cancelled`, sin orden.
+- **18:16 #480:** con la 0.39.3 republicada, el cupón cambiado seguía abriendo Vipps sin aviso.
+  - **Causa:** el **gateway GraphQL reintenta todo**, incluidos los 4xx (`axios-retry`, «Reintenta todo»). El
+    `COUPON_CHANGED`, que solo se rechaza una vez, se reintentaba 220 ms después y pasaba (carritos `babd7a20` y
+    `0669756b`). Por la misma razón, cada 503 o 429 de Vipps se convertía en unas 4 llamadas.
+  - **Arreglo:** [graphql#42](https://github.com/vio-live/graphql/pull/42), `retries: 0` en el inicio del pago de
+    Vipps, como ya llevan las llamadas de descuento. 2 tests nuevos que fallan sin el arreglo; suite 644/644.
+    Mergeado (`c715eb3`) y desplegado en QA hacia las 18:24; verificado en el pod.
+  - **Pendiente:** los inicios de pago de los demás métodos siguen con el reintento por defecto.
 
 ## Decisions
 - Lo que queda de la #481 se prueba en Vev, en la página propia de Alan; el Replit ya no.
