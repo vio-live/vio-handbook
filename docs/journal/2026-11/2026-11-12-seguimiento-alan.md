@@ -129,6 +129,11 @@ códigos de descuento con Vipps; Alan montó una tienda Woo local en Docker, pub
     [vev#87](https://github.com/vio-live/vev/pull/87): Vev **0.349**. Desplegado con la indicación de Angelo de ir
     mergeando y desplegando para que Alan pueda seguir.
   - Alan, avisado para que republique y lo repita.
+- **17:06 #480, caducar `qa_gave` en Woo con el carrito aplicado:**
+  - **17:02:16:** el pago se rechaza con `COUPON_EXPIRED`; el código y el regalo salen del carrito. OK, marcado.
+  - **Lo que lo bloqueaba después era Vipps:** su API de pruebas (`/epayment/v1/payments`) dio 429 a las 17:04 y 503
+    en todos los intentos de 16:56 a 17:04 (19 × 503 y un solo 201 en una hora). Cada toque genera unas 4 peticiones.
+  - Le pedí esperar y probar una sola vez, y volver a dejar `qa_gave` sin caducar o poner `QAVIO15` en la campaña 31.
 
 ## Decisions
 - Lo que queda de la #481 se prueba en Vev, en la página propia de Alan; el Replit ya no.
