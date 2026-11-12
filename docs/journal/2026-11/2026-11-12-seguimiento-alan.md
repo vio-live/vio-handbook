@@ -43,6 +43,22 @@ códigos de descuento con Vipps; Alan montó una tienda Woo local en Docker, pub
   que el producto llegara a Commerce. Kustom se quedó con 2 líneas y la página mostraba 3. Viene de antes de hoy.
   Arreglo en [web-sdk#152](https://github.com/vio-live/vio-web-sdk/pull/152), probado en vivo (4 líneas y 768,69
   en Kustom, igual que la página). Sin mergear: espera el OK de Angelo.
+- **13:57 #480, Alan:** «me preparas los datos nuevamente, tengo un nuevo Woo para el user brand 1331, la surface es
+  21».
+  - **Lo que había en QA:** Alan ya tenía la surface 21 «Vev Alan 12 NOV», la campaña 31 (por defecto, marca 1331),
+    el canal 526 con Vipps y la colección «Woo 12 NOV» con 6 productos. Su Woo es la misma tienda en
+    `woo-dev.vio.live`, con 4 productos nuevos, y la conexión 508 de Vio sigue funcionando.
+  - **Lo que preparé (14:05):**
+    - 12 cupones en su Woo (ids 33–44), con los productos que ya tenía en los papeles de la tarjeta: P1 = 411963,
+      P2 = 416101, P3 = 412009, G1 = 416099, G2 = 416102. Como sus productos valen más de 500, `qa_min500` pasa a
+      ser `qa_min2000`.
+    - El código de Vio `qa_vio10` (discount 275, sobre `up91EztSJ`).
+    - `QAVIO15` como código de la campaña 31.
+  - **Verificado:**
+    - el resolver de extensions da cada cupón como se espera (regalos con su variante; caducado y no soportados
+      con su motivo);
+    - el bootstrap de la surface 21 lleva `discount.ref` y `discountMethods ["vipps"]`, sin el código.
+  - Le respondí en la tarjeta y la descripción ya lo refleja.
 
 ## Decisions
 - Lo que queda de la #481 se prueba en Vev, en la página propia de Alan; el Replit ya no.
