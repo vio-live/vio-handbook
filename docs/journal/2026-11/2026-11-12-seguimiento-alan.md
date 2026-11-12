@@ -152,6 +152,14 @@ códigos de descuento con Vipps; Alan montó una tienda Woo local en Docker, pub
     Vipps, como ya llevan las llamadas de descuento. 2 tests nuevos que fallan sin el arreglo; suite 644/644.
     Mergeado (`c715eb3`) y desplegado en QA hacia las 18:24; verificado en el pod.
   - **Pendiente:** los inicios de pago de los demás métodos siguen con el reintento por defecto.
+- **18:29–18:44 #480, checklist 4 con graphql#42 en QA:**
+  - **Cupón cambiado:** el rechazo `COUPON_CHANGED` (18:29:06) ya no se reintenta. El carrito muestra «Rabatten er
+    endret av butikken. Handlekurven er oppdatert – prøv igjen.» con el total nuevo, y el segundo toque abre Vipps.
+    OK, marcado.
+  - **Compra tras compra:** el regalo vuelve en cada carrito. VIO-4726/4727/4728 con pedidos Woo 55–57 y `qa_gave`
+    en `coupon_lines`. OK.
+  - **Móvil:** salta a la app. **Escritorio:** la página de Vipps pide el número. OK.
+  - Checklist 4: quedan caducar el pago de Vipps, los 25 códigos (página local) y revocar la clave REST.
 
 ## Decisions
 - Lo que queda de la #481 se prueba en Vev, en la página propia de Alan; el Replit ya no.
