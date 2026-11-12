@@ -112,6 +112,13 @@ códigos de descuento con Vipps; Alan montó una tienda Woo local en Docker, pub
     el cupón tiene importe mínimo, como fija el test de `storeCouponSpend` (`minimumAmount: null` con `[]` cumple).
     El caso del checklist se pensó para la TasteWP de faves, cuyo cupón sí tenía mínimo. Le pedí repetirlo con
     `qa_min2000`.
+- **16:39 #480:** `qa_min2000` se rechaza en un carrito vacío (`COUPON_MIN_AMOUNT`) y se aplica con 2 × P1 (carrito
+  `f869c603`). Con eso el checklist 3 queda completo.
+- **16:46–16:51 #480, checklist 4, `qa20` cambiado en Woo con el cupón ya aplicado:**
+  - En los logs de shopcart, a las 16:49:30, el primer intento de pago (carrito `0330c46b`) se rechaza con
+    `COUPON_CHANGED`.
+  - El segundo va a Vipps con el valor nuevo (760).
+  - Falta que Alan confirme que vio «Handlekurven er oppdatert – prøv igjen.» en la página. No lo marqué.
 
 ## Decisions
 - Lo que queda de la #481 se prueba en Vev, en la página propia de Alan; el Replit ya no.
