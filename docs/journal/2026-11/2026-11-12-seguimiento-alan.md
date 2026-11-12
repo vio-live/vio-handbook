@@ -160,6 +160,13 @@ códigos de descuento con Vipps; Alan montó una tienda Woo local en Docker, pub
     en `coupon_lines`. OK.
   - **Móvil:** salta a la app. **Escritorio:** la página de Vipps pide el número. OK.
   - Checklist 4: quedan caducar el pago de Vipps, los 25 códigos (página local) y revocar la clave REST.
+- **19:07 #480, pago de Vipps caducado:** `EXPIRED` a las 18:53 (checkout `297f3da1`), sin orden. El nuevo intento
+  pagó VIO-4730. OK.
+- **20:24–20:27 #480, 25 códigos inventados por script:**
+  - El primer intento devolvió 25 × `COUPON_OTHER_APPLIED`: el carrito llevaba el código de la campaña.
+  - Con un carrito sin código (`b542a6ab`): 20 × `COUPON_NOT_FOUND` y 5 × `COUPON_UNAVAILABLE`. Es el tope de
+    `COUPON_RATE_MAX_UNKNOWN` (20 por minuto y canal). OK.
+  - Del checklist 4 solo queda revocar la clave REST, que va al final.
 
 ## Decisions
 - Lo que queda de la #481 se prueba en Vev, en la página propia de Alan; el Replit ya no.
