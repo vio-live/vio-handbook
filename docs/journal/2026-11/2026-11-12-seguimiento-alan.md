@@ -77,15 +77,25 @@ códigos de descuento con Vipps; Alan montó una tienda Woo local en Docker, pub
     objeto. Las líneas que dibuja la página tienen la imagen local; el regalo no. Arreglo en
     [web-sdk#153](https://github.com/vio-live/vio-web-sdk/pull/153) con test (falla sin el arreglo). Espera el OK
     de Angelo, junto a #152.
+- **14:44–15:01 #480:**
+  - **VIO-4720** con Vipps estándar, verificada (pedido Woo 47; `qa_gave` en 2 usos).
+  - **«Sin código»** OK: quitó el código de la campaña 31 y ya no hay `ApplyDiscount`.
+  - **14:57:** volvió a poner `QAVIO15` en la 31 desde el selector del dashboard (comprobado en QA).
+- **~15:20 SDK 0.39.2 en Vev (OK de Angelo):**
+  - **Merges:** [web-sdk#152](https://github.com/vio-live/vio-web-sdk/pull/152) y
+    [#153](https://github.com/vio-live/vio-web-sdk/pull/153). El conflicto en el CHANGELOG se resolvió con un merge
+    de `main`, sin force-push.
+  - **Release** [#154](https://github.com/vio-live/vio-web-sdk/pull/154) (`e4983c1`) y [vev#86](https://github.com/vio-live/vev/pull/86):
+    Vev **0.348**. Rollback: `vev restore` a la 0.347.
+  - **CLI de Vev:** su servidor ahora exige la 2.3.0 (`npm i -g @vev/cli@2.3.0`).
+  - **Alan avisado** en la #480 y en la #481 para que republique su página.
 
 ## Decisions
 - Lo que queda de la #481 se prueba en Vev, en la página propia de Alan; el Replit ya no.
 - La tienda Woo local de Alan (`woo-dev-local`, admin por defecto) es cosa suya: no se le pide cambiarla.
 
 ## Blockers
-- Publicar la 0.39.1 en npm: este portátil no tiene sesión de npm, así que lo hace Angelo.
-- [web-sdk#152](https://github.com/vio-live/vio-web-sdk/pull/152): falta el OK de Angelo para mergearlo y sacar
-  la 0.39.2 en Vev.
+- Publicar en npm la 0.39.2, que incluye la 0.39.1: lo hace Angelo desde un checkout limpio en `e4983c1`.
 
 ## Next session
 - Verificar en QA y en Kustom lo que reporte Alan en Vev. Después, devolver «Boots test» a la cuenta de Kustom de
