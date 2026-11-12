@@ -1,0 +1,58 @@
+---
+date: 2026-11-12
+session: seguimiento-alan
+participants: [angelo, claude]
+status: live
+---
+
+# Seguimiento de Alan — 12/11
+
+## Goal
+Lo pendiente de la #481 [zM6LN43p](https://trello.com/c/zM6LN43p), Boots × Kustom, ahora **en Vev** y no en el Replit
+(Angelo, 12/11: «alan ahora probará en vev no en replit, pero las funcionalidades son las mismas»): el doble pago
+con dos pestañas, la vuelta a la página correcta y la reapertura sin órdenes nuevas. Guardia desde las 13:46 UTC
+(«Quédate interactuando con Alan»). En Doing también está la #480 [DiIsksLg](https://trello.com/c/DiIsksLg),
+códigos de descuento con Vipps; Alan montó una tienda Woo local en Docker, publicada por el túnel `woo-dev-local`
+(Angelo: es su tienda de prueba, no hace falta tocarla).
+
+## Done
+- **09:30 UTC:** [shopcart#119](https://github.com/vio-live/vio-shopcart-microservice/pull/119) (un carrito, un pago:
+  lock del carrito y validación de Kustom) mergeado y desplegado en QA, con el OK de Angelo. Verificado en el pod.
+  Le avisé a Alan en la #481 a las 09:37.
+- **~11:00:** las mejoras de la #481 pasadas a tarjetas del Backlog, con las capturas de Alan:
+  [#482](https://trello.com/c/wyxrEvRm), [#483](https://trello.com/c/k1esk1va),
+  [#484](https://trello.com/c/RwXH8cCH), [#485](https://trello.com/c/5dnVGgZ1),
+  [#486](https://trello.com/c/yTN1kfl5), [#487](https://trello.com/c/LtkTf0cW) (asignada a Angelo) y
+  [#488](https://trello.com/c/aU43nmD5).
+- **#482 y #483 arreglados:**
+  - **Causa:** en shopcart, la orden de Kustom se creaba o sincronizaba sobre el checkout ACTIVE del carrito,
+    no sobre el de la ruta. La pestaña vieja escribía su página en la orden de la otra (VIO-4707).
+  - **[shopcart#120](https://github.com/vio-live/vio-shopcart-microservice/pull/120):** la orden es del checkout
+    que la pide, y uno sustituido recibe `CHECKOUT_SUPERSEDED`. Mergeado y en QA a las 12:40.
+  - **[web-sdk#150](https://github.com/vio-live/vio-web-sdk/pull/150):** al reabrir, el SDK retoma el checkout
+    de la pestaña; con el checkout sustituido, quita Kustom y no lo vuelve a montar solo.
+  - **Probado en vivo contra QA** con la página local `qa-boots`, sin pagar. Al reabrir y al recargar se mantiene
+    una sola orden (`c6de7cd6`). Con dos pestañas, la vieja muestra «Handlekurven ble endret i en annen fane…» y
+    el backend rechaza su sincronización.
+- **~13:00:** release del SDK 0.39.1 ([web-sdk#151](https://github.com/vio-live/vio-web-sdk/pull/151), `7a96b52`)
+  y Vev 0.347 ([vev#85](https://github.com/vio-live/vev/pull/85)), desplegado con el OK de Angelo. Es la primera
+  vez que Vev recibe la 0.38 y la 0.39 (códigos de descuento). Rollback: `vev restore` a la 0.346.
+- **#481 reescrita para Vev** y comentario a Alan: republicar su página, doble pago con dos pestañas, volver a la
+  página correcta (con dos páginas) y reabrir.
+- **Fallo encontrado en la verificación:** con Kustom abierto, añadir un producto actualizaba la orden antes de
+  que el producto llegara a Commerce. Kustom se quedó con 2 líneas y la página mostraba 3. Viene de antes de hoy.
+  Arreglo en [web-sdk#152](https://github.com/vio-live/vio-web-sdk/pull/152), probado en vivo (4 líneas y 768,69
+  en Kustom, igual que la página). Sin mergear: espera el OK de Angelo.
+
+## Decisions
+- Lo que queda de la #481 se prueba en Vev, en la página propia de Alan; el Replit ya no.
+- La tienda Woo local de Alan (`woo-dev-local`, admin por defecto) es cosa suya: no se le pide cambiarla.
+
+## Blockers
+- Publicar la 0.39.1 en npm: este portátil no tiene sesión de npm, así que lo hace Angelo.
+- [web-sdk#152](https://github.com/vio-live/vio-web-sdk/pull/152): falta el OK de Angelo para mergearlo y sacar
+  la 0.39.2 en Vev.
+
+## Next session
+- Verificar en QA y en Kustom lo que reporte Alan en Vev. Después, devolver «Boots test» a la cuenta de Kustom de
+  Boots (la configuración guardada está en `payment_method` 22b909d1).
