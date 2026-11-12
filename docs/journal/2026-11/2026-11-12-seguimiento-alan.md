@@ -89,6 +89,16 @@ códigos de descuento con Vipps; Alan montó una tienda Woo local en Docker, pub
     Vev **0.348**. Rollback: `vev restore` a la 0.347.
   - **CLI de Vev:** su servidor ahora exige la 2.3.0 (`npm i -g @vev/cli@2.3.0`).
   - **Alan avisado** en la #480 y en la #481 para que republique su página.
+- **15:04–15:48 #480, checklist 3:**
+  - **15:04:** Alan pone `qa_gave` como código de la campaña 31 desde el selector (fuente `store`).
+  - **Stepper del regalo bloqueado en 1:** OK.
+  - **Varios `ApplyCampaignDiscount`:** no duplican el regalo. OK.
+  - **Regalo con cantidad 3 por `AddItem`:** el carrito descuenta una sola unidad (−1 375) y el pago se rechaza con
+    `GIFT_MAX_ONE_UNIT`. OK.
+  - **La imagen sigue gris** porque su página publicada aún sirve la 0.39.1 (comprobado en el paquete de Vev que
+    carga). Le pedí republicar.
+- **15:20, otra sesión** (también como Angelo) le pidió en la #480 montar los códigos de Shopify (vio-shopify-sync#136).
+  Esa parte la lleva esa sesión; no la toco.
 
 ## Decisions
 - Lo que queda de la #481 se prueba en Vev, en la página propia de Alan; el Replit ya no.
