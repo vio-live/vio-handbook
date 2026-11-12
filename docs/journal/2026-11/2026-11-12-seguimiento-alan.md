@@ -59,6 +59,13 @@ códigos de descuento con Vipps; Alan montó una tienda Woo local en Docker, pub
       con su motivo);
     - el bootstrap de la surface 21 lleva `discount.ref` y `discountMethods ["vipps"]`, sin el código.
   - Le respondí en la tarjeta y la descripción ya lo refleja.
+- **14:25 #480, Alan, en Vev** (`a-alan-local.vev.site/woo-origin`): «veo descuento pero no lo de producto gratis».
+  - **Era lo esperado:** la campaña 31 da `QAVIO15`, un 15 % sin regalo, y P1 sale a 1 062,50. Product Simple 3
+    estaba a precio completo porque lo había añadido él.
+  - **Vev no expone el campo «Rabattkode»** (`discountField`); el código de página se pasa con `?vio_discount=`.
+  - **Comprobado en su página** con `?vio_discount=qa_gave`: G1 «Gratis», total 1 260 y Stripe desactivado.
+  - **Respondido (14:28):** qué checklists se hacen en Vev y cuáles en la página local. Un código que no se
+    teclea no muestra mensajes cuando se rechaza; está así por diseño desde la 0.38.0.
 
 ## Decisions
 - Lo que queda de la #481 se prueba en Vev, en la página propia de Alan; el Replit ya no.
