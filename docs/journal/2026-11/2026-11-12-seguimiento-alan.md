@@ -134,6 +134,12 @@ códigos de descuento con Vipps; Alan montó una tienda Woo local en Docker, pub
   - **Lo que lo bloqueaba después era Vipps:** su API de pruebas (`/epayment/v1/payments`) dio 429 a las 17:04 y 503
     en todos los intentos de 16:56 a 17:04 (19 × 503 y un solo 201 en una hora). Cada toque genera unas 4 peticiones.
   - Le pedí esperar y probar una sola vez, y volver a dejar `qa_gave` sin caducar o poner `QAVIO15` en la campaña 31.
+- **17:47 #480, borrar el cupón en Woo a mitad:** el pago del carrito `abfd7e0c` se rechaza con `COUPON_NOT_FOUND`
+  (cupón «alantest») y el código sale del carrito. OK.
+  - Vipps vuelve a responder: a las 17:46:03, `POST /epayment/v1/payments` → 201.
+- **17:50:** Alan no encuentra «Bruk» en Vev. Vev no expone `discountField`, y es la segunda vez hoy que eso le
+  bloquea casos; la decisión sigue pendiente de Angelo. Le indiqué que en Vev haga solo el doble clic en pagar y que
+  «Bruk» se pruebe en la página local.
 
 ## Decisions
 - Lo que queda de la #481 se prueba en Vev, en la página propia de Alan; el Replit ya no.
