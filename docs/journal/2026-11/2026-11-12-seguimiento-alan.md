@@ -66,6 +66,17 @@ códigos de descuento con Vipps; Alan montó una tienda Woo local en Docker, pub
   - **Comprobado en su página** con `?vio_discount=qa_gave`: G1 «Gratis», total 1 260 y Stripe desactivado.
   - **Respondido (14:28):** qué checklists se hacen en Vev y cuáles en la página local. Un código que no se
     teclea no muestra mensajes cuando se rechaza; está así por diseño desde la 0.38.0.
+- **14:32–14:35 #480:** Alan marca los 4 primeros casos del checklist 1 y reporta que la imagen del regalo no sale en
+  el carrito.
+  - **Órdenes verificadas en QA y en su Woo:**
+    - **VIO-4718:** `QAVIO15`, 1 072,50; pedido Woo 45 con 858 sin IVA.
+    - **VIO-4719:** `qa_gave`, G1 a 0, 1 260; pedido Woo 46 con 1 008 sin IVA, el cupón en el pedido y el uso en 1.
+    - Las dos fueron con **Vipps Express**. Ninguna orden respalda el caso «checkout → Vipps estándar», así que se
+      lo pedí.
+  - **Imagen del regalo:** bug confirmado. `GetCart` manda `image` como lista (`[{id,url}]`) y el SDK solo leía un
+    objeto. Las líneas que dibuja la página tienen la imagen local; el regalo no. Arreglo en
+    [web-sdk#153](https://github.com/vio-live/vio-web-sdk/pull/153) con test (falla sin el arreglo). Espera el OK
+    de Angelo, junto a #152.
 
 ## Decisions
 - Lo que queda de la #481 se prueba en Vev, en la página propia de Alan; el Replit ya no.
