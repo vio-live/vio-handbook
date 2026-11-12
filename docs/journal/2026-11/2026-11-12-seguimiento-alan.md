@@ -178,12 +178,22 @@ códigos de descuento con Vipps; Alan montó una tienda Woo local en Docker, pub
 - **20:59 #480, revocar la clave REST:** 401 de su Woo → `COUPON_UNAVAILABLE` (20:55:34). OK. **Checklist 4 completo.**
   - Al reconectar otra vez (conexión 512) se repitió el catálogo vacío. Lo reconstruí de nuevo y lo anoté en #489,
     junto con que la conexión nueva quedó con `prices_include_tax = null` (los precios no cambiaron).
+- **21:30–21:46 #480, checklist 5:**
+  - **Vipps:** Express con código, VIO-4731; estándar con código, VIO-4732. OK.
+  - **Con código solo se ofrece Vipps:** OK.
+  - **Por API, Stripe y Apple Pay con código:** `DISCOUNT_PAYMENT_METHOD_UNSUPPORTED`. OK. Stripe sale 3 veces en el
+    log: es el mismo reintento del gateway, pendiente para los demás métodos.
+  - **Stripe sin código:** OK.
+  - **Klarna con «Use Vio's account»:** 401 `PERMISSION_DENIED` en `/payments/v1/sessions`. La `KLARNA_AUTH_KEY` de
+    plataforma de QA no vale (16 intentos de la marca 1331 en 12 h, todos 401). No tiene que ver con los códigos;
+    hace falta una clave de playground válida (Angelo).
 
 ## Decisions
 - Lo que queda de la #481 se prueba en Vev, en la página propia de Alan; el Replit ya no.
 - La tienda Woo local de Alan (`woo-dev-local`, admin por defecto) es cosa suya: no se le pide cambiarla.
 
 ## Blockers
+- La clave de Klarna de plataforma en QA (`KLARNA_AUTH_KEY`) devuelve 401: Klarna con «Use Vio's account» no funciona en QA.
 - Publicar en npm la 0.39.3, que incluye la 0.39.1 y la 0.39.2: lo hace Angelo desde un checkout limpio en `ad038a0`.
 
 ## Next session
