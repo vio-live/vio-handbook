@@ -106,6 +106,12 @@ códigos de descuento con Vipps; Alan montó una tienda Woo local en Docker, pub
   - **«Fjern» y cambiar cantidades:** totales correctos (5 125 − 1 375 + 10 = 3 760) y el regalo sigue en 1.
   - **Lo que marqué a petición suya:** 4 casos del checklist 3. Quedan los 2 de código tecleado, que van en la
     página local.
+- **16:32 #480:** Alan probó por GraphQL los dos casos de código tecleado.
+  - **Segundo código:** se rechaza con `COUPON_OTHER_APPLIED`. OK, marcado.
+  - **`qa_gave` en un carrito vacío:** se acepta (`executed: true`), y es lo correcto. `COUPON_MIN_AMOUNT` solo sale si
+    el cupón tiene importe mínimo, como fija el test de `storeCouponSpend` (`minimumAmount: null` con `[]` cumple).
+    El caso del checklist se pensó para la TasteWP de faves, cuyo cupón sí tenía mínimo. Le pedí repetirlo con
+    `qa_min2000`.
 
 ## Decisions
 - Lo que queda de la #481 se prueba en Vev, en la página propia de Alan; el Replit ya no.
