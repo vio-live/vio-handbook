@@ -167,6 +167,14 @@ códigos de descuento con Vipps; Alan montó una tienda Woo local en Docker, pub
   - Con un carrito sin código (`b542a6ab`): 20 × `COUPON_NOT_FOUND` y 5 × `COUPON_UNAVAILABLE`. Es el tope de
     `COUPON_RATE_MAX_UNKNOWN` (20 por minuto y canal). OK.
   - Del checklist 4 solo queda revocar la clave REST, que va al final.
+- **20:50 #480:** Alan desconecta y reconecta su Woo (conexión nueva 511) y sincroniza. Sus productos dejan de salir
+  por GraphQL.
+  - **Causa:** `channel_user_products` de los canales 516, 519 y 526 quedó vacío; los productos, las colecciones y
+    `channel_group` estaban bien.
+  - **Arreglo en QA (20:51):** `POST products/channel-process/collections/update` con `up91EztSJ` y `l43F97e5G`.
+    Ahora 526 → 6 productos, y 516 y 519 → 2 cada uno.
+  - **Bug abierto en el Backlog:** [#489](https://trello.com/c/FAQlozGG). Reconectar la tienda no rehace el catálogo
+    de los canales.
 
 ## Decisions
 - Lo que queda de la #481 se prueba en Vev, en la página propia de Alan; el Replit ya no.
