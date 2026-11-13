@@ -46,11 +46,28 @@ Las tres tarjetas abiertas:
     de Boots (ya hubo al menos 5 de 2); el `&amp;` arreglado.
 - **`shopcart-reconcile` en QA:** falló a las 06:30, 06:40 y 06:50 mientras QA arrancaba; desde entonces va bien.
 
+- **Las respuestas de Angelo (13/11) y lo que se hizo:**
+  - **El regalo comprado aparte, opción (a):** [vio-web-sdk#158](https://github.com/vio-live/vio-web-sdk/pull/158).
+    - En la ficha, mientras el producto es el regalo del carrito, «Legg i handlekurv» queda desactivado con la nota
+      «Produktet er allerede med som gave…».
+    - El carrito ya no lo añadía (`addManual` devuelve la línea del regalo tal cual), pero la ficha decía «Lagt i
+      handlekurven» y mandaba `vio:added-to-cart`.
+    - Release 0.39.4 ([#159](https://github.com/vio-live/vio-web-sdk/pull/159), `478a5c9`) y desplegado en Vev
+      ([vev#88](https://github.com/vio-live/vev/pull/88), paquete cq1lXld-TA9). En npm, cuando lo publique Angelo.
+  - **#480:** se desmarca otra vez «Borrar el cupón en Woo a mitad» (lista 4) y se añade la prueba del regalo desde la
+    ficha (lista 3).
+  - **El logo claro:** no se toca el SDK; el logo lo sube Vio en el alta de la marca. Se añadió al playbook
+    `alta-marca-en-articulo.md` (paso 7) que tiene que verse sobre blanco.
+  - **La captura `1845fe`:** no se borra ni se rota nada.
+  - **Las órdenes de más en la cuenta de Kustom de Boots:** Angelo ya avisó.
+
 ## Decisions
 - El logo blanco de la 1331 es de la tienda de pruebas de Alan; se le explica la causa y él decide.
 - Los arreglos para lo que reporta Alan se mergean y se despliegan en QA sin preguntar cada vez. Producción, no.
 
 ## Blockers
+> [claude, 2026-11-13] Contestadas (ver Done) menos la 3, que Angelo pidió que se le explique.
+
 Preguntas a Angelo (13/11):
 1. **Captura `1845fe` en #480:** sale un fragmento de una credencial de Vipps en el editor SQL de Alan. ¿Se borra de la
    tarjeta? ¿Se rota la clave?
@@ -66,4 +83,4 @@ Preguntas a Angelo (13/11):
 ## Next session
 - **Producción para products#65:** el release y el mismo arreglo de datos para el catálogo de Boots en producción
   (productos y `channel_user_products`). Necesita el OK de Angelo.
-- **Release del SDK con #157:** se junta con lo que decida Angelo sobre el regalo.
+- **npm 0.39.4:** lo publica Angelo desde `478a5c9`.

@@ -254,6 +254,10 @@ Comprobar también que la campaña sale activa en `/v2/mobile/config`.
 - **Logo:** se crea una tarjeta en Trello (tablero Dev, «To do», asignada a Alan): conseguir el logo horizontal sin
   margen, subirlo en Settings → Brand de la cuenta de la marca y comprobar `logoUrl` en la config.
   Ejemplo: [QKC](https://trello.com/c/TZ2QXjYn).
+  - **Tiene que verse sobre blanco** (la versión oscura o en color, nunca la blanca). La cabecera de la caja («Du
+    handler hos …») es blanca y el SDK pone el logo **en lugar** del nombre, así que con un logo blanco queda vacía. Pasó
+    en QA el 12/11 con la marca 1331 (`vio-logo-white.svg`). El logo lo subimos nosotros en este paso, no la marca
+    (Angelo, 13/11).
 - **Promesas:** las pide Michael a la marca. Las escribe la marca en Settings → Brand → Promises.
   - Si las da Angelo, se cargan en `brand_profile.highlights` de la marca (si no hay fila, se crea con `brand_user_id`).
   - Antes se validan con `parseBrandHighlights` de `/usr/src/app/dist/domain/brand-highlights.js` en el pod de
