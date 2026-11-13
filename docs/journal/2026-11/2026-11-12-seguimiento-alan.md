@@ -206,8 +206,8 @@ códigos de descuento con Vipps; Alan montó una tienda Woo local en Docker, pub
 ## Blockers
 - **Klarna con «Use Vio's account» no funciona en QA:** la clave de plataforma (`KLARNA_AUTH_KEY`) devuelve 401.
   Hace falta una clave válida del playground de Klarna (Angelo).
-- **npm:** Angelo publicó la 0.39.2 (15:29 UTC). Falta la 0.39.3 (`COUPON_CHANGED`), desde un checkout limpio en
-  `ad038a0`. Vev ya la lleva.
+- ~~**npm:**~~ resuelto: Angelo publicó la 0.39.2 (15:29 UTC) y la 0.39.3 (17:07 UTC). npm `latest` = 0.39.3, la misma
+  que lleva Vev (comprobado el 13/11 con `npm view @vio-live/web-sdk dist-tags`).
 - **Campo «Rabattkode» en Vev:** los bloques de Vev no exponen `discountField`. Decisión pendiente de Angelo; mientras
   tanto, los casos de código tecleado van en la página local del SDK.
 
