@@ -31,6 +31,9 @@ Alan vuelve hoy. Angelo, 16/11: «ve con vev, cupón, que alan termine hoy con e
 - **#481:** las órdenes con la cuenta de Kustom de Boots están cerradas (Angelo: «no podemos seguir poniendo ninguna con
   esa cuenta»). «Boots test» se queda con nuestra cuenta y ya no se le devuelve la configuración de Boots
   (`payment_method` 22b909d1). Descripción y comentario actualizados.
+- **11:40 UTC, plan para cerrar hoy en la #480** (Angelo: «él está usando a Claude para avanzar; con AI ayudando debería ir más rápido»).
+  - **A, el Claude de Alan por API:** los cupones que no deben entrar, la lista 8 entera, el punto de Network y la comprobación de los pedidos en Woo.
+  - **B, Alan a mano en Vev y en el dashboard:** unas 8 compras con Vipps que cubren varios puntos cada una. La lista 6 va en 3 compras (A: captura, reembolso solo del regalo y parcial; B: captura y reembolso total; C: cancelar).
 
 ## Decisions
 - **La #480 se termina en Vev.** Vev no tiene el campo «Rabattkode», así que los casos de código tecleado pasan a
