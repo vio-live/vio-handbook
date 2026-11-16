@@ -115,6 +115,8 @@ Alan vuelve hoy. Angelo, 16/11: «ve con vev, cupón, que alan termine hoy con e
   - `qa_limit` comprobado en Woo (1/1 usos) y con `COUPON_USAGE_LIMIT` en los logs de shopcart.
   - `qa_email` no tiene captura de hoy; queda cubierto por el resolver del 12/11.
   - Le pedí a Alan seguir con la #481 si le da tiempo.
+- **20:30–22:30 UTC:** Alan devolvió la #481 a To do sin comentar y siguió con la #490 (Shopify, la lleva «Woo Vio»). En la #480 y la #481 no hubo nada más.
+  - **22:30, guardia cerrada:** bucle y monitor parados; QA se apaga a las 23:00.
 
 ## Decisions
 - **La #480 se termina en Vev.** Vev no tiene el campo «Rabattkode», así que los casos de código tecleado pasan a
@@ -128,8 +130,13 @@ Alan vuelve hoy. Angelo, 16/11: «ve con vev, cupón, que alan termine hoy con e
 - **Klarna fuera de la #480 por ahora** (Angelo, 16/11: «si klarna lo dejamos fuera por ahora»).
 
 ## Blockers
-- Nada nuestro por ahora. Falta que Alan republique su página y encienda su Woo.
+- **Decisiones de Angelo pendientes:**
+  1. **Vev con la SDK de web-sdk#162:** desplegarla ahora lleva también la 0.40.0, con la analítica del reel de otra sesión.
+  2. **Los 10 kr del envío:** en la 4741 se reembolsaron en Woo todas las líneas antes de cobrar, pero no el envío. Vio deja la orden REFUNDED y los 10 kr quedan reservados en Vipps sin captura ni liberación. Propuesta: cobrar lo no reembolsado y liberar el resto.
+  3. **El «Total» de la lista y el CSV de órdenes** del dashboard no incluye el envío.
+- **Producción:** extensions#76, graphql#43 y webapp#114 están solo en QA y necesitan el OK de Angelo.
 
 ## Next session
-- Guardia mientras Alan trabaje. Cuando su Woo responda, comprobar que `qa20` vuelve a ser un 20 % y que `qa_gave` no
-  está caducado.
+- **#481** (Boots × Kustom en Vev, con nuestra cuenta de Kustom; «Boots test» no usa la clave de Boots, comprobado por hash): Alan la dejó en To do.
+- **#490:** la lleva «Woo Vio».
+- **Vev 0.40.1** con web-sdk#162, cuando Angelo diga.
