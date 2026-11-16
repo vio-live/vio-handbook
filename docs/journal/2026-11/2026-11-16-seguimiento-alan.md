@@ -34,6 +34,17 @@ Alan vuelve hoy. Angelo, 16/11: «ve con vev, cupón, que alan termine hoy con e
 - **11:40 UTC, plan para cerrar hoy en la #480** (Angelo: «él está usando a Claude para avanzar; con AI ayudando debería ir más rápido»).
   - **A, el Claude de Alan por API:** los cupones que no deben entrar, la lista 8 entera, el punto de Network y la comprobación de los pedidos en Woo.
   - **B, Alan a mano en Vev y en el dashboard:** unas 8 compras con Vipps que cubren varios puntos cada una. La lista 6 va en 3 compras (A: captura, reembolso solo del regalo y parcial; B: captura y reembolso total; C: cancelar).
+- **11:35 UTC, repaso de las tarjetas** (Angelo: «lee bien las tarjetas y que estén actualizadas»):
+  - **#480:**
+    - La repetición de «borrar el cupón a mitad» se hace con un cupón de usar y tirar (`alantest2`), para no romper los de la lista.
+    - La compra sin código de la lista 7 va antes de la lista 10, porque esa lista deja `QAVIO15` en la 31.
+    - En la lista 2, los cupones que no entran se prueban por API, igual que en el plan.
+    - Nombres de los productos y qué rebaja cada código: `QAVIO15` solo P1 y P3 (colección «Woo29Oct»); `qa_vio10` los 6.
+    - La operación de Network se llama `ApplyCampaignDiscount`.
+    - Los códigos de Shopify (petición del 12/11 a las 15:20) quedan aparte.
+  - **#481:** título y descripción reescritos para Vev, con nuestra cuenta, el SDK 0.39.4 y las dos respuestas que faltan (artículo de Careless, surface 20). La descripción del 11/11 queda copiada en un comentario.
+  - **#477:** estado añadido. Está en staging y en producción desde el 05/11 ([vio-analytics#42](https://github.com/vio-live/vio-analytics/pull/42)) y solo falta la prueba en vivo.
+  - **#482 y #483:** estado añadido. Arreglados en QA y en Vev; falta comprobarlos en Vev y llevar shopcart#120 a producción.
 
 ## Decisions
 - **La #480 se termina en Vev.** Vev no tiene el campo «Rabattkode», así que los casos de código tecleado pasan a
