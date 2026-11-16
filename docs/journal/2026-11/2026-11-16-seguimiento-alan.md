@@ -83,6 +83,19 @@ Alan vuelve hoy. Angelo, 16/11: «ve con vev, cupón, que alan termine hoy con e
     - conexión revocada: se descarta una vez con un aviso, sin llamar a Shopify;
     - el resto: `nack` a los 30 s.
   - Verificado en los logs de QA: el mensaje se descartó a las 14:28:07 y no vuelve.
+- **14:14–15:28 UTC, #480, listas 6, 7 y 8**, con las órdenes VIO-4741…4745:
+  - **Lista 6:** Vipps (el recibo no se ve en la app de pruebas, pero shopcart lo manda con 3 líneas y Vipps responde 200), el pedido en Woo (1 008 = 1 260 sin IVA, porque la tienda no tiene impuestos), la orden en Vio y Analytics (bruto 13,8K, reembolsado 6,3K, neto 7,5K).
+    - Faltan los dos reembolsos con el dinero ya cobrado: el total del 73 y el de P1 del 66. Alan hizo los dos antes de cobrar (4744, 4743).
+  - **Lista 7:** completa (4745 sin código, todos los métodos de pago, Express sin regalo).
+  - **Lista 8:** completa.
+    - Las operaciones de administración dan FORBIDDEN y las rutas de base-api 403. `ApplyDiscount` y `DeleteAppliedDiscount` siguen funcionando.
+    - **Fallo encontrado:** `VerifyDiscount(code)` respondía «data.channelId should not be null». Desde el 11/11 shopcart exige el canal y el gateway no lo pasaba.
+    - **Arreglo:** [graphql#43](https://github.com/vio-live/graphql/pull/43) (`5b63514`), con 644/644 tests; 4 fallan sin el arreglo. En QA desde las 15:35.
+    - **Comprobado con la key del canal 526:** `COUPON_NOT_FOUND` para `QAVIO15` (código de marca; `VerifyDiscount` solo mira los del canal) y 403 por id.
+  - **Hallazgos para Angelo:**
+    - la lista y el CSV de órdenes del dashboard enseñan un «Total» sin el envío;
+    - en la 4741, Alan reembolsó en Woo todas las líneas antes de cobrar, pero no el envío. La orden queda REFUNDED y los 10 kr del envío quedan reservados en Vipps sin captura ni liberación.
+  - **Progreso de la #480:** 43 de 74.
 
 ## Decisions
 - **La #480 se termina en Vev.** Vev no tiene el campo «Rabattkode», así que los casos de código tecleado pasan a
