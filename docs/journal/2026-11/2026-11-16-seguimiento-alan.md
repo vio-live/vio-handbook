@@ -67,6 +67,10 @@ Alan vuelve hoy. Angelo, 16/11: «ve con vev, cupón, que alan termine hoy con e
   `?vio_discount=`.
 - **Con la cuenta de Kustom de Boots no se hace ninguna compra más.** Cualquier prueba va con nuestra cuenta.
 - **Shopify en su propia tarjeta (#490); la #477 se cierra sin la prueba en vivo** (Angelo, 16/11).
+- **Reparto de la guardia con la sesión «Woo Vio»** (12:55 UTC, a propuesta suya). Angelo le pidió también quedarse con Alan.
+  - «Woo Vio» lleva la #490 (Shopify).
+  - Esta sesión lleva la #480 y la #481, y es la única que escribe en ellas.
+  - Lo que Alan reporte en la #480 sobre el selector o el código de campaña se le pasa a «Woo Vio», que lo arregla y le contesta en un comentario propio.
 - **Klarna fuera de la #480 por ahora** (Angelo, 16/11: «si klarna lo dejamos fuera por ahora»).
 
 ## Blockers
