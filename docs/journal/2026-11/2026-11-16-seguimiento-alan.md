@@ -100,6 +100,17 @@ Alan vuelve hoy. Angelo, 16/11: «ve con vev, cupón, que alan termine hoy con e
   - **Fallo:** al borrar un código en uso, el dashboard enseñaba «DISCOUNT_IN_USE» en crudo. base-api contesta `{error, message, campaigns}` sin `code`, y `discountErrorOf` no lo encontraba.
   - **Arreglo:** [webapp-vio-commerce#114](https://github.com/vio-live/webapp-vio-commerce/pull/114) (`849d6c2`, 1188/1188 tests). Vercel lo publicó en `develop`, que es el dashboard de QA de Alan.
   - **Ojo:** la rama `staging` del webapp (`dashboard-staging.ecom.vio.live`) está parada desde el 06/11 y le faltan 15 commits, entre ellos los códigos de descuento (#108/#109).
+- **16:30–19:20 UTC, #480, listas 10, 6, 4 y 3 completas. Van 60 de 74; queda la lista 2.**
+  - **Lista 10:** órdenes 4746–4748. `QAVIO20` y `QAVIO15` se aplican, el código de página manda y la 21 y la 19 se bloquean en el selector.
+  - **Lista 6, los dos reembolsos con el dinero cobrado:** los registré por API en el Woo de Alan (refunds 83 y 84), porque él pidió validarlos. Vipps devolvió 1 260 (4742, total) y 1 250 (4737, solo P1).
+  - **Lista 4:**
+    - Primero Alan borró el cupón con el pago de Vipps ya empezado (4749/4750). La orden respeta el precio con el que empezó el pago; se le explicó.
+    - Después, el caso del punto: a las 19:10:45 `PostInitPaymentVipps` rechazó con `COUPON_NOT_FOUND` y quitó el cupón.
+  - **Lista 3:** «Legg i handlekurv» se desactiva bien en la ficha del regalo.
+  - **Fallo de texto:** en esa misma ficha, «Kjøp nå med Vipps» decía «3 varer · 2 625 Kr», como si fuera a comprar el regalo otra vez.
+    - **Arreglo:** [vio-web-sdk#162](https://github.com/vio-live/vio-web-sdk/pull/162), mergeado, con la línea del CHANGELOG en #163. Tests 1516/1518; los 2 que fallan son `klarna-confirm`, que ya fallaba en este Mac.
+    - **Sin desplegar en Vev:** `main` ya va en la 0.40.0, que otra sesión publicó en npm con la analítica de vídeo del reel y que no está en Vev. Desplegar ahora llevaría eso también; se le pregunta a Angelo.
+  - **Alan:** sin actividad de 17:15 a 19:12.
 
 ## Decisions
 - **La #480 se termina en Vev.** Vev no tiene el campo «Rabattkode», así que los casos de código tecleado pasan a
