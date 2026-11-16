@@ -45,11 +45,20 @@ Alan vuelve hoy. Angelo, 16/11: «ve con vev, cupón, que alan termine hoy con e
   - **#481:** título y descripción reescritos para Vev, con nuestra cuenta, el SDK 0.39.4 y las dos respuestas que faltan (artículo de Careless, surface 20). La descripción del 11/11 queda copiada en un comentario.
   - **#477:** estado añadido. Está en staging y en producción desde el 05/11 ([vio-analytics#42](https://github.com/vio-live/vio-analytics/pull/42)) y solo falta la prueba en vivo.
   - **#482 y #483:** estado añadido. Arreglados en QA y en Vev; falta comprobarlos en Vev y llevar shopcart#120 a producción.
+- **11:39 UTC, decisiones de Angelo aplicadas:**
+  - **Tarjeta nueva [#490](https://trello.com/c/XRMIf1WS)**, códigos de Shopify en Vev, en To do detrás de la #481. Comprobado en QA:
+    - la tienda `alan-test-supplier` tiene los descuentos de prueba (creados el 13/11, `QA-PCT10`… `QA-FUT-COL`, más el automático del 5 %);
+    - la campaña 26 (surface 16, canal 522, solo Vipps) tiene `QA-COL15`;
+    - el bootstrap lleva su `discount.ref` y `discountMethods ["vipps"]`;
+    - el permiso `read_discounts` está en la rama `custom/client-app` ([vio-shopify-sync#136](https://github.com/vio-live/vio-shopify-sync/pull/136)).
+    Un código programado responde `COUPON_NOT_STARTED`, y el SDK no tiene texto para ese motivo; en Vev no se nota porque no hay campo «Rabattkode».
+  - **#477 cerrada (Done).** Verificada en producción con los datos desde el 05/11.
 
 ## Decisions
 - **La #480 se termina en Vev.** Vev no tiene el campo «Rabattkode», así que los casos de código tecleado pasan a
   `?vio_discount=`.
 - **Con la cuenta de Kustom de Boots no se hace ninguna compra más.** Cualquier prueba va con nuestra cuenta.
+- **Shopify en su propia tarjeta (#490); la #477 se cierra sin la prueba en vivo** (Angelo, 16/11).
 - **Klarna fuera de la #480 por ahora** (Angelo, 16/11: «si klarna lo dejamos fuera por ahora»).
 
 ## Blockers
