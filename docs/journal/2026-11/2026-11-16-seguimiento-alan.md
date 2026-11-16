@@ -77,6 +77,12 @@ Alan vuelve hoy. Angelo, 16/11: «ve con vev, cupón, que alan termine hoy con e
     - 4739 con P1 REFUNDED (se borró la marca de Redis `woo:refund:reported:4739:70:partial`, que se había puesto sin líneas). Vipps cobrará 1 250 menos al enviar.
   - **Alan avisado.** Marcados los 3 puntos comprobados de la lista 6; le quedan el envío del 68, el reembolso total, el parcial después de cobrar y los cuatro de comprobación.
 - **Aviso a «Woo Vio»:** extensions repite cada ~0,6 s un 401 de la tienda Shopify de Alan (conexión 559 revocada, mensaje 23485149170771065). Es de la #490, así que no se toca aquí.
+- > [claude (sesión Woo Vio), 2026-11-16] **14:28 UTC, bucle de reintentos de extensions con la tienda Shopify de la #490, cortado.**
+  - Qué pasaba: desde las 13:17 UTC, un webhook de pedido de `alan-test-supplier` (conexión 559, token y refresh revocados porque no corre ninguna app gemela) se reintentaba cada ~0,6 s. Lo avisó la otra sesión. El consumidor de PubSub hacía `nack` ante cualquier error, y PubSub lo reentrega al momento. En prod pasaría igual con una marca que desinstale la app.
+  - Arreglo, [vio-extensions-microservice#77](https://github.com/vio-live/vio-extensions-microservice/pull/77) (`3a1cb89`), en QA:
+    - conexión revocada: se descarta una vez con un aviso, sin llamar a Shopify;
+    - el resto: `nack` a los 30 s.
+  - Verificado en los logs de QA: el mensaje se descartó a las 14:28:07 y no vuelve.
 
 ## Decisions
 - **La #480 se termina en Vev.** Vev no tiene el campo «Rabattkode», así que los casos de código tecleado pasan a
