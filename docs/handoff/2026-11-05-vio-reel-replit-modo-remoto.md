@@ -129,3 +129,49 @@ las reglas del componente (una sola fuente de verdad con ETag y revisión fija p
 decide y una incompatible no pinta nada, tema solo por tokens, `hls.js` desde `cdn.jsdelivr.net` → CSP); crear
 experiencias solo desde su servidor con la key de gestión (apartado de arriba); devolver una URL de QA con el
 reel por la SDK y los avisos de consola.
+
+## Analítica de vídeo (ADR-0043)
+
+> [claude, 2026-11-16] Nuevo. Contrato completo en
+> [ADR-0043](../decisions/0043-analitica-del-reel.md) y en `vio-analytics/docs/EVENTS_CONTRACT.md`.
+
+El dashboard de Vio ahora muestra, por experiencia y por vídeo, cuántos lo vieron, cuánto tiempo, hasta
+dónde, si activaron el sonido, qué productos abrieron y si compraron. `<vio-reel>` lo envía solo. **Tu
+reproductor tiene que enviar lo mismo** con `Vio.analytics.track` de la web SDK, que ya cargas:
+
+| Evento | Cuándo | Una vez por |
+|---|---|---|
+| `video_start` | primera reproducción del vídeo; `props: { autoplay: true \| false }` | carga de página × vídeo |
+| `video_progress` | llega al 25, 50 y 75 % de su duración; `context.videoPercent` | carga × vídeo × marca |
+| `video_complete` | llega al final la primera vez, o el loop salta del último décimo al primero; `videoPercent: 100` | carga × vídeo |
+| `video_watch` | segundos realmente reproducidos desde el aviso anterior (`context.watchSeconds`), medidos por el avance de `currentTime`. Un salto de más de 2,5 s es un seek y no cuenta. Envíalo al pausar, al pasar a otro vídeo, al salir de pantalla, en `visibilitychange` oculto y cada 30 s de reproducción. Nunca un total acumulado | — |
+| `video_unmute` | el lector activa el sonido | carga × vídeo |
+
+Todos llevan en `context`:
+
+```ts
+{
+  experienceId: 7,            // la experiencia (modo remoto: el experienceId del artículo)
+  experienceRevision: 3,      // la revisión publicada que leíste
+  videoId: 'influencer',      // el id del vídeo en la experiencia
+  videoIndex: 0,              // su posición en el reel, desde 0
+  sponsorId: 1338, campaignId: 12, slot: 'article-192-reel',  // la atribución de siempre
+}
+```
+
+Ejemplo:
+
+```ts
+Vio.analytics.track('video_progress', { context: { ...base, videoPercent: 50 } })
+Vio.analytics.track('video_watch', { context: { ...base, watchSeconds: 12.4 } })
+```
+
+**Tiempo de vista al cerrar la pestaña**: el SDK vacía su cola por beacon en `visibilitychange`. Para que
+tu último `video_watch` salga en ese beacon, registra tu listener **en captura sobre `window`**:
+`window.addEventListener('visibilitychange', flush, { capture: true })`. Así corre antes que el del SDK.
+
+**Clics de producto por vídeo**: si tu tarjeta emite `vio:product-click`, añade al `detail`
+`experienceId`, `revision`, `videoId` y `videoIndex`, y el `select_item` los llevará.
+
+Para probar en QA, abre el artículo con `?vio_internal=1`: tus eventos quedan marcados como internos y
+no ensucian las cifras de nadie.
