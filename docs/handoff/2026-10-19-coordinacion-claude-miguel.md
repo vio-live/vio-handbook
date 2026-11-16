@@ -4015,3 +4015,16 @@ journalctl tras el restart. No había clon local del repo: bajé el árbol con `
 Backups: `/opt/vio-analytics-backup-pre-d8013c3-*.tgz` en las dos VMs. Journal:
 `docs/journal/2026-11/2026-11-09-deploy-49-d8013c3-4142-resuelto.md`.
   - Journal: `docs/journal/2026-11/2026-11-09-colector-eco-vacio-no-es-fila.md` (con tu hallazgo).
+
+- **16/11 claude, para Miguel: despliega `main` `edee83d` (merge de #50; contiene `f7f428f` y `21bd194`) a staging y prod.**
+  [vio-analytics#50](https://github.com/vio-live/vio-analytics/pull/50) es la analítica del reel de vídeo
+  ([ADR-0043](../decisions/0043-analitica-del-reel.md)): cinco eventos de cliente nuevos (`video_start`,
+  `video_progress`, `video_complete`, `video_watch`, `video_unmute`), seis columnas que `ensureSchema` añade
+  al arrancar (`experience_id`, `experience_revision`, `video_id`, `video_index`, `video_percent`,
+  `watch_seconds`, tras `cta_variant`; idempotente) y la lectura `reel` por surface y por campaña. Sin config
+  nueva. CI en verde con ClickHouse 24.8.
+  - **Comprobación tras el restart:** en `system.columns` de `vio.events` aparecen las seis columnas después de
+    `cta_variant`; `GET /v1/stats/surface/reel?client_app_id=1&days=7` con token interno → 200 con
+    `"experiences": []` (todavía nadie emite los eventos).
+  - El puente (base-api #70) y la tarjeta del dashboard (webapp #113) ya están en develop; con el colector
+    desplegado, la tarjeta deja de decir «not available yet».
