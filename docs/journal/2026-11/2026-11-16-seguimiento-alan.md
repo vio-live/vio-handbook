@@ -111,6 +111,10 @@ Alan vuelve hoy. Angelo, 16/11: «ve con vev, cupón, que alan termine hoy con e
     - **Arreglo:** [vio-web-sdk#162](https://github.com/vio-live/vio-web-sdk/pull/162), mergeado, con la línea del CHANGELOG en #163. Tests 1516/1518; los 2 que fallan son `klarna-confirm`, que ya fallaba en este Mac.
     - **Sin desplegar en Vev:** `main` ya va en la 0.40.0, que otra sesión publicó en npm con la analítica de vídeo del reel y que no está en Vev. Desplegar ahora llevaría eso también; se le pregunta a Angelo.
   - **Alan:** sin actividad de 17:15 a 19:12.
+- **19:29–19:57 UTC, lista 2 completa: #480 en 74/74, pasada a Done.**
+  - `qa_limit` comprobado en Woo (1/1 usos) y con `COUPON_USAGE_LIMIT` en los logs de shopcart.
+  - `qa_email` no tiene captura de hoy; queda cubierto por el resolver del 12/11.
+  - Le pedí a Alan seguir con la #481 si le da tiempo.
 
 ## Decisions
 - **La #480 se termina en Vev.** Vev no tiene el campo «Rabattkode», así que los casos de código tecleado pasan a
