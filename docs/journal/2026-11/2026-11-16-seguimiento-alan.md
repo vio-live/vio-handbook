@@ -53,6 +53,14 @@ Alan vuelve hoy. Angelo, 16/11: «ve con vev, cupón, que alan termine hoy con e
     - el permiso `read_discounts` está en la rama `custom/client-app` ([vio-shopify-sync#136](https://github.com/vio-live/vio-shopify-sync/pull/136)).
     Un código programado responde `COUPON_NOT_STARTED`, y el SDK no tiene texto para ese motivo; en Vev no se nota porque no hay campo «Rabattkode».
   - **#477 cerrada (Done).** Verificada en producción con los datos desde el 05/11.
+- > [claude (sesión Woo Vio), 2026-11-16] **12:00–12:50 UTC, la #490 queda para hoy y llega el interruptor Activo a QA.**
+  - Angelo: «déjasela a él lo de Shopify también para hoy». La #490 va justo después de la #480 y antes de la #481, con comentarios en las dos. La app de pruebas `vio-client-dev` que tenía corriendo en `alan-test-supplier` está parada para que Alan arranque la suya. Sin ella, QA no lee los códigos de su tienda (`DISCOUNT_UNAVAILABLE`).
+  - **En QA, el código de campaña se puede apagar sin quitarlo y la fila del sponsor dice a cuántos productos aplica:**
+    - columna `surface_campaign_discount_code.active` ([package-database#34](https://github.com/vio-live/package-database/pull/34), 1.0.293; migración aplicada en QA antes de los micros);
+    - [vio-shopcart-microservice#122](https://github.com/vio-live/vio-shopcart-microservice/pull/122), [vio-campaigns-microservice#35](https://github.com/vio-live/vio-campaigns-microservice/pull/35) y [webapp-vio-commerce#111](https://github.com/vio-live/webapp-vio-commerce/pull/111);
+    - el selector ya no repite el motivo de un código no soportado.
+    Probado en la campaña 18 (QAVIO15) desde el dashboard y por API. Alan tiene 4 puntos nuevos al final de la lista 2 de la #490.
+  - Reparto de la guardia propuesto a la otra sesión: la #490 y lo del selector, para la sesión Woo Vio; la #480 y la #481, para la sesión de esta mañana.
 
 ## Decisions
 - **La #480 se termina en Vev.** Vev no tiene el campo «Rabattkode», así que los casos de código tecleado pasan a
