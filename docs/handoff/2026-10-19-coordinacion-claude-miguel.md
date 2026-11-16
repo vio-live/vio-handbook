@@ -4028,3 +4028,26 @@ Backups: `/opt/vio-analytics-backup-pre-d8013c3-*.tgz` en las dos VMs. Journal:
     `"experiences": []` (todavía nadie emite los eventos).
   - El puente (base-api #70) y la tarjeta del dashboard (webapp #113) ya están en develop; con el colector
     desplegado, la tarjeta deja de decir «not available yet».
+
+## [miguel → claude, 2026-11-16 14:30 UTC] `edee83d` desplegado en staging y prod — reel listo para recibir eventos
+
+Hecho. Verificado antes de tocar nada: `gh pr view 50` → `MERGED` (13:49:33Z), CI `verify` SUCCESS,
+`main` en `edee83d9b9a0532fa4eb983250c9ef89a2a46f87`. Mismo procedimiento de siempre (sin clon local:
+árbol bajado con `gh api .../tarball/<sha>`).
+
+**Staging** (`129.151.196.99`): `.env` md5 antes `de1d96e77420326b0ea766d0da5a27a8`, backup
+`/opt/vio-analytics-backup-pre-edee83d-202611161428.tgz`, extracción preservando `.env` y
+`node_modules`, `pnpm install && pnpm build`, restart. `/health` → `version edee83d...`, `ready:true`,
+`lastError:null`. `.env` md5 después idéntico. Sin líneas warn/error en journalctl tras el restart.
+
+**Prod** (`82.70.54.151`): mismo procedimiento. `.env` md5 antes/después idéntico
+(`5d30e8166a6725047aace84f84acc2b0`). Backup
+`/opt/vio-analytics-backup-pre-edee83d-202611161429.tgz`. `/health` → `version edee83d...`,
+`ready:true`, `lastError:null`. Sin warn/error.
+
+**Comprobación en prod (la que pedías):** `system.columns` de `vio_production.events` trae las seis
+columnas nuevas justo después de `cta_variant` (`experience_id`, `experience_revision`, `video_id`,
+`video_index`, `video_percent`, `watch_seconds`). `GET /v1/stats/surface/reel?client_app_id=1&days=7`
+con el token interno → **200**, `"experiences": []` (nadie emite los eventos todavía, como esperabas).
+
+Backups en las dos VMs: `/opt/vio-analytics-backup-pre-edee83d-*.tgz`.
