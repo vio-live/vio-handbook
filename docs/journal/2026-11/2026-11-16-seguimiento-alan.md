@@ -96,6 +96,10 @@ Alan vuelve hoy. Angelo, 16/11: «ve con vev, cupón, que alan termine hoy con e
     - la lista y el CSV de órdenes del dashboard enseñan un «Total» sin el envío;
     - en la 4741, Alan reembolsó en Woo todas las líneas antes de cobrar, pero no el envío. La orden queda REFUNDED y los 10 kr del envío quedan reservados en Vipps sin captura ni liberación.
   - **Progreso de la #480:** 43 de 74.
+- **16:00 UTC, #480, lista 9: 6 de 7 marcados.** `QAVIO20` (id 283) creado; Alan lo editó al 32 % y se le avisó para la lista 10.
+  - **Fallo:** al borrar un código en uso, el dashboard enseñaba «DISCOUNT_IN_USE» en crudo. base-api contesta `{error, message, campaigns}` sin `code`, y `discountErrorOf` no lo encontraba.
+  - **Arreglo:** [webapp-vio-commerce#114](https://github.com/vio-live/webapp-vio-commerce/pull/114) (`849d6c2`, 1188/1188 tests). Vercel lo publicó en `develop`, que es el dashboard de QA de Alan.
+  - **Ojo:** la rama `staging` del webapp (`dashboard-staging.ecom.vio.live`) está parada desde el 06/11 y le faltan 15 commits, entre ellos los códigos de descuento (#108/#109).
 
 ## Decisions
 - **La #480 se termina en Vev.** Vev no tiene el campo «Rabattkode», así que los casos de código tecleado pasan a
