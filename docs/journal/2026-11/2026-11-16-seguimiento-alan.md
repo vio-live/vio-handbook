@@ -61,6 +61,22 @@ Alan vuelve hoy. Angelo, 16/11: «ve con vev, cupón, que alan termine hoy con e
     - el selector ya no repite el motivo de un código no soportado.
     Probado en la campaña 18 (QAVIO15) desde el dashboard y por API. Alan tiene 4 puntos nuevos al final de la lista 2 de la #490.
   - Reparto de la guardia propuesto a la otra sesión: la #490 y lo del selector, para la sesión Woo Vio; la #480 y la #481, para la sesión de esta mañana.
+- **13:10–13:46 UTC, Alan empieza:**
+  - **Su Woo responde:** `qa20` vuelve a ser un 20 % y `qa_gave` no está caducado. Republicó su página de Vev, que ya carga la SDK 0.39.4.
+  - **Compras:** de 13:21 a 13:27, 7 órdenes con `qa_gave` (VIO-4734…4740, pedidos de Woo 63–69), cada una de 1 260 kr: P1 + G1 a 0 + 10 de envío.
+  - **El total del checkout (2 635) es antes del regalo**, igual que en la VIO-4719 del 12/11; no es un fallo.
+- **13:46, #480, lista 6:** canceló, completó y reembolsó en Woo, pero el dashboard seguía en «In progress».
+  - **Causa:** `woo-dev.vio.live` está en las conexiones 469, 470 y 490 del vendedor 1289 y en la 512 de la marca 1331. `getEcomUserWooByShop` devolvía la de 1289, así que:
+    - en las cancelaciones y los completados salía `toProcess: []`;
+    - los reembolsos se leían con la clave de 1289, y Woo daba 401.
+  - **Arreglo:** [vio-extensions-microservice#76](https://github.com/vio-live/vio-extensions-microservice/pull/76) (`473946e`), que elige la cuenta dueña de las líneas de la orden. Tiene 9 tests (4 fallan sin el arreglo) y las 249 pruebas de Woo pasan. En QA desde las 14:02.
+  - **14:03, los 4 webhooks repetidos desde el pod:**
+    - 4740 cancelada y la reserva de Vipps liberada;
+    - 4737 completada y 1 260 cobrados;
+    - 4738 con el regalo REFUNDED, sin mover dinero;
+    - 4739 con P1 REFUNDED (se borró la marca de Redis `woo:refund:reported:4739:70:partial`, que se había puesto sin líneas). Vipps cobrará 1 250 menos al enviar.
+  - **Alan avisado.** Marcados los 3 puntos comprobados de la lista 6; le quedan el envío del 68, el reembolso total, el parcial después de cobrar y los cuatro de comprobación.
+- **Aviso a «Woo Vio»:** extensions repite cada ~0,6 s un 401 de la tienda Shopify de Alan (conexión 559 revocada, mensaje 23485149170771065). Es de la #490, así que no se toca aquí.
 
 ## Decisions
 - **La #480 se termina en Vev.** Vev no tiene el campo «Rabattkode», así que los casos de código tecleado pasan a
