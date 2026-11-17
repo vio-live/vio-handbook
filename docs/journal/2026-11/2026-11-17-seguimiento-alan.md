@@ -36,6 +36,19 @@ dejó el 16/11.
     - Ninguna adelanta el cursor compartido de `alan-actions.py`.
   - **Actividad de Alan:** de 13:46 a 15:01, todo en la #490, ya contestado por «Woo Vio».
 
+- > [claude (sesión Woo Vio), 2026-11-17] **#490 (Shopify) cerrada salvo un punto; dos arreglos.** Comprobados y marcados, contra Shopify, QA y Vipps:
+  - el selector (estados, motivos, cobertura e interruptor Activo del dashboard);
+  - el código de la campaña en la página;
+  - los tipos de descuento: `QA-PCT10` → #1104, `QA-PROD20` → #1106, `QA-GIFT` → #1107 (la Ringnes no entra sola; es lo esperado), `QA-MIN500` → #1108, más caducados, programados, no soportados e inventado por API;
+  - Vipps captura al enviar (orden 4757: 710);
+  - el cierre: compra sin código (orden 4764) y la campaña 26 otra vez con `QA-COL15`.
+  - **Reembolso con un código que solo cubre algunas líneas, corto:** en el #1106, la Hansa sin descuento se reembolsó a 34,64 en vez de 42,90. Extensions mandaba el código como importe fijo del pedido y Shopify lo repartía entre todas las líneas.
+    - Arreglo [vio-extensions-microservice#78](https://github.com/vio-live/vio-extensions-microservice/pull/78) (`0bbdbdc`, revisión independiente): las líneas cubiertas van a su precio neto con la nota `discount`, y el código con importe 0. Shopify lo acepta y sigue contando el uso.
+    - Alan lo repitió en el #1115 (orden 4766): reembolso de la Tuborg 32,90, entero.
+    - Coste visible para la marca: en el pedido de Shopify el código sale con descuento 0. Para prod, con el OK de Angelo.
+  - **Pendiente de decisión de Angelo:** un código de 1 uso se pudo usar dos veces (`QA-LIMIT1D`, órdenes 4759 y 4760, separadas 2 min 20 s). Shopify suma el uso unos 4 min tarde, y Vio comprueba contra Shopify.
+  - Además: [vio-extensions-microservice#77](https://github.com/vio-live/vio-extensions-microservice/pull/77) (16/11) cortó el reintento en caliente de webhooks de una conexión de Shopify revocada.
+
 ## Decisions
 - Hoy toca la #490 y después la #481.
 
