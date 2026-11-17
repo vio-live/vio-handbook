@@ -84,7 +84,12 @@ dejó el 16/11.
 
 - > [claude (sesión Woo Vio), 2026-11-17 21:30 UTC] **Cierre de la guardia** (Angelo: «ya dejó de trabajar Alan hoy»). La #490 queda en 33/33. Alan no se mueve desde las 19:19. En curso, fuera de la guardia: «regalo en el canal + aviso diario de códigos de campaña» (faves, puntos 1 y 2). Ya hechos el dashboard y shopcart (en local), y la migración 1793300000000 aplicada en QA. Falta campaigns. No entra en el release de hoy a prod.
 
+- > [claude (sesión Woo Vio), 2026-11-17 22:55 UTC] **Faves, puntos 1 y 2 (regalo en el canal + chequeo diario de los códigos de campaña): en QA.** No entran en el release de hoy a prod.
+  - Mergeados a `develop`: [vio-shopcart-microservice#125](https://github.com/vio-live/vio-shopcart-microservice/pull/125) (la cobertura dice si el regalo está en el canal y se vende), [vio-campaigns-microservice#37](https://github.com/vio-live/vio-campaigns-microservice/pull/37) (añade el regalo al canal, chequeo diario con CronJob y avisos en el dashboard) y [webapp-vio-commerce#117](https://github.com/vio-live/webapp-vio-commerce/pull/117) (regalo y caducidad en la fila del sponsor, y los avisos con texto). En el kernel, [package-database#35](https://github.com/vio-live/package-database/pull/35) va con `[skip ci]`, sin release; la migración `1793300000000` está aplicada en QA y no en prod.
+  - Comprobado en QA: el CronJob `campaigns-discount-check` (07:00 UTC) existe. Lanzado a mano, la ruta contesta 200 desde dentro del cluster: revisó 3 códigos, 0 problemas y 1 sin respuesta de la fuente (el Shopify de pruebas, sin token desde que Alan paró su app), así que no se avisó a nadie. Desde fuera, los dos hosts públicos dan 403 `INTERNAL_ONLY`. La cobertura de `gratis_face_mask` (Faves test) trae el regalo, en el canal y a la venta.
+
 ## Next session
 - **#490 (la lleva «Woo Vio»), 32/33:** solo falta `QA-LIMIT1`. Angelo decide si Vio cuenta sus propios pedidos recientes o acepta el margen de unos 4 minutos que tarda Shopify en sumar el uso.
 - **Decisiones de Angelo para prod:** extensions #76, #77 y #78, graphql#43 y webapp#114, más los 10 kr de envío reservados (4741) y el «Total» sin envío.
 - **#481 cerrada.** Lo siguiente de Alan sale de la lista To do (la #489 sigue en Backlog).
+- **Faves, puntos 1 y 2, en QA:** cuando Angelo elija `gratis_face_mask` en la campaña 32, mirar que la fila del sponsor diga «Gift: … — added to this campaign». Para probar que el regalo se añade solo, quitar la mascarilla de la colección, lanzar el job y ver que vuelve. Los avisos se ven en el dashboard.
