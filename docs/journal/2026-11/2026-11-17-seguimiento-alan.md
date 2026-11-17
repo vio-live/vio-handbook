@@ -22,12 +22,18 @@ dejó el 16/11.
 - **Tarjetas puestas al día para hoy:**
   - **#490:** bloque «17/11: plan para cerrar hoy» arriba de la descripción (17 puntos en orden, empezando por arrancar la app gemela y el interruptor del dashboard) y un comentario. Se avisó antes a «Woo Vio».
   - **#481** [zM6LN43p](https://trello.com/c/zM6LN43p): va después de la #490. Comentario preguntando por qué la devolvió a To do.
+- **~10:00 UTC, Vev con el SDK 0.40.1** (Angelo: «vamos con vev»).
+  - **Release:** [vio-web-sdk#164](https://github.com/vio-live/vio-web-sdk/pull/164) (`6c8fa29`), con #162 y la 0.40.0 del reel.
+  - **Despliegue:** bundle esbuild y [vev#89](https://github.com/vio-live/vev/pull/89) (`6162563`), desplegado en `cq1lXld-TA9`. El servidor de Vev ya exige `@vev/cli` 2.3.1 (actualizado).
+  - **Vev no manda eventos de vídeo:** ningún bloque pinta `<vio-reel>`, así que la nota de la 0.40.0 sobre el colector no le aplica.
+  - **Pendiente:** npm 0.40.1, que publica Angelo.
+  - **Alan:** sus dos páginas (`/woo-origin` y `/test`) estaban caducadas otra vez. Se le pidió republicar en el plan de la #490 y se le avisó en la #480.
 
 ## Decisions
 - Hoy toca la #490 y después la #481.
 
 ## Blockers
-- Siguen pendientes las decisiones de Angelo del 16/11: Vev con web-sdk#162 (llevaría la 0.40.0), los 10 kr de envío reservados (4741), el «Total» sin envío y producción de extensions#76, graphql#43 y webapp#114.
+- Siguen pendientes las decisiones de Angelo del 16/11: los 10 kr de envío reservados (4741), el «Total» sin envío y producción de extensions#76, graphql#43 y webapp#114.
 
 ## Next session
 - La guardia, si Angelo la pide, cuando Alan empiece (sobre las 13:00 UTC).
