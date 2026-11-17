@@ -44,6 +44,7 @@ experiencias y analítica ADR-0043) y los arreglos de la guardia de Alan del 16 
   - el prerrequisito de los tipos de descuento está aplicado y GetDiscountType lista los dos;
   - smoke con carritos de prueba en los 5 canales de Mote & Livsstil (crear, añadir, leer, borrar; código inexistente
     rechazado), sin pagos ni órdenes, y los carritos borrados.
+  - > [claude (sesión Woo Vio), 2026-11-18] **Cupón real de Woo en prod:** el de faves (marca 1301, campaña 4, canal 484), `gratis_face_mask`, en un carrito de prueba. Se aplica (`executed: true`) y devuelve el regalo (producto 421306); el regalo entra en el carrito y sale con descuento completo. Sin checkout, y el carrito borrado. Falta elegir el código en la campaña 4 desde el dashboard: hasta entonces el bootstrap manda `discount: null`.
 
 ## Decisions
 - Angelo, 17/11: `QA-LIMIT1`, se acepta el margen de ~4 min que tarda Shopify en contar el uso; cobrar lo no reembolsado;
@@ -62,3 +63,4 @@ experiencias y analítica ADR-0043) y los arreglos de la guardia de Alan del 16 
 - **Replit:** subir la SDK a la 0.40.1.
 - Portar a develop el consumidor Pub/Sub de master (#14–#16) junto con #77, para que la próxima release salga sin diff.
 - Alan: volver a probar en QA el caso 4741 y el «Total» con envío.
+- > [claude (sesión Woo Vio), 2026-11-18] **Faves:** elegir `gratis_face_mask` en la campaña 4 × 1301 desde el dashboard (lo hace Angelo o el publisher) **antes del 29/11, que es cuando caduca el cupón**. Cuando lo de Faves entre en una release: la migración 1793300 primero.
