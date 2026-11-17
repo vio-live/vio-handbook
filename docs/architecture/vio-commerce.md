@@ -80,6 +80,12 @@ El grueso del backend commerce se pusheó el **2026-06-30** (los "fix timeout" /
 >   llaman los SDKs, Vev y el webapp. Los demás solo son internos.
 > - **Hace su propia auth**, sin pasar por el middleware: token de Firebase para el dashboard y
 >   key de surface para el SDK.
+> - **Rutas internas `/internal/*`** (desde el 17/11/2026; en QA y en prod con la próxima release): solo desde
+>   dentro del cluster. Como el micro es público, `ClusterOnlyGuard` devuelve 403 `INTERNAL_ONLY` a lo que trae
+>   cabeceras del Gateway (`x-forwarded-for`, `x-envoy-external-address`…). La primera es
+>   `POST /internal/discount-codes/check`, el chequeo diario de los códigos de campaña: añade al canal el regalo
+>   de un cupón y avisa en el dashboard. La llama el CronJob `campaigns-discount-check` (07:00 UTC en QA, 06:00 en
+>   prod; [vio-campaigns-microservice#37](https://github.com/vio-live/vio-campaigns-microservice/pull/37)).
 > - **Su rama de prod es `main`** (como `collection`), no `master`.
 > - **Su deploy hace rolling update de verdad** (tag por número de run, `maxUnavailable: 0`), en
 >   vez del `image.tag=latest` + `kubectl delete pod` de los demás, que cuesta ~1 min de 503

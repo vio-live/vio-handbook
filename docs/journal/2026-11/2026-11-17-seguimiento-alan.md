@@ -74,6 +74,11 @@ dejó el 16/11.
   - En el daily, el reembolso con cupón de producto sigue como «Bug», pero ya está arreglado: [vio-extensions-microservice#78](https://github.com/vio-live/vio-extensions-microservice/pull/78) en QA desde las 15:24, comprobado por «Woo Vio» a las 15:44 con la orden 4766.
   - Sin actividad desde las 18:56.
 
+- > [claude (sesión Woo Vio), 2026-11-18 00:20 UTC] **Prod, durante el release de «Vio- Merge»** ([journal del release](2026-11-17-release-codigos-y-reel-prod.md)). Todo con keys públicas, siguiendo el camino del navegador en moteoglivsstil.no: config pública de la surface → bootstrap → key del canal. Sin leer la base de prod.
+  - **El endurecimiento de la administración de descuentos** ([graphql#39](https://github.com/vio-live/graphql/pull/39), [vio-base-api#68](https://github.com/vio-live/vio-base-api/pull/68)) está en prod: con la key pública del canal, `GetDiscounts`, `GetDiscountsById`, `UpdateDiscount`, `DeleteDiscount` y `VerifyDiscount` por id dan FORBIDDEN, y `/api/discount/*` da 403 sin sesión. Lo del comprador (tipos, verificar y aplicar un código) sigue abierto. Las mutaciones se lanzaron sobre un id que no existe, y las que crean no se llamaron. Con eso, «Vio- Merge» volvió a encender los tipos de descuento 1 y 2, que estaban apagados en prod desde el 10/11 como medida provisional.
+  - **Smoke del carrito** en los 5 canales de M&L: crear, añadir, leer, aplicar y borrar, sin checkout. Los cupones de Shopify dan `missing_scope:read_discounts` hasta el deploy de las apps custom.
+  - **El cupón real de faves en prod** se aplica, y su regalo entra en el carrito con descuento completo.
+
 ## Decisions
 - Hoy toca la #490 y después la #481.
 
@@ -93,3 +98,4 @@ dejó el 16/11.
 - **Decisiones de Angelo para prod:** extensions #76, #77 y #78, graphql#43 y webapp#114, más los 10 kr de envío reservados (4741) y el «Total» sin envío.
 - **#481 cerrada.** Lo siguiente de Alan sale de la lista To do (la #489 sigue en Backlog).
 - **Faves, puntos 1 y 2, en QA:** cuando Angelo elija `gratis_face_mask` en la campaña 32, mirar que la fila del sponsor diga «Gift: … — added to this campaign». Para probar que el regalo se añade solo, quitar la mascarilla de la colección, lanzar el job y ver que vuelve. Los avisos se ven en el dashboard.
+- **Faves en prod:** elegir `gratis_face_mask` en la campaña 4 × 1301 antes del 29/11, cuando caduca el cupón. Después, la subida del SDK en Replit.
