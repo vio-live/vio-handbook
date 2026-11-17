@@ -53,6 +53,12 @@ dejó el 16/11.
   - Órdenes 4767 y 4768 desde el Replit, y 4769 desde su página de Vev `/test`, que ya carga el SDK 0.40.1. Las tres de 199,90 con envío gratis.
   - Contestado en la tarjeta: punto 1 aprobado, pero no va a Done. Faltan los puntos 2 y 3, en Vev, y sus dos respuestas (el artículo de Careless y la surface 20).
 
+- **18:23–18:35 UTC, #481: Alan da por hechos los puntos 2 y 3 y contesta a las dos preguntas.** Comprobado en QA con los checkouts y sus capturas:
+  - Con dos pestañas, la que pierde muestra «Handlekurven ble endret i en annen fane…» y no cobra. Una orden por carrito: 4770 y 4771, en Vev.
+  - **El punto 2 está a medias.** Todo fue en `/test`, en las dos pestañas, así que no se ve si vuelve a la página correcta. Se le pide duplicar la página (`/test2`) y decir la URL tras pagar.
+  - **El punto 3 no está hecho.** Lo que mandó es otra vez la prueba de dos pestañas. Se le explican los pasos en una sola pestaña (cerrar, cambiar el carrito, reabrir; y recargar) y que dé las horas.
+  - **Las respuestas no responden.** Contestó «todo correcto». Se le repiten como sí o no: si el artículo de Careless tiene su campaña, y si la surface 20 se usa o se puede borrar. Borrarla en QA espera el OK de Angelo.
+
 ## Decisions
 - Hoy toca la #490 y después la #481.
 
