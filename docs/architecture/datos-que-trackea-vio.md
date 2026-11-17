@@ -41,6 +41,22 @@ cualquier nombre de evento que no esté acá.
 | `poll_impression` | Se mostró una encuesta | Exposición de engagement (el voto es verdad del servidor) |
 | `contest_impression` | Se mostró un concurso | Ídem |
 
+### Vídeo: el reel de vídeos comprables (desde 2026-11-16, [ADR-0043](../decisions/0043-analitica-del-reel.md))
+
+> [claude, 2026-11-17] El contrato ya no está cerrado en 20: se le han sumado eventos de forma
+> aditiva (estos cinco, entre otros). La fuente de verdad sigue siendo `analytics-schema.ts`.
+
+| Evento | Cuándo se dispara | Para qué sirve |
+|---|---|---|
+| `video_start` | Un vídeo del reel empieza a reproducirse (lleva si arrancó solo o porque lo tocaron) | Cuánta gente **ve** cada vídeo, no solo cuánta lo tiene delante |
+| `video_progress` | El vídeo llega al 25, 50 y 75 % | La curva de retención de cada vídeo |
+| `video_complete` | Se ve hasta el final, o el bucle vuelve a empezar | Tasa de finalización |
+| `video_watch` | Segundos reproducidos de verdad desde el último aviso (los saltos no cuentan). Se manda al pausar, cambiar de vídeo, salir de pantalla, ocultar la página y cada 30 s | Tiempo de vista total y medio |
+| `video_unmute` | Se activa el sonido | Interés activo, más allá del autoplay mudo |
+
+Una vez por vídeo y carga de página, salvo `video_watch`, que suma. No graban la imagen ni el sonido
+ni nada del dispositivo: solo qué vídeo, en qué punto y cuánto tiempo.
+
 ### Sesión: el ciclo de la visita
 
 | Evento | Cuándo se dispara | Para qué sirve |
@@ -134,6 +150,9 @@ componente, artículo y producto.
 
 Todos salen de datos que el SDK ya tiene para renderizar: el host no completa
 nada.
+
+Del reel (desde 2026-11-16): `experience_id` · `experience_revision` · `video_id` · `video_index` ·
+`video_percent` · `watch_seconds`. Un valor inválido se descarta, no rechaza el evento.
 
 ### Comercio (solo en eventos de comercio)
 

@@ -107,7 +107,7 @@ espejo server (`ad_activation`, `cart_intent`) son la mitad del cuento.
    barato: por eso el contrato de EVENTOS es estricto y las MÉTRICAS son
    blandas.
 
-## Estado de los endpoints (2026-08-21)
+## Estado de los endpoints (2026-08-21; reel añadido 2026-11-16)
 
 | Endpoint | Estado | Perillas |
 |---|---|---|
@@ -116,6 +116,7 @@ espejo server (`ad_activation`, `cart_intent`) son la mitad del cuento.
 | `/v1/stats/campaigns/:id/ads` (TV) | ✅ | `days` |
 | `/v1/stats/cross-device` (TV→móvil) | ✅ | `days`, `windowHours` |
 | `/v1/stats/retention` (apps) | ✅ | `cohortDays`, `surface` |
+| `/v1/stats/surface/reel` · `/v1/stats/campaigns/:id/reel` (reel de vídeo, [ADR-0043](../decisions/0043-analitica-del-reel.md)) | ✅ 2026-11-16 (colector `edee83d`). Solo token interno; el dashboard llega por el puente de base-api | `days`, `experience_id` |
 | `context.surface_id` en el contrato | ⬜ cuando Surfaces sea entidad (aditivo) |
 | `context.content_title` (snapshot legible) | ✅ 2026-08-21 — el borrado es permanente sin papelera: el título capturado en el evento mantiene los reportes legibles aunque el artículo muera. Auto en web (`document.title`); nativos lo pasan en context (pendiente en Swift/Kotlin, aditivo) |
 
