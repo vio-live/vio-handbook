@@ -61,6 +61,10 @@ dejó el 16/11.
 
 - **18:46 UTC, #481 punto 2 aprobado.** Pagó en `/woo-origin` y volvió a `/woo-origin` (orden 4772). La pestaña de `/test` se quedó con el aviso y su checkout, inactivo. Siguen pendientes el punto 3 en una sola pestaña y las dos respuestas.
 
+- **18:59 UTC, #481 cerrada y en Done.**
+  - **Punto 3:** de 18:51 a 18:52, varias aperturas de Kustom en una pestaña. En QA, un solo checkout y una sola orden de Kustom para ese carrito, que se fue actualizando hasta 1 299,70, sin órdenes nuevas.
+  - **Respuestas de Alan:** no tocó el artículo de Careless, y la surface 20 es su surface de pruebas, así que se queda. Nada que borrar.
+
 ## Decisions
 - Hoy toca la #490 y después la #481.
 
