@@ -29,6 +29,13 @@ dejó el 16/11.
   - **Pendiente:** npm 0.40.1, que publica Angelo.
   - **Alan:** sus dos páginas (`/woo-origin` y `/test`) estaban caducadas otra vez. Se le pidió republicar en el plan de la #490 y se le avisó en la #480.
 
+- **15:05 UTC, guardia de la tarde arrancada** (Angelo: «alan arrancó, ¿puedes ir escuchando e interactuando con él?»).
+  - **Reparto con «Woo Vio», confirmado por las dos sesiones:**
+    - «Woo Vio» lleva la #490, es la única que escribe en ella y está arreglando en extensions el reembolso de Shopify con código por línea.
+    - Esta sesión lleva la #480, la #481 y el resto de tarjetas. Lo que salga del selector, del interruptor, de la cobertura, del código de campaña o de los reembolsos de Shopify con código se le pasa a «Woo Vio».
+    - Ninguna adelanta el cursor compartido de `alan-actions.py`.
+  - **Actividad de Alan:** de 13:46 a 15:01, todo en la #490, ya contestado por «Woo Vio».
+
 ## Decisions
 - Hoy toca la #490 y después la #481.
 
