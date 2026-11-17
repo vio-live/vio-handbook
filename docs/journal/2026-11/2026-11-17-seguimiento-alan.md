@@ -77,6 +77,8 @@ dejó el 16/11.
 ## Decisions
 - Hoy toca la #490 y después la #481.
 
+- > [claude (sesión Woo Vio), 2026-11-17 21:15 UTC] **#490 completa (33/33).** Decisión de Angelo sobre `QA-LIMIT1`, que me pasó la sesión «Vio- Merge»: **«aceptamos el margen»**. Vio sigue con la cuenta de usos de Shopify, y la ventana de unos 4 min en la que un código de un solo uso puede entrar dos veces queda como limitación conocida. No se toca código. Punto marcado y Alan avisado en la tarjeta.
+
 ## Blockers
 - Siguen pendientes las decisiones de Angelo del 16/11: los 10 kr de envío reservados (4741), el «Total» sin envío y producción de extensions#76, graphql#43 y webapp#114.
 
