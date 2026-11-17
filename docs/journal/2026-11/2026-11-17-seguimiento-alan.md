@@ -49,6 +49,10 @@ dejó el 16/11.
   - **Pendiente de decisión de Angelo:** un código de 1 uso se pudo usar dos veces (`QA-LIMIT1D`, órdenes 4759 y 4760, separadas 2 min 20 s). Shopify suma el uso unos 4 min tarde, y Vio comprueba contra Shopify.
   - Además: [vio-extensions-microservice#77](https://github.com/vio-live/vio-extensions-microservice/pull/77) (16/11) cortó el reintento en caliente de webhooks de una conexión de Shopify revocada.
 
+- **18:09 UTC, #481 punto 1 (doble pago con dos pestañas):** Alan lo da por bueno y pide Done. Comprobado en QA a las 18:24: una orden por carrito y ningún cobro de la otra pestaña.
+  - Órdenes 4767 y 4768 desde el Replit, y 4769 desde su página de Vev `/test`, que ya carga el SDK 0.40.1. Las tres de 199,90 con envío gratis.
+  - Contestado en la tarjeta: punto 1 aprobado, pero no va a Done. Faltan los puntos 2 y 3, en Vev, y sus dos respuestas (el artículo de Careless y la surface 20).
+
 ## Decisions
 - Hoy toca la #490 y después la #481.
 
