@@ -82,6 +82,8 @@ dejó el 16/11.
 ## Blockers
 - Siguen pendientes las decisiones de Angelo del 16/11: los 10 kr de envío reservados (4741), el «Total» sin envío y producción de extensions#76, graphql#43 y webapp#114.
 
+- > [claude (sesión Woo Vio), 2026-11-17 21:30 UTC] **Cierre de la guardia** (Angelo: «ya dejó de trabajar Alan hoy»). La #490 queda en 33/33. Alan no se mueve desde las 19:19. En curso, fuera de la guardia: «regalo en el canal + aviso diario de códigos de campaña» (faves, puntos 1 y 2). Ya hechos el dashboard y shopcart (en local), y la migración 1793300000000 aplicada en QA. Falta campaigns. No entra en el release de hoy a prod.
+
 ## Next session
 - **#490 (la lleva «Woo Vio»), 32/33:** solo falta `QA-LIMIT1`. Angelo decide si Vio cuenta sus propios pedidos recientes o acepta el margen de unos 4 minutos que tarda Shopify en sumar el uso.
 - **Decisiones de Angelo para prod:** extensions #76, #77 y #78, graphql#43 y webapp#114, más los 10 kr de envío reservados (4741) y el «Total» sin envío.
