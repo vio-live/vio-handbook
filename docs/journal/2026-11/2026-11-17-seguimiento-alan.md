@@ -65,6 +65,11 @@ dejó el 16/11.
   - **Punto 3:** de 18:51 a 18:52, varias aperturas de Kustom en una pestaña. En QA, un solo checkout y una sola orden de Kustom para ese carrito, que se fue actualizando hasta 1 299,70, sin órdenes nuevas.
   - **Respuestas de Alan:** no tocó el artículo de Careless, y la surface 20 es su surface de pruebas, así que se queda. Nada que borrar.
 
+- **20:45 UTC, daily de Alan del 17/11 contrastado:** describe la #480 del 12/11, no lo de hoy.
+  - Sus órdenes VIO-4718…4732 son todas del 12/11, y la #480 se cerró el 16/11 (74/74).
+  - Hoy hizo 69 acciones en la #490 y 16 en la #481, con las órdenes 4754–4772.
+  - Estado al cierre: la #490 va 32/33 (falta `QA-LIMIT1`, pendiente de la decisión de Angelo sobre la carrera del límite) y la #481 está cerrada. La #489 sigue en Backlog.
+
 ## Decisions
 - Hoy toca la #490 y después la #481.
 
