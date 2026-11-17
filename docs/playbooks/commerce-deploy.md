@@ -1,6 +1,6 @@
 ---
 title: "Cómo desplegar — Vio Commerce (microservicios + base-api + graph-ql)"
-last-updated: 2026-10-22
+last-updated: 2026-11-17
 owner: miguel
 status: live
 ---
@@ -98,6 +98,23 @@ Para confirmar que el deploy terminó: la edad de los pods
 (`kubectl --context vio-commerce-prod get pods -n default`) y
 `gh run list --repo vio-live/<repo> --branch <rama>`. Así se vio el 28/09 que los 13
 servicios habían salido a prod sin aviso.
+
+## Release multi-repo a prod (la de los códigos, 17/11)
+
+> [claude, 2026-11-17] Procedimiento que se usó para subir 13 servicios a la vez
+> ([journal](../journal/2026-11/2026-11-17-release-codigos-y-reel-prod.md)).
+
+1. **Inventario por parche, no por `ahead_by`:** `git cherry -v origin/<prod> origin/develop` en cada repo.
+2. **Ramas `release/<slug>` desde la rama de prod**, con cherry-pick de lo que falta (los merges de PR con
+   `-m 1` cuando un merge resolvió conflictos). Objetivo: `git diff origin/develop` vacío salvo `charts/`. Si no lo
+   está, se explica en el PR ([lección](../lessons/arreglos-solo-en-master-se-pierden.md)).
+3. **Migraciones en prod antes del primer merge**, con scripts idempotentes desde el pod de users, enviados por stdin
+   (`kubectl exec -i … -- sh -c 'cd /usr/src/app && node -' < script.js`). Comprobar antes la tabla `migrations`.
+4. **Un servicio cada vez**, en orden de dependencias: merge → esperar el run de la rama de prod → `kubectl rollout
+   status` → pods nuevos sin errores en el log → siguiente. Nunca dos merges seguidos al mismo servicio.
+5. **Comprobación en vivo** al final (endpoints públicos con la key de un canal, smoke de carrito sin pagar).
+6. Autorizaciones de Angelo: una frase por tipo de acción (leer prod, escribir en la base de prod, desplegar), pedidas
+   juntas al principio.
 
 ## Gotchas conocidos (ver `lessons/`)
 

@@ -360,6 +360,24 @@ reservada → liberada). Lo que **no** se hace: devolver parcialmente una reserv
 libera a trozos) ni mover dinero de otros PSP desde la tienda (se registra el estado, el dinero lo mueve
 el vendedor con sus herramientas).
 
+### Reembolso en la tienda que deja la orden sin nada que enviar (2026-11-17)
+
+> [claude, 2026-11-17] Caso de QA 4741 (16/11): la tienda reembolsó todas las líneas antes del envío, pero no el
+> envío. La orden quedó Refunded y los 10 kr del envío se quedaron reservados en Vipps para siempre, porque ya no
+> iba a llegar ningún envío que disparara la captura. Angelo decidió: **cobrar lo no reembolsado y liberar el resto**.
+
+- **orders-ms** ([#53](https://github.com/vio-live/vio-orders-microservice/pull/53)): si después del reembolso todas
+  las líneas quedan reembolsadas o canceladas, y hay un importe reembolsado mayor que 0, avisa a shopcart con
+  `nothingLeftToShip`.
+- **shopcart** ([#123](https://github.com/vio-live/vio-shopcart-microservice/pull/123)): en modo de captura
+  «al despachar» hace la misma captura que haría el envío (cobra lo no reembolsado y libera el resto). En otros modos
+  no mueve dinero y lo dice.
+- **Regla:** un reembolso hecho en la tienda antes de cobrar nunca se captura. Si la liberación falla después de
+  cobrar, un «shipped» tardío o el «Capture» de la card solo reintentan liberar (`VippsService.reservedForShopRefund`).
+- **Huecos que siguen** (notas en los PRs): reembolsos concurrentes de dos líneas, líneas canceladas desde el dashboard
+  dentro del total de la tienda, y una captura parcial manual previa con todas las líneas reembolsadas después.
+- En prod desde la release del 17/11.
+
 ## Estado en QA (2026-10-06): pagos aprobados de verdad, y lo que salió al apretar
 
 Con el usuario de prueba que dio Vipps (`4795111218`) y el *force approve* de test se aprobaron por
