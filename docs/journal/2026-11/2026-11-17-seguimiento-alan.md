@@ -70,6 +70,10 @@ dejó el 16/11.
   - Hoy hizo 69 acciones en la #490 y 16 en la #481, con las órdenes 4754–4772.
   - Estado al cierre: la #490 va 32/33 (falta `QA-LIMIT1`, pendiente de la decisión de Angelo sobre la carrera del límite) y la #481 está cerrada. La #489 sigue en Backlog.
 
+- **21:00 UTC, guardia de la tarde cerrada.** Alan dejó su daily (este sí es el de hoy: la #490 y la #481), y cuadra con lo comprobado.
+  - En el daily, el reembolso con cupón de producto sigue como «Bug», pero ya está arreglado: [vio-extensions-microservice#78](https://github.com/vio-live/vio-extensions-microservice/pull/78) en QA desde las 15:24, comprobado por «Woo Vio» a las 15:44 con la orden 4766.
+  - Sin actividad desde las 18:56.
+
 ## Decisions
 - Hoy toca la #490 y después la #481.
 
@@ -77,4 +81,6 @@ dejó el 16/11.
 - Siguen pendientes las decisiones de Angelo del 16/11: los 10 kr de envío reservados (4741), el «Total» sin envío y producción de extensions#76, graphql#43 y webapp#114.
 
 ## Next session
-- La guardia, si Angelo la pide, cuando Alan empiece (sobre las 13:00 UTC).
+- **#490 (la lleva «Woo Vio»), 32/33:** solo falta `QA-LIMIT1`. Angelo decide si Vio cuenta sus propios pedidos recientes o acepta el margen de unos 4 minutos que tarda Shopify en sumar el uso.
+- **Decisiones de Angelo para prod:** extensions #76, #77 y #78, graphql#43 y webapp#114, más los 10 kr de envío reservados (4741) y el «Total» sin envío.
+- **#481 cerrada.** Lo siguiente de Alan sale de la lista To do (la #489 sigue en Backlog).
