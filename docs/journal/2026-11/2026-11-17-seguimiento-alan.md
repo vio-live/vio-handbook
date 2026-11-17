@@ -59,6 +59,8 @@ dejó el 16/11.
   - **El punto 3 no está hecho.** Lo que mandó es otra vez la prueba de dos pestañas. Se le explican los pasos en una sola pestaña (cerrar, cambiar el carrito, reabrir; y recargar) y que dé las horas.
   - **Las respuestas no responden.** Contestó «todo correcto». Se le repiten como sí o no: si el artículo de Careless tiene su campaña, y si la surface 20 se usa o se puede borrar. Borrarla en QA espera el OK de Angelo.
 
+- **18:46 UTC, #481 punto 2 aprobado.** Pagó en `/woo-origin` y volvió a `/woo-origin` (orden 4772). La pestaña de `/test` se quedó con el aviso y su checkout, inactivo. Siguen pendientes el punto 3 en una sola pestaña y las dos respuestas.
+
 ## Decisions
 - Hoy toca la #490 y después la #481.
 
