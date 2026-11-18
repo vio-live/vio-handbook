@@ -113,6 +113,7 @@ un test rápido en Vev: el botón de compra manda a la **Vipps Hurtigkasse** de 
     Alan encontró un problema real con dos Kondomeriet Config: la segunda arrancaba en Staging y, como ganaba la que se pintaba la última, podía pisar el fast start, Circlewise y el entorno.
     Arreglado en [vev#102](https://github.com/vio-live/vev/pull/102) y desplegado. La primera Config montada es la dueña; las demás muestran un aviso en el editor; una Config nueva empieza en Production, y si no lo está sale un aviso ámbar.
     Bloque 1 (montaje) de la checklist, completo.
+    18:57 UTC: al borrar la dueña, la otra seguía con el aviso. [vev#104](https://github.com/vio-live/vev/pull/104) cambia el sistema: la dueña pasa a ser la primera de la lista de Configs montadas. Ya no depende del orden de los eventos y descarta los ids de renders que nunca llegaron a montarse.
 
 ## Decisions
 - Feed, no scraping: ya escucha los cambios de precio y stock.
