@@ -13,6 +13,23 @@ página: la config de la surface y los productos del canal. Hoy las dos llamadas
 (`server: istio-envoy`, sin CDN delante). Con esto, Cloudflare las sirve desde el PoP del lector y el
 origen ve una petición por URL cada 60 s.
 
+### Contexto, para Miguel
+
+- **El caso:** VG (Schibsted) publica en Vev un artículo de Black Week con los productos de Kondomeriet
+  (campaña 7 en prod, del 18/11 al 30/11). El pago va por el Vipps Hurtigkasse de Kondomeriet, no por
+  nuestro checkout. Es tráfico de portada de VG: muchos lectores a la vez, casi todos en el móvil y
+  desde la app de VG, y la mayoría entra una sola vez. La caché del navegador no les sirve; solo una
+  caché en el borde.
+- **Por qué importa:** medido hoy en la página de prueba, la primera tarjeta tardaba 3,3 s en frío. Con
+  los arreglos del lado de Vev ya está en ~0,4 s, pero cada lector sigue pagando la ida al AKS para la
+  config y los productos (y un preflight CORS por la cabecera `X-API-Key`). En un pico, además, todas
+  esas lecturas caen en `campaigns`, `graph-ql`, `products` y MySQL.
+- **Qué pasa si no se hace:** nada se rompe. Las cabeceras ya están en el origen y sin Cloudflare
+  simplemente no se cachea. Es rendimiento, no un bloqueo.
+- **Prioridad:** alta mientras dure Black Week; cuanto antes, mejor, pero siempre QA primero.
+- **Quién hace qué:** tú, solo Cloudflare (§2). El origen está hecho y desplegado (§1 y §4). El cambio
+  de Vev/SDK a GET (§5) lo hace claude cuando tú confirmes QA aquí.
+
 ## 1. Qué está hecho en el origen (QA desde hoy)
 
 | Llamada | Servicio | PR (develop → QA) | Cacheable solo si |
@@ -164,16 +181,21 @@ curl -s -o /dev/null -D - -X POST "https://graph-ql-staging.vio.live/" -H "conte
   -H "Authorization: $CK" -d "{\"query\":\"$Q\",\"variables\":{\"productIds\":[411995],\"useCache\":true}}" | grep -iE '^(HTTP|cache-control)'
 ```
 
-## 4. Prod: lo que falta y quién
+## 4. Prod: hecho el 18/11 y lo que falta
 
-1. **Angelo:** OK para mergear los PRs de release (preparados, sin mergear). Llevan **solo** este cambio,
-   cherry-pick sobre la rama de prod (no arrastran lo demás que hay en develop):
+1. ✅ **Origen en prod (18/11, ~16:50 UTC, con OK de Angelo):**
    [vio-campaigns-microservice#39](https://github.com/vio-live/vio-campaigns-microservice/pull/39) → `main`
-   y [graphql#46](https://github.com/vio-live/graphql/pull/46) → `master`. Tests en verde en las dos ramas.
-2. Desplegar (el merge dispara el deploy) y repetir §3 contra `api.vio.live` / `graph-ql.vio.live`.
-3. **Miguel:** §2 en prod.
-4. **SDK/Vev:** que pidan las dos llamadas como en §5. Sin eso, Cloudflare no guarda nada aunque esté todo
-   lo anterior.
+   (`8326278`) y [graphql#46](https://github.com/vio-live/graphql/pull/46) → `master` (`3c8eb0b`; el
+   primer build falló por un 429 del repo apt de Microsoft al instalar azure-cli, se relanzó y pasó).
+   Solo este cambio, cherry-pick sobre la rama de prod.
+2. ✅ **Comprobado en prod con curl (sin Cloudflare):** config con `?apiKey=` → `public, max-age=0,
+   s-maxage=60, stale-while-revalidate=300` + `Vary: X-Api-Key`; key solo en cabecera → `private,
+   no-store`. GraphQL GET con `?apiKey=` (canal de Kondomeriet×VG) → 200 `public, s-maxage=60,
+   stale-while-revalidate=300` con el producto; el POST de siempre → 200 `no-store`. Sin errores en los
+   logs de los pods nuevos.
+3. **Miguel:** §2, primero QA y luego prod (ya puedes hacer las dos; el origen de prod está listo).
+4. **Vev (claude):** pasar los bloques de Kondomeriet a GET como en §5 cuando Miguel confirme QA. Sin
+   eso, Cloudflare no guarda nada aunque esté todo lo anterior.
 
 ## 5. Qué tienen que cambiar el SDK web y los bloques de Vev (no lo cambia este trabajo)
 

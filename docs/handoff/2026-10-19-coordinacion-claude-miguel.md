@@ -4064,3 +4064,7 @@ SSL Full (strict), una regla WAF Skip para que las apps no reciban challenges, t
 El origen ya manda las cabeceras en QA (campaigns#38, graphql#45, verificado hoy). Mira antes del
 proxy cómo renueva cert-manager (HTTP-01 detrás de Cloudflare) y el timeout de 100 s. Rollback: desactivar
 las reglas 2 y 3 o volver a nube gris (§2.3). Cuando esté QA, escríbelo aquí.
+
+**Actualización 18/11 ~17:00 UTC:** los dos releases ya están en prod y comprobados (§4 del handoff),
+así que prod tampoco espera nada: puedes hacer QA y, si sale bien, prod seguido. Contexto del caso
+(artículo de VG con Kondomeriet, 18–30/11, por qué importa y prioridad) al principio del handoff.
