@@ -118,7 +118,7 @@ un test rápido en Vev: el botón de compra manda a la **Vipps Hurtigkasse** de 
     - Bundle de 443 KB, que llega a ~3,2 s; config ~3,9 s; productos ~4,35 s; LCP ~4,7 s; CLS 0,11.
     - Vev sirve el paquete **dos veces** (2×832 KB sin comprimir) y con gzip, no brotli.
     - [vev#103](https://github.com/vio-live/vev/pull/103), desplegado: config y catálogo sin preflight, por GET con `?apiKey=`. Los OPTIONS pasan de 5 a 3 y el LCP del arnés de 4264 a 4008 ms.
-    - [vev#105](https://github.com/vio-live/vev/pull/105): Vipps perezoso y CLS 0. [vev#106](https://github.com/vio-live/vev/pull/106): vista lista y precio de venta con «før» real tachado y % calculado. Los dos, en rebase.
+    - [vev#105](https://github.com/vio-live/vev/pull/105): Vipps perezoso y CLS 0. [vev#106](https://github.com/vio-live/vev/pull/106): vista lista y precio de venta con «før» real tachado y % calculado. Los dos mergeados y desplegados (~19:25 UTC), y avisado a Alan para que los pruebe.
     - No hay code-splitting: el CLI de Vev compila un único IIFE. El 79 % del bundle es `vio-sdk`.
     - Alternativas pendientes de decisión: que Vev no duplique el paquete, o un SDK reducido.
     - La página de prueba `test-kondomeriet` aparece como «Expired» desde ~19:48 UTC: hay que republicarla.
