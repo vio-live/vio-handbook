@@ -122,7 +122,7 @@ un test rápido en Vev: el botón de compra manda a la **Vipps Hurtigkasse** de 
     - No hay code-splitting: el CLI de Vev compila un único IIFE. El 79 % del bundle es `vio-sdk`.
     - Alternativas pendientes de decisión: que Vev no duplique el paquete, o un SDK reducido.
     - La página de prueba `test-kondomeriet` aparece como «Expired» desde ~19:48 UTC: hay que republicarla.
-  - **Selector de productos del editor** ([vev#107](https://github.com/vio-live/vev/pull/107), desplegado). Es lo que Angelo quería con «precio de venta, % y listar»; la vista en lista de la página (vev#106) la entendí mal, pero se queda.
+  - **Selector de productos del editor** ([vev#107](https://github.com/vio-live/vev/pull/107), desplegado). Es lo que Angelo quería con «precio de venta, % y listar»; la vista en lista de la página (vev#106) la entendí mal y se quitó entera en [vev#109](https://github.com/vio-live/vev/pull/109). Se queda el precio de venta con el anterior tachado y el % calculado.
     - Precio de venta y, si hay `compare_at` real, el anterior tachado con el % calculado. Si no lo hay, el % de la hoja de Black Week en una etiqueta aparte.
     - Interruptor Grid / List; desde [vev#108](https://github.com/vio-live/vev/pull/108), List es la vista por defecto. A Alan solo le quedó pedido probar el selector, no la vista en lista de la página.
 
