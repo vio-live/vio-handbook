@@ -146,6 +146,22 @@ un test rápido en Vev: el botón de compra manda a la **Vipps Hurtigkasse** de 
   - **Paquete ligero publicado (~22:10 UTC).** Angelo creó la clave `c5CIrrzXoMb` con `vev init` (cuenta del compartido). [vev#114](https://github.com/vio-live/vev/pull/114) mergeado y los dos paquetes desplegados.
     [vev#115](https://github.com/vio-live/vev/pull/115): los bloques del compartido pasan a llamarse «(old)» para no duplicar nombres en el menú; el `widgetId` sale del nombre de la función y no cambia.
     Falta mover `test-kondomeriet` y la página de Alan con «Copy/Paste settings», y medir.
+  - **`test-kondomeriet` en el paquete ligero, medido (~22:35 UTC).** Movida por claude con «Copy/Paste settings»; la Config vieja y las dos tarjetas viejas se borraron.
+    Perfil: móvil, 4G a 150 ms y 1,6 Mbps, CPU ×4, caché vacía, mediana de 3.
+
+    | | Antes (paso 0) | Ahora |
+    |---|---|---|
+    | JS transferido | 443 KB | 77 KB |
+    | JS, llegada | 3,2 s | 1,4 s |
+    | Primera tarjeta | 4,4 s | 0,36 s (Vev la pinta en el HTML) |
+    | LCP | 4,7 s | 0,72 s |
+    | TTI | 4,4 s | 1,7 s |
+    | CLS | 0,11 | 0 |
+    | OPTIONS | 5 | 2 |
+
+    La analítica llega igual al colector, con el mismo `session_id`. Vev sigue sirviendo el paquete duplicado.
+    - Bug del paquete ligero: con `H auto` el marco de la tarjeta queda en 0 px; en la página se dejaron 600 px fijos mientras tanto. Arreglo en curso en la rama `fix/kondomeriet-ligero-alto-auto`.
+    - La caducidad de las páginas es del plan gratis de Vev: al publicar avisa «Expires in an hour» y ofrece pagar para publicar sin límite ni marca de agua. Hay que comprobar el plan de la cuenta de VG.
 
 ## Decisions
 - Feed, no scraping: ya escucha los cambios de precio y stock.
@@ -159,10 +175,10 @@ un test rápido en Vev: el botón de compra manda a la **Vipps Hurtigkasse** de 
 - **Circlewise:** el receptor de la postback está en QA. A prod (campaigns #41) le faltan las frases de Angelo y el token. VG configura la postback al final, con el handoff en inglés.
 - **Pago real por Hurtigkasse sin probar:** la compra de 39 kr del llavero espera el OK de Angelo.
 - **Vev sirve el paquete duplicado:** el bundle va dos veces. Hay que escribirles.
-- **Las páginas publicadas en Vev caducan («Expired»)** y hay que republicarlas. Comprobar que al artículo de VG no le pase.
+- **Las páginas publicadas en Vev caducan a la hora en el plan gratis** («Expires in an hour»). La cuenta de VG tiene que ser de pago.
 
 ## Next session
-- Angelo mueve `test-kondomeriet` al paquete `c5CIrrzXoMb` con «Copy/Paste settings», abre las propiedades, publica y se mide con el perfil de siempre. Esperado: LCP de ~4,9 a ~2,8 s.
+- Mergear y desplegar el arreglo de `H auto` del paquete ligero. Quitar los 600 px fijos de `test-kondomeriet` y volver a medir el CLS. Revisar el TBT de 136 ms.
 - Si sale bien, explicar a Alan en la #491 cómo mover su página. Le queda repetir el flujo de las dos Configs (vev#112) y seguir con los bloques 3 a 12 de la checklist.
 - Postback de Circlewise a prod y aviso en #vio-ordenes (frases de Angelo). Después, el texto para VG.
 - Preguntar si la cuenta de Vev de VG permite código en el `<head>`, para precargar la foto y la primera imagen.
