@@ -128,6 +128,11 @@ un test rápido en Vev: el botón de compra manda a la **Vipps Hurtigkasse** de 
   - **Guardia #491, 20:13 UTC.** La imagen propia en la tarjeta funciona bien.
     Al añadir otro producto, el selector daba «bootstrap recently failed — backing off». Lo más probable: la Config que quedó tras la prueba de las dos Configs estaba en Staging, y `api-staging` responde 401 a la key de VG; lo comprobé con curl.
     [vev#110](https://github.com/vio-live/vev/pull/110), desplegado: el selector reintenta pasado el backoff y muestra el error en claro con «Try again» y la pista de la Config.
+  - **[vev#111](https://github.com/vio-live/vev/pull/111), desplegado.** El esqueleto ocupa el alto real de la tarjeta: el CLS de la Card en móvil baja de 0,306 a 0,002 sin snapshot.
+    Vev no deja a un bloque escribir sus props desde el canvas, así que hay avisos solo para el editor cuando faltan `fastStart` o el snapshot.
+  - **Lector de la foto del CDN:** preparado en la rama `feat/kondomeriet-foto-cdn`. En el arnés pinta la primera tarjeta en 242 ms frente a ~880 ms. Espera a que el backend publique la foto real.
+  - **Paquete de Kondomeriet sin `vio-sdk`, prototipo:** ~56 KB gzip frente a los 448 KB de hoy. Se puede hacer con analítica idéntica, compilando el `AnalyticsManager` del SDK desde su código fuente.
+    Pide una clave de paquete nueva y volver a colocar los bloques en las páginas que ya existen. Pendiente de la decisión de Angelo.
 
 ## Decisions
 - Feed, no scraping: ya escucha los cambios de precio y stock.
