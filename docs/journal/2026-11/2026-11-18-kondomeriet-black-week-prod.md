@@ -149,13 +149,23 @@ un test rápido en Vev: el botón de compra manda a la **Vipps Hurtigkasse** de 
 
 ## Decisions
 - Feed, no scraping: ya escucha los cambios de precio y stock.
-- El precio de Black Week llega por el feed cuando Kondomeriet lo ponga (hoy ningún producto trae precio anterior).
+- El precio de Black Week llega por el feed cuando Kondomeriet lo ponga; hoy ningún producto trae precio anterior. Nunca se deduce un «før-pris» de un %.
+- Circlewise siempre activo: el pago va por su tracker y llega al Hurtigkasse a través del puente. Cuesta unos 0,6 s más en un navegador real.
+- Cloudflare delante de la API queda para Miguel. Para este artículo lo sustituye la foto de campaña en `container.vio.live`, que ya va detrás de Cloudflare.
+- Paquete de Vev propio para Kondomeriet, sin `vio-sdk`. Angelo lo aprobó; el compartido queda con los bloques «(old)».
+- El selector de productos abre en vista de lista. La vista en lista de la página se quitó, porque había entendido mal la petición.
 
 ## Blockers
-- **Circlewise:** con la compra por su Hurtigkasse, la venta no pasa por Vio y no hay forma de activar el tracking.
-  Pendiente de cómo lo quiere usar Angelo.
-  → Receptor de la postback hecho (QA en vivo, prod preparado): [handoff](../../handoff/2026-11-18-circlewise-postback.md).
-- El pago por Hurtigkasse no se ha probado en vivo, porque crea un pago real en su Vipps.
+- **Circlewise:** el receptor de la postback está en QA. A prod (campaigns #41) le faltan las frases de Angelo y el token. VG configura la postback al final, con el handoff en inglés.
+- **Pago real por Hurtigkasse sin probar:** la compra de 39 kr del llavero espera el OK de Angelo.
+- **Vev sirve el paquete duplicado:** el bundle va dos veces. Hay que escribirles.
+- **Las páginas publicadas en Vev caducan («Expired»)** y hay que republicarlas. Comprobar que al artículo de VG no le pase.
 
 ## Next session
-- Paso 2 (test en Vev): el bloque con la colección `KHBq619Se` y el botón «Kjøp med Vipps» → Hurtigkasse.
+- Angelo mueve `test-kondomeriet` al paquete `c5CIrrzXoMb` con «Copy/Paste settings», abre las propiedades, publica y se mide con el perfil de siempre. Esperado: LCP de ~4,9 a ~2,8 s.
+- Si sale bien, explicar a Alan en la #491 cómo mover su página. Le queda repetir el flujo de las dos Configs (vev#112) y seguir con los bloques 3 a 12 de la checklist.
+- Postback de Circlewise a prod y aviso en #vio-ordenes (frases de Angelo). Después, el texto para VG.
+- Preguntar si la cuenta de Vev de VG permite código en el `<head>`, para precargar la foto y la primera imagen.
+- Kondomeriet: precios de Black Week. Comprobar que el tachado y el % salen solos.
+- El feed de Kondomeriet vuelve a subir todas las imágenes con nombres nuevos en cada importación. Mirarlo aparte.
+- Las cachés de productos de los demás canales en Redis guardan URLs de imagen con `?size=`. Funcionan, pero con dos redirecciones.
