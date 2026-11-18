@@ -79,6 +79,18 @@ un test rápido en Vev: el botón de compra manda a la **Vipps Hurtigkasse** de 
     - Eksklusive priser.
     Logo de la marca: pendiente.
 
+- **Tarde (17:00 UTC aprox.; se completa al cierre):**
+  - **Vev:** [vev#95](https://github.com/vio-live/vev/pull/95), [vev#96](https://github.com/vio-live/vev/pull/96) y [vev#97](https://github.com/vio-live/vev/pull/97) (compra en tarjeta, conversión y carga, enlace Circlewise por tarjeta). [vev#98](https://github.com/vio-live/vev/pull/98) activa Circlewise por defecto: ref1 sale del archivo, ref2 es la sesión del SDK y ref3 la campaña. Todo desplegado en `cq1lXld-TA9`.
+    El salto por Circlewise cuesta ~0,6 s en un navegador real. El preconnect no lo acorta.
+  - **Caché en el borde:** el origen ya está en prod, con campaigns [#39](https://github.com/vio-live/vio-campaigns-microservice/pull/39) y graphql [#46](https://github.com/vio-live/graphql/pull/46), comprobado con curl.
+    Falta que Miguel ponga Cloudflare delante: [handoff](../../handoff/2026-11-18-cdn-edge-cache-sdk.md).
+  - **Postback de Circlewise:** campaigns [#40](https://github.com/vio-live/vio-campaigns-microservice/pull/40) está en QA. [#41](https://github.com/vio-live/vio-campaigns-microservice/pull/41) a prod espera el OK de Angelo.
+    El texto para VG, que tiene la cuenta, está en el [handoff](../../handoff/2026-11-18-circlewise-postback-vg.md) y se les pide al final.
+  - **Imágenes sin redirecciones:** base-api #72/#73, products #70 y api #80 están en QA. Los tiempos por imagen bajan de 1,4–2,1 s a 0,2–0,4 s.
+    Prod en curso, con el OK de Angelo.
+  - **Guardia #491, 16:54 UTC.** Alan marcó 9 productos distintos en el «Products» de una tarjeta del Carousel y salió una sola tarjeta con 9 opciones.
+    En curso: «+ Add products» crea una tarjeta por familia, una tarjeta que mezcla familias se divide sola, y la tarjeta suelta avisa. Ya le contestamos en la tarjeta.
+
 ## Decisions
 - Feed, no scraping: ya escucha los cambios de precio y stock.
 - El precio de Black Week llega por el feed cuando Kondomeriet lo ponga (hoy ningún producto trae precio anterior).
