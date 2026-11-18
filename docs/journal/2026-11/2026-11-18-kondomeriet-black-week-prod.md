@@ -133,6 +133,16 @@ un test rápido en Vev: el botón de compra manda a la **Vipps Hurtigkasse** de 
   - **Lector de la foto del CDN:** preparado en la rama `feat/kondomeriet-foto-cdn`. En el arnés pinta la primera tarjeta en 242 ms frente a ~880 ms. Espera a que el backend publique la foto real.
   - **Paquete de Kondomeriet sin `vio-sdk`, prototipo:** ~56 KB gzip frente a los 448 KB de hoy. Se puede hacer con analítica idéntica, compilando el `AnalyticsManager` del SDK desde su código fuente.
     Pide una clave de paquete nueva y volver a colocar los bloques en las páginas que ya existen. Pendiente de la decisión de Angelo.
+  - **Guardia #491, 20:56 UTC.** Al guardar una segunda Config en Staging y borrarla, el selector de la primera dejaba de cargar.
+    Causa: el panel de propiedades tiene su propio SDK, y el campo de fast start de la duplicada lo reiniciaba en staging y persistía `vio.environment`.
+    [vev#112](https://github.com/vio-live/vev/pull/112), desplegado: la duplicada no toca nada, la dueña vuelve a imponer su key y su entorno, y el selector se conecta con los de la dueña.
+  - **Foto de campaña en el CDN, en prod** (campaigns #42–#45): `snapshots/<hash>.json` + `.js`, regenerados cada 90 s. El `.js` es porque el blob y Cloudflare no dan CORS.
+    [vev#113](https://github.com/vio-live/vev/pull/113), desplegado: los bloques la cargan con `<script>`. En el arnés, primera tarjeta en 451 ms con foto frente a 929 ms sin ella.
+  - **Paquete ligero sin `vio-sdk`:** [vev#114](https://github.com/vio-live/vev/pull/114), en rebase.
+    El bundle baja de 218 a 75 KB gzip con una copia (de 448 a ~146 KB con la duplicada de Vev). En el arnés, LCP de 4896 a 2828 ms.
+    Analítica idéntica, comparando los lotes que llegan al colector.
+    Falta la clave del paquete: Angelo tiene que ejecutar `vev init` en `kondomeriet/` y elegir la cuenta de `cq1lXld-TA9`.
+  - `test-kondomeriet` ha vuelto a caducar.
 
 ## Decisions
 - Feed, no scraping: ya escucha los cambios de precio y stock.
