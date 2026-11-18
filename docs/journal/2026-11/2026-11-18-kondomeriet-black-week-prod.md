@@ -143,6 +143,9 @@ un test rápido en Vev: el botón de compra manda a la **Vipps Hurtigkasse** de 
     Analítica idéntica, comparando los lotes que llegan al colector.
     Falta la clave del paquete: Angelo tiene que ejecutar `vev init` en `kondomeriet/` y elegir la cuenta de `cq1lXld-TA9`.
   - `test-kondomeriet` ha vuelto a caducar.
+  - **Paquete ligero publicado (~22:10 UTC).** Angelo creó la clave `c5CIrrzXoMb` con `vev init` (cuenta del compartido). [vev#114](https://github.com/vio-live/vev/pull/114) mergeado y los dos paquetes desplegados.
+    [vev#115](https://github.com/vio-live/vev/pull/115): los bloques del compartido pasan a llamarse «(old)» para no duplicar nombres en el menú; el `widgetId` sale del nombre de la función y no cambia.
+    Falta mover `test-kondomeriet` y la página de Alan con «Copy/Paste settings», y medir.
 
 ## Decisions
 - Feed, no scraping: ya escucha los cambios de precio y stock.
