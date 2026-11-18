@@ -4068,3 +4068,10 @@ las reglas 2 y 3 o volver a nube gris (§2.3). Cuando esté QA, escríbelo aquí
 **Actualización 18/11 ~17:00 UTC:** los dos releases ya están en prod y comprobados (§4 del handoff),
 así que prod tampoco espera nada: puedes hacer QA y, si sale bien, prod seguido. Contexto del caso
 (artículo de VG con Kondomeriet, 18–30/11, por qué importa y prioridad) al principio del handoff.
+
+**Medida 18/11 ~20:15 UTC (por qué corre):** en un móvil 4G con caché vacía, la página del artículo tarda
+~4,7 s en enseñar la primera tarjeta con imagen. De eso, ~1,1 s es esperar a `api.vio.live` (config) y a
+`graph-ql.vio.live` (productos), con conexión nueva al AKS. Con Cloudflare delante y las reglas del §2,
+esas dos respuestas salen del PoP en ~0,15 s. El lado de Vev ya pide las dos por GET con `?apiKey=` (vev#103,
+en prod), así que en cuanto actives las reglas empieza a cachear. Escríbelo aquí cuando esté QA y cuando esté
+prod, y lo mido.
