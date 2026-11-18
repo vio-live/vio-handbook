@@ -114,6 +114,14 @@ un test rápido en Vev: el botón de compra manda a la **Vipps Hurtigkasse** de 
     Arreglado en [vev#102](https://github.com/vio-live/vev/pull/102) y desplegado. La primera Config montada es la dueña; las demás muestran un aviso en el editor; una Config nueva empieza en Production, y si no lo está sale un aviso ámbar.
     Bloque 1 (montaje) de la checklist, completo.
     18:57 UTC: al borrar la dueña, la otra seguía con el aviso. [vev#104](https://github.com/vio-live/vev/pull/104) cambia el sistema: la dueña pasa a ser la primera de la lista de Configs montadas. Ya no depende del orden de los eventos y descarta los ids de renders que nunca llegaron a montarse.
+  - **Carga para el lector nuevo** (móvil de gama media, 4G, caché vacía, mediana de 3 pasadas; página publicada antes de los cambios):
+    - Bundle de 443 KB, que llega a ~3,2 s; config ~3,9 s; productos ~4,35 s; LCP ~4,7 s; CLS 0,11.
+    - Vev sirve el paquete **dos veces** (2×832 KB sin comprimir) y con gzip, no brotli.
+    - [vev#103](https://github.com/vio-live/vev/pull/103), desplegado: config y catálogo sin preflight, por GET con `?apiKey=`. Los OPTIONS pasan de 5 a 3 y el LCP del arnés de 4264 a 4008 ms.
+    - [vev#105](https://github.com/vio-live/vev/pull/105): Vipps perezoso y CLS 0. [vev#106](https://github.com/vio-live/vev/pull/106): vista lista y precio de venta con «før» real tachado y % calculado. Los dos, en rebase.
+    - No hay code-splitting: el CLI de Vev compila un único IIFE. El 79 % del bundle es `vio-sdk`.
+    - Alternativas pendientes de decisión: que Vev no duplique el paquete, o un SDK reducido.
+    - La página de prueba `test-kondomeriet` aparece como «Expired» desde ~19:48 UTC: hay que republicarla.
 
 ## Decisions
 - Feed, no scraping: ya escucha los cambios de precio y stock.
