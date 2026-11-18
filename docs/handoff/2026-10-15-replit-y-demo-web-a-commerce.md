@@ -553,3 +553,19 @@ carrito de la SDK los aplica solo. Cómo funciona por dentro: README de la SDK y
 > SDK los aplica solo. No pongáis códigos de descuento en la página.
 >
 > Después de publicar, comprobad en la copia de pruebas que los artículos se ven y venden igual que antes.
+
+## SDK 0.40.1 a producción (18/11) — texto para el agente de Replit
+
+El 17/11 llegó a producción el release de Commerce con los códigos de descuento (código por campaña y marca, cupones de
+tienda con regalo, y el endurecimiento de los permisos de descuentos) y el backend del reel
+([journal del release](../journal/2026-11/2026-11-17-release-codigos-y-reel-prod.md)). El 18/11 la web real
+(`moteoglivsstil.no`) seguía con la SDK 0.37.7, y su `Vio.init` solo pasa entorno, key y URLs: basta con subir la
+versión. Las notas de actualización de la 0.38.0 a la 0.40.1 dependen de Commerce, que ya está en producción.
+
+> Subid la SDK a la 0.40.1 exacta y publicad en producción: `npm i --save-exact @vio-live/web-sdk@0.40.1`.
+>
+> No hay que cambiar código.
+>
+> Después de publicar, en un artículo de producción con productos: añadid uno al carrito y comprobad que el carrito se
+> abre y suma igual que antes. En la pestaña Red del navegador, los envíos a `events.vio.live` llevan
+> `"sdk_version":"0.40.1"`.
