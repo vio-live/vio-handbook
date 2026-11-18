@@ -98,6 +98,8 @@ un test rápido en Vev: el botón de compra manda a la **Vipps Hurtigkasse** de 
     - Una tarjeta que mezcla familias se divide sola, y la tarjeta suelta avisa.
     - ref1 sigue a la opción comprada.
     - Con los 9 de Alan salen 7 tarjetas. Ya le pedimos que vuelva a probarlo.
+  - **Imagen mediana (500 px)** en las tarjetas y en las miniaturas de la galería ([vev#100](https://github.com/vio-live/vev/pull/100)). `directImage` entiende ya la URL directa de api #81.
+  - **Ojo con lo publicado en Vev:** una página publicada se queda con la versión de los bloques del momento de publicar. La de prueba seguía con el bundle anterior tras `vev deploy`, así que cada arreglo exige volver a publicar. Avisado a Alan. VG debe publicar su artículo después de nuestro último despliegue.
 
 ## Decisions
 - Feed, no scraping: ya escucha los cambios de precio y stock.
