@@ -7,6 +7,9 @@ status: draft
 
 # Campañas y surfaces en Commerce
 
+> **[claude, 2026-11-18]** La config de una surface y los productos de su campaña también se sirven como
+> fichero estático desde el CDN: [foto de campaña en el CDN](./foto-de-campana-en-el-cdn.md) (URL, forma, frescura).
+
 Angelo (2026-10-13) dijo *«lo que quiero es toda la estructura de campañas pasarla a Vio
 y conectarla al front; de vio-backend quiero hacer campañas, registrar surfaces y poco
 más»*. La decisión está en
