@@ -107,6 +107,8 @@ un test rápido en Vev: el botón de compra manda a la **Vipps Hurtigkasse** de 
     - Pendiente:
       - Las cachés de los demás canales siguen con URLs `?size=`. Funcionan, con dos redirecciones.
       - El feed de Kondomeriet vuelve a subir todas las imágenes en cada importación. Hay que mirarlo aparte.
+  - **Guardia #491, 18:00–18:16 UTC.** Alan probó key mala o vacía (error claro, las tarjetas no rompen), el catálogo del selector, la búsqueda por nombre, marca e id, y la agrupación de los colores del Womanizer con sus Details. Todo correcto.
+    Solo falló el texto blanco sobre blanco en el buscador del selector, arreglado en [vev#101](https://github.com/vio-live/vev/pull/101) y desplegado.
 
 ## Decisions
 - Feed, no scraping: ya escucha los cambios de precio y stock.
