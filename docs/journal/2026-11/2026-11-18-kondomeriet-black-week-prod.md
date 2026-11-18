@@ -109,6 +109,10 @@ un test rápido en Vev: el botón de compra manda a la **Vipps Hurtigkasse** de 
       - El feed de Kondomeriet vuelve a subir todas las imágenes en cada importación. Hay que mirarlo aparte.
   - **Guardia #491, 18:00–18:16 UTC.** Alan probó key mala o vacía (error claro, las tarjetas no rompen), el catálogo del selector, la búsqueda por nombre, marca e id, y la agrupación de los colores del Womanizer con sus Details. Todo correcto.
     Solo falló el texto blanco sobre blanco en el buscador del selector, arreglado en [vev#101](https://github.com/vio-live/vev/pull/101) y desplegado.
+  - **Guardia #491, 18:24–18:29 UTC.** Carousel y Grid funcionan: añadir, reordenar, borrar y el mismo producto en dos tarjetas.
+    Alan encontró un problema real con dos Kondomeriet Config: la segunda arrancaba en Staging y, como ganaba la que se pintaba la última, podía pisar el fast start, Circlewise y el entorno.
+    Arreglado en [vev#102](https://github.com/vio-live/vev/pull/102) y desplegado. La primera Config montada es la dueña; las demás muestran un aviso en el editor; una Config nueva empieza en Production, y si no lo está sale un aviso ámbar.
+    Bloque 1 (montaje) de la checklist, completo.
 
 ## Decisions
 - Feed, no scraping: ya escucha los cambios de precio y stock.
