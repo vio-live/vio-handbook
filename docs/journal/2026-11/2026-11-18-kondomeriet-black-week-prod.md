@@ -86,8 +86,12 @@ un test rápido en Vev: el botón de compra manda a la **Vipps Hurtigkasse** de 
     Falta que Miguel ponga Cloudflare delante: [handoff](../../handoff/2026-11-18-cdn-edge-cache-sdk.md).
   - **Postback de Circlewise:** campaigns [#40](https://github.com/vio-live/vio-campaigns-microservice/pull/40) está en QA. [#41](https://github.com/vio-live/vio-campaigns-microservice/pull/41) a prod espera el OK de Angelo.
     El texto para VG, que tiene la cuenta, está en el [handoff](../../handoff/2026-11-18-circlewise-postback-vg.md) y se les pide al final.
-  - **Imágenes sin redirecciones:** base-api #72/#73, products #70 y api #80 están en QA. Los tiempos por imagen bajan de 1,4–2,1 s a 0,2–0,4 s.
-    Prod en curso, con el OK de Angelo.
+  - **Imágenes sin redirecciones, en prod:**
+    - En prod: base-api #74, products #71 y api #81.
+    - Relleno: 30.143 originales y 90.429 variantes, sin fallos.
+    - En el canal de VG: de 2 redirecciones y 1,66 s por imagen a 0 redirecciones y 0,24–0,47 s.
+    - Cómo funciona: `docs/architecture/vio-commerce.md` §8.
+    - 17:27 UTC, Alan vio 404 en la galería de la ficha: `directImage` de Vev construía `<n>large.jpg` antes de que existiera la variante. Se arregló al terminar el relleno; le avisamos para que vuelva a probar.
   - **Guardia #491, 16:54 UTC.** Alan marcó 9 productos distintos en el «Products» de una tarjeta del Carousel y salió una sola tarjeta con 9 opciones.
     Arreglado en [vev#99](https://github.com/vio-live/vev/pull/99) y desplegado:
     - «+ Add products» crea una tarjeta por familia. Una familia es la misma fila del archivo, o la misma marca con las dos primeras palabras del título iguales.
