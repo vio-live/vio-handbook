@@ -52,6 +52,10 @@ Los `asverify.*` se dejan puestos: si alguna vez hay que volver a registrar el c
 Front Door no era un proxy pelado. Tenía lógica, y esto es lo que se trasladó:
 
 **1. `imageResize` — redirect de imágenes con `?size=`**
+
+> Desde el 2026-11-18 el API ya no emite `?size=` para las imágenes de producto de nuestro
+> contenedor: devuelve la variante directa y la regla queda para URLs viejas. Ver
+> [arquitectura §8](../architecture/vio-commerce.md#8-imágenes-de-producto-variantes-de-tamaño-sin-redirecciones-desde-2026-11-18).
 Si la URI contiene `product-images`, `default-placeholder`, `products`, `collection` o `user-avatar`
 **y** el query string contiene `size`, Front Door devolvía un **308** hacia el API, que es quien
 redimensiona. Replicado como Redirect Rule de Cloudflare, con el mismo código 308:

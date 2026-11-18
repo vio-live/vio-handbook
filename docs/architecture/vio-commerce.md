@@ -1,6 +1,6 @@
 ---
 title: "Vio Commerce — arquitectura del código"
-last-updated: 2026-07-01
+last-updated: 2026-11-18
 owner: angelo
 status: live
 ---
@@ -292,3 +292,82 @@ Otros repos de `vio-live` que orbitan commerce pero no son el backend de runtime
    [journal](../journal/2026-10/2026-10-15-collection-foto-coleccion.md)). Además
    `channel_group` referencia `collection_shared` **por id**: des-compartir es soft-delete y
    re-compartir debe **restaurar** esa fila, no crear otra.
+
+---
+
+## 8. Imágenes de producto: variantes de tamaño sin redirecciones (desde 2026-11-18)
+
+**Qué pasaba.** El API (`vio-api-microservice`, channel products) devolvía cada imagen como
+`<url>?size=<size>` (el gateway GraphQL pide `large` por defecto). Para una imagen de nuestro
+contenedor eso eran **dos redirecciones** antes del primer byte:
+
+```
+container.vio.live/.../product-images/<id>.jpg?size=large
+  308  Cloudflare (Redirect Rule `imageResize`, ver infrastructure/cdn-container-cloudflare.md)
+  302  api-ecom.vio.live -> resizer de base-api (genera la variante si falta y la GUARDA)
+  200  container.vio.live/.../product-images/<id>large.jpg
+```
+
+Medido en prod el 2026-11-18 (Kondomeriet, 20 imágenes, `?size=large`): 2 redirecciones en
+todas, **1,66 s** de media por imagen, y 31,8 KB por `large` frente a 8,2 KB del original. Las
+variantes sólo existían si alguien las había pedido: de 235 imágenes, 49 tenían `large`,
+3 `medium`, 1 `thumbnail`. Y las que existían estaban **recortadas a cuadrado y ampliadas**
+(`resize(w, h)` con el `fit: cover` por defecto): un original de 400x484 salía como `large`
+de 1024x1024.
+
+**Cómo funciona ahora.**
+
+| Pieza | Qué hace |
+|---|---|
+| `vio-base-api` `src/service/imageVariants.ts` | Fuente de verdad: tamaños (`thumbnail` 150, `medium` 500, `large` 1024), nombre del blob (`<base><size><ext>`), render (`fit: 'inside'`, `withoutEnlargement`, `rotate()` por EXIF). Si sharp no puede con la imagen, la variante es **copia del original**: nunca un 404. |
+| `vio-base-api` `POST /upload/:productId` | Sube el original y escribe las 3 variantes **antes** de devolver la URL. |
+| `vio-products-microservice` `helpers/image-variants.ts` | Espejo del anterior (mantener los dos iguales). `uploadToAzure(..., { variants: true })` en `centralizedImages` (feeds/Magento) y `reviewImages` (webp/heic). |
+| `vio-api-microservice` `transform/image-size-url.ts` | `sizedImageUrl`: imágenes bajo `${AZURE_STORAGE_URL_REACHU}/${AZURE_BUCKET}/` en `product-images/` o `products/`, jpg/jpeg/png/webp y sin query → URL directa de la variante (y el original para `full`). Todo lo demás (Shopify, otras carpetas, gif/svg, URLs con query, o si falta una de las dos env) sigue con `?size=`. |
+| Resizer de base-api + regla de Cloudflare | Siguen igual, para las URLs viejas con `?size=` (cachés, clientes antiguos). No hace falta tocar Cloudflare. |
+
+**Orden obligatorio en cada entorno:** base-api (y products) desplegados → backfill → api. Si
+el API publica la URL directa antes de que exista la variante, la tienda ve una imagen rota y
+**Cloudflare cachea el 404** unos minutos. Por lo mismo: **nunca hacer HEAD/GET a una variante
+que todavía no existe** para "comprobar"; comprobar con el SDK de Azure dentro del cluster.
+
+**Backfill** (`vio-base-api` `src/scripts/backfillImageVariants.ts`, idempotente):
+
+1. Lista de URLs referenciadas (lectura): `select distinct url from image where deleted_at is null
+   and (url like '<base>product-images/%' or url like '<base>products/%')`. No listar el
+   contenedor entero: cada sync de feed sube blobs nuevos y la mayoría están huérfanos (QA:
+   ~125k blobs, ~17k referenciados).
+2. **Pod propio** con la imagen de base-api (por digest), `sidecar.istio.io/inject: "false"`,
+   1,5 GiB de límite, `command: sleep`; la lista entra por stdin a `/tmp/list.txt`.
+   **Nunca** `kubectl exec` del backfill en el contenedor que sirve tráfico: en QA (512Mi)
+   tumbó base-api por OOM.
+3. Ensayo: sin `--apply` (sólo cuenta) y comprobación de solo lectura de que los originales
+   existen. Después `node dist/scripts/backfillImageVariants.js --apply --overwrite
+   --names-file /tmp/list.txt --concurrency 6`. `--overwrite` regenera las viejas recortadas.
+4. Con `failed=0`, desplegar el API. Borrar el pod.
+
+Resultados del 2026-11-18: QA 17.261 originales → 51.777 variantes, 6 copias, 0 fallos;
+prod 30.143 originales → 90.429 variantes, 0 copias, 0 fallos (~12 min a 6 en paralelo). En QA, tras el API: 0 redirecciones y 0,22–0,41 s de media por
+imagen (antes 2 redirecciones y 1,4–2,1 s). Prod, tras el API (Kondomeriet, 235 imágenes): 0 redirecciones y 200 en los tres tamaños;
+media por imagen 0,24 s `thumbnail` (2,8 KB), 0,45 s `medium` (13,5 KB), 0,47 s `large` (14,6 KB),
+frente a 2 redirecciones, 1,66 s y 31,8 KB de antes.
+
+**Gotchas vistos el mismo día.**
+
+- **Cloudflare sirve un rato la variante vieja.** `--overwrite` reescribe el blob, pero si
+  Cloudflare ya lo tenía en caché (variantes recortadas que generó el resizer antiguo) sigue
+  sirviendo esa copia hasta que caduca. Es una imagen válida, sólo más pesada.
+- **Vev (Kondomeriet) ya construía `<n>large.jpg` por su cuenta** (`directImage`, en
+  `src/components/kondomeriet-perf.ts`) antes de que existieran las variantes: las imágenes de la
+  galería sin `large` dieron 404 (lo vio Alan a las 17:27 UTC) hasta que el backfill las generó.
+  Ahora el API ya devuelve la URL directa, así que `directImage` la deja tal cual; su comentario
+  de que `medium` no existe ya no es cierto.
+- **Cada sync del feed sube blobs nuevos** (`product-images/<Date.now()>.jpg`): el catálogo cambia
+  de URLs cada pocos minutos. Por eso la lista se saca de la base justo antes del backfill, y por
+  eso products tiene que escribir las variantes al subir.
+
+**Pendiente / ideas.** Si el original ya cabe en la caja, `medium`/`large` son una recodificación
+~5 % más pesada que el original (se podría guardar el original tal cual). El SDK pide `large` para
+tarjetas donde `medium` bastaría. Las respuestas cacheadas (Redis del API/gateway, `useCache`)
+conservan las URLs viejas con `?size=` hasta que se refrescan; siguen funcionando.
+
+PRs: base-api #72 #73 (release #74), products #70 (release #71), api #80 (release #81).
