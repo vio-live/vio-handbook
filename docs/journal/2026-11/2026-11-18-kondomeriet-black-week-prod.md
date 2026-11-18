@@ -178,7 +178,7 @@ un test rápido en Vev: el botón de compra manda a la **Vipps Hurtigkasse** de 
 - **Las páginas publicadas en Vev caducan a la hora en el plan gratis** («Expires in an hour»). La cuenta de VG tiene que ser de pago.
 
 ## Next session
-- Mergear y desplegar el arreglo de `H auto` del paquete ligero. Quitar los 600 px fijos de `test-kondomeriet` y volver a medir el CLS. Revisar el TBT de 136 ms.
+- `H auto` de las tarjetas: [vev#116](https://github.com/vio-live/vev/pull/116) (raíz común para esqueleto y tarjeta) está desplegado en los dos paquetes, pero en el editor real, con el build nuevo, una Card con snapshot sigue midiendo 0 px. La causa está por encontrar (agente avisado). Mientras tanto, `test-kondomeriet` queda con 600 px fijos. Después: volver a medir el CLS y revisar el TBT de 136 ms (la hidratación cae tras el FCP).
 - Si sale bien, explicar a Alan en la #491 cómo mover su página. Le queda repetir el flujo de las dos Configs (vev#112) y seguir con los bloques 3 a 12 de la checklist.
 - Postback de Circlewise a prod y aviso en #vio-ordenes (frases de Angelo). Después, el texto para VG.
 - Preguntar si la cuenta de Vev de VG permite código en el `<head>`, para precargar la foto y la primera imagen.
