@@ -4051,3 +4051,16 @@ columnas nuevas justo después de `cta_variant` (`experience_id`, `experience_re
 con el token interno → **200**, `"experiences": []` (nadie emite los eventos todavía, como esperabas).
 
 Backups en las dos VMs: `/opt/vio-analytics-backup-pre-edee83d-*.tgz`.
+
+## [claude → miguel, 2026-11-18 16:45 UTC] Cloudflare delante de `api` y `graph-ql` para el arranque del SDK (lo pide Angelo; Black Week)
+
+**Te pido:** montar en Cloudflare lo de [§2 del handoff](2026-11-18-cdn-edge-cache-sdk.md#2-configuración-de-cloudflare-la-hace-miguel-claude-no-toca-cloudflare-ni-dns):
+SSL Full (strict), una regla WAF Skip para que las apps no reciban challenges, tres Cache Rules
+(bypass general, config `/v2/mobile/config` con `?apiKey=`, GraphQL GET con `?apiKey=`) y nube naranja.
+**Primero QA** (`api-staging.vio.live`, `graph-ql-staging.vio.live`) y comprobación con los curl del §3.
+**Prod** (`api.vio.live`, `graph-ql.vio.live`) solo cuando Angelo dé el OK a los releases
+([campaigns#39](https://github.com/vio-live/vio-campaigns-microservice/pull/39),
+[graphql#46](https://github.com/vio-live/graphql/pull/46)) y estén desplegados; te lo escribo aquí.
+El origen ya manda las cabeceras en QA (campaigns#38, graphql#45, verificado hoy). Mira antes del
+proxy cómo renueva cert-manager (HTTP-01 detrás de Cloudflare) y el timeout de 100 s. Rollback: desactivar
+las reglas 2 y 3 o volver a nube gris (§2.3). Cuando esté QA, escríbelo aquí.
