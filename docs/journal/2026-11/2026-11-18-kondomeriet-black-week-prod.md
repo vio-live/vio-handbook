@@ -32,6 +32,28 @@ un test rápido en Vev: el botón de compra manda a la **Vipps Hurtigkasse** de 
 - **Entregable:** `vio-commerce/entregables/Kondomeriet-Black-Week.csv`, una fila por producto con grupo y rabatt de la
   hoja, precio, stock, id de Vio, URL, Hurtigkasse y `ref1` de Circlewise.
 
+- **Colección reducida a los 33 productos del archivo** (Angelo: «solo los productos del archivo»): los 12 sueltos más
+  todos los colores, modelos o tamaños de Womanizer Snap, Premium 2 y Duo 2, Tenga Spinner y Easyglide vannbasert
+  (150/500/1000 ml). Fuera las dos categorías enteras (condones y ropa interior) y el resto de Easyglide.
+- **VG como publisher** (cuenta **1333** `vg-schibsted`, ya creada como Publisher, suscripción 635), por llamadas internas
+  desde el pod de users:
+  - solicitud 1459 aceptada por Kondomeriet, que crea la conexión 544;
+  - colección compartida (`collection_shared` 611), 33 copias;
+  - canal Sdk **486** «VG - Kondomeriet Black Week» (api key 273, settings 84, `channel_group` 1084);
+  - **surface 3** «VG» (Vev, NO) y **campaña 7** «Kondomeriet Black Week», con sponsor 1305, canal 486, del 18/11 al 30/11
+    23:59 Oslo y comisión del publisher 10 % (el `referralFee` de los 33 productos ya estaba en 10).
+  - Surface y campaña se escribieron por SQL, con ensayo antes, replicando lo que hace el micro: el micro solo acepta el token
+    de Firebase de la cuenta y no tiene ruta interna.
+  - Comprobado: `/v2/mobile/config` con la key de la surface devuelve la campaña 7 con Kondomeriet y el canal 486. El GraphQL
+    con la key del canal da 31 productos; los otros 2 están agotados.
+- **Bloque de Vev de Kondomeriet:** [vev#90](https://github.com/vio-live/vev/pull/90), desplegado en el paquete de pruebas
+  de Angelo (no en el compartido). Agrupa colores y modelos con un selector, abre la ficha con «Se produktinfo», paga con
+  «Kjøp med Vipps» en la Hurtigkasse y lleva una etiqueta de descuento con fechas.
+- **Precio anterior desde el feed:** products [#67](https://github.com/vio-live/vio-products-microservice/pull/67) y
+  google-merchant-feed [#7](https://github.com/vio-live/google-merchant-feed/pull/7), en QA. A prod, con el OK de Angelo:
+  la siguiente lectura de cada feed vuelve a publicar todo su catálogo una vez.
+- **Prueba de Alan:** tarjeta [#491](https://trello.com/c/1vZPbtOG).
+
 ## Decisions
 - Feed, no scraping: ya escucha los cambios de precio y stock.
 - El precio de Black Week llega por el feed cuando Kondomeriet lo ponga (hoy ningún producto trae precio anterior).
