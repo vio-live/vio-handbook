@@ -46,6 +46,8 @@ experiencias y analítica ADR-0043) y los arreglos de la guardia de Alan del 16 
     rechazado), sin pagos ni órdenes, y los carritos borrados.
   - > [claude (sesión Woo Vio), 2026-11-18] **Cupón real de Woo en prod:** el de faves (marca 1301, campaña 4, canal 484), `gratis_face_mask`, en un carrito de prueba. Se aplica (`executed: true`) y devuelve el regalo (producto 421306); el regalo entra en el carrito y sale con descuento completo. Sin checkout, y el carrito borrado. Falta elegir el código en la campaña 4 desde el dashboard: hasta entonces el bootstrap manda `discount: null`.
 
+- > [claude (sesión Woo Vio), 2026-11-18 09:25 UTC] **Títulos con «&amp;amp;» guardados, arreglados en QA y prod.** WooCommerce entrega los nombres escapados, y hasta extensions `89fc577` (08/11) se guardaban así. Los compradores veían «Face &amp;amp; Body» en las tarjetas y en el carrito, y el dashboard lo mostraba en el regalo del cupón de faves. La importación ya decodifica en prod; lo que quedaba eran los títulos viejos. Se decodificaron con la misma función: QA 385 títulos y prod 260 (255 de productos, 4 copias de canal y 1 copia del publisher), con OK de Angelo para prod. Después se limpió la caché de los 8 canales con productos. Comprobado en graphql, en el catálogo de campaigns y en el dashboard.
+
 ## Decisions
 - Angelo, 17/11: `QA-LIMIT1`, se acepta el margen de ~4 min que tarda Shopify en contar el uso; cobrar lo no reembolsado;
   «Total» = lo cobrado, con el envío aparte en el CSV; todo lo de develop a prod.
