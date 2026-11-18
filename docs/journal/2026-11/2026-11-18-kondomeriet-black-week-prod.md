@@ -86,6 +86,7 @@ un test rápido en Vev: el botón de compra manda a la **Vipps Hurtigkasse** de 
 ## Blockers
 - **Circlewise:** con la compra por su Hurtigkasse, la venta no pasa por Vio y no hay forma de activar el tracking.
   Pendiente de cómo lo quiere usar Angelo.
+  → Receptor de la postback hecho (QA en vivo, prod preparado): [handoff](../../handoff/2026-11-18-circlewise-postback.md).
 - El pago por Hurtigkasse no se ha probado en vivo, porque crea un pago real en su Vipps.
 
 ## Next session
