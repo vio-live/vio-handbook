@@ -125,6 +125,9 @@ un test rápido en Vev: el botón de compra manda a la **Vipps Hurtigkasse** de 
   - **Selector de productos del editor** ([vev#107](https://github.com/vio-live/vev/pull/107), desplegado). Es lo que Angelo quería con «precio de venta, % y listar»; la vista en lista de la página (vev#106) la entendí mal y se quitó entera en [vev#109](https://github.com/vio-live/vev/pull/109). Se queda el precio de venta con el anterior tachado y el % calculado.
     - Precio de venta y, si hay `compare_at` real, el anterior tachado con el % calculado. Si no lo hay, el % de la hoja de Black Week en una etiqueta aparte.
     - Interruptor Grid / List; desde [vev#108](https://github.com/vio-live/vev/pull/108), List es la vista por defecto. A Alan solo le quedó pedido probar el selector, no la vista en lista de la página.
+  - **Guardia #491, 20:13 UTC.** La imagen propia en la tarjeta funciona bien.
+    Al añadir otro producto, el selector daba «bootstrap recently failed — backing off». Lo más probable: la Config que quedó tras la prueba de las dos Configs estaba en Staging, y `api-staging` responde 401 a la key de VG; lo comprobé con curl.
+    [vev#110](https://github.com/vio-live/vev/pull/110), desplegado: el selector reintenta pasado el backoff y muestra el error en claro con «Try again» y la pista de la Config.
 
 ## Decisions
 - Feed, no scraping: ya escucha los cambios de precio y stock.
