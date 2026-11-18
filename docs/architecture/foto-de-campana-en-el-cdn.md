@@ -8,8 +8,8 @@ status: active
 # Foto de campaña en el CDN
 
 > **Estado (2026-11-18):** en prod para la campaña 7 (VG × Kondomeriet, Black Week). En QA, para la campaña 12
-> (surface 13). Código: `vio-campaigns-microservice`, `src/modules/snapshots/` (PR #42 a develop, #43 a main).
-> **Pendiente para que lo lea un navegador:** CORS, ver «Bloqueo: CORS» abajo.
+> (surface 13). Código: `vio-campaigns-microservice`, `src/modules/snapshots/` (PR #42 y #44 a develop, #43 y #45 a main).
+> El navegador la lee con la variante **`.js`** (`<script async src>`): el CDN no manda CORS, ver «Por qué `.js`» abajo.
 
 ## Para qué
 
@@ -21,10 +21,13 @@ cosas ya resueltas en un fichero estático del CDN.
 **Medido en prod (18/11, surface de VG):** `…/snapshots/cb29caad495006e33774c41970475cf7.json`, 31 productos,
 110 KB (20 KB en gzip, que Cloudflare aplica solo), MISS ~0,3–0,6 s y HIT ~0,2–0,3 s desde la laptop;
 `config` idéntica a la de `api.vio.live/v2/mobile/config?platform=vev`; `generatedAt` avanzando 90 s por pasada.
+El `.js` (desde el 18/11, 21:20 UTC): 200, `application/javascript; charset=utf-8`, 20 KB en gzip, HIT ~0,11–0,23 s;
+ejecutado con un `window` simulado deja exactamente el objeto del `.json` y dispara `vio:snapshot`.
 
 ## Contrato del fichero
 
-**URL:** `https://container.vio.live/reachu-uploads-production/snapshots/<h>.json`, con
+**URL:** `https://container.vio.live/reachu-uploads-production/snapshots/<h>.js` (para el navegador) y
+`…/snapshots/<h>.json` (mismo contenido, para servidores o el día que haya CORS), con
 `h` = los primeros 32 caracteres del sha256 en hex de la key **pública** de la surface (la que ya va en
 `?apiKey=`). La key nunca va en claro en el nombre. En JS:
 
@@ -70,13 +73,52 @@ const h = [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).j
 - Si la campaña deja de estar activa (pausada, terminada) o la surface se desactiva o cambia de key, el fichero se
   borra en la pasada siguiente: un 404 significa «no hay foto», no «no hay campaña». Ir a la API.
 - Cloudflare ignora la query string en ese host: `?v=` no rompe la caché.
+- Cloudflare **cachea también los 404 unos 3 minutos** (y por separado para cada `Accept-Encoding`): si alguien
+  pide la foto antes de que exista (campaña recién añadida al filtro, primer despliegue), puede tardar ~3 min más en
+  verse. En un despliegue el pod nuevo escribe en su primer tick tras soltar el lock el viejo (hasta ~90 s).
 
 ## Cómo se consume (SDK y bloques)
 
-1. Pedir la foto en paralelo con (o en vez de) la config. Si llega, es reciente y trae la campaña, pintar con
-   `config` + `products` sin esperar a la API.
+La variante `.js` es el mismo `JSON.stringify` del documento envuelto en una asignación y un evento:
+
+```js
+(window.__vioSnapshots=window.__vioSnapshots||{})["<h>"]=<JSON>;try{window.dispatchEvent(new CustomEvent("vio:snapshot",{detail:"<h>"}))}catch(e){}
+```
+
+`Content-Type: application/javascript; charset=utf-8`, el mismo `Cache-Control` que el `.json`. Se escriben y se
+borran juntos. El único cambio sobre el JSON: U+2028/U+2029 dentro de textos van escapados (`\u2028`), mismo valor.
+
+```js
+function loadVioSnapshot(h) {
+  return new Promise((resolve) => {
+    const have = () => (window.__vioSnapshots || {})[h];
+    if (have()) return resolve(have());
+    const done = () => resolve(have() || null);
+    window.addEventListener('vio:snapshot', (e) => { if (e.detail === h) done(); });
+    const s = document.createElement('script');
+    s.async = true;
+    s.src = `https://container.vio.live/reachu-uploads-production/snapshots/${h}.js`;
+    s.onerror = done; // 404 = no hay foto: ir a la API
+    document.head.appendChild(s);
+  });
+}
+```
+
+O en el HTML, lo antes posible: `<script async src="https://container.vio.live/reachu-uploads-production/snapshots/<h>.js"></script>`,
+y leer `window.__vioSnapshots[h]` (o esperar `vio:snapshot`, `detail` = `h`). Varias fotos en la misma página no
+se pisan: cada una va en su clave.
+
+1. Pedir la foto en paralelo con (o en vez de) la config. Si llega, es reciente (`generatedAt`) y trae la campaña,
+   pintar con `config` + `products` sin esperar a la API.
 2. Seguir pidiendo la config y los productos en segundo plano para lo que cambie en vivo (stock al abrir la ficha,
    checkout): la foto es para el primer pintado, no para cobrar.
+
+**Por qué `.js`.** Ni el blob de Azure ni Cloudflare devuelven `Access-Control-Allow-Origin` en
+`container.vio.live` (medido el 18/11: GET con `Origin` sin la cabecera, `OPTIONS` 403), así que un `fetch()` del
+`.json` desde vg.no o un dominio de Vev no se puede leer. Un `<script>` no necesita CORS. Así no hay que tocar
+infraestructura (ni Cloudflare ni la cuenta de Azure). El `.json` se queda para cuando haya CORS (una Transform Rule
+de Cloudflare con `Access-Control-Allow-Origin: *` en `/reachu-uploads-production/snapshots/*` sería lo más limpio).
+Lo que sale en el script es público igual que el `.json`: lo mismo que la API ya da con la key pública de la surface.
 
 ## Qué surfaces llevan foto
 
@@ -84,15 +126,3 @@ Filtro explícito por campaña, nunca todas: `CDN_SNAPSHOT_CAMPAIGN_IDS` en el `
 (`values.yaml` QA = `12`, `values-prod.yaml` prod = `7`). Añadir una campaña es un PR al chart (y release a main).
 La credencial del container (`AZURE_SERVICE_CONTAINER_CONNECTION_STRING`, `AZURE_BUCKET`) ya venía en el `.env`
 compartido de los micros, también en el Secret `env-sc-campaigns` de prod: no hubo que añadir nada.
-
-## Bloqueo: CORS
-
-El fichero se sirve bien (curl: 200, HIT), pero **un `fetch()` desde vg.no o un dominio de Vev no lo puede leer**:
-ni el blob ni Cloudflare devuelven `Access-Control-Allow-Origin` (medido el 18/11: GET con `Origin` sin la
-cabecera; `OPTIONS` 403; las reglas CORS de la cuenta de QA, `containerqasc`, están vacías). Opciones, sin decidir:
-
-- **Regla de Cloudflare** (Transform Rule de respuesta, `Access-Control-Allow-Origin: *` en
-  `/reachu-uploads-production/snapshots/*`): la más limpia; la puede poner quien tenga acceso a Cloudflare.
-- **CORS en la cuenta de Azure** (`GET`, origen `*`): afecta a todos los containers de la cuenta, y Azure solo
-  responde la cabecera si la petición trae `Origin`, así que Cloudflare puede cachear una copia sin ella.
-- **Variante `.js`** (`window.__VIO_SNAPSHOT__ = …`) cargada con `<script>`, que no necesita CORS.
