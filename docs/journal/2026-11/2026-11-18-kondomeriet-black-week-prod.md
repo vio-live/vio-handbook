@@ -54,6 +54,31 @@ un test rápido en Vev: el botón de compra manda a la **Vipps Hurtigkasse** de 
   la siguiente lectura de cada feed vuelve a publicar todo su catálogo una vez.
 - **Prueba de Alan:** tarjeta [#491](https://trello.com/c/1vZPbtOG).
 
+- **Tarde del 18/11:**
+  - **Bloques de Vev de Kondomeriet en el paquete compartido** ([vev#90](https://github.com/vio-live/vev/pull/90)–[#93](https://github.com/vio-live/vev/pull/93)):
+    - el diseño del SDK estándar;
+    - descuento en la tarjeta y en la ficha;
+    - etiqueta editable «Kjøp direkte fra artikkelen»;
+    - ficha completa con secciones;
+    - las ventajas o promesas de marca;
+    - adaptación a móvil;
+    - imagen elegida por el redactor y las mismas opciones de la tarjeta estándar;
+    - sin el enlace a kondomeriet.no.
+    Página de prueba publicada: `a-vio-dev.vev.site/test-kondomeriet`.
+  - **Descripciones limpias:** sacadas de las 34 fichas de kondomeriet.no (frase destacada, Produktinformasjon,
+    Spesifikasjoner, Inkludert i esken y valoración) y escritas en `product.description` con el marcador
+    `<!-- vio:keep-description -->`. Así el feed no las pisa ([products#68](https://github.com/vio-live/vio-products-microservice/pull/68)).
+    El feed de Kondomeriet manda las descripciones sin `< >`.
+  - **Prod:** products [#69](https://github.com/vio-live/vio-products-microservice/pull/69) (precio anterior + descripciones fijadas) y
+    google-merchant-feed [#8](https://github.com/vio-live/google-merchant-feed/pull/8). Al re-publicar los catálogos, el pod de products se quedó
+    en ~495 MB, sin reinicios.
+  - **Llavero «Ring For Sex» (410659, 39 kr)** en la colección, para probar pedidos baratos.
+  - **Promesas de marca de Kondomeriet** (`brand_profile.highlights` 1305, con ensayo antes):
+    - Lynrask levering · Tusenvis av varer på lager;
+    - Anonymitet;
+    - Eksklusive priser.
+    Logo de la marca: pendiente.
+
 ## Decisions
 - Feed, no scraping: ya escucha los cambios de precio y stock.
 - El precio de Black Week llega por el feed cuando Kondomeriet lo ponga (hoy ningún producto trae precio anterior).
