@@ -89,7 +89,11 @@ un test rápido en Vev: el botón de compra manda a la **Vipps Hurtigkasse** de 
   - **Imágenes sin redirecciones:** base-api #72/#73, products #70 y api #80 están en QA. Los tiempos por imagen bajan de 1,4–2,1 s a 0,2–0,4 s.
     Prod en curso, con el OK de Angelo.
   - **Guardia #491, 16:54 UTC.** Alan marcó 9 productos distintos en el «Products» de una tarjeta del Carousel y salió una sola tarjeta con 9 opciones.
-    En curso: «+ Add products» crea una tarjeta por familia, una tarjeta que mezcla familias se divide sola, y la tarjeta suelta avisa. Ya le contestamos en la tarjeta.
+    Arreglado en [vev#99](https://github.com/vio-live/vev/pull/99) y desplegado:
+    - «+ Add products» crea una tarjeta por familia. Una familia es la misma fila del archivo, o la misma marca con las dos primeras palabras del título iguales.
+    - Una tarjeta que mezcla familias se divide sola, y la tarjeta suelta avisa.
+    - ref1 sigue a la opción comprada.
+    - Con los 9 de Alan salen 7 tarjetas. Ya le pedimos que vuelva a probarlo.
 
 ## Decisions
 - Feed, no scraping: ya escucha los cambios de precio y stock.
