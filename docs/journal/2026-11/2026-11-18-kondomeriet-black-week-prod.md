@@ -100,6 +100,13 @@ un test rápido en Vev: el botón de compra manda a la **Vipps Hurtigkasse** de 
     - Con los 9 de Alan salen 7 tarjetas. Ya le pedimos que vuelva a probarlo.
   - **Imagen mediana (500 px)** en las tarjetas y en las miniaturas de la galería ([vev#100](https://github.com/vio-live/vev/pull/100)). `directImage` entiende ya la URL directa de api #81.
   - **Ojo con lo publicado en Vev:** una página publicada se queda con la versión de los bloques del momento de publicar. La de prueba seguía con el bundle anterior tras `vev deploy`, así que cada arreglo exige volver a publicar. Avisado a Alan. VG debe publicar su artículo después de nuestro último despliegue.
+  - **Caché de productos del canal 486 en el Redis de prod, borrada con OK de Angelo** (~18:10 UTC):
+    - Por qué: la ficha de Vev pide con `useCache:true`, y api guardaba la respuesta por URL, sin caducidad, con los nombres de imagen de ayer en la forma `?size=`. El feed volvió a subir hoy todas las imágenes con nombres nuevos, y el relleno no generó tamaños para los nombres viejos. Cada miniatura de la galería daba 404 y caía al redimensionador.
+    - Cómo: ensayo y borrado de las 151 claves de `USER_CHANNEL_ID_486_KEYS`, como hace `deleteCacheChannelUser`. De esas, 79 tenían respuesta y 66 llevaban URLs viejas; no quedó ninguna.
+    - Comprobado: la API devuelve las URLs directas nuevas, y en `test-kondomeriet` las 11 imágenes de la galería del Womanizer cargan directas.
+    - Pendiente:
+      - Las cachés de los demás canales siguen con URLs `?size=`. Funcionan, con dos redirecciones.
+      - El feed de Kondomeriet vuelve a subir todas las imágenes en cada importación. Hay que mirarlo aparte.
 
 ## Decisions
 - Feed, no scraping: ya escucha los cambios de precio y stock.
