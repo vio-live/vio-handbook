@@ -155,6 +155,9 @@ Las tarjetas salen unos 300 ms más tarde que con la copia de las props (que pin
 - **graphql#48 en prod** (15:32 UTC, frase de Angelo). La caché de productos del gateway caduca a los 120 s y se rellena desde api con `useCache=false`. Run 44555914015 en verde, pods `graph-ql` nuevos sin errores, y las respuestas con y sin caché iguales: Blowcast Pro 568/1419, blåbær 1359/1999, llavero 39.
 - **Guardia #491, 15:20–15:24 UTC.** Alan aprobó el cambio de color en la ficha, cerrar la ficha (también deslizando en el móvil, vev#125) y la opción agotada seleccionada (vev#124). Escribió «se fuerza cambio de precio»; a las 15:38 los 38 precios del canal coinciden con los escritos a las 11:40, así que no queda ningún cambio en prod.
 - **Promesas de la ficha sin estilo en el móvil** (captura de Angelo, 17:42 UTC): el paquete ligero copia la hoja de estilos de la ficha de la SDK (`detail-css.js`), pero la franja de promesas tiene sus reglas aparte (`src/ui/highlights.ts`). [vev#126](https://github.com/vio-live/vev/pull/126) las añade a la hoja propia de la ficha. Comprobado inyectándolas en la página publicada: grid de tres columnas e icono de 22 px (antes salía como lista con viñetas y un icono de 352 px). Hay que republicar.
+- **Guardia #491, 15:38–19:20 UTC.** Sin fallos nuevos. Alan cerró:
+  - el bloque 5 menos la compra de 39 kr: Hurtigkasse desde la tarjeta y desde la ficha, los 22 grupos de la hoja, doble clic, pestaña nueva y misma ventana. La cantidad 1 fija es a propósito.
+  - el bloque 6 entero: iPhone Safari, Android emulado, Messenger, Instagram, Slack y Facebook (la app de VG queda para cuando el artículo esté en vg.no), Firefox, Edge, tablet, bloqueador de anuncios y cookies rechazadas, Slow 3G y modo avión.
 
 ## Decisions
 - Angelo, 19/11: el precio de Black Week se calcula con el % de la hoja y se escribe en la base de datos. Sustituye a la regla del 18/11 «nunca se deduce un før-pris de un %».
