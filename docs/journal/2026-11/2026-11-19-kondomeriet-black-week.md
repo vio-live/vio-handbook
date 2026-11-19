@@ -132,6 +132,12 @@ Las tarjetas salen unos 300 ms más tarde que con la copia de las props (que pin
     El producto con stock (Snap) sigue comprable.
   - Arreglo de raíz: [graphql#47](https://github.com/vio-live/graphql/pull/47) (en QA) y su release [graphql#48](https://github.com/vio-live/graphql/pull/48), pendiente de la frase de Angelo. Hasta entonces, cualquier cambio de stock o precio puede llegar viejo a la primera o segunda consulta de cada combinación de ids, y quedarse 5 min en la caché local de ese lector.
 
+- **Tarjetas mezcladas con el esqueleto** (#491, Alan 13:13 y 13:48 UTC, `a-alan-local.vev.site/woo-origin`): [vev#122](https://github.com/vio-live/vev/pull/122), mergeado y desplegado en los dos paquetes.
+  - **Causa: hidratación.** La página publicada llega renderizada en el servidor con el esqueleto y React la hidrata. En una recarga, el primer render del cliente ya leía la caché local y pintaba la tarjeta, y el esqueleto usaba datos del navegador (identidad de la caché, detección de app, cuenta atrás). La hidratación reutiliza los nodos del servidor sin corregir sus atributos: quedaban `knd-skel-line` en el precio, `knd-skel-block` en «Se produktinfo» y `aria-busy`. No era vev#119 ni el botón oficial de Vipps.
+  - Reproducido en su página con Puppeteer: bien con caché vacía; al recargar, las 4 tarjetas quedaban `aria-busy` con nodos de esqueleto. También en el arnés, con `renderToString` del bundle e hidratación legacy.
+  - Arreglo: el primer render es igual al del servidor; la caché, la foto, la copia de las props y la identidad entran tras montar. Comprobado sin nodos de esqueleto ni errores de hidratación en card (con stock y agotada), grid y carrusel, con `hydrateRoot` y con `hydrate`. La carga no empeora.
+  - La página de Alan sigue con el bundle viejo (`b08e85fa…`), porque las publicadas lo fijan: tiene que **republicar**.
+
 ## Decisions
 - Angelo, 19/11: el precio de Black Week se calcula con el % de la hoja y se escribe en la base de datos. Sustituye a la regla del 18/11 «nunca se deduce un før-pris de un %».
 
