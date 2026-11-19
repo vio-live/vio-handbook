@@ -152,6 +152,7 @@ Las tarjetas salen unos 300 ms más tarde que con la copia de las props (que pin
   - Cerrar la ficha deslizando en el móvil: [vev#125](https://github.com/vio-live/vev/pull/125) porta el `BottomSheet` de la SDK, que no lo exporta.
   - Todo desplegado en los dos paquetes; hay que republicar.
   - Alan volvió a tocar stock en prod: blåbær 411312 a 0. A las 15:18 ya estaba de vuelta en 999, igual que el llavero. Le pedí que no cambie datos de prod.
+- **graphql#48 en prod** (15:32 UTC, frase de Angelo). La caché de productos del gateway caduca a los 120 s y se rellena desde api con `useCache=false`. Run 44555914015 en verde, pods `graph-ql` nuevos sin errores, y las respuestas con y sin caché iguales: Blowcast Pro 568/1419, blåbær 1359/1999, llavero 39.
 
 ## Decisions
 - Angelo, 19/11: el precio de Black Week se calcula con el % de la hoja y se escribe en la base de datos. Sustituye a la regla del 18/11 «nunca se deduce un før-pris de un %».
