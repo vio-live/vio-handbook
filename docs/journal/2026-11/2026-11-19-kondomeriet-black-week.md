@@ -91,6 +91,36 @@ Necesita a otros:
 
 No medido: el cambio de color en la ficha (solo la apertura), ni Safari/iOS.
 
+### Hecho (Angelo: «dale, haz las mejoras 1 a 4»)
+
+- **[vev#119](https://github.com/vio-live/vev/pull/119)**, mergeado y desplegado en los dos paquetes (`cq1lXld-TA9`, `c5CIrrzXoMb`):
+  - foto del CDN primero; la copia de las props solo si la foto falla, está vieja o no llega en 700 ms;
+  - GET de GraphQL con `cache: "no-cache"`;
+  - las imágenes de las tarjetas no prioritarias se montan cuando han cargado las prioritarias, a 100 px del viewport o a los 2,5 s.
+- **[graphql#47](https://github.com/vio-live/graphql/pull/47)**, mergeado a develop y desplegado en QA en verde:
+  - la caché de productos del gateway caduca a los 120 s (antes 1 h, el valor por defecto de `RedisService`);
+  - el gateway la llena desde api con `useCache=false`. La caché de api no caduca y también sirve antes de refrescar, así que devolvía el precio viejo; esa era la causa del fallo 1.
+  - Comprobado en QA en los logs del gateway (canal 503):
+    - las claves se guardan «with expiration of 120 seconds» y api se llama con `useCache=false`;
+    - tras 130 s sin peticiones, la siguiente es un fallo de caché: sin «RETURN RESPONSE», con CALL SERVICE a api (115 ms) y la clave guardada de nuevo.
+    - No se cambió ningún precio en QA para la prueba de punta a punta: escribir en la base de QA pide el OK de Angelo. La cota de ≤120 s sale de la caducidad comprobada más la lectura fresca de api.
+  - Release a prod preparada en **[graphql#48](https://github.com/vio-live/graphql/pull/48)** (cherry-pick sobre master; 679 tests y tsc en verde). Está **sin mergear**: espera la frase de Angelo.
+
+Antes/después en el mismo arnés (main `5d4870d` frente a vev#119; 3 corridas intercaladas; grid de 16 tarjetas; 4G y caché vacía):
+
+| | antes | después |
+|---|---|---|
+| Copia de las props vieja (la situación real de hoy): precio viejo en pantalla | 1 105–1 326 ms | **0** |
+| — imágenes de producto | 20 peticiones / 239 KB | **8 / 100 KB** |
+| — las 4 imágenes de arriba completas (las definitivas) | 3 284–3 486 ms | **2 061–2 233 ms** |
+| — tarjetas pintadas | 1 355–1 435 ms (precio e imagen viejos) | 1 669–1 686 ms (correctas) |
+| — LCP | 1 772–1 908 (imagen vieja) | 1 852–2 056 (imagen definitiva) |
+| Sin copia en las props: las 4 de arriba completas | 2 448–2 483 ms | **2 070–2 084 ms** |
+| — LCP / tarjetas | 1 864–2 080 / 1 688–1 780 | 1 880–1 896 / 1 689–1 713 |
+| Segunda visita: GET de GraphQL | caché del navegador | red |
+
+Las tarjetas salen unos 300 ms más tarde que con la copia de las props (que pintaba al momento, pero mal): esperan a la foto completa (26 KB gzip). La foto recortada en campaigns (propuesta 3 de arriba, medida −210 ms) lo recuperaría; no entraba en este lote. Comprobado en el arnés: card, grid y carrusel con los precios nuevos en primera y segunda visita, todas las imágenes completas y sin errores de consola.
+
 ## Decisions
 - Angelo, 19/11: el precio de Black Week se calcula con el % de la hoja y se escribe en la base de datos. Sustituye a la regla del 18/11 «nunca se deduce un før-pris de un %».
 
