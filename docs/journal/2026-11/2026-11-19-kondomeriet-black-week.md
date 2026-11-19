@@ -145,6 +145,13 @@ Las tarjetas salen unos 300 ms más tarde que con la copia de las props (que pin
     - El llavero sigue a 0; hay que restaurarlo con OK de Angelo.
   - **Tarjetas a medio cargar** (barra gris del esqueleto detrás del precio, bloque gris en lugar de «Se produktinfo») al recargar una página publicada. Era la hidratación de React: el primer render del cliente usaba la caché local y no coincidía con el HTML del servidor de Vev. Arreglado en [vev#122](https://github.com/vio-live/vev/pull/122), que alinea el primer render con el del servidor. Hay que republicar las páginas (Alan su woo-origin; Angelo test-kondomeriet).
   - Checklist «13. Verificar arreglos» añadido a la #491 (dos Configs y agotado).
+- **Guardia #491, 14:37–15:10 UTC.**
+  - Precio en Vipps sin descuento: es lo esperado mientras Kondomeriet no active su Black Week. Se lo expliqué a Alan.
+  - Ficha de un agotado que dejaba comprar: [vev#123](https://github.com/vio-live/vev/pull/123). Aprobado por Alan.
+  - Opción agotada seleccionada (texto blanco ilegible) y ficha que se abría en el color agotado: [vev#124](https://github.com/vio-live/vev/pull/124).
+  - Cerrar la ficha deslizando en el móvil: [vev#125](https://github.com/vio-live/vev/pull/125) porta el `BottomSheet` de la SDK, que no lo exporta.
+  - Todo desplegado en los dos paquetes; hay que republicar.
+  - Alan volvió a tocar stock en prod: blåbær 411312 a 0. A las 15:18 ya estaba de vuelta en 999, igual que el llavero. Le pedí que no cambie datos de prod.
 
 ## Decisions
 - Angelo, 19/11: el precio de Black Week se calcula con el % de la hoja y se escribe en la base de datos. Sustituye a la regla del 18/11 «nunca se deduce un før-pris de un %».
