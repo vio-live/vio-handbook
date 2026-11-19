@@ -120,6 +120,7 @@ Antes/después en el mismo arnés (main `5d4870d` frente a vev#119; 3 corridas i
 | Segunda visita: GET de GraphQL | caché del navegador | red |
 
 Las tarjetas salen unos 300 ms más tarde que con la copia de las props (que pintaba al momento, pero mal): esperan a la foto completa (26 KB gzip). La foto recortada en campaigns (propuesta 3 de arriba, medida −210 ms) lo recuperaría; no entraba en este lote. Comprobado en el arnés: card, grid y carrusel con los precios nuevos en primera y segunda visita, todas las imágenes completas y sin errores de consola.
+- **Guardia #491, 12:52–12:59 UTC.** Alan cerró editableCSS (las fuentes ya cambian, vev#117), la card suelta (Blowcast Pro 568, tachado 1419, −60 %) y la card con opciones (Premium 2 1359, tachado 1999). Verificado en sus capturas. Le he pedido que confirme la prueba de las dos Configs y que trabaje en la página con el paquete ligero.
 
 ## Decisions
 - Angelo, 19/11: el precio de Black Week se calcula con el % de la hoja y se escribe en la base de datos. Sustituye a la regla del 18/11 «nunca se deduce un før-pris de un %».
