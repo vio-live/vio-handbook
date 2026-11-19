@@ -137,6 +137,14 @@ Las tarjetas salen unos 300 ms más tarde que con la copia de las props (que pin
   - Reproducido en su página con Puppeteer: bien con caché vacía; al recargar, las 4 tarjetas quedaban `aria-busy` con nodos de esqueleto. También en el arnés, con `renderToString` del bundle e hidratación legacy.
   - Arreglo: el primer render es igual al del servidor; la caché, la foto, la copia de las props y la identidad entran tras montar. Comprobado sin nodos de esqueleto ni errores de hidratación en card (con stock y agotada), grid y carrusel, con `hydrateRoot` y con `hydrate`. La carga no empeora.
   - La página de Alan sigue con el bundle viejo (`b08e85fa…`), porque las publicadas lo fijan: tiene que **republicar**.
+- **Guardia #491, 13:13–14:19 UTC.**
+  - Cerrados: estrellas, línea de confianza y fecha de fin de oferta; títulos largos y precios de 4 cifras; imagen que no carga; abrir la ficha (Se mer, Se produktinfo, foto); contenido de la ficha.
+  - **Producto agotado:** Alan puso el llavero 410659 a stock 0 directamente en la base de datos de prod. La tarjeta seguía ofreciendo Vipps y llegaba al pago.
+    - En los bloques: [vev#120](https://github.com/vio-live/vev/pull/120) (producto que el canal ya no devuelve → agotado) y [vev#121](https://github.com/vio-live/vev/pull/121) (respuesta vacía del canal = agotado; un fallo no cuenta como agotado).
+    - Causa de fondo: la caché del gateway GraphQL en prod servía la respuesta vieja. El arreglo es [graphql#48](https://github.com/vio-live/graphql/pull/48), pendiente de la frase de Angelo.
+    - El llavero sigue a 0; hay que restaurarlo con OK de Angelo.
+  - **Tarjetas a medio cargar** (barra gris del esqueleto detrás del precio, bloque gris en lugar de «Se produktinfo») al recargar una página publicada. Era la hidratación de React: el primer render del cliente usaba la caché local y no coincidía con el HTML del servidor de Vev. Arreglado en [vev#122](https://github.com/vio-live/vev/pull/122), que alinea el primer render con el del servidor. Hay que republicar las páginas (Alan su woo-origin; Angelo test-kondomeriet).
+  - Checklist «13. Verificar arreglos» añadido a la #491 (dos Configs y agotado).
 
 ## Decisions
 - Angelo, 19/11: el precio de Black Week se calcula con el % de la hoja y se escribe en la base de datos. Sustituye a la regla del 18/11 «nunca se deduce un før-pris de un %».
