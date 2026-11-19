@@ -29,7 +29,18 @@ Lo pendiente del 18/11 («Next session») y la guardia de Alan en la #491.
   - Comprobado: el GraphQL del canal 486 da 38 productos (31 + 7), con los precios de la web, y las imágenes `medium` responden 200.
   - Orden correcto para la próxima vez: envío, publicar y después añadir. Aquí se añadió antes de publicar y hubo que volver a proyectar.
 
+- **Precios de Black Week calculados con el % de la hoja** (11:40 UTC; decisión y OK de Angelo, en la base de datos).
+  - Products#69 y google-merchant-feed#8 ya estaban en prod desde el 18/11 (~15:00 UTC). El feed de Kondomeriet no trae `sale_price` para ninguno de nuestros productos (solo para packs regalo de Liberty que no están en la campaña), y su web dice «Kampanjen "Black Week 2026" er for øyeblikket ikke aktiv»: los precios actuales son los normales.
+  - Escritos 40 productos de la colección (todos salvo el llavero 410659), en una transacción con guarda sobre el precio anterior: `price_compare_at` = precio actual, `price_amount` = `public_price` = precio × (1 − %), redondeado a la corona. Ejemplos: Blowcast Pro 1419→568, Premium 2 1999→1359, Duo 2 2099→1532, Snap 998→749, Alpha Surge 1849→925, Liberty 2 1149→816.
+  - Solo en `product`: la copia de VG (`custom_product`) solo sustituye título, descripción, sku y código de barras (`product.service.ts:1826`), así que el canal toma el precio del producto.
+  - Después: proyección de `KHBq619Se`, 6 claves del canal 486 borradas en el Redis de api, y la foto del CDN regenerada (11:41:16) con los precios nuevos. GraphQL con y sin caché: 37 de 38 con tachado.
+  - El editor pintó 1999 durante unos minutos: la respuesta GET lleva `stale-while-revalidate=300` y el navegador sirvió la copia vieja mientras revalidaba. Tras recargar: 1359 en rojo, 1999 tachado.
+  - Se deshace solo: el feed vuelve a escribir precio y precio anterior de un producto cuando Kondomeriet lo cambia en su feed (incluido un cambio de stock). Cuando activen su Black Week, ganan sus precios reales.
+  - Ojo: hasta entonces su Vipps Hurtigkasse cobra el precio normal. El artículo de VG no debe salir antes.
+  - La copia de productos que guarda cada tarjeta en sus props (`group.snap`) sigue con el precio viejo hasta que alguien abra sus propiedades en el editor. En el primer pintado esa copia va antes que la foto del CDN, así que un lector sin caché puede ver un instante el precio viejo.
+
 ## Decisions
+- Angelo, 19/11: el precio de Black Week se calcula con el % de la hoja y se escribe en la base de datos. Sustituye a la regla del 18/11 «nunca se deduce un før-pris de un %».
 
 ## Blockers
 - Siguen los del 18/11: H auto a 0 px en el editor de Vev, frases de prod para la postback de Circlewise, compra de 39 kr y precios de Black Week de Kondomeriet.
