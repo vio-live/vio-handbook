@@ -19,6 +19,15 @@ Lo pendiente del 18/11 («Next session») y la guardia de Alan en la #491.
   - Los 4 existen en kondomeriet.no, pero **no están en el canal 486** (31 productos). Para que entren hay que buscarlos en el catálogo de Kondomeriet en Vio (feed), publicarlos y añadirlos a la colección `KHBq619Se` y a la compartida 611. Eso es lectura y escritura en prod, y espera las frases de Angelo.
   - [vev#118](https://github.com/vio-live/vev/pull/118), desplegado en los dos paquetes: añade el rabatt y el `ref1` de los 4 nuevos y el 27 % de Womanizer Duo 2, que faltaba en el mapa.
   - Los 31 productos del canal tienen `compare_at` 0. La web ya vende, por ejemplo, el Snap a 998 kr (−25 %), así que el precio anterior aún no llega a prod: products#67 y google-merchant-feed#7 solo están en develop.
+- **Los 4 productos nuevos, en el canal de VG** (12:20 UTC, con las frases de Angelo de leer y escribir en prod). Son 7 productos: Xtensity 411330, Klitty 410906, Alpha Surge 410308 y los cuatro colores de Womanizer Liberty 2 (411292, 411295, 411297, 411300). Los packs regalo de Liberty y el Alpha Surge Stamina quedan fuera.
+  - Estaban en borrador y sin clase de envío. `bulk-publish` falla con «Can't publish without shipping class».
+  - Pasos, todos por los micros desde el pod de products:
+    - `POST /shipping/join-product` con «Frakt» (`47d45020…`, la única de Kondomeriet, que llevan los 34 de la colección);
+    - `PUT /bulk-publish`;
+    - `POST collections/collectionItem/add/multiple` a `KHBq619Se`, que copia a VG como custom-product por la compartida 611;
+    - `POST /channel-process/collections/update`.
+  - Comprobado: el GraphQL del canal 486 da 38 productos (31 + 7), con los precios de la web, y las imágenes `medium` responden 200.
+  - Orden correcto para la próxima vez: envío, publicar y después añadir. Aquí se añadió antes de publicar y hubo que volver a proyectar.
 
 ## Decisions
 
