@@ -158,6 +158,11 @@ Las tarjetas salen unos 300 ms más tarde que con la copia de las props (que pin
 - **Guardia #491, 15:38–19:20 UTC.** Sin fallos nuevos. Alan cerró:
   - el bloque 5 menos la compra de 39 kr: Hurtigkasse desde la tarjeta y desde la ficha, los 22 grupos de la hoja, doble clic, pestaña nueva y misma ventana. La cantidad 1 fija es a propósito.
   - el bloque 6 entero: iPhone Safari, Android emulado, Messenger, Instagram, Slack y Facebook (la app de VG queda para cuando el artículo esté en vg.no), Firefox, Edge, tablet, bloqueador de anuncios y cookies rechazadas, Slow 3G y modo avión.
+- **Guardia #491, 19:33–21:06 UTC.** Alan cerró los bloques 7 (salvo 7.2: espera a que Kondomeriet active su Black Week), 8 y 9. Sin fallos nuevos; solo dudas de comportamiento, contestadas en la tarjeta:
+  - la tarjeta no se refresca mientras la página está abierta, y tras un cambio tarda hasta 2 min (caché del gateway);
+  - los eventos salen en lote cada 5 s o al salir de la página (sendBeacon);
+  - no hay evento de compra; la compra llega por la postback de Circlewise.
+  - Alan volvió a cambiar datos de prod para probar: stock a 0 y el llavero a 390 kr. Lo devolvió él; comprobado a 39 kr, 999 de stock y 38 productos. Se le pidió tres veces que no toque prod; Angelo debería decírselo directamente.
 
 ## Decisions
 - Angelo, 19/11: el precio de Black Week se calcula con el % de la hoja y se escribe en la base de datos. Sustituye a la regla del 18/11 «nunca se deduce un før-pris de un %».
