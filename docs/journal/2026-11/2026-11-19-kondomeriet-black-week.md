@@ -122,6 +122,16 @@ Antes/después en el mismo arnés (main `5d4870d` frente a vev#119; 3 corridas i
 Las tarjetas salen unos 300 ms más tarde que con la copia de las props (que pintaba al momento, pero mal): esperan a la foto completa (26 KB gzip). La foto recortada en campaigns (propuesta 3 de arriba, medida −210 ms) lo recuperaría; no entraba en este lote. Comprobado en el arnés: card, grid y carrusel con los precios nuevos en primera y segunda visita, todas las imágenes completas y sin errores de consola.
 - **Guardia #491, 12:52–12:59 UTC.** Alan cerró editableCSS (las fuentes ya cambian, vev#117), la card suelta (Blowcast Pro 568, tachado 1419, −60 %) y la card con opciones (Premium 2 1359, tachado 1999). Verificado en sus capturas. Le he pedido que confirme la prueba de las dos Configs y que trabaje en la página con el paquete ligero.
 
+- **Agotado que seguía comprable** (#491, llavero 410659 a stock 0): la causa es la caché del gateway de prod, no los bloques.
+  - En el arnés con main `91d9d5d` (vev#120/#121) y el producto real, la primera carga de la tarjeta recibió del GET de GraphQL el llavero **con stock**: la clave de esa consulta seguía vieja en el gateway, que sirve antes de refrescar desde la caché de api, sin caducidad.
+  - Las cargas siguientes recibieron `[]` y la tarjeta pasó a «UTSOLGT» con el botón deshabilitado. Hacia las 13:15 UTC la consulta exacta de las tarjetas, con los ids del editor, devolvía `[]` en 6 de 6, y el editor de test-kondomeriet ya mostraba «UTSOLGT».
+  - Con una respuesta fresca, main hace lo correcto:
+    - tarjeta suelta en «UTSOLGT»;
+    - en grid y carrusel la tarjeta agotada desaparece;
+    - en el Premium 2, bringebær y rød no salen entre las opciones de la ficha.
+    El producto con stock (Snap) sigue comprable.
+  - Arreglo de raíz: [graphql#47](https://github.com/vio-live/graphql/pull/47) (en QA) y su release [graphql#48](https://github.com/vio-live/graphql/pull/48), pendiente de la frase de Angelo. Hasta entonces, cualquier cambio de stock o precio puede llegar viejo a la primera o segunda consulta de cada combinación de ids, y quedarse 5 min en la caché local de ese lector.
+
 ## Decisions
 - Angelo, 19/11: el precio de Black Week se calcula con el % de la hoja y se escribe en la base de datos. Sustituye a la regla del 18/11 «nunca se deduce un før-pris de un %».
 
