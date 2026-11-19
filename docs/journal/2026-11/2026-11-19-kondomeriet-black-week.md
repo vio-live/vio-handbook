@@ -171,3 +171,21 @@ Las tarjetas salen unos 300 ms más tarde que con la copia de las props (que pin
 - Siguen los del 18/11: H auto a 0 px en el editor de Vev, frases de prod para la postback de Circlewise, compra de 39 kr y precios de Black Week de Kondomeriet.
 
 ## Next session
+- **Alan (#491): 52/63.** Le quedan:
+  - 5.6: la compra de 39 kr, con OK de Angelo y con el enlace de Circlewise para cubrir también el 12.6;
+  - 7.2: espera a que Kondomeriet active su Black Week;
+  - bloque 10 (regresión), 11 (cierre) y 12 (Circlewise);
+  - 13.1: dos Configs.
+  - Cursor de la guardia: 22:28 UTC.
+- **Kondomeriet aún no ha activado su Black Week.** Hasta entonces su Hurtigkasse cobra el precio normal (las tarjetas enseñan el calculado por %), y un cambio en su feed revierte el precio de ese producto. Hay que preguntar a Michael la fecha. El artículo de VG no debe salir antes.
+- **Republicar las páginas** para que lleven vev#117–#126: la de Alan y la página de VG cuando exista. test-kondomeriet ya está republicada.
+- **Que Angelo hable con Alan:** hoy cambió tres veces datos de prod (stock y precio) para probar.
+- **Fotos, mejoras 5–8 sin hacer:**
+  - foto del CDN recortada (−210 ms);
+  - `Cache-Control` largo en las imágenes, con pasada en prod;
+  - WebP;
+  - código en el `<head>` de VG.
+- **Sigue de antes:**
+  - postback de Circlewise a prod (campaigns#41, frases de Angelo);
+  - H auto y paquete duplicado (escribir a Vev);
+  - el feed de Kondomeriet sube las imágenes de nuevo en cada importación.
