@@ -14,6 +14,7 @@ Plan para entregar los bloques Kondomeriet a Partner Studio (escriben el artícu
 - Plan: [sprints/2026-11-kondomeriet-vg-entrega-partner-studio.md](../../sprints/2026-11-kondomeriet-vg-entrega-partner-studio.md). Vev no comparte paquetes entre cuentas; recomendado instalar el paquete ligero en la cuenta de Partner Studio con un usuario de desarrollador suyo.
 - Tutorial en noruego, 11 páginas: [assets/partner-studio/Kondomeriet-Vev-veiledning.pdf](../../assets/partner-studio/Kondomeriet-Vev-veiledning.pdf). Fuente HTML y capturas en `vio-commerce/entregables/partner-studio-tutorial/`. La API key va tapada.
 - Mientras se hacían las capturas, la card del llavero en test-kondomeriet apareció sin productos. Era una card migrada con «Paste settings»: sus productos solo vivían en `pastedSettings`, y «Clear the pasted settings» o un `group` vacío los perdían. Arreglado en [vev#127](https://github.com/vio-live/vev/pull/127) (desplegado en los dos paquetes). La card se restauró en el editor.
+- Quitada la opción de Google Analytics (GA4/dataLayer) de la Config de Kondomeriet, en los dos paquetes ([vev#128](https://github.com/vio-live/vev/pull/128)): la analítica de Vio queda siempre activa y ya no se escribe en `window.dataLayer`. Tutorial actualizado.
 - Kondomeriet: su página de Black Week ya no dice «ikke aktiv», pero los precios (Blowcast Pro 1419) y el feed (33 `sale_price`, los mismos de antes) siguen sin cambios.
 
 ## Decisions
