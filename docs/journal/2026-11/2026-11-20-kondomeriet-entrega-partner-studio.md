@@ -43,5 +43,8 @@ Plan para entregar los bloques Kondomeriet a Partner Studio (escriben el artícu
 - Tutorial en noruego (Angelo). Angelo habla con Michael sobre la fecha de Black Week y hace él la compra de 39 kr. Lo de Vev (H auto, paquete duplicado), el lunes.
 
 ## Next session
+- Si Partner Studio ya tiene el PDF, mandarles la versión del 20/11 noche: añade la altura por tamaño de pantalla (vev#131).
+- Alan (#491): falta su recuento final (X/63). Quedan la compra de 39 kr (Angelo) y la prueba 7.2, que espera la Black Week de Kondomeriet.
+- Reproducir en Safari iOS el hueco entre las promesas y la línea del vendedor en el grid con el móvil en horizontal. No es bloqueante; la mitigación es dar margen en Tablet.
 - Pedir a Partner Studio el usuario de Vev y la información del punto 2 del plan, y mandarles el PDF.
 - Lunes: instalar el paquete en su cuenta, montar la página de ejemplo y hacer la sesión de 30 min.
