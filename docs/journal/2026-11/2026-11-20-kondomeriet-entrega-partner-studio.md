@@ -33,6 +33,7 @@ Plan para entregar los bloques Kondomeriet a Partner Studio (escriben el artícu
     - con la rama, aviso de Config que falta, solo `api-staging` y panel en `staging`;
     - Kondomeriet prod, paquete ligero: tarjetas a ~1,7 s en la primera visita y ~1,19 s en la segunda, como antes.
   - **Para Alan:** abrir una vez la Config de cada página en el editor (o darle Save), porque lo guardado antes se borra. Repetir el recorrido Kondomeriet → staging → Kondomeriet sin tocar el localStorage. Las páginas publicadas fijan su bundle: republicar.
+- **Guardia #491 (14:06–15:31 UTC):** Alan encontró que el estado de las Configs en el localStorage era por origen, no por página: una Vio Config de staging se quedaba en prod y los bloques Kondomeriet de otra página usaban la conexión y la caché de la página de Kondomeriet. Arreglado en [vev#129](https://github.com/vio-live/vev/pull/129) (estado por página; la Config impone su key y su entorno, también la Vio Config genérica). Alan lo probó y aprobó el bloque 10.
 
 ## Decisions
 - Tutorial en noruego (Angelo). Angelo habla con Michael sobre la fecha de Black Week y hace él la compra de 39 kr. Lo de Vev (H auto, paquete duplicado), el lunes.
