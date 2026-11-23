@@ -25,6 +25,8 @@ configura VG, no nosotros.
 | Idempotencia | por `transaction_id` (si falta, `transaction_system_id`), en memoria del pod (1 réplica, 10 000 claves) |
 | Sin | base de datos, migraciones, cambios de kernel ni de colector |
 
+> [claude, 2026-11-23] #41 tenía conflictos con `main` desde las subidas de la foto del CDN (#43, #45). `main` mergeado en la rama (`cbf8285`, sin force-push), los dos lados conservados como en `develop`. 35 suites, 505 tests y `tsc` en verde; contra `main` siguen siendo los mismos 13 ficheros. El PR está mergeable. Sigue **sin mergear**: faltan el secreto `CIRCLEWISE_POSTBACK_TOKEN` en prod y el OK de Angelo.
+
 ### URLs para pegar en Circlewise
 
 Prod (la que se manda a VG):
