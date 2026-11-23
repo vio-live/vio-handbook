@@ -13,6 +13,12 @@ Material entregable: el tutorial en noruego, [`Kondomeriet-Vev-veiledning.pdf`](
 
 ## 1. Acceso a los bloques (la decisión que bloquea todo)
 
+> [claude, 2026-11-23] **Decidido: Partner Studio instala el paquete en su cuenta ellos mismos** a partir de una release pública.
+> Angelo hizo público `vio-live/vev` el 23/11. Release [`kondomeriet-v1.0.0`](https://github.com/vio-live/vev/releases/tag/kondomeriet-v1.0.0): zip de `kondomeriet/` con un `vev.json` sin clave (`vev init` en su cuenta añade la suya) y el PDF.
+> Instrucciones en noruego en [`kondomeriet/README.md`](https://github.com/vio-live/vev/tree/main/kondomeriet#readme) (vev#132).
+> Cada arreglo durante la campaña = release nueva con `kondomeriet/scripts/release.sh <versión> <notas> [pdf]`; ellos copian su `vev.json`, `vev deploy` y republican.
+> Ya no hace falta un usuario en su cuenta. El historial del repo, ahora público, contiene claves de canal de QA (`api-staging`) retiradas de main el 12/08.
+
 Vev no tiene forma documentada de compartir un paquete de código con **otra** cuenta:
 
 - `shareWithAccount: true` lo publica para todos los usuarios de **nuestra** cuenta ([developer.vev.design/cli/configuration](https://developer.vev.design/cli/configuration)).
@@ -29,14 +35,14 @@ Vev no tiene forma documentada de compartir un paquete de código con **otra** c
 
 ## 2. Qué necesitamos de VG / Partner Studio
 
-- [ ] Usuario de desarrollador en su cuenta de Vev (opción A), o su decisión por la B.
+- [x] ~~Usuario de desarrollador en su cuenta de Vev~~: ya no hace falta, instalan ellos la release (23/11).
 - [ ] Confirmar que su plan de Vev publica sin caducidad. En el plan gratis, la página caduca a la hora.
 - [ ] Cómo publican en vg.no: hosting de Vev o embed. Si se puede, que nos dejen poner código en el `<head>`, para precargar la foto del CDN y la primera imagen. Es la mejora de carga con más ganancia que queda.
 - [ ] Persona de contacto y el canal para dudas durante el montaje.
 
 ## 3. Qué les damos nosotros
 
-- [ ] El paquete instalado en su cuenta (opción A) y aviso de «listo».
+- [x] El paquete, como release pública que instalan ellos: [`kondomeriet-v1.0.0`](https://github.com/vio-live/vev/releases/tag/kondomeriet-v1.0.0) (23/11).
 - [ ] El tutorial en PDF (noruego).
 - [ ] La API key de la surface VG, **aparte del PDF**, por canal directo. En el tutorial va tapada.
 - [ ] La hoja de Kondomeriet con productos, % y enlaces de Circlewise. La sigue manteniendo Michael.
