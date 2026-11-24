@@ -48,17 +48,33 @@ Todo en prod, cuenta de Boots **1308**, con las frases de Angelo para leer y esc
     copia del blob que se mete en la imagen al construirla **sigue llevando la línea**: si algún día se regenera el
     Secret desde el blob, vuelve el fallo.
 
+- **Canal y campaña** (~13:52 UTC, dashboard de prod con la sesión de Aller, por encargo de Angelo):
+  - canal **487 «Boots»** con la colección `tWOhIb-4q`: 13/13 productos y 13/13 copias de Aller. Kustom visible
+    («1 of 1 shown to buyers»), y `available-payment-methods/487` = `["Kustom"]`;
+  - campaña **8 «Boots»** en la surface 1 (Mote Livsstil Hub): activa, sin inicio ni fin («Always on»), no es la
+    campaña por defecto, canal 487 y sin slots todavía;
+  - comisión **10 %** (Angelo). El dashboard no tiene ese campo y la campaña nace al 15 %, así que se cambió en la
+    base (ensayo y COMMIT);
+  - `brand_profile` 1308 creado solo con `terms_url` (`/generelle-vilkar`) y `refund_policy_url`
+    (`/retur-og-angrerett`). Sin logo (le toca a Alan) ni promesas (Michael);
+  - `/v2/mobile/config` de la surface 1 lista la campaña 8 con `paymentMethods: ["kustom"]`, `termsUrl` de Boots y
+    la key del canal.
+
 ## Decisions
 
 - **Prod usa las keys de Kustom de Boots y su envío** (Angelo, 24/11), no nuestra cuenta ni tarifas de Vio.
+- Campaña de Boots: **10 %, desde hoy y sin fin** (Angelo, 24/11).
 
 ## Blockers
 
 Hoy no se pueden poner órdenes en prod:
 
 - ~~Método de pago~~: hecho (ver Done).
-- **Canal de Aller y campaña:** sin crear. El micro de campañas solo acepta la sesión de Firebase del publisher, así
-  que se hace desde el dashboard como Aller. Faltan comisión, fin, nombre y si va pausada.
+- ~~Canal y campaña~~: hechos (canal 487, campaña 8).
+- **Prueba sin pagar:** una sesión de checkout de Kustom en prod con un producto, para ver que el Shipping
+  Assistant de Boots devuelve sus opciones. Espera el OK de Angelo.
+- **Artículo:** `data-vio-campaign="8"` en el artículo de Replit/Aller.
+- **Blob del `.env` de shopcart:** todavía lleva `KUSTOM_API_URL`.
 - **Pearlconvert:** tiene que estar recibiendo `order.created` en su Magento de prod. Lo último que se sabe (28/10) es
   que solo estaba en test. Si no, la orden llega al Kustom de Boots pero nadie la despacha.
 - **Publisher, canal y campaña** del artículo: aún no hay ninguno.
