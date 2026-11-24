@@ -569,3 +569,30 @@ versión. Las notas de actualización de la 0.38.0 a la 0.40.1 dependen de Comme
 > Después de publicar, en un artículo de producción con productos: añadid uno al carrito y comprobad que el carrito se
 > abre y suma igual que antes. En la pestaña Red del navegador, los envíos a `events.vio.live` llevan
 > `"sdk_version":"0.40.1"`.
+
+## Boots en la copia de pruebas, con Kustom (24/11) — texto para el agente de Replit
+
+Boots (marca 1308) vende en Mote & Livsstil con su propia cuenta de Kustom, no con Vipps. Campaña **8 «Boots»** en la
+surface de producción (la misma key que ya usáis), canal 487, 13 productos No7. El envío lo calcula el Shipping
+Assistant de Boots dentro del widget de Kustom. Comprobado por nuestro lado el 24/11 (journal
+[Boots prod](../journal/2026-11/2026-11-24-boots-no7-coleccion-prod.md)).
+
+La copia de pruebas lleva la SDK 0.39.0 y la web real la 0.37.7. Los arreglos de Kustom (reabrir el checkout sin
+duplicar la orden y no perder un producto añadido con el widget abierto) llegaron en la 0.39.1 y la 0.39.2.
+
+> 1. En la copia de pruebas (`mote-livsstil-hub-vio.replit.app`), subid la SDK a la **0.40.1 exacta**:
+>    `npm i --save-exact @vio-live/web-sdk@0.40.1`. No hay que cambiar código.
+> 2. Cread un artículo de prueba de Boots:
+>    - con su **propio `contentId`** (por ejemplo `boots-no7-test`), que no sea el de otro artículo;
+>    - con `data-vio-campaign="8"` en el contenedor del artículo;
+>    - con `Vio.analytics.setInternal(true)` justo después de `Vio.init()`;
+>    - con un carrusel y dos o tres tarjetas de producto de Boots (`sponsorId` 1308), por ejemplo 421901
+>      (Lip & Cheek Glow, 89,40 kr) y 421579 (Ultimate Beauty Julekalender, 1.749,50 kr).
+> 3. Comprobad, en móvil y en escritorio:
+>    - los productos salen con el precio de boots.no y el precio anterior tachado;
+>    - al pasar por caja, el único método de pago es **Kustom**, y el widget muestra «Boots Apoteks vilkår»;
+>    - tras rellenar nombre, dirección y móvil, salen **las opciones de entrega de Boots** (a domicilio, punto de
+>      recogida, recogida en Boots Apotek), y al cambiar de opción el total cambia en el widget y en el resumen.
+> 4. **No pulséis «Betal ordren».** Es la cuenta real de Boots: un pago crea una venta real. La compra de prueba la
+>    hace Angelo.
+> 5. Mandad capturas del widget con las opciones de entrega y del resumen antes de rellenar la dirección.

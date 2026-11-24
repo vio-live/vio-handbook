@@ -79,7 +79,16 @@ Hoy no se pueden poner órdenes en prod:
     `vio_checkout`/`vio_seller` 1308/`vio_channel` 487, y sin `shipping_options` de Vio;
   - el widget carga y muestra Klarna, Vipps, Visa, Mastercard, Apple Pay y Google Pay, y «godtar Boots Apoteks
     vilkår»;
-  - **falta ver las opciones del Shipping Assistant:** Kustom pide nombre, dirección y móvil antes de enseñarlas.
+  - **falta ver las opciones del Shipping Assistant:** Kustom pide nombre, dirección y móvil antes de enseñarlas;
+    se verá con Replit ([texto](../../handoff/2026-10-15-replit-y-demo-web-a-commerce.md#boots-en-la-copia-de-pruebas-con-kustom-2411--texto-para-el-agente-de-replit));
+  - los 2 carritos de la prueba, borrados;
+  - catálogo de la campaña 8 (`/v2/commerce/sponsors/1308/catalog`): 13 productos con los precios de boots.no y las
+    13 imágenes en 200.
+- **SDK, por revisar:** con Kustom elegido y antes de que el widget diga el envío, `shippingInEffect()` cae a la
+  clase de Vio, y el resumen diría «Frakt – Levering velges i kassen: Gratis». Lo correcto con Kustom sin precio
+  todavía es «Beregnes ved kasse».
+- **SDK de Replit:** la copia de pruebas lleva la 0.39.0 y la web real la 0.37.7. Los arreglos de Kustom están en la
+  0.39.1 y la 0.39.2, y su parte de shopcart (#120) ya está en prod.
 - **Artículo:** `data-vio-campaign="8"` en el artículo de Replit/Aller.
 - **Blob del `.env` de shopcart:** todavía lleva `KUSTOM_API_URL`.
 - **Pearlconvert:** tiene que estar recibiendo `order.created` en su Magento de prod. Lo último que se sabe (28/10) es
