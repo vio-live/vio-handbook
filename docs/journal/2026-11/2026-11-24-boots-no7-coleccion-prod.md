@@ -28,6 +28,26 @@ Todo en prod, cuenta de Boots **1308**, con las frases de Angelo para leer y esc
   - va a 0 y con ese nombre para que el carrito no enseñe una tarifa que no es la de Boots.
 - **Publicados** los 13 (`bulk-publish`): `status` 1 y `active` 1.
 
+- **Disponible para Aller** (13:12 UTC): `collection_shared` 612 y conexión 545 Boots ↔ Aller, por solicitud
+  (1460, de 1308 a 1330) y aceptación, como pide el playbook.
+- **Kustom de Boots (prod), revisado tras cargar Angelo la clave** desde el dashboard:
+  - Fila `98911dce…`: «Kustom», activa, clave cifrada `enc:v1`.
+  - Descifrada dentro del pod de shopcart, sin imprimirla: es `kco_live_`, sin espacios. Contra
+    `api.kustom.co` autentica (GET de una orden inexistente → 404 `NO_SUCH_ORDER`).
+  - `captureMode: account`, devoluciones y cancelaciones apagadas, `providerShipping: true` y `merchantId` de Boots.
+  - `user_settings.payment_kustom` = 1.
+  - **Faltaba `termsUrl`:** añadido `https://www.boots.no/generelle-vilkar` (ensayo, COMMIT y relectura; la clave
+    no se tocó).
+- **🔴 El shopcart de prod tenía `KUSTOM_API_URL="https://portal.kustom.co"`** en el Secret `env-sc-shopcart`.
+  - Esa variable se impone al host que sale de la clave, así que **ningún checkout de Kustom podía funcionar en
+    prod**: cada llamada acababa en un 307 al login del portal.
+  - Quitada la línea (Secret parcheado sin imprimirlo, 263 → 262 líneas) y `rollout restart` de shopcart (OK de
+    Angelo, ~13:42 UTC).
+  - Comprobado: los 2 pods nuevos están Running, sin errores, no tienen la variable y derivan `api.kustom.co`.
+  - El `.env` montado viene del Secret (el `volumeMount` no está en el chart, pero sobrevive al `helm upgrade`). La
+    copia del blob que se mete en la imagen al construirla **sigue llevando la línea**: si algún día se regenera el
+    Secret desde el blob, vuelve el fallo.
+
 ## Decisions
 
 - **Prod usa las keys de Kustom de Boots y su envío** (Angelo, 24/11), no nuestra cuenta ni tarifas de Vio.
@@ -36,9 +56,9 @@ Todo en prod, cuenta de Boots **1308**, con las frases de Angelo para leer y esc
 
 Hoy no se pueden poner órdenes en prod:
 
-- **Método de pago:** Boots no tiene ninguno en prod. Angelo carga la API key *live* de Kustom de Boots.
-  - Después, por la misma fila: `providerShipping: true`, sin captura de Vio (`autoCapture: false`, como en QA) y
-    `termsUrl` `https://www.boots.no/generelle-vilkar`.
+- ~~Método de pago~~: hecho (ver Done).
+- **Canal de Aller y campaña:** sin crear. El micro de campañas solo acepta la sesión de Firebase del publisher, así
+  que se hace desde el dashboard como Aller. Faltan comisión, fin, nombre y si va pausada.
 - **Pearlconvert:** tiene que estar recibiendo `order.created` en su Magento de prod. Lo último que se sabe (28/10) es
   que solo estaba en test. Si no, la orden llega al Kustom de Boots pero nadie la despacha.
 - **Publisher, canal y campaña** del artículo: aún no hay ninguno.
