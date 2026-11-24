@@ -71,8 +71,15 @@ Hoy no se pueden poner órdenes en prod:
 
 - ~~Método de pago~~: hecho (ver Done).
 - ~~Canal y campaña~~: hechos (canal 487, campaña 8).
-- **Prueba sin pagar:** una sesión de checkout de Kustom en prod con un producto, para ver que el Shipping
-  Assistant de Boots devuelve sus opciones. Espera el OK de Angelo.
+- **Prueba sin pagar (24/11, OK de Angelo):**
+  - carrito `03d52764…` en el canal 487 con 1 × 421901 (89,40 kr), checkout `a19b17a1…` y sesión de Kustom *live*
+    `8f9f4e24…`, sin completar;
+  - leída en Kustom con la key de Boots: `checkout_incomplete`, NOK, `nb-NO`, línea con `reference` 767382 (el SKU
+    de Boots), IVA 25 %, `terms` de boots.no, `push` y `validation` a `api-ecom.vio.live`, `merchant_data` con
+    `vio_checkout`/`vio_seller` 1308/`vio_channel` 487, y sin `shipping_options` de Vio;
+  - el widget carga y muestra Klarna, Vipps, Visa, Mastercard, Apple Pay y Google Pay, y «godtar Boots Apoteks
+    vilkår»;
+  - **falta ver las opciones del Shipping Assistant:** Kustom pide nombre, dirección y móvil antes de enseñarlas.
 - **Artículo:** `data-vio-campaign="8"` en el artículo de Replit/Aller.
 - **Blob del `.env` de shopcart:** todavía lleva `KUSTOM_API_URL`.
 - **Pearlconvert:** tiene que estar recibiendo `order.created` en su Magento de prod. Lo último que se sabe (28/10) es
