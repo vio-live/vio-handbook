@@ -579,6 +579,9 @@ Assistant de Boots dentro del widget de Kustom. Comprobado por nuestro lado el 2
 
 La copia de pruebas lleva la SDK 0.39.0 y la web real la 0.37.7. Los arreglos de Kustom (reabrir el checkout sin
 duplicar la orden y no perder un producto añadido con el widget abierto) llegaron en la 0.39.1 y la 0.39.2.
+[web-sdk#165](https://github.com/vio-live/vio-web-sdk/pull/165) (mergeado el 24/11 y **sin publicar**) quita el
+«Gratis» del resumen antes de que Kustom diga el envío. Con la 0.40.1 la prueba sirve, pero ese «Gratis» se verá.
+Cuando Angelo publique la versión siguiente, se cambia en el punto 1.
 
 > 1. En la copia de pruebas (`mote-livsstil-hub-vio.replit.app`), subid la SDK a la **0.40.1 exacta**:
 >    `npm i --save-exact @vio-live/web-sdk@0.40.1`. No hay que cambiar código.

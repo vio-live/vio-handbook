@@ -84,9 +84,14 @@ Hoy no se pueden poner órdenes en prod:
   - los 2 carritos de la prueba, borrados;
   - catálogo de la campaña 8 (`/v2/commerce/sponsors/1308/catalog`): 13 productos con los precios de boots.no y las
     13 imágenes en 200.
-- **SDK, por revisar:** con Kustom elegido y antes de que el widget diga el envío, `shippingInEffect()` cae a la
-  clase de Vio, y el resumen diría «Frakt – Levering velges i kassen: Gratis». Lo correcto con Kustom sin precio
-  todavía es «Beregnes ved kasse».
+- **SDK: el «Gratis» de Kustom, arreglado** en [web-sdk#165](https://github.com/vio-live/vio-web-sdk/pull/165)
+  (`24dc09c`, mergeado a `main` y sin publicar; en el CHANGELOG, `Unreleased`).
+  - Antes: con Kustom elegido y antes de que el widget diera el envío, el resumen caía a la clase de Vio y decía
+    «Frakt – Levering velges i kassen: Gratis».
+  - Ahora: el envío y su nombre son los del widget, y hasta entonces se lee «Beregnes ved kasse».
+  - Hay un test nuevo que falla con el código anterior. Los tipos están limpios. Los 16 tests que fallan en este
+    Mac fallan igual en `main` (Node 26).
+  - Falta que Angelo publique la versión y que Replit la suba.
 - **SDK de Replit:** la copia de pruebas lleva la 0.39.0 y la web real la 0.37.7. Los arreglos de Kustom están en la
   0.39.1 y la 0.39.2, y su parte de shopcart (#120) ya está en prod.
 - **Artículo:** `data-vio-campaign="8"` en el artículo de Replit/Aller.
