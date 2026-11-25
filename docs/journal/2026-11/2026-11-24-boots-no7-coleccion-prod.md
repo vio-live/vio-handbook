@@ -67,6 +67,16 @@ Todo en prod, cuenta de Boots **1308**, con las frases de Angelo para leer y esc
   artikkel»: quitado de la colección con OK de Angelo (`collectionItem/delete`); colección y canal 487 en 18/18.
   El ejemplo del texto de Replit pasa a 421638 (Skin Sip Moisture Milk).
 
+- **25/11 11:14 UTC, primera orden real de Boots: 4145** (Angelo, artículo `boots-no7-test` de Replit, campaña 8):
+  - Kustom live `6d21300f…`, ref. MCHRE4JC, factura, AUTHORIZED / ACCEPTED, 899,40 NOK (IVA 179,88), sin capturar
+    (`captureMode` account: captura Boots). `merchant_reference1` VIO-4145, acknowledge hecho.
+  - Envío del Shipping Assistant: «Utlevering i Boots Apotek», PickUpStore, 0 kr, con tienda elegida.
+  - Validation callback 200 (base-api → shopcart). El push por orden no llegó: la orden se reconoció a los 8 s
+    por el return, antes de los ~2 min del push.
+  - Reparto con el 10 %: marca 809,46, Aller 62,96, Vio 26,98. `order_paid` aceptado por el colector.
+  - **El colector no responde a lecturas** (`/v1/stats/recent` 500/504 a los 30 s; `/health` 200): el aviso de
+    órdenes de Slack no ve la 4145 y el aviso de datos parados salta cada hora desde la mañana.
+
 ## Decisions
 
 - **Prod usa las keys de Kustom de Boots y su envío** (Angelo, 24/11), no nuestra cuenta ni tarifas de Vio.
