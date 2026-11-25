@@ -75,6 +75,11 @@ cualquier publisher).
   - Probado contra prod con la página local (ficha y carrito).
   - Publicada desde el commit local `469a355` durante un incidente de GitHub (merges y pushes fallando). La #169 entró en `main` (`9f7bdb5`); la release `release/0.41.1` está subida y su PR se mergea cuando GitHub lo permita.
 
+- **Medición en la web real** (~16:30 UTC, `moteoglivsstil.no/skjonnhet/guider/arets-skjonnhetsgaver-pa-tilbud-no7-favorittene-…`, Chrome de Angelo, caché caliente, `?vio_internal=1`): Replit ya está en 0.41.1, llama a `preloadVio` y quitó `cachedBootstrap`.
+  - **La foto llega a los ~1,0 s** (0,82 → 1,02 s) y los productos salen de ella: **0 `GetProductsByIds`**.
+  - **Pero `Vio.init` no arranca hasta los ~2,2 s.** Antes, Replit encadena sus propias llamadas, una detrás de otra: `/api/vio/settings` (0,70 s) → `/api/vio/status` (1,0) → `/api/vio/public-config` (1,3) → `/api/vio/bootstrap` (1,7 → 2,2). Las tarjetas salen ~2,3 s, casi igual que los ~2,4 s de partida. **El cuello de botella ya no es la SDK: es esa cadena de Replit.**
+  - Además, por cada tarjeta, 17 `GetProductShippingWithLogo` con `useCache:false` (`getShippingRates` para su etiqueta de envío). Salen después de las tarjetas y no las bloquean.
+
 ## Decisions
 - Foto para todas las surfaces, sin lista ni flags (Angelo: «arranca con todo»).
 - La interfaz en dos tiempos, con las llamadas guardadas mientras carga (Angelo: «haz también lo de la interfaz»).
