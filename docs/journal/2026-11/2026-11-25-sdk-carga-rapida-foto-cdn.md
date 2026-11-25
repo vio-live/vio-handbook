@@ -60,6 +60,14 @@ cualquier publisher).
 
 - **SDK 0.41.0 en npm** (`latest` a las 15:36 UTC, publicada por Angelo; `exports` con `./preload`). Texto a Replit en el [handoff](../../handoff/2026-10-15-replit-y-demo-web-a-commerce.md); falta que Replit la suba y volver a medir el artículo de Boots (partida ~2,4 s).
 
+- **Prueba de la 0.41.0 contra prod** (~15:50 UTC, página local de `examples/` sobre `main` = la versión publicada, key de la surface 1, `?vio_internal=1`, campaña 8):
+  - la foto `….web.js` llega en ~0,27 s (59 → 325 ms) en paralelo con config y surface;
+  - las 4 tarjetas de Boots salen de la foto a los ~335 ms, **sin ninguna petición a `graph-ql.vio.live`**;
+  - la ficha muestra el logo de Boots, el precio con el tachado (183,92 / 229,90), «Kjøpsvilkår · Angrerett og retur» y las 3 promesas;
+  - el carrito funciona y se vació al terminar.
+  - El checkout de Kustom **no arranca desde localhost**: Kustom live rechaza `merchant_urls.confirmation` en http (`400 BAD_VALUE Bad value: confirmation`). Es lo esperado; desde https funcionó en la 4145.
+  - Efecto visible de la tarifa a 1 kr: la ficha dice «Frakt fra 1 Kr» (antes, con 0, «Gratis»).
+
 ## Decisions
 - Foto para todas las surfaces, sin lista ni flags (Angelo: «arranca con todo»).
 - La interfaz en dos tiempos, con las llamadas guardadas mientras carga (Angelo: «haz también lo de la interfaz»).
