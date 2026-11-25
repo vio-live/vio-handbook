@@ -68,6 +68,13 @@ cualquier publisher).
   - El checkout de Kustom **no arranca desde localhost**: Kustom live rechaza `merchant_urls.confirmation` en http (`400 BAD_VALUE Bad value: confirmation`). Es lo esperado; desde https funcionó en la 4145.
   - Efecto visible de la tarifa a 1 kr: la ficha dice «Frakt fra 1 Kr» (antes, con 0, «Gratis»).
 
+- **SDK 0.41.1** (`latest` desde las 16:08 UTC, publicada por Angelo): [web-sdk#169](https://github.com/vio-live/vio-web-sdk/pull/169). Si la marca solo cobra con Kustom (`shippingPickedAtCheckout`: todos los `paymentMethods` son `kustom`), no se muestra precio de envío antes del checkout:
+  - la ficha dice «Frakt beregnes i kassen» y «Frakt & retur» no lista tarifas;
+  - el carrito dice «Beregnes i kassen», sin total con la tarifa, y «Frakt velger du i kassen.».
+  - La tarifa de Boots en Vio sigue a 1 kr para que la etiqueta de «fri frakt» de Replit (que sale con envío 0) no aparezca.
+  - Probado contra prod con la página local (ficha y carrito).
+  - Publicada desde el commit local `469a355` durante un incidente de GitHub (merges y pushes fallando). La #169 entró en `main` (`9f7bdb5`); la release `release/0.41.1` está subida y su PR se mergea cuando GitHub lo permita.
+
 ## Decisions
 - Foto para todas las surfaces, sin lista ni flags (Angelo: «arranca con todo»).
 - La interfaz en dos tiempos, con las llamadas guardadas mientras carga (Angelo: «haz también lo de la interfaz»).
