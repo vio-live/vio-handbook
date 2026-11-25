@@ -37,6 +37,23 @@ Angelo ve en el dashboard `Analytics unavailable. analytics collector unreachabl
     09:10:56 del 23/11; `count() = uniqExact(event_id)` por día (sin duplicados). `vio_staging` 8.018.
   - Lecturas que hace el dashboard (`campaigns/8/session-funnel/products`, `content`, `funnel`) → 200 en 1–2,4 s.
 
+## Copias programadas y alerta de gasto (25/11, 16:23–16:30 UTC, pedido por Angelo)
+
+- **Copias.** Política propia `vio-analytics-ch-diaria-7d-semanal-4s` asignada al boot volume
+  `vio-analytics-ch (Boot Volume)`: incremental **diaria 03:00 UTC, 7 días**, e incremental **semanal lunes
+  02:00 UTC, 28 días**. Primera copia programada: 26/11 03:00 UTC (vista en la ficha del volumen, sin
+  comprobar aún que se ejecuta). No usé Gold/Silver de Oracle porque guardan copias hasta 5 años y los
+  eventos tienen TTL de 2 años en ClickHouse. Sigue además la copia manual completa del 25/11.
+- **Presupuesto.** `vio-backend-mensual`, compartimento raíz, **500 SEK al mes** (la suscripción factura en
+  SEK; lo vi en Billing → Subscriptions). Dos avisos por correo a la cuenta titular: **gasto real al 80 %** y
+  **previsión al 100 %**. Los 500 salen de una estimación (~35 USD/mes de la VM por precio de lista, sin
+  confirmar): ajustar cuando haya una semana de coste real en Cost Analysis.
+- La consola ya muestra «successfully upgraded», plan **Pay As You Go**. La suscripción de prueba se renovaba
+  el 24/10: confirma que la prueba acabó ese día y la VM cayó 30 días después.
+- **Error mío al documentar:** el commit `d8ec5d2` lleva mi mensaje pero contiene tres ficheros de otra sesión
+  (aviso de escrituras paradas del colector) que estaban sin commitear en el mismo clon; los arrastré con
+  `git add docs/`. No se reescribe (sin force-push). Esta sección va en el commit siguiente.
+
 ## Decisions
 
 - Cuenta de Oracle en Pay As You Go (Angelo). Las dos `E2.1.Micro` siguen siendo Always Free; esta VM se factura.
@@ -50,7 +67,6 @@ Angelo ve en el dashboard `Analytics unavailable. analytics collector unreachabl
 
 - Alerta cuando el colector no pueda escribir (`clickhouse.lastError` no nulo o `lastFlushAt` viejo): estuvo
   dos días fallando sin que nadie lo viera.
-- Política de copias programadas del boot volume y alerta de presupuesto en Oracle.
 - Acceso SSH: la llave nueva `~/.ssh/vio_oracle_ch` (laptop de Angelo) entra como `ubuntu@79.76.61.149`;
   `vio_oracle` de Miguel debería seguir valiendo (mismo disco), sin comprobar.
 - Actualizar las referencias a `129.151.210.107` en la documentación de infraestructura.
