@@ -64,7 +64,8 @@ Todo en prod, cuenta de Boots **1308**, con las frases de Angelo para leer y esc
   421641 (767389), 421660 (767384), 421637 (767386), 421639 (767387). Ya estaban en el feed de Boots sin publicar;
   clase de envío `08f92b62…`, publicados y añadidos a `tWOhIb-4q`. Canal 487: 19/19 y 19/19 copias de Aller
   (script 4 del playbook). La hoja marca Lip & Cheek Glow (421901) como «Ikke på nettlager, fjern denne fra
-  artikkel»: sigue en la colección a la espera de Angelo.
+  artikkel»: quitado de la colección con OK de Angelo (`collectionItem/delete`); colección y canal 487 en 18/18.
+  El ejemplo del texto de Replit pasa a 421638 (Skin Sip Moisture Milk).
 
 ## Decisions
 

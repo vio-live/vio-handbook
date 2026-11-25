@@ -573,7 +573,7 @@ versión. Las notas de actualización de la 0.38.0 a la 0.40.1 dependen de Comme
 ## Boots en la copia de pruebas, con Kustom (24/11) — texto para el agente de Replit
 
 Boots (marca 1308) vende en Mote & Livsstil con su propia cuenta de Kustom, no con Vipps. Campaña **8 «Boots»** en la
-surface de producción (la misma key que ya usáis), canal 487, 13 productos No7. El envío lo calcula el Shipping
+surface de producción (la misma key que ya usáis), canal 487, 18 productos No7 (desde el 25/11). El envío lo calcula el Shipping
 Assistant de Boots dentro del widget de Kustom. Comprobado por nuestro lado el 24/11 (journal
 [Boots prod](../journal/2026-11/2026-11-24-boots-no7-coleccion-prod.md)).
 
@@ -588,8 +588,8 @@ La **0.40.2** (publicada el 25/11, [web-sdk#165](https://github.com/vio-live/vio
 >    - con su **propio `contentId`** (por ejemplo `boots-no7-test`), que no sea el de otro artículo;
 >    - con `data-vio-campaign="8"` en el contenedor del artículo;
 >    - con `Vio.analytics.setInternal(true)` justo después de `Vio.init()`;
->    - con un carrusel y dos o tres tarjetas de producto de Boots (`sponsorId` 1308), por ejemplo 421901
->      (Lip & Cheek Glow, 89,40 kr) y 421579 (Ultimate Beauty Julekalender, 1.749,50 kr).
+>    - con un carrusel y dos o tres tarjetas de producto de Boots (`sponsorId` 1308), por ejemplo 421638
+>      (Good Intent Skin Sip Moisture Milk, 183,92 kr) y 421579 (Ultimate Beauty Julekalender, 1.749,50 kr).
 > 3. Comprobad, en móvil y en escritorio:
 >    - antes de rellenar la dirección, el envío del resumen dice «Beregnes ved kasse» (nunca «Gratis»);
 >    - los productos salen con el precio de boots.no y el precio anterior tachado;
