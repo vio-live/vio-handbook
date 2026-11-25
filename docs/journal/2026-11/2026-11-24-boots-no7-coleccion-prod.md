@@ -60,6 +60,12 @@ Todo en prod, cuenta de Boots **1308**, con las frases de Angelo para leer y esc
   - `/v2/mobile/config` de la surface 1 lista la campaña 8 con `paymentMethods: ["kustom"]`, `termsUrl` de Boots y
     la key del canal.
 
+- **25/11, 6 productos No7 Good Intent añadidos** (Boots los sumó a la hoja): 421638 (767390), 421659 (767395),
+  421641 (767389), 421660 (767384), 421637 (767386), 421639 (767387). Ya estaban en el feed de Boots sin publicar;
+  clase de envío `08f92b62…`, publicados y añadidos a `tWOhIb-4q`. Canal 487: 19/19 y 19/19 copias de Aller
+  (script 4 del playbook). La hoja marca Lip & Cheek Glow (421901) como «Ikke på nettlager, fjern denne fra
+  artikkel»: sigue en la colección a la espera de Angelo.
+
 ## Decisions
 
 - **Prod usa las keys de Kustom de Boots y su envío** (Angelo, 24/11), no nuestra cuenta ni tarifas de Vio.
