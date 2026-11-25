@@ -46,6 +46,18 @@ cualquier publisher).
   - Deploy run 45640217965 terminado sin errores (build y deploy). Primera pasada: `surfaces=2 written=16 failed=0` (~3,9 MB sin comprimir). La surface 1 (Aller) lleva sus 6 catálogos (campaña 8 / canal 487: 18 productos), y el logo y las promesas de Boots ya están en la foto.
   - **Cloudflare guarda los 404:** una petición hecha antes de que exista el fichero deja un 404 en caché unos minutos, aunque la URL cambie de query. Solo pasa la primera vez que se crea el fichero de una surface.
 
+- **«Todo a prod» (Angelo, ~15:15 UTC): inventario de `develop` frente a prod en los 14 repos de Commerce.** Solo dos tenían algo de `develop` sin subir: lo de Faves (#125 y #117).
+  - shopcart [#126](https://github.com/vio-live/vio-shopcart-microservice/pull/126) (`140f3cc`): `/discount/coverage` dice si el canal vende el regalo. Desplegado (run 45642924205), con 2 pods sanos. `tsc` sin errores y discount 257/257. Falla `store-coupon-cart.unit.spec.ts` («the cache first, then the shop»), igual en `main`: viene de antes.
+  - webapp [#118](https://github.com/vio-live/webapp-vio-commerce/pull/118) (`74ae90c`): los avisos del código de campaña en el selector y en las notificaciones. Vercel Production terminado; 190/190 tests.
+  - **Lo que NO se subió a propósito** (en estos repos `develop` está por detrás de prod; copiarlo encima borraría cosas):
+    - los `pdb.yaml` de casi todos los charts;
+    - las sondas y los recursos de products;
+    - los mercados disponibles de graphql (en `develop` solo hay un `console.log`);
+    - el consumidor Pub/Sub de extensions (pendiente desde el 17/11);
+    - la suscripción automática de middleware (prod la quitó el 15/09);
+    - el bump del kernel a 1.0.292 en template y tracking (prod sigue en 1.0.282 sin necesitarlo).
+- **SDK 0.41.0:** #168 mergeada (`faf6296`). Hay una copia limpia de `main` lista para `npm publish` en `~/vio-commerce/worktrees/sdk-publish-0410`; la publica Angelo.
+
 ## Decisions
 - Foto para todas las surfaces, sin lista ni flags (Angelo: «arranca con todo»).
 - La interfaz en dos tiempos, con las llamadas guardadas mientras carga (Angelo: «haz también lo de la interfaz»).
