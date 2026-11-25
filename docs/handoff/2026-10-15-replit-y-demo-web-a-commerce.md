@@ -579,12 +579,11 @@ Assistant de Boots dentro del widget de Kustom. Comprobado por nuestro lado el 2
 
 La copia de pruebas lleva la SDK 0.39.0 y la web real la 0.37.7. Los arreglos de Kustom (reabrir el checkout sin
 duplicar la orden y no perder un producto añadido con el widget abierto) llegaron en la 0.39.1 y la 0.39.2.
-[web-sdk#165](https://github.com/vio-live/vio-web-sdk/pull/165) (mergeado el 24/11 y **sin publicar**) quita el
-«Gratis» del resumen antes de que Kustom diga el envío. Con la 0.40.1 la prueba sirve, pero ese «Gratis» se verá.
-Cuando Angelo publique la versión siguiente, se cambia en el punto 1.
+La **0.40.2** (publicada el 25/11, [web-sdk#165](https://github.com/vio-live/vio-web-sdk/pull/165)) quita el
+«Gratis» del resumen antes de que Kustom diga el envío: hasta entonces se lee «Beregnes ved kasse».
 
-> 1. En la copia de pruebas (`mote-livsstil-hub-vio.replit.app`), subid la SDK a la **0.40.1 exacta**:
->    `npm i --save-exact @vio-live/web-sdk@0.40.1`. No hay que cambiar código.
+> 1. En la copia de pruebas (`mote-livsstil-hub-vio.replit.app`), subid la SDK a la **0.40.2 exacta**:
+>    `npm i --save-exact @vio-live/web-sdk@0.40.2`. No hay que cambiar código.
 > 2. Cread un artículo de prueba de Boots:
 >    - con su **propio `contentId`** (por ejemplo `boots-no7-test`), que no sea el de otro artículo;
 >    - con `data-vio-campaign="8"` en el contenedor del artículo;
@@ -592,6 +591,7 @@ Cuando Angelo publique la versión siguiente, se cambia en el punto 1.
 >    - con un carrusel y dos o tres tarjetas de producto de Boots (`sponsorId` 1308), por ejemplo 421901
 >      (Lip & Cheek Glow, 89,40 kr) y 421579 (Ultimate Beauty Julekalender, 1.749,50 kr).
 > 3. Comprobad, en móvil y en escritorio:
+>    - antes de rellenar la dirección, el envío del resumen dice «Beregnes ved kasse» (nunca «Gratis»);
 >    - los productos salen con el precio de boots.no y el precio anterior tachado;
 >    - al pasar por caja, el único método de pago es **Kustom**, y el widget muestra «Boots Apoteks vilkår»;
 >    - tras rellenar nombre, dirección y móvil, salen **las opciones de entrega de Boots** (a domicilio, punto de
