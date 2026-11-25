@@ -85,6 +85,11 @@ cualquier publisher).
   - SDK [#171](https://github.com/vio-live/vio-web-sdk/pull/171): `getShippingRates` contesta desde la foto si la tiene a mano para ese mercado; si no, pregunta a GraphQL como antes. Release [#172](https://github.com/vio-live/vio-web-sdk/pull/172) = **0.41.2** (`2d2f518`), lista en `~/vio-commerce/worktrees/sdk-publish-0412` para que la publique Angelo.
   - El `useCache: false` se queda, a propósito: la caché del gateway guarda cada producto sin mirar qué campos se pidieron, así que una consulta estrecha estropearía la siguiente completa.
 
+- **Replit aplicó los cambios: tarjetas a ~0,9 s** (~17:55 UTC; Chrome de Angelo, caché caliente, `?vio_internal=1`, página en iframe con `fetch` instrumentado):
+  - **web real** (artículo No7 de `moteoglivsstil.no`): tarjetas a **~0,88 s** (antes ~2,3 s). Ya no hay `/api/vio/bootstrap`; `status`, `public-config` y `settings` van en paralelo (0,42–0,5 s). La foto llega de 0,61 a 0,77 s y `Vio.init` arranca a 0,80 s. 0 `GetProductsByIds`.
+  - **copia de pruebas** (`boots-no7-test`): tarjetas a **~0,79 s** (antes ~2,4 s).
+  - Quedan las 17 `GetProductShippingWithLogo` (siguen en la 0.41.1). Con la 0.41.2 salen de la foto; falta que Replit suba la versión.
+
 ## Decisions
 - Foto para todas las surfaces, sin lista ni flags (Angelo: «arranca con todo»).
 - La interfaz en dos tiempos, con las llamadas guardadas mientras carga (Angelo: «haz también lo de la interfaz»).
