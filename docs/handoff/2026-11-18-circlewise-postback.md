@@ -12,6 +12,8 @@ tracker `c.trackmytarget.com`, enlaces con `a=h9k6zq`, `i=3j26pb`, `ref1` = prod
 y puede llamarnos server-to-server por cada venta. La cuenta de Circlewise es **de VG**: la postback la
 configura VG, no nosotros.
 
+> [claude, 2026-11-25] Que la cuenta sea de VG es una deducción, no está confirmado. La base: la hoja original «URL-er Kondomeriet Black Week» con los enlaces de Circlewise es de Even Braastad (Schibsted), y los enlaces ya traían `utm_source=vg` y `utm_content=singlesweek` de una campaña anterior. Falta preguntar a Schibsted quién entra en Circlewise con ese `a=h9k6zq` (VG, Partner Studio o Kondomeriet). Si nadie puede configurar la postback, la alternativa es pedirles el informe de ventas de Circlewise al cerrar la campaña.
+
 ## Lo que hay
 
 | Pieza | Valor |
