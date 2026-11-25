@@ -88,6 +88,10 @@ Todo en prod, cuenta de Boots **1308**, con las frases de Angelo para leer y esc
 
 - **25/11 ~15:08 UTC, el envío de Vio de Boots pasa a 1 kr** (pedido de Angelo, para que no se lea «Gratis»/«fri frakt»): `shipping` `08f92b62…` y su `shipping_country` NO de 0,00 a 1,00 NOK (ensayo y COMMIT). Con Kustom (`providerShipping: true`) shopcart no manda el envío de Vio a Kustom; la orden solo lleva productos y descuentos. Así que no cambia lo que se cobra, solo lo que se muestra.
 
+- **25/11 15:27 UTC, la 4145 cancelada en Commerce** (autorización de Angelo): `POST http://orders/4145/cancel` como la marca (1308), desde el pod de users. La línea 4626 pasa a CANCELED, y `order_cancelled` de 899,40 NOK se manda a analítica (surface 1, con checkout_id). No hay pedido externo (Magento/Woo/Shopify) ni camino de Kustom en `cancelOrderInShop`, así que no se llamó a nadie fuera; en Kustom ya estaba cancelada por Boots. Lo que faltaba de fondo sigue faltando: el webhook de cuenta de Kustom con su secret, para que una cancelación en el portal llegue sola.
+- **25/11 ~15:35 UTC, `KUSTOM_API_URL` quitada de los `.env` del storage** (`containerproductionsc/env-file-microservices`, de donde el Dockerfile copia el `.env` a la imagen): `shopcart/.env` (254 → 253 líneas) y `.env` (256 → 255). Solo shopcart lee esa variable. Copias al lado con el sufijo `.backup-pre-kustomurl-<ts>`; se releyó sin imprimir valores. El Secret `env-sc-shopcart` ya no la tenía desde el 24/11.
+- **Colector:** las lecturas siguen caídas (`/v1/stats/recent` da 504 a los 30 s a las 15:30 UTC, `/health` 200). Se le pidió a Miguel en el handoff a las 15:10 UTC (la VM de ClickHouse en Oracle no responde desde el 23/11).
+
 ## Decisions
 
 - **Prod usa las keys de Kustom de Boots y su envío** (Angelo, 24/11), no nuestra cuenta ni tarifas de Vio.
