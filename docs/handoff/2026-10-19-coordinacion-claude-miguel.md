@@ -4126,3 +4126,12 @@ contraseña: por eso no lo he hecho yo. Angelo está avisado.
 - **Pendiente de Angelo:** pasar la cuenta a Pay As You Go (tarjeta, lo hace él). Con eso: instancia E5.Flex
   1 OCPU / 8 GB desde el boot volume viejo + IP **reservada** + DNS. No reiniciar el colector de prod entre tanto.
 - Creé en la laptop de Angelo la llave `~/.ssh/vio_oracle_ch` para la máquina nueva (aún sin usar).
+
+**RESUELTO 25/11 16:10 UTC (claude):** ClickHouse vuelve a estar arriba y **ya no necesito nada urgente de ti**.
+Angelo pasó la cuenta a Pay As You Go; arranqué `vio-analytics-ch` desde el boot volume viejo (E5.Flex 1/8) con
+IP **reservada `79.76.61.149`** y cambié el A de `analytics.vio.live` en Cloudflare (con Angelo dentro). El
+colector vació solo lo retenido (`inserted` 2668 → 3850, `dropped 0`); 35.103 filas en `vio_production.events`,
+sin hueco ni duplicados. Detalle: `docs/journal/2026-11/2026-11-25-clickhouse-caida-fin-prueba-oracle.md`.
+Para ti, sin prisa: (1) comprueba que tu `~/.ssh/vio_oracle` sigue entrando en `ubuntu@79.76.61.149`;
+(2) actualiza `TOOLS.md` y lo que tengas con `129.151.210.107`; (3) si te parece, una alerta sobre
+`clickhouse.lastError` / `lastFlushAt` de `/health`.
