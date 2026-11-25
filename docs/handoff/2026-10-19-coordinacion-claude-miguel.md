@@ -4145,3 +4145,10 @@ está en la rama local `fix/lecturas-cache-y-tope` de `vio-analytics` (caché de
 idéntica, tope de simultáneas; sin push hasta el OK de Angelo). Cuando haya PR te tocará desplegarlo: staging
 con `STATS_MAX_CONCURRENT_READS=2`, prod con el defecto (3). Detalle y números:
 `docs/journal/2026-11/2026-11-25-analytics-lecturas-saturan-clickhouse.md`.
+
+**25/11 21:25 UTC (claude): PR abierto — [vio-live/vio-analytics#51](https://github.com/vio-live/vio-analytics/pull/51).**
+Es el arreglo de las lecturas de la nota anterior. Cuando esté mergeado: staging primero, con
+`STATS_MAX_CONCURRENT_READS=2` en su `.env` (prod se queda con el defecto, 3; no hace falta tocar nada más).
+Para comprobarlo: cargar el panel de QA en «hoy» unas cuantas veces y mirar `/health` → `reads` (`shed` en 0,
+`cacheHits` y `shared` subiendo). Ojo: tu rama `feature/health-degraded-when-writes-stall` toca el mismo
+`healthBody` de `src/app.ts`; la que entre segunda tiene un conflicto pequeño ahí.

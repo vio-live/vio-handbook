@@ -39,8 +39,8 @@ Angelo ve fallar analytics otra vez la tarde del 25/11, ya restaurada la VM de C
   vuelta a las 21:09:13, colector vaciado a las 21:09:57 (`inserted` 7033 → 7098, `dropped 0`). 92 eventos
   recibidos durante el reinicio están guardados, sin duplicados. Contenedores e `iptables` (`DOCKER-USER`)
   volvieron solos. Tres lecturas de prod a la vez: 0,7–1,5 s (antes 1,4–2,6 s).
-- **Rama en `vio-analytics`: `fix/lecturas-cache-y-tope`, commit local `c3d993f`** (sin push; worktree
-  `~/vio-commerce/worktrees/analytics-lecturas-cache`). `src/stats-guard.ts` delante de todas las lecturas:
+- **PR [vio-live/vio-analytics#51](https://github.com/vio-live/vio-analytics/pull/51)**, rama
+  `fix/lecturas-cache-y-tope`, commit `c3d993f` (subida con OK de Angelo, 21:20 UTC; sin mergear). `src/stats-guard.ts` delante de todas las lecturas:
   respuesta reutilizada 30 s (`STATS_READ_CACHE_TTL_MS`), una sola ejecución por lectura idéntica en vuelo y
   tope de simultáneas (`STATS_MAX_CONCURRENT_READS`, 3) con cola; pasados 15 s de espera
   (`STATS_READ_QUEUE_MAX_WAIT_MS`) contesta el mismo 503 `read limit exceeded`. `/recent`, `/seen` y la búsqueda
@@ -49,8 +49,10 @@ Angelo ve fallar analytics otra vez la tarde del 25/11, ya restaurada la VM de C
 
 ## Decisions
 
-- Angelo (21:05 UTC): subir la VM y preparar la rama del colector. Hecho lo primero; lo segundo queda en commit
-  local hasta su OK para subirla y abrir el PR.
+- Angelo (21:05 UTC): subir la VM y preparar la rama del colector. (21:20 UTC): subir la rama, abrir el PR y
+  subir el presupuesto de Oracle.
+- Presupuesto `vio-backend-mensual`: de 500 a **800 SEK/mes** (los 500 salían de 1 OCPU). Los dos avisos (80 %
+  de gasto real, 100 % de previsión) siguen, ahora sobre 800.
 - El tope es por proceso y los dos entornos comparten la VM: producción `3`, staging `2`
   (`docs/DESPLIEGUE.md` de la rama).
 - Las lecturas de «¿ha llegado ya?» no se guardan ni hacen cola: un panel puede ir 30 s por detrás, una
@@ -58,14 +60,13 @@ Angelo ve fallar analytics otra vez la tarde del 25/11, ya restaurada la VM de C
 
 ## Blockers
 
-- OK de Angelo para subir la rama y abrir el PR; después, despliegue (staging primero).
+- Revisión y merge del PR #51 (humano); después, despliegue (staging primero).
 
 ## Next session
 
-- PR de `fix/lecturas-cache-y-tope`; desplegar en staging con `STATS_MAX_CONCURRENT_READS=2`, repetir la carga
+- Con el PR #51 mergeado: desplegar en staging con `STATS_MAX_CONCURRENT_READS=2`, repetir la carga
   del panel de QA en «hoy» y mirar `/health` → `reads` (que `shed` no crezca) y `system.query_log`.
-- El presupuesto de Oracle (`vio-backend-mensual`, 500 SEK) salía de 1 OCPU: con 2 la VM ronda los 55 USD/mes
-  por precio de lista y avisará. Subirlo si Angelo quiere.
+- Coste real de la VM con 2 OCPU: mirar Cost Analysis en una semana (los ~55 USD/mes son precio de lista).
 - La rama `feature/health-degraded-when-writes-stall` toca el mismo `healthBody` de `src/app.ts`: quien entre
   segundo tiene un conflicto pequeño.
 - A fondo: que el SQL no repita el filtro de internos ni la compensación en cada subconsulta.
