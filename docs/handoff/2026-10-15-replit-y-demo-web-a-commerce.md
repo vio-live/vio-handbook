@@ -628,7 +628,7 @@ productos.
 >      `<vio-cart>`/`<vio-checkout>`/`<vio-product-detail>` que ya están en la página funcionan sin tocar nada.
 >    - Si la página tiene Content-Security-Policy, añadid `https://container.vio.live` a `script-src`.
 > 3. Comprobad en el artículo de Boots (`boots-no7-test`), en móvil y en escritorio, con la pestaña Red abierta:
->    - sale una petición a `container.vio.live/reachu-uploads-production/snapshots/…​.web.js` con 200;
+>    - sale una petición a `container.vio.live/reachu-uploads-production/snapshots/….web.js` con 200;
 >    - al cargar **no** sale ninguna `GetProductsByIds` a `graph-ql.vio.live` para las tarjetas;
 >    - los productos salen con el precio de boots.no, el logo de Boots arriba en la ficha y sus tres promesas debajo
 >      de la compra;
