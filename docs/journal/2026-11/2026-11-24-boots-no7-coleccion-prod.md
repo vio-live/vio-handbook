@@ -92,6 +92,8 @@ Todo en prod, cuenta de Boots **1308**, con las frases de Angelo para leer y esc
 - **25/11 ~15:35 UTC, `KUSTOM_API_URL` quitada de los `.env` del storage** (`containerproductionsc/env-file-microservices`, de donde el Dockerfile copia el `.env` a la imagen): `shopcart/.env` (254 → 253 líneas) y `.env` (256 → 255). Solo shopcart lee esa variable. Copias al lado con el sufijo `.backup-pre-kustomurl-<ts>`; se releyó sin imprimir valores. El Secret `env-sc-shopcart` ya no la tenía desde el 24/11.
 - **Colector:** las lecturas siguen caídas (`/v1/stats/recent` da 504 a los 30 s a las 15:30 UTC, `/health` 200). Se le pidió a Miguel en el handoff a las 15:10 UTC (la VM de ClickHouse en Oracle no responde desde el 23/11).
 
+- **25/11 16:12 UTC, el colector de prod vuelve a escribir en ClickHouse** (la otra sesión levantó la VM de Oracle): `lastError` null, `inserted` 2668 → 3880 sin reiniciar (218 h de uptime), `dropped` 0, `buffered` 0. `/v1/stats/recent` responde 200 en 0,1 s. No se perdió ningún evento del 23/11 en adelante.
+
 ## Decisions
 
 - **Prod usa las keys de Kustom de Boots y su envío** (Angelo, 24/11), no nuestra cuenta ni tarifas de Vio.
