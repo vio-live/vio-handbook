@@ -76,6 +76,15 @@ Todo en prod, cuenta de Boots **1308**, con las frases de Angelo para leer y esc
   - Reparto con el 10 %: marca 809,46, Aller 62,96, Vio 26,98. `order_paid` aceptado por el colector.
   - **El colector no responde a lecturas** (`/v1/stats/recent` 500/504 a los 30 s; `/health` 200): el aviso de
     órdenes de Slack no ve la 4145 y el aviso de datos parados salta cada hora desde la mañana.
+- **25/11 ~14:57 UTC, logo y promesas de Boots en prod** (OK de Angelo; ensayo y COMMIT sobre `brand_profile` 1308):
+  - **logo:** `brand/boots-logo-20261125145623.svg` en `containerproductionsc` (`image/svg+xml`). Es el vectorial oficial
+    de boots.no (`logo-mobile.svg`, con «Apotek» debajo) recompuesto en horizontal, en #1a2157. El horizontal de boots.no
+    es un PNG de 300×86 y se ve borroso a los 44 px de la ficha;
+  - **promesas:** las de la barra de boots.no que pasó Angelo: `truck` «Fri frakt over 399,-*» (texto
+    «*For Boots Bedre-medlemmer», la nota al pie de boots.no), `home` «Ekspress hjemlevering» y `clock` «1 time klikk &
+    hent i apotek». Ojo: la primera es solo para socios y la tercera depende de que el Shipping Assistant de Kustom ofrezca
+    la recogida en farmacia;
+  - `/v2/mobile/config` de la surface 1 ya devuelve el `logoUrl` y las 3 promesas del sponsor 1308.
 
 ## Decisions
 
