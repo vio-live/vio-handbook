@@ -58,6 +58,8 @@ cualquier publisher).
     - el bump del kernel a 1.0.292 en template y tracking (prod sigue en 1.0.282 sin necesitarlo).
 - **SDK 0.41.0:** #168 mergeada (`faf6296`). Hay una copia limpia de `main` lista para `npm publish` en `~/vio-commerce/worktrees/sdk-publish-0410`; la publica Angelo.
 
+- **SDK 0.41.0 en npm** (`latest` a las 15:36 UTC, publicada por Angelo; `exports` con `./preload`). Texto a Replit en el [handoff](../../handoff/2026-10-15-replit-y-demo-web-a-commerce.md); falta que Replit la suba y volver a medir el artículo de Boots (partida ~2,4 s).
+
 ## Decisions
 - Foto para todas las surfaces, sin lista ni flags (Angelo: «arranca con todo»).
 - La interfaz en dos tiempos, con las llamadas guardadas mientras carga (Angelo: «haz también lo de la interfaz»).
