@@ -599,3 +599,39 @@ La **0.40.2** (publicada el 25/11, [web-sdk#165](https://github.com/vio-live/vio
 > 4. **No pulséis «Betal ordren».** Es la cuenta real de Boots: un pago crea una venta real. La compra de prueba la
 >    hace Angelo.
 > 5. Mandad capturas del widget con las opciones de entrega y del resumen antes de rellenar la dirección.
+
+## SDK 0.41.0: carga rápida de los artículos (25/11) — texto para el agente de Replit
+
+Desde el 25/11, campaigns publica en el CDN, cada ~90 s, una **foto** de cada surface: la config del bootstrap y los productos
+de sus campañas activas. La SDK 0.41.0 la carga con un `<script>` desde `container.vio.live` y con ella pinta la config y las
+primeras tarjetas sin esperar a la API ni a GraphQL. Además, el carrito, el checkout y la ficha se cargan en un segundo
+tiempo (~78 KB comprimidos antes de los productos, frente a ~138 KB). Todo está en prod
+([journal](../journal/2026-11/2026-11-25-sdk-carga-rapida-foto-cdn.md)). El artículo de Boots tardaba ~2,4 s en enseñar los
+productos.
+
+> 1. Subid la SDK a la **0.41.0 exacta**, primero en la copia de pruebas (`mote-livsstil-hub-vio.replit.app`):
+>    `npm i --save-exact @vio-live/web-sdk@0.41.0`.
+> 2. Cambios en el código:
+>    - **Quitad vuestro proxy `/api/vio/bootstrap` y la línea que asigna `cachedBootstrap`.** `Vio.bootstrap()` ya
+>      contesta desde la foto al instante y luego la refresca con la API; un bootstrap puesto desde fuera se salta la foto.
+>    - **Arrancad la foto lo antes posible.** En cuanto tengáis la key, antes de cargar la SDK:
+>      ```ts
+>      import { preloadVio } from '@vio-live/web-sdk/preload'   // unos KB, sin la SDK dentro
+>      preloadVio({ apiKey: KEY, environment: 'production', platform: 'web' })
+>      ```
+>      El `Vio.init()` de después usa la misma key, entorno y `platform` (o ninguno: `web` es el de por defecto).
+>    - **No esperéis a `import('@vio-live/web-sdk/ui')` para llamar a `Vio.init()` y pedir los productos.** Lanzad las dos
+>      cosas a la vez.
+>    - `/ui` ya no exporta `VioCart`, `VioCheckout` ni `VioProductDetail` como valores, solo como tipos. Si los usáis como
+>      clases (`instanceof`, `new`), sacadlos de `await loadVioElements()` (de `@vio-live/web-sdk/ui`). Si creáis uno de
+>      esos elementos y llamáis `show()` justo después, haced `await loadVioElements()` antes. Las tarjetas y los
+>      `<vio-cart>`/`<vio-checkout>`/`<vio-product-detail>` que ya están en la página funcionan sin tocar nada.
+>    - Si la página tiene Content-Security-Policy, añadid `https://container.vio.live` a `script-src`.
+> 3. Comprobad en el artículo de Boots (`boots-no7-test`), en móvil y en escritorio, con la pestaña Red abierta:
+>    - sale una petición a `container.vio.live/reachu-uploads-production/snapshots/…​.web.js` con 200;
+>    - al cargar **no** sale ninguna `GetProductsByIds` a `graph-ql.vio.live` para las tarjetas;
+>    - los productos salen con el precio de boots.no, el logo de Boots arriba en la ficha y sus tres promesas debajo
+>      de la compra;
+>    - la ficha, el carrito y el checkout de Kustom se abren igual que antes. **No pulséis «Betal ordren».**
+> 4. Mandad el tiempo hasta ver las tarjetas, antes y después, medido en la pestaña Rendimiento o a ojo con
+>    la caché vacía. Si todo va bien, publicad lo mismo en la web real (`moteoglivsstil.no`).
