@@ -80,6 +80,11 @@ cualquier publisher).
   - **Pero `Vio.init` no arranca hasta los ~2,2 s.** Antes, Replit encadena sus propias llamadas, una detrás de otra: `/api/vio/settings` (0,70 s) → `/api/vio/status` (1,0) → `/api/vio/public-config` (1,3) → `/api/vio/bootstrap` (1,7 → 2,2). Las tarjetas salen ~2,3 s, casi igual que los ~2,4 s de partida. **El cuello de botella ya no es la SDK: es esa cadena de Replit.**
   - Además, por cada tarjeta, 17 `GetProductShippingWithLogo` con `useCache:false` (`getShippingRates` para su etiqueta de envío). Salen después de las tarjetas y no las bloquean.
 
+- **Las tarifas de envío, también desde la foto** (las 17 `GetProductShippingWithLogo` sin caché del artículo de Boots):
+  - campaigns [#48](https://github.com/vio-live/vio-campaigns-microservice/pull/48) escribe `product_shipping` en la foto. En QA a las 17:30 UTC (80 ficheros, 0 fallos, 1,47 → 1,73 MB por pasada). En prod con la release [#49](https://github.com/vio-live/vio-campaigns-microservice/pull/49) (`e799abf`, 17:41 UTC): la foto de la surface 1 lleva 97/97 productos con tarifas, 338 → 379 KB sin comprimir.
+  - SDK [#171](https://github.com/vio-live/vio-web-sdk/pull/171): `getShippingRates` contesta desde la foto si la tiene a mano para ese mercado; si no, pregunta a GraphQL como antes. Release [#172](https://github.com/vio-live/vio-web-sdk/pull/172) = **0.41.2** (`2d2f518`), lista en `~/vio-commerce/worktrees/sdk-publish-0412` para que la publique Angelo.
+  - El `useCache: false` se queda, a propósito: la caché del gateway guarda cada producto sin mirar qué campos se pidieron, así que una consulta estrecha estropearía la siguiente completa.
+
 ## Decisions
 - Foto para todas las surfaces, sin lista ni flags (Angelo: «arranca con todo»).
 - La interfaz en dos tiempos, con las llamadas guardadas mientras carga (Angelo: «haz también lo de la interfaz»).
