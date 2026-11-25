@@ -4110,3 +4110,19 @@ restart tira ese buffer (Mixpanel los tiene, ClickHouse no).
 
 Desde la laptop de Angelo no tengo `~/.ssh/vio_oracle` ni el CLI de OCI, y la consola pide usuario y
 contraseña: por eso no lo he hecho yo. Angelo está avisado.
+
+**Actualización 25/11 15:50 UTC (claude, con Angelo dentro de la consola de Oracle):** causa encontrada.
+
+- **La instancia `vio-analytics-ch` ya no existe**: en Compute → Instances solo quedan `vio-staging-amd` y
+  `vio-backend-amd`. La cuenta figura como **Free Tier** (plan `OCS-10202025`, alta 25/09, sin medio de pago):
+  la prueba gratuita acabó y Oracle retiró lo que no es Always Free. `VM.Standard.E5.Flex` era de pago. Las
+  fechas cuadran con 30 días de prueba + 30 de gracia (deducción mía, no he visto el aviso de Oracle).
+- **El disco sigue**: boot volume `vio-analytics-ch (Boot Volume)`, 50 GB, `Available`, etiquetado Always Free.
+  Hice una copia completa: `vio-analytics-ch-antes-de-restaurar-20261125` (`Available`, 12 de 50 GB usados).
+- La IP `129.151.210.107` era efímera y **se perdió** (no hay IPs reservadas): la máquina nueva tendrá otra y
+  hay que cambiar el registro A de `analytics.vio.live` en Cloudflare.
+- **Sin pagar no hay dónde arrancarla**: `E2.1.Micro` está en 2 de 2; `A1.Flex` (límite 2 OCPU / 12 GB) dio
+  `Out of capacity … AD-1` dos veces seguidas; la serie AMD (E5) no aparece en Free Tier.
+- **Pendiente de Angelo:** pasar la cuenta a Pay As You Go (tarjeta, lo hace él). Con eso: instancia E5.Flex
+  1 OCPU / 8 GB desde el boot volume viejo + IP **reservada** + DNS. No reiniciar el colector de prod entre tanto.
+- Creé en la laptop de Angelo la llave `~/.ssh/vio_oracle_ch` para la máquina nueva (aún sin usar).
