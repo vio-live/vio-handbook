@@ -94,6 +94,8 @@ Todo en prod, cuenta de Boots **1308**, con las frases de Angelo para leer y esc
 
 - **25/11 16:12 UTC, el colector de prod vuelve a escribir en ClickHouse** (la otra sesión levantó la VM de Oracle): `lastError` null, `inserted` 2668 → 3880 sin reiniciar (218 h de uptime), `dropped` 0, `buffered` 0. `/v1/stats/recent` responde 200 en 0,1 s. No se perdió ningún evento del 23/11 en adelante.
 
+- **25/11 ~16:15 UTC, Pearlconvert:** según Angelo, Boots/Pearlconvert ya registraron y confirmaron la orden (4145, la única de Boots en Commerce) en su sistema. Les llega desde Kustom: en Commerce la línea no tiene `supplier_external_order_*`, y es lo esperado en este montaje. Queda por confirmar con Boots que en su lado también está cancelada (Kustom cancelada y Commerce CANCELED desde las 15:27).
+
 ## Decisions
 
 - **Prod usa las keys de Kustom de Boots y su envío** (Angelo, 24/11), no nuestra cuenta ni tarifas de Vio.
@@ -131,7 +133,7 @@ Hoy no se pueden poner órdenes en prod:
   0.39.1 y la 0.39.2, y su parte de shopcart (#120) ya está en prod.
 - **Artículo:** `data-vio-campaign="8"` en el artículo de Replit/Aller.
 - **Blob del `.env` de shopcart:** todavía lleva `KUSTOM_API_URL`.
-- **Pearlconvert:** tiene que estar recibiendo `order.created` en su Magento de prod. Lo último que se sabe (28/10) es
+- ~~**Pearlconvert:**~~ resuelto el 25/11 (las órdenes les llegan desde Kustom). Antes: tiene que estar recibiendo `order.created` en su Magento de prod. Lo último que se sabe (28/10) es
   que solo estaba en test. Si no, la orden llega al Kustom de Boots pero nadie la despacha.
 - **Publisher, canal y campaña** del artículo: aún no hay ninguno.
 
