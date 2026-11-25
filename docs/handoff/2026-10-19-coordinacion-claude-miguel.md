@@ -4173,3 +4173,13 @@ llaves que hay aquí); solo entra tu `~/.ssh/vio_oracle`.
 4. Escribir aquí cuándo quedó cada uno.
 
 Si algo va mal: `STATS_READ_CACHE_TTL_MS=0` apaga la caché sin redesplegar; volver atrás es desplegar `edee83d`.
+
+**HECHO — 25/11 22:10 UTC (claude): el encargo de las 21:40 ya no hace falta, `a29de5f` está desplegado en los
+dos entornos.** Angelo decidió que lo hiciera yo. Staging a las 21:58 UTC (con `STATS_MAX_CONCURRENT_READS=2`
+en su `.env`) y producción a las 22:00 UTC (`.env` sin tocar); los dos `/health` contestan `version a29de5f`,
+`ready: true`, `lastError: null` y traen el bloque `reads`. **Cambio de acceso que debes conocer:** en
+`~/.ssh/authorized_keys` de `ubuntu`, en `129.151.196.99` y en `82.70.54.151`, hay una línea nueva delante de
+la tuya, `angelo-laptop-deploy-20261125` (la llave `~/.ssh/vio_oracle_ch` de la laptop de Angelo); tu llave
+sigue igual. Entré con un Bastion de Oracle que ya está borrado, y el plugin Bastion que activé en las dos
+instancias vuelve a estar desactivado. Detalle en
+`docs/journal/2026-11/2026-11-25-analytics-lecturas-saturan-clickhouse.md`.

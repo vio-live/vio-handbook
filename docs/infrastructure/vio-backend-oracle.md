@@ -20,7 +20,7 @@ Costo: **0 USD/mes** (Always Free), contra los ~49 USD/mes que costaba en Azure.
 | SO | Ubuntu 24.04.5 LTS x86_64 |
 | CPU / RAM / disco | AMD EPYC 7551, 2 vCPU burst (1/8 OCPU), 954 MB, 48 GB |
 | Swap | 2 GB en `/swapfile`, `vm.swappiness=10` |
-| SSH | `ssh -i ~/.ssh/vio_oracle ubuntu@82.70.54.151` |
+| SSH | `ssh -i ~/.ssh/vio_oracle ubuntu@82.70.54.151` (llave de Miguel) · desde la laptop de Angelo: `ssh -i ~/.ssh/vio_oracle_ch ubuntu@82.70.54.151` (línea `angelo-laptop-deploy-20261125` en `authorized_keys`, añadida el 2026-11-25 con OK de Angelo) |
 
 **Por qué AMD y no ARM:** el shape ARM `VM.Standard.A1.Flex` (4 OCPU / 24 GB, también
 Always Free) **no tiene capacidad** en Estocolmo — 288 intentos entre el 26 y el 28/09, cero

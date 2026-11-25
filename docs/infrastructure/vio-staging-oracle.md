@@ -14,7 +14,7 @@ Con esta se agotan las **2 `E2.1.Micro`** del tier gratuito: no queda margen par
 |---|---|
 | Instancia | `vio-staging-amd`, `VM.Standard.E2.1.Micro`, `eu-stockholm-1` |
 | IP pública | `129.151.196.99` |
-| SSH | `ssh -i ~/.ssh/vio_oracle ubuntu@129.151.196.99` |
+| SSH | `ssh -i ~/.ssh/vio_oracle ubuntu@129.151.196.99` (llave de Miguel) · desde la laptop de Angelo: `ssh -i ~/.ssh/vio_oracle_ch ubuntu@129.151.196.99` (línea `angelo-laptop-deploy-20261125` en `authorized_keys`, añadida el 2026-11-25 con OK de Angelo) |
 | SO / CPU / RAM | Ubuntu 24.04.5, AMD EPYC 7551, 2 vCPU burst, 954 MB + 2 GB swap |
 | Dominios | `api-staging.vio.live` (backend), `events-staging.vio.live` (analytics) |
 

@@ -42,7 +42,27 @@ Angelo ve fallar analytics otra vez la tarde del 25/11, ya restaurada la VM de C
 - **PR [vio-live/vio-analytics#51](https://github.com/vio-live/vio-analytics/pull/51)**, rama
   `fix/lecturas-cache-y-tope`, commit `c3d993f` (subida con OK de Angelo, 21:20 UTC). **Mergeado a las 21:33
   UTC** con su OK: `a29de5f`, mismo árbol que el commit probado; el check `verify` del PR pasó antes del merge.
-  **Sin desplegar**: los dos colectores siguen en `edee83d`. `src/stats-guard.ts` delante de todas las lecturas:
+  CI de `main` en verde.
+- **Desplegado `a29de5f` en staging (21:58 UTC) y en producción (22:00 UTC)**, con OK de Angelo y por mi mano
+  («lo de Miguel tómalo tú»). Procedimiento de `docs/DESPLIEGUE.md`; staging con
+  `STATS_MAX_CONCURRENT_READS=2` en su `.env`, prod sin tocar el `.env` (defecto 3).
+  - **Staging, ráfaga del panel de QA reproducida** (5 superficies × 6 lecturas, 30 peticiones a la vez): en
+    ClickHouse 60 lecturas, **0 cortadas**, media 0,6 s, máximo 1,8 s, espera de CPU ~1 ms, **como mucho 2 a la
+    vez** (antes: media 4,8–9 s, máximo 14,7 s, 7,5 s de espera). Primera carga en frío: 25 respuestas 200 y 5
+    respuestas 503 (8 lecturas esperaron más de 15 s su turno); la segunda carga, 30 de 30 en 200 con mediana
+    0,09 s (52 de caché); la tercera, todo de caché.
+  - **Producción:** reinicio de 2 s (22:00:20 → 22:00:22), eventos entrando en el mismo minuto, `dropped 0`.
+    Carga como la del panel (14 peticiones, 24 lecturas): todas 200 salvo un 400 de mi propia prueba (le faltaba
+    `by=` a `breakdown`), la más lenta 7,4 s en frío y 0,2 s la segunda vez; en ClickHouse 0 cortadas, máximo
+    2,0 s, como mucho 3 a la vez.
+- **Acceso SSH desde la laptop de Angelo a las dos VMs del colector** (decisión suya: «Bastion + llave fija»).
+  No había forma de entrar sin la llave de Miguel, y Miguel no escribe en el handbook desde el 16/11. Camino:
+  plugin Bastion de Oracle Cloud Agent activado en `vio-staging-amd` y `vio-backend-amd` (tarda ~10 min en
+  pasar a Running), Bastion `viodeploy20261125` en `vcn-vio` limitado a la IP de la laptop, una sesión SSH
+  gestionada por máquina, y dentro la línea `angelo-laptop-deploy-20261125` en `~/.ssh/authorized_keys` de
+  `ubuntu` (misma llave que `~/.ssh/vio_oracle_ch`). Después: sesiones y Bastion **borrados**, plugin
+  **desactivado** en las dos, y entrada directa comprobada sin Bastion. El plugin, al cerrar la sesión, quita
+  solo sus dos líneas (marcador + llave) y deja las demás. `src/stats-guard.ts` delante de todas las lecturas:
   respuesta reutilizada 30 s (`STATS_READ_CACHE_TTL_MS`), una sola ejecución por lectura idéntica en vuelo y
   tope de simultáneas (`STATS_MAX_CONCURRENT_READS`, 3) con cola; pasados 15 s de espera
   (`STATS_READ_QUEUE_MAX_WAIT_MS`) contesta el mismo 503 `read limit exceeded`. `/recent`, `/seen` y la búsqueda
@@ -57,20 +77,20 @@ Angelo ve fallar analytics otra vez la tarde del 25/11, ya restaurada la VM de C
   de gasto real, 100 % de previsión) siguen, ahora sobre 800.
 - El tope es por proceso y los dos entornos comparten la VM: producción `3`, staging `2`
   (`docs/DESPLIEGUE.md` de la rama).
+- Angelo (21:30 UTC): mergear y desplegar en staging y prod. (21:40 UTC): que el despliegue lo haga claude, y
+  para el acceso, Bastion de Oracle + llave fija de su laptop en las dos VMs.
 - Las lecturas de «¿ha llegado ya?» no se guardan ni hacen cola: un panel puede ir 30 s por detrás, una
   verificación no.
 
 ## Blockers
 
-- **Despliegue de `a29de5f` (OK de Angelo para staging y prod, 21:30 UTC): no puedo hacerlo yo.** Desde la
-  laptop de Angelo no hay acceso SSH a las VMs del colector (`Permission denied (publickey)` en `129.151.196.99`
-  y `82.70.54.151` con `vio_oracle_ch` y con `id_ed25519`); solo entra la llave de Miguel. Pasos para él en el
-  handoff (`docs/handoff/2026-10-19-coordinacion-claude-miguel.md`, nota de las 21:40 UTC).
+- Ninguno.
 
 ## Next session
 
-- Desplegar `a29de5f`: staging con `STATS_MAX_CONCURRENT_READS=2`, repetir la carga
-  del panel de QA en «hoy» y mirar `/health` → `reads` (que `shed` no crezca) y `system.query_log`.
+- Mirar `/health` → `reads` de prod tras un día de uso real (`shed` debería seguir en 0) y `system.query_log`.
+- Staging con tope 2: la primera carga en frío de la vista más ancha de QA puede dejar algún panel en 503;
+  recargar lo completa. Si molesta, subir el tope de staging a 3.
 - Coste real de la VM con 2 OCPU: mirar Cost Analysis en una semana (los ~55 USD/mes son precio de lista).
 - La rama `feature/health-degraded-when-writes-stall` toca el mismo `healthBody` de `src/app.ts`: quien entre
   segundo tiene un conflicto pequeño.
