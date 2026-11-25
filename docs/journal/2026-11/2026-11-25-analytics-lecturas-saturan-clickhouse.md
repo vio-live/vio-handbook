@@ -34,19 +34,39 @@ Angelo ve fallar analytics otra vez la tarde del 25/11, ya restaurada la VM de C
 - **Descartado un ajuste del servidor:** con el analizador viejo (`allow_experimental_analyzer=0`) baja de 1,08
   a ~0,76 s, y ninguna otra opción del planificador probada cambia nada. No compensa el riesgo.
 - El colector no tiene caché de lecturas ni tope de lecturas simultáneas (`src/stats.ts`, `makeStatsQuerier`).
+- **VM de ClickHouse a 2 OCPU (4 vCPU), 8 GB** (OK de Angelo, 21:05 UTC). Cambio de forma desde la consola
+  (Angelo aprobó el inicio de sesión en su teléfono); la VM se reinició sola: última escritura 21:08:14, de
+  vuelta a las 21:09:13, colector vaciado a las 21:09:57 (`inserted` 7033 → 7098, `dropped 0`). 92 eventos
+  recibidos durante el reinicio están guardados, sin duplicados. Contenedores e `iptables` (`DOCKER-USER`)
+  volvieron solos. Tres lecturas de prod a la vez: 0,7–1,5 s (antes 1,4–2,6 s).
+- **Rama en `vio-analytics`: `fix/lecturas-cache-y-tope`, commit local `c3d993f`** (sin push; worktree
+  `~/vio-commerce/worktrees/analytics-lecturas-cache`). `src/stats-guard.ts` delante de todas las lecturas:
+  respuesta reutilizada 30 s (`STATS_READ_CACHE_TTL_MS`), una sola ejecución por lectura idéntica en vuelo y
+  tope de simultáneas (`STATS_MAX_CONCURRENT_READS`, 3) con cola; pasados 15 s de espera
+  (`STATS_READ_QUEUE_MAX_WAIT_MS`) contesta el mismo 503 `read limit exceeded`. `/recent`, `/seen` y la búsqueda
+  de la compra de una compensación van directas (`fresh`). `/health` gana `reads`. 512 pruebas en verde
+  (17 nuevas; las 141 de ClickHouse contra un contenedor local), `tsc` y `biome` limpios.
 
 ## Decisions
 
-- Pendiente de Angelo: subir la VM a 2 OCPU (4 vCPU) como alivio inmediato, y arreglo en el colector (caché
-  corta + una sola lectura en vuelo por petición idéntica + tope de simultáneas).
+- Angelo (21:05 UTC): subir la VM y preparar la rama del colector. Hecho lo primero; lo segundo queda en commit
+  local hasta su OK para subirla y abrir el PR.
+- El tope es por proceso y los dos entornos comparten la VM: producción `3`, staging `2`
+  (`docs/DESPLIEGUE.md` de la rama).
+- Las lecturas de «¿ha llegado ya?» no se guardan ni hacen cola: un panel puede ir 30 s por detrás, una
+  verificación no.
 
 ## Blockers
 
-- Ninguno técnico; faltan las dos decisiones.
+- OK de Angelo para subir la rama y abrir el PR; después, despliegue (staging primero).
 
 ## Next session
 
-- Si se aprueba: redimensionar la VM (reinicio de ~2 min; el colector retiene los eventos en memoria) y rama
-  en `vio-analytics` con el arreglo.
+- PR de `fix/lecturas-cache-y-tope`; desplegar en staging con `STATS_MAX_CONCURRENT_READS=2`, repetir la carga
+  del panel de QA en «hoy» y mirar `/health` → `reads` (que `shed` no crezca) y `system.query_log`.
+- El presupuesto de Oracle (`vio-backend-mensual`, 500 SEK) salía de 1 OCPU: con 2 la VM ronda los 55 USD/mes
+  por precio de lista y avisará. Subirlo si Angelo quiere.
+- La rama `feature/health-degraded-when-writes-stall` toca el mismo `healthBody` de `src/app.ts`: quien entre
+  segundo tiene un conflicto pequeño.
 - A fondo: que el SQL no repita el filtro de internos ni la compensación en cada subconsulta.
 - No sé quién tenía abierto el panel de QA a esas horas; desde ClickHouse solo se ve el colector de origen.

@@ -4135,3 +4135,13 @@ sin hueco ni duplicados. Detalle: `docs/journal/2026-11/2026-11-25-clickhouse-ca
 Para ti, sin prisa: (1) comprueba que tu `~/.ssh/vio_oracle` sigue entrando en `ubuntu@79.76.61.149`;
 (2) actualiza `TOOLS.md` y lo que tengas con `129.151.210.107`; (3) si te parece, una alerta sobre
 `clickhouse.lastError` / `lastFlushAt` de `/health`.
+
+**25/11 21:15 UTC (claude): la VM de ClickHouse ahora tiene 2 OCPU (4 vCPU), y hay un arreglo del colector en
+camino.** Por la tarde los paneles daban «analytics unavailable» a ratos con el colector sano: las lecturas
+saturaban las 2 vCPU (cada una gasta 1,1–1,6 s de CPU solo en planificar un SQL de 40.000 caracteres, y el panel
+de QA lanzó ráfagas de 100–125 por minuto sobre la misma máquina que prod). Con OK de Angelo subí
+`vio-analytics-ch` a 2 OCPU / 8 GB (reinicio de un minuto a las 21:08 UTC, sin pérdida). El arreglo de fondo
+está en la rama local `fix/lecturas-cache-y-tope` de `vio-analytics` (caché de 30 s, una ejecución por lectura
+idéntica, tope de simultáneas; sin push hasta el OK de Angelo). Cuando haya PR te tocará desplegarlo: staging
+con `STATS_MAX_CONCURRENT_READS=2`, prod con el defecto (3). Detalle y números:
+`docs/journal/2026-11/2026-11-25-analytics-lecturas-saturan-clickhouse.md`.
