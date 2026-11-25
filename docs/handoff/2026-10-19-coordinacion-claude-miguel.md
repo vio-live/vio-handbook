@@ -4075,3 +4075,38 @@ así que prod tampoco espera nada: puedes hacer QA y, si sale bien, prod seguido
 esas dos respuestas salen del PoP en ~0,15 s. El lado de Vev ya pide las dos por GET con `?apiKey=` (vev#103,
 en prod), así que en cuanto actives las reglas empieza a cachear. Escríbelo aquí cuando esté QA y cuando esté
 prod, y lo mido.
+
+## [claude → miguel, 2026-11-25 15:10 UTC] URGENTE: la VM de ClickHouse (`vio-analytics-ch`) no responde desde el 23/11 09:10 UTC (lo pide Angelo: «arréglalo, es importante»)
+
+**Síntoma que ve Angelo:** los dashboards dicen `Analytics unavailable. analytics collector unreachable`.
+
+**Qué pasa (verificado hoy 15:00–15:05 UTC, desde fuera):**
+
+- `129.151.210.107` (`analytics.vio.live`) **no contesta en ningún puerto**: TCP 22, 443 y 8123 dan timeout
+  (no «refused»). En la misma prueba, `82.70.54.151` y `129.151.196.99` contestan en 22 y 443. Traceroute
+  muere dentro de la red de Oracle (último salto `140.91.246.11`).
+- Colector de prod (`events.vio.live/health`, `edee83d`, uptime 9 días, **no ha reiniciado**):
+  `clickhouse.lastError: "Timeout error."`, `lastFlushAt: 2026-11-23T09:10:58.770Z` y `inserted: 2668`,
+  los dos congelados desde entonces. Mixpanel sigue reenviando (`forwarded` 3189 y subiendo).
+- Lecturas: `GET /v1/stats/overview` con el token de lectura → **500 `Timeout error.` a los 30 s**. base-api
+  corta a los 15 s y el proxy de socket-server a los 10 s, de ahí el `collector unreachable`.
+- No es el colector: `/health` responde en 0,1 s y la ingesta acepta eventos.
+
+**Los eventos del 23/11 09:10 en adelante NO están perdidos todavía:** están en el buffer en memoria del
+proceso `vio-analytics.service` de `82.70.54.151` (unos 520 a las 15:05; tope 50.000, `dropped: 0`). El
+colector reintenta solo cada ~30 s. **No reinicies el colector de prod hasta que ClickHouse vuelva**: un
+restart tira ese buffer (Mixpanel los tiene, ClickHouse no).
+
+**Te pido:**
+
+1. Consola de Oracle (tenancy `vio-backend`, `eu-stockholm-1`): estado de la instancia `vio-analytics-ch`
+   (¿Running, Stopped, Terminated?), el historial de consola y los eventos del 23/11 ~09:10 UTC. Ojo: es
+   `VM.Standard.E5.Flex`, **no** es Always Free; mira también facturación/créditos de la tenancy.
+2. Levantarla (Start, o Reboot si figura Running pero colgada) y comprobar dentro: disco (`df -h`),
+   `docker ps` con `vio-clickhouse-1` y Caddy arriba, `SELECT count() FROM vio_production.events`.
+3. Confirmar que el colector vacía el buffer solo: en `/health`, `lastError: null`, `lastFlushAt` de hoy e
+   `inserted` ≈ 2668 + lo pendiente. Y `GET /v1/stats/overview` → 200.
+4. Escribir aquí la causa (parada, reclamada, facturación, OOM, disco…) y si el volumen de datos está intacto.
+
+Desde la laptop de Angelo no tengo `~/.ssh/vio_oracle` ni el CLI de OCI, y la consola pide usuario y
+contraseña: por eso no lo he hecho yo. Angelo está avisado.
