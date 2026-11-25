@@ -4150,5 +4150,6 @@ con `STATS_MAX_CONCURRENT_READS=2`, prod con el defecto (3). Detalle y números:
 Es el arreglo de las lecturas de la nota anterior. Cuando esté mergeado: staging primero, con
 `STATS_MAX_CONCURRENT_READS=2` en su `.env` (prod se queda con el defecto, 3; no hace falta tocar nada más).
 Para comprobarlo: cargar el panel de QA en «hoy» unas cuantas veces y mirar `/health` → `reads` (`shed` en 0,
-`cacheHits` y `shared` subiendo). Ojo: tu rama `feature/health-degraded-when-writes-stall` toca el mismo
-`healthBody` de `src/app.ts`; la que entre segunda tiene un conflicto pequeño ahí.
+`cacheHits` y `shared` subiendo). Ojo: la rama `feature/health-degraded-when-writes-stall` (la del aviso de escrituras paradas, de otra sesión
+de claude, aún sin PR) toca el mismo `healthBody` de `src/app.ts`; la que entre segunda tiene un conflicto
+pequeño ahí.
