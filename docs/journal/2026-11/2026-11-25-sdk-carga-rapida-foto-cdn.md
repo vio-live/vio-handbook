@@ -39,6 +39,7 @@ cualquier publisher).
     Un test de descuentos dependía del orden (un único método se autoselecciona) y se arregló.
   - Probado en navegador contra QA (surface 13): foto cargada, carrusel de 12 productos sin GraphQL propio,
     ficha, carrito y checkout abren; sin errores de red.
+- **PR de la versión 0.41.0** ([vio-web-sdk#168](https://github.com/vio-live/vio-web-sdk/pull/168)): solo #167. Es minor porque `/ui` deja de exportar como valores las clases del carrito, del checkout y de la ficha. Quita además el enlace `node_modules` que c3d9669 coló en `main` (el `.gitignore` decía `node_modules/` y eso no ignora un enlace). npm no se vio afectado. La publicación la hace Angelo.
 
 ## Decisions
 - Foto para todas las surfaces, sin lista ni flags (Angelo: «arranca con todo»).
