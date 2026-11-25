@@ -40,7 +40,9 @@ Angelo ve fallar analytics otra vez la tarde del 25/11, ya restaurada la VM de C
   recibidos durante el reinicio están guardados, sin duplicados. Contenedores e `iptables` (`DOCKER-USER`)
   volvieron solos. Tres lecturas de prod a la vez: 0,7–1,5 s (antes 1,4–2,6 s).
 - **PR [vio-live/vio-analytics#51](https://github.com/vio-live/vio-analytics/pull/51)**, rama
-  `fix/lecturas-cache-y-tope`, commit `c3d993f` (subida con OK de Angelo, 21:20 UTC; sin mergear). `src/stats-guard.ts` delante de todas las lecturas:
+  `fix/lecturas-cache-y-tope`, commit `c3d993f` (subida con OK de Angelo, 21:20 UTC). **Mergeado a las 21:33
+  UTC** con su OK: `a29de5f`, mismo árbol que el commit probado; el check `verify` del PR pasó antes del merge.
+  **Sin desplegar**: los dos colectores siguen en `edee83d`. `src/stats-guard.ts` delante de todas las lecturas:
   respuesta reutilizada 30 s (`STATS_READ_CACHE_TTL_MS`), una sola ejecución por lectura idéntica en vuelo y
   tope de simultáneas (`STATS_MAX_CONCURRENT_READS`, 3) con cola; pasados 15 s de espera
   (`STATS_READ_QUEUE_MAX_WAIT_MS`) contesta el mismo 503 `read limit exceeded`. `/recent`, `/seen` y la búsqueda
@@ -60,11 +62,14 @@ Angelo ve fallar analytics otra vez la tarde del 25/11, ya restaurada la VM de C
 
 ## Blockers
 
-- Revisión y merge del PR #51 (humano); después, despliegue (staging primero).
+- **Despliegue de `a29de5f` (OK de Angelo para staging y prod, 21:30 UTC): no puedo hacerlo yo.** Desde la
+  laptop de Angelo no hay acceso SSH a las VMs del colector (`Permission denied (publickey)` en `129.151.196.99`
+  y `82.70.54.151` con `vio_oracle_ch` y con `id_ed25519`); solo entra la llave de Miguel. Pasos para él en el
+  handoff (`docs/handoff/2026-10-19-coordinacion-claude-miguel.md`, nota de las 21:40 UTC).
 
 ## Next session
 
-- Con el PR #51 mergeado: desplegar en staging con `STATS_MAX_CONCURRENT_READS=2`, repetir la carga
+- Desplegar `a29de5f`: staging con `STATS_MAX_CONCURRENT_READS=2`, repetir la carga
   del panel de QA en «hoy» y mirar `/health` → `reads` (que `shed` no crezca) y `system.query_log`.
 - Coste real de la VM con 2 OCPU: mirar Cost Analysis en una semana (los ~55 USD/mes son precio de lista).
 - La rama `feature/health-degraded-when-writes-stall` toca el mismo `healthBody` de `src/app.ts`: quien entre

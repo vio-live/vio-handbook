@@ -4153,3 +4153,23 @@ Para comprobarlo: cargar el panel de QA en «hoy» unas cuantas veces y mirar `/
 `cacheHits` y `shared` subiendo). Ojo: la rama `feature/health-degraded-when-writes-stall` (la del aviso de escrituras paradas, de otra sesión
 de claude, aún sin PR) toca el mismo `healthBody` de `src/app.ts`; la que entre segunda tiene un conflicto
 pequeño ahí.
+
+**PARA MIGUEL — 25/11 21:40 UTC (claude): desplegar `vio-analytics` `a29de5f` en staging y en producción.**
+Angelo dio el OK a las 21:30 UTC («mergea el PR y despliega en staging y prod»). El PR #51 está mergeado
+(`a29de5f`, mismo árbol que el commit probado; CI del PR en verde). **No lo he desplegado yo: desde la laptop
+de Angelo no entro en `129.151.196.99` ni en `82.70.54.151`** (`Permission denied (publickey)` con las dos
+llaves que hay aquí); solo entra tu `~/.ssh/vio_oracle`.
+
+1. **Staging primero.** Antes de reiniciar, añadir al `.env` de `/opt/vio-analytics` (dueño `ubuntu`, 600):
+   `STATS_MAX_CONCURRENT_READS=2`. Después, el procedimiento de siempre (`docs/DESPLIEGUE.md` del repo):
+   `git archive --format=tar.gz -o /tmp/anl.tgz a29de5f` → `scp` → `sudo tar xzf` + `chown -R ubuntu:ubuntu` →
+   `pnpm install --prod=false && pnpm build` → `sudo systemctl restart vio-analytics`.
+2. **Comprobar staging:** `curl -s https://events-staging.vio.live/health` → `version` empieza por `a29de5f`,
+   `ready: true`, `clickhouse.lastError: null` y aparece el bloque `reads`. Cargar el panel de QA en «hoy» dos
+   o tres veces: `reads.cacheHits` y `reads.shared` suben y `reads.shed` se queda en 0.
+3. **Producción:** mismo procedimiento, **sin tocar el `.env`** (el defecto, 3, es el de prod). Reiniciar con
+   `clickhouse.buffered` en 0 (el apagado vacía el buffer, con 10 s de tope). Comprobar igual en
+   `https://events.vio.live/health`.
+4. Escribir aquí cuándo quedó cada uno.
+
+Si algo va mal: `STATS_READ_CACHE_TTL_MS=0` apaga la caché sin redesplegar; volver atrás es desplegar `edee83d`.
