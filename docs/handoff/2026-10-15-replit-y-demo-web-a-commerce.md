@@ -600,17 +600,17 @@ La **0.40.2** (publicada el 25/11, [web-sdk#165](https://github.com/vio-live/vio
 >    hace Angelo.
 > 5. Mandad capturas del widget con las opciones de entrega y del resumen antes de rellenar la dirección.
 
-## SDK 0.41.0: carga rápida de los artículos (25/11) — texto para el agente de Replit
+## SDK 0.41.1: carga rápida de los artículos (25/11) — texto para el agente de Replit
 
 Desde el 25/11, campaigns publica en el CDN, cada ~90 s, una **foto** de cada surface: la config del bootstrap y los productos
-de sus campañas activas. La SDK 0.41.0 la carga con un `<script>` desde `container.vio.live` y con ella pinta la config y las
+de sus campañas activas. La SDK 0.41.x la carga con un `<script>` desde `container.vio.live` y con ella pinta la config y las
 primeras tarjetas sin esperar a la API ni a GraphQL. Además, el carrito, el checkout y la ficha se cargan en un segundo
 tiempo (~78 KB comprimidos antes de los productos, frente a ~138 KB). Todo está en prod
 ([journal](../journal/2026-11/2026-11-25-sdk-carga-rapida-foto-cdn.md)). El artículo de Boots tardaba ~2,4 s en enseñar los
 productos.
 
 > 1. Subid la SDK a la **0.41.0 exacta**, primero en la copia de pruebas (`mote-livsstil-hub-vio.replit.app`):
->    `npm i --save-exact @vio-live/web-sdk@0.41.0`.
+>    `npm i --save-exact @vio-live/web-sdk@0.41.1`.
 > 2. Cambios en el código:
 >    - **Quitad vuestro proxy `/api/vio/bootstrap` y la línea que asigna `cachedBootstrap`.** `Vio.bootstrap()` ya
 >      contesta desde la foto al instante y luego la refresca con la API; un bootstrap puesto desde fuera se salta la foto.
