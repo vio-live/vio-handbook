@@ -47,7 +47,9 @@ Tras la [caída del 23–25/11](2026-11-25-clickhouse-caida-fin-prueba-oracle.md
   - `test_salud_colector.py`: 14 casos sin red, entre ellos la caída del 23/11 con el `/health` de entonces.
     Probado también contra un colector local con ClickHouse parado y con el colector muerto.
   - Tarea programada `aviso-salud-colector`: `5-59/10 7-23 * * *`, publica en `#vio-ordenes` y manda una
-    notificación de escritorio. Primera pasada contra prod: `OK escribe bien`.
+    notificación de escritorio. Primera pasada sola, 16:36 UTC: corrió el script, `OK escribe bien`, no
+    publicó nada. **Sin ejercitar:** el camino de `ALERTA` de la tarea real hasta Slack y la notificación
+    (el script sí se probó dando `ALERTA` y `RESUELTO` contra un colector local).
 - **Playbook** [operate-vio-analytics](../../playbooks/operate-vio-analytics.md): qué hacer cuando salta el
   aviso (no reiniciar el colector).
 
@@ -64,6 +66,7 @@ Tras la [caída del 23–25/11](2026-11-25-clickhouse-caida-fin-prueba-oracle.md
 - **El aviso sigue dependiendo del portátil de Angelo** (la app abierta, de 07 a 23) y de una notificación de
   escritorio. Para que no dependa: un monitor externo sobre `/health/writes` una vez desplegado, o el cron de
   Miguel. Decisión de Angelo.
+- Falta un aviso de prueba de punta a punta (mensaje en `#vio-ordenes` + notificación) para ver que llega.
 - El aviso de datos parados sigue publicando «el colector no responde a /stats/recent» cada hora durante una
   caída. No se tocó.
 
