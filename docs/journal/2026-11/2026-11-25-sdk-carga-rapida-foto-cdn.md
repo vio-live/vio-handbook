@@ -41,6 +41,11 @@ cualquier publisher).
     ficha, carrito y checkout abren; sin errores de red.
 - **PR de la versión 0.41.0** ([vio-web-sdk#168](https://github.com/vio-live/vio-web-sdk/pull/168)): solo #167. Es minor porque `/ui` deja de exportar como valores las clases del carrito, del checkout y de la ficha. Quita además el enlace `node_modules` que c3d9669 coló en `main` (el `.gitignore` decía `node_modules/` y eso no ignora un enlace). npm no se vio afectado. La publicación la hace Angelo.
 
+- **Campaigns a prod, `develop` entero** (OK de Angelo, ~15:00 UTC): [campaigns#47](https://github.com/vio-live/vio-campaigns-microservice/pull/47) (`a9b730b`), con un árbol idéntico a `develop` (`04e4c79`) y `main` mezclado con `-s ours`. Los commits propios de `main` (#41, #43, #45) eran cherry-picks de otros que ya están en `develop`. Entra la #46 (foto para todas las surfaces y por plataforma) y la #37 (el regalo del cupón en el canal y el chequeo diario de los códigos, CronJob `campaigns-discount-check` a las 06:00 UTC).
+  - **Antes, la migración 1793300 en prod** (`surface_campaign_discount_code.problem` y `problem_notified_at`, más su fila en `migrations`), con un script idempotente desde el pod de users. Sin ella, elegir un código en el dashboard y el chequeo diario habrían fallado.
+  - Deploy run 45640217965 terminado sin errores (build y deploy). Primera pasada: `surfaces=2 written=16 failed=0` (~3,9 MB sin comprimir). La surface 1 (Aller) lleva sus 6 catálogos (campaña 8 / canal 487: 18 productos), y el logo y las promesas de Boots ya están en la foto.
+  - **Cloudflare guarda los 404:** una petición hecha antes de que exista el fichero deja un 404 en caché unos minutos, aunque la URL cambie de query. Solo pasa la primera vez que se crea el fichero de una surface.
+
 ## Decisions
 - Foto para todas las surfaces, sin lista ni flags (Angelo: «arranca con todo»).
 - La interfaz en dos tiempos, con las llamadas guardadas mientras carga (Angelo: «haz también lo de la interfaz»).

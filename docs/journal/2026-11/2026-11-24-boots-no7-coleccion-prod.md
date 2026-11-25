@@ -86,6 +86,8 @@ Todo en prod, cuenta de Boots **1308**, con las frases de Angelo para leer y esc
     la recogida en farmacia;
   - `/v2/mobile/config` de la surface 1 ya devuelve el `logoUrl` y las 3 promesas del sponsor 1308.
 
+- **25/11 ~15:08 UTC, el envío de Vio de Boots pasa a 1 kr** (pedido de Angelo, para que no se lea «Gratis»/«fri frakt»): `shipping` `08f92b62…` y su `shipping_country` NO de 0,00 a 1,00 NOK (ensayo y COMMIT). Con Kustom (`providerShipping: true`) shopcart no manda el envío de Vio a Kustom; la orden solo lleva productos y descuentos. Así que no cambia lo que se cobra, solo lo que se muestra.
+
 ## Decisions
 
 - **Prod usa las keys de Kustom de Boots y su envío** (Angelo, 24/11), no nuestra cuenta ni tarifas de Vio.
