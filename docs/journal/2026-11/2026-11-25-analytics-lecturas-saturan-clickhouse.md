@@ -26,7 +26,7 @@ Angelo ve fallar analytics otra vez la tarde del 25/11, ya restaurada la VM de C
     5 superficies (apps 3, 13, 15, 16, 21) lanzó ráfagas de 100–125 consultas por minuto a las 16:54, 18:10,
     20:21 y 20:51 UTC: 105–112 s de CPU pedidos por minuto contra 120 disponibles.
   - Cuando coinciden, las consultas esperan CPU (7,5 s de espera por 1,6 s de trabajo) y pasan del límite de
-    15 s del colector (`max_execution_time`): **47 lecturas cortadas hoy**, 22 de ellas de prod (16:54–16:55 y
+    15 s del colector (`max_execution_time`): **45 lecturas cortadas hoy**, 22 de prod y 23 de QA (16:54–16:55 y
     20:21 UTC). Además, las que tardan 10–15 s sin ser cortadas ya superan el tope de 10 s de
     `socket-server/server/analytics-proxy.ts` y rozan el de 15 s de base-api: de ahí el «analytics collector
     unreachable».
