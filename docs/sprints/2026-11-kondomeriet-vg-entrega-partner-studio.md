@@ -53,7 +53,7 @@ Vev no tiene forma documentada de compartir un paquete de código con **otra** c
 
 - [ ] **Kondomeriet ha activado su Black Week.** Hasta entonces su Hurtigkasse cobra el precio normal y las tarjetas enseñan el calculado por %. Al 20/11 su página ya no dice «ikke aktiv», pero los precios y el feed siguen siendo los normales.
 - [ ] Compra real de prueba (llavero de 39 kr) con enlace de Circlewise, y la venta vista en el panel de Circlewise.
-- [ ] Postback de Circlewise a prod (campaigns#41), si queremos ver las compras en nuestro panel.
+- [x] Postback de Circlewise a prod (campaigns#41): en vivo desde el 25/11. Falta que quien administre la cuenta de Circlewise pegue la URL con el token (no está confirmado que sea VG; preguntar a Even Braastad, dueño de la hoja).
 - [ ] Página revisada en móvil, en la app de VG y en escritorio.
 - [ ] Config en Production y una sola Config.
 - [ ] Tarjetas con altura fija y el panel de propiedades de cada una abierto una vez (snapshot fresco).

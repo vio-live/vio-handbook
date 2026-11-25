@@ -1,6 +1,6 @@
 # Postback de Circlewise: compras de Kondomeriet que pasan fuera de Vio
 
-**Estado al 18/11/2026.** QA en vivo y verificado; prod preparado sin mergear.
+**Estado al 25/11/2026.** QA y **prod en vivo y verificados**. Falta que quien administre la cuenta de Circlewise pegue la URL (ver la nota de abajo sobre de quién es la cuenta).
 Versión para mandar a VG (en inglés, tal cual): [2026-11-18-circlewise-postback-vg.md](2026-11-18-circlewise-postback-vg.md).
 Contexto: [journal Kondomeriet Black Week](../journal/2026-11/2026-11-18-kondomeriet-black-week-prod.md).
 
@@ -20,7 +20,7 @@ configura VG, no nosotros.
 |---|---|
 | Endpoint | `GET\|POST /v2/conversions/circlewise?token=<secreto>&…` en `vio-campaigns-microservice` |
 | Código | [#40](https://github.com/vio-live/vio-campaigns-microservice/pull/40) mergeado en `develop` (`d62ec6f`, merge `54a885b`), imagen QA `campaigns:56` |
-| Prod | [#41](https://github.com/vio-live/vio-campaigns-microservice/pull/41) `release/circlewise-postback` → `main` (`3b37007`), **sin mergear** |
+| Prod | [#41](https://github.com/vio-live/vio-campaigns-microservice/pull/41) mergeado en `main` el 25/11 10:40 UTC (`9f6fe81`), imagen `campaigns:61` |
 | Secreto | `CIRCLEWISE_POSTBACK_TOKEN` (nuevo, opcional). Sin él: 503 `POSTBACK_DISABLED` |
 | Respuestas | 200 `{ok, duplicate}` · 401 `INVALID_POSTBACK_TOKEN` · 400 `MISSING_TRANSACTION_ID` |
 | Registro | una línea de log por pedido nuevo: `circlewise_conversion {json}` con `event: purchase_external` |
@@ -104,7 +104,16 @@ CronJob y el comando falla entero. Usar `deploy/campaigns`.
   storage de Azure (`*.blob.core.windows.net`) no responde por HTTPS desde la red de la laptop (TCP abre,
   TLS se cuelga). Si algún día se mete en el blob, **con el mismo valor**: el `.env.local` pisa a
   `process.env`.
-- **Prod (lo hace Angelo, no está hecho):** valor nuevo (`openssl rand -hex 32`), distinto del de QA, en
+- **Prod, hecho el 25/11 (10:40 UTC, con el OK de Angelo):** token nuevo de 64 hex, distinto del de QA, añadido
+  como última línea del Secret `env-sc-campaigns` y del blob `containerproductionsc/env-file-microservices/campaigns/.env`
+  (los dos idénticos, 14 643 → 14 734 bytes; el diff es esa línea). Respaldo del blob anterior:
+  `campaigns/.env.backup-pre-circlewise-20261125`. El deploy de #41 (run 61) recreó el pod, que ya lee la línea.
+  Verificado a las 10:45 UTC con `TEST-PROD-20261125104542`: token mal o ausente 401, sin id 400, nuevo 200
+  `duplicate:false`, repetido 200 `duplicate:true` (GET y POST); en el log la línea `circlewise_conversion` con los
+  campos y sin el token. Para copiar el token al portapapeles sin verlo:
+  `kubectl --context vio-commerce-prod-sc -n default get secret env-sc-campaigns -o jsonpath='{.data.\.env}' | base64 -d | grep '^CIRCLEWISE_POSTBACK_TOKEN=' | cut -d= -f2 | tr -d '\n' | pbcopy`.
+  Desde la red de la laptop el blob storage sí respondió este día (`az storage blob … --auth-mode key`).
+- **Cómo se hizo (referencia):** valor nuevo (`openssl rand -hex 32`), distinto del de QA, en
   el Secret `env-sc-campaigns` (clave `.env`, montado en `/usr/src/app/.env`) y en su fuente, el blob
   `containerproductionsc/env-file-microservices/campaigns/.env`. Sin imprimirlo:
 
