@@ -1,6 +1,6 @@
 ---
 title: "Playbook — operar Vio Analytics"
-last-updated: 2026-09-16
+last-updated: 2026-11-25
 owner: angelo
 status: live
 ---
@@ -76,6 +76,32 @@ az containerapp logs show -n ca-analytics-vio-staging -g rg-api-vio-staging --ta
 3. ¿Evento rechazado? El POST devuelve `{accepted, rejected, errors[]}` — el SDK con backoff lo reintenta si fue 5xx, pero un rechazo de validación es definitivo
 4. Espejo server: `SELECT * FROM events_outbox WHERE module='analytics' AND status IN ('pending','dead')` en el Postgres del env — `last_error` trae la razón del colector
 5. Impresiones web: requieren página **renderizando** (IntersectionObserver no corre en tabs ocultas) y ≥50% visible ≥1s
+
+## Aviso: el colector no puede escribir en ClickHouse
+
+Tarea programada `aviso-salud-colector` (portátil de Angelo, cada 10 min de 07 a 23). Corre
+`~/vio-reportes/colector/salud-colector.py`, que lee `https://events.vio.live/health`, y publica en
+`#vio-ordenes` (más una notificación de escritorio):
+
+- `🚨 Colector de analítica — el colector de prod lleva N sin poder escribir en ClickHouse…`: `lastError`
+  puesto más de 5 min. Se repite cada 2 h con las cifras del momento, y al instante si `dropped` crece.
+- `🚨 … no contesta en /health`: el colector mismo está caído; esos eventos se pierden.
+- `✅ … vuelve a escribir`: cierre, una vez.
+
+**Qué hacer cuando salta el primero:**
+
+1. **No reiniciar el colector.** Los eventos esperan en su memoria (hasta 50.000 filas); un reinicio los
+   pierde. El 23–25/11 se salvaron los 1.202 de dos días porque nadie lo reinició.
+2. Mirar ClickHouse, no el colector: la VM `vio-analytics-ch` en Oracle (`79.76.61.149`, 443 solo desde los
+   colectores) y sus contenedores `vio-clickhouse-1` y `vio-caddy-1`.
+3. Cuando ClickHouse vuelve, el writer vacía el buffer solo. Comprobar `lastError: null`, `buffered: 0` y
+   `dropped: 0` en `/health`, y `count() = uniqExact(event_id)` por día en `vio_production.events`.
+
+`/health` del colector: desde [vio-analytics `feature/health-degraded-when-writes-stall`](https://github.com/vio-live/vio-analytics)
+(pendiente de merge y de desplegar al 25/11) contesta `status: degraded` (200) y `clickhouse.stalled: true`
+cuando hay filas esperando más de 60 s sin un insert correcto, y `GET /health/writes` da 503. Hasta que se
+despliegue, `status` dice `ok` aunque `lastError` esté puesto: mirar `lastError`, no `status`.
+Por qué el aviso anterior no sirvió: [lección](../lessons/un-aviso-publicado-con-tu-usuario-no-te-avisa.md).
 
 ## ClickHouse (VM sin SSH — todo por run-command)
 
