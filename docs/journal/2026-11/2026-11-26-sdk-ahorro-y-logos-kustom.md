@@ -15,8 +15,12 @@ Dos pedidos de Boots que Angelo trasladó, para hacerlos generales en el SDK:
 2. «Vise tydelig i handlekurven og checkout hva de sparer eller før og etter pris … rett før de trykker kjøp.»
 
 ## Done
-- Rama **local** `feat/kustom-merker-og-besparelse` de `vio-web-sdk`, commit `991c4b4` sobre `main` (`2d2f518`,
-  0.41.2). Worktree `~/vio-commerce/worktrees/sdk-kustom-logos-ahorro`. **Sin push ni PR**: espera el OK de Angelo.
+- [web-sdk#173](https://github.com/vio-live/vio-web-sdk/pull/173) mergeada en `main` (`298bf30`) con el OK de Angelo
+  («sube la rama y abre el PR y actualizamos para ver qué tal», ~15:00 UTC). Release
+  [#174](https://github.com/vio-live/vio-web-sdk/pull/174) = **0.42.0** (`2599079`). **Sin publicar en npm**: copia
+  limpia de `main`, compilada y comprobada con `npm pack --dry-run`, en `~/vio-commerce/worktrees/sdk-publish-0420`;
+  la publica Angelo. Texto para Replit en el
+  [handoff](../../handoff/2026-10-15-replit-y-demo-web-a-commerce.md). Vev sin tocar.
 - **Ahorro.**
   - La línea del carrito guarda `compareAtPrice` (el `compare_at_incl_taxes` de Commerce, si no `compare_at`), solo
     mientras sea mayor que el precio. Lo toma del producto al añadir y de la respuesta del carrito después; si la
@@ -34,6 +38,9 @@ Dos pedidos de Boots que Angelo trasladó, para hacerlos generales en el SDK:
   ficheros (`cart-manager.quantity`, `klarna-confirm`, `vio-cart.stepper`); los mismos 3 fallan en `main` sin tocar,
   por `localStorage` con Node 26 en esta máquina.
 - **Vista en local** contra QA (surface 17 «Boots test», canal 518, Kustom), en móvil: ficha, carrito y kasse.
+- **Con Kustom montado** (~15:15 UTC, `main` a 0.42.0 tras el túnel `vio-web-dev.vio.live`): «Du sparer 95,96 Kr»
+  queda encima de «Betalingsmåte: Kustom» y del widget; el resumen bajo el widget lleva el precio tachado. No se pagó.
+  La cuenta de Kustom de QA enseña en su pie cinco logos, **sin Vipps**; nuestra tira enseña seis.
 
 ## Decisions
 - **Tira propia del SDK, no el elemento oficial de Kustom.** Kustom tiene `<kustom-payment-method-display>` (Kustom
@@ -54,11 +61,16 @@ Dos pedidos de Boots que Angelo trasladó, para hacerlos generales en el SDK:
 - **Sin ver con datos reales.** Ningún producto de QA tiene precio anterior (canales Boots test y Bohus). El precio
   anterior de la captura se inyectó en la respuesta del navegador. Que el servicio lo devuelve por línea está leído
   en el código de shopcart (`compare_at`, `compare_at_incl_taxes` en `line_items.price`), no observado.
-- **Kustom no monta en local** (`Kustom 400 BAD_VALUE: confirmation`, origen http): la posición de «Du sparer» sobre
-  el widget real está cubierta por prueba, no vista. Hace falta el túnel https o QA.
+- Kustom no monta desde un origen http (`Kustom 400 BAD_VALUE: confirmation`): para verlo hace falta el túnel
+  (`cloudflared tunnel --config ~/.cloudflared/config-vio-web-dev.yml run` + la página de `examples/` en el 5174 con
+  `__VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS=vio-web-dev.vio.live`).
+- **La lista fija ya falla en un caso real:** en QA la tira dice Vipps y la cuenta de Kustom de pruebas no lo tiene.
+  En prod, Boots sí tiene los seis (captura de Angelo). Pendiente decidir la lista por marca.
 - Dentro del widget de Kustom («Ordrebeløp», «Vis detaljer») no se puede escribir: lo nuestro va encima.
 - Al publicar, el ahorro aparece para **todas** las marcas con precio anterior, no solo Boots.
 
 ## Next session
-- OK de Angelo → push, PR, release 0.42.0 en npm; después rebundle y deploy en Vev, y aviso a Replit para subir.
-- Probar en QA con un producto con precio anterior y con Kustom montado.
+- Angelo publica la 0.42.0 en npm → pasar el texto a Replit → mirar el artículo de Boots en la copia de pruebas, que
+  sí tiene precios anteriores reales.
+- Vev: rebundle + deploy cuando Angelo lo pida.
+- Lista de logos por marca (config del método en Commerce, o Kustom Elements).

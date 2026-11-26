@@ -635,3 +635,32 @@ productos.
 >    - la ficha, el carrito y el checkout de Kustom se abren igual que antes. **No pulséis «Betal ordren».**
 > 4. Mandad el tiempo hasta ver las tarjetas, antes y después, medido en la pestaña Rendimiento o a ojo con
 >    la caché vacía. Si todo va bien, publicad lo mismo en la web real (`moteoglivsstil.no`).
+
+## SDK 0.42.0: ahorro en carrito y kasse, logos de Kustom bajo el botón de compra (26/11) — texto para el agente de Replit
+
+> [claude, 2026-11-26] Se pasa cuando Angelo publique `@vio-live/web-sdk@0.42.0` en npm (release `2599079`,
+> [web-sdk#173](https://github.com/vio-live/vio-web-sdk/pull/173) + [#174](https://github.com/vio-live/vio-web-sdk/pull/174)).
+> Lleva también lo de la 0.41.2 (las tarifas de envío salen de la foto del CDN), que la web real aún no tiene.
+> Detalle en el [journal](../journal/2026-11/2026-11-26-sdk-ahorro-y-logos-kustom.md).
+
+Dos pedidos de Boots, hechos para todas las marcas. No hay que cambiar código en Replit.
+
+> 1. Subid la SDK a la **0.42.0 exacta**, primero en la copia de pruebas (`mote-livsstil-hub-vio.replit.app`):
+>    `npm i --save-exact @vio-live/web-sdk@0.42.0`. No hay cambios de código.
+> 2. Comprobad en el artículo de Boots (`boots-no7-test`), en móvil:
+>    - **Ficha:** debajo de «Kjøp nå» sale una fila de logos (Klarna, Vipps, Visa, Mastercard, Apple Pay, Google Pay)
+>      y debajo la marca de Kustom.
+>    - **Carrito:** un producto rebajado enseña el precio anterior tachado encima del precio; sobre «Til kassen» sale
+>      «Du sparer … Kr» en verde, y debajo del botón la misma fila de logos.
+>    - **Kasse:** «Du sparer … Kr» sale arriba, encima del widget de Kustom; en el resumen de abajo, la línea lleva el
+>      precio anterior tachado. **No pulséis «Betal ordren».**
+>    - «Sum» y «Totalt» son los mismos que antes: el ahorro no cambia lo que se cobra.
+> 3. Comprobad en un artículo de una marca que cobra con Vipps (Careless): **no** salen los logos; «Du sparer» sale
+>    solo si alguno de sus productos tiene precio anterior.
+> 4. Si vuestro CSS toca los precios del carrito o del resumen (`::part(line-list-price)`, `::part(line-net-price)`),
+>    miradlo: con código de descuento los dos precios van ahora uno sobre otro, no en fila.
+> 5. Si algo no encaja con el diseño de la página, se oculta sin tocar la SDK:
+>    `applyVioTheme({ paymentMarksDisplay: 'none' })` para los logos, `applyVioTheme({ savingsDisplay: 'none' })` para
+>    «Du sparer». Avisad antes de hacerlo.
+> 6. Mandad una captura de la ficha, del carrito y de la kasse del artículo de Boots. Con el OK de Angelo, publicad lo
+>    mismo en la web real (`moteoglivsstil.no`).
