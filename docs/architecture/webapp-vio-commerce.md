@@ -277,6 +277,12 @@ journal `2026-10/2026-10-13-front-commerce-surfaces-y-campanas.md`.
 - **Probar contra el micro sin Firebase ni MySQL:** compilarlo a un directorio aparte y
   levantarlo con `MemoryAdaptersModule` + `InMemoryCommerce`. El token falso del harness pasa su
   auth, porque el verificador en memoria compara strings. Detalle en el journal.
+- **Informe diario de la campaña (2026-11-26, PR #119):** tarjeta «Daily report» en el detalle
+  (`views/campaign-detail/daily-report.jsx`, con V2): destinatarios, Day 1, estado, test y preview del
+  PDF. Las rutas son `/campaigns/:id/report…` y el contrato está en la cabecera de
+  `src/lib/campaigns.js`. Los archivos que piden el Bearer se bajan con `vioApiBlob` (`src/lib/vio.js`)
+  y se abren por object URL en una pestaña creada dentro del clic (si se crea después de un `await`,
+  Safari la bloquea). Journal `2026-11/2026-11-26-front-commerce-informe-diario.md`.
 
 ## Gotchas vigentes
 
