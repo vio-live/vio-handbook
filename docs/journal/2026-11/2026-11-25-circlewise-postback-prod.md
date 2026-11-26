@@ -36,3 +36,12 @@ Angelo preguntó por «el tracking que nos faltaba» de Kondomeriet y dio el OK 
 > Sigue sin verse ninguna `circlewise_conversion`: el log del pod de `campaigns` de prod solo alcanza hasta su
 > reinicio del 25/11 17:38 UTC y desde entonces no hay ninguna línea de conversión. La campaña 7 tuvo 8
 > sesiones no internas entre el 25/11 16:30 y el 26/11 08:15 UTC.
+
+> [claude, 2026-11-26 08:50 UTC] **Aparcado.** Angelo: quien administra Circlewise dice que poner la postback
+> «es mucho trabajo» y no cree que la quieran poner. No se insiste más ni se hace la compra de 39 kr. El
+> receptor (`/v2/conversions/circlewise`) y su token **se quedan en prod sin uso**: si cambian de idea funciona
+> sin tocar nada. Lo que Vio ve por su cuenta de la campaña 7 (14 días, sin internos): 114 sesiones con
+> impresión, 64 con clic y 107 clics en «Vipps hurtigkasse»; la venta en la web de Kondomeriet sigue sin
+> verse. Camino más ligero, sin proponer aún: los enlaces ya llevan `ref1`–`ref3` (sesión y campaña), así que
+> un export del informe de conversiones de Circlewise bastaría para atribuir ventas. No está comprobado que
+> su export incluya esos campos.
