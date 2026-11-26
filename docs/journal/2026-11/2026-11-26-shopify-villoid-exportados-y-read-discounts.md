@@ -44,6 +44,19 @@ Angelo: buscar el estado de los códigos de Shopify y de las pruebas de Alan, y 
     vigentes. Ninguna aceptó todavía `read_discounts`: Shopify se lo pide a cada tienda al abrir la app;
   - en prod, `POST extensions/coupons/list` responde `connected: true, missingScope: read_discounts` para 1322,
     1323, 1324, 1325 y 1327. Cuando acepten, el selector de la campaña lista sus códigos sin tocar nada más.
+- **Arreglo desplegado en los seis proyectos de Vercel** (OK de Angelo, «despliega», con #138 todavía sin mergear):
+  - por ADR-0001 no lo mergeé yo; desplegué la punta de la rama del PR, `6445241`, que es exactamente
+    `custom/client-app` (`5fa6e06`) más el commit del arreglo. Cuando se mergee no hace falta volver a desplegar;
+  - vitest 253/253 en el worktree del deploy;
+  - deploys nuevos: `vio-sync-demo-ofpc7us87`, `vio-sync-gladkokken-6w01ffwg0`, `vio-sync-makeupmekka-e2bxval3b`,
+    `vio-sync-client-3aws1fw9s`, `vio-sync-careless-6gbi1d9yk`, `vio-sync-floyd-ds4u8r1j1`. Los seis dominios de
+    producción apuntan a ellos y `healthz` da 200. Para volver atrás en Villoid: `vio-sync-client-75c8st80e`;
+  - el manifiesto del navegador sigue en `manifest-6aa160b4`, como era de esperar: `vioEndpoints.ts` es solo de
+    servidor, así que el manifiesto no sirve para saber qué build está en producción; lo que vale es `vercel inspect`;
+  - comprobado en prod desde un pod de base-api, con la key de 1323 y la misma llamada que la app:
+    `GET /api/listings?page=0&size=1000&variants=false` da HTTP 200 en **1,75 s**, 0,6 MB, 166 productos, los 166
+    con `originId` y `title`;
+  - logs de los 30 minutos siguientes: ningún `failed`; nadie había abierto todavía las pantallas de la app.
 - **Floyd no instaló nunca.** Su link venció el 5/11 y `/internal/token` sigue en 409 `no_session`. La app y el
   proyecto de Vercel están listos (registro del playbook); si quieren seguir, hay que crear otra app, como con Villoid.
 
@@ -56,12 +69,12 @@ Angelo: buscar el estado de los códigos de Shopify y de las pruebas de Alan, y 
   campo «Rabattkode» si la página lo activa.
 
 ## Blockers
-- **Angelo:** mergear #138. Después, desplegar en los seis proyectos de Vercel (todas las apps en la misma versión).
-- **Mensaje a Villoid** (redactado en la sesión, en noruego): lo mandan Angelo o Michael después del deploy de Vercel.
+- **Angelo:** mergear #138 para que `custom/client-app` coincida con lo que está en producción. Ya está desplegado.
+- **Mensaje a Villoid** (redactado en la sesión, en noruego): ya se puede mandar; lo mandan Angelo o Michael.
 
 ## Next session
-1. Tras el merge, deploy en los seis proyectos de Vercel con `healthz` y la misma build en todos; después abrir la
-   app de Villoid (o esperar a Daniel) y ver los 166 sin timeouts en `vercel logs`.
+1. Cuando Daniel abra la app, confirmar en `vercel logs` de `vio-sync-client` que no hay `failed: timeout` y que
+   ve los 166. Comprobar que #138 está mergeado.
 2. Cuando Villoid acepte `read_discounts`:
    - `coupons/list` de 1323 para saber qué códigos admite Vio;
    - la consulta de `codeDiscountNodes`, para ver tipo, alcance, `appliesOncePerCustomer` y `combinesWith`;
