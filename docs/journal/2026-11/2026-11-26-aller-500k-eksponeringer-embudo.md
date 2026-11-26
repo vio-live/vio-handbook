@@ -40,6 +40,32 @@ ve los productos; falta saber cuántos entran, cuántos se quedan y cuántos de 
   mismo `ml_analytics_sid` que nos pasa como sesión: se puede cruzar.
 - **Los clics sobre las 500 000 exposiciones** solo los tiene Aller (su sistema de anuncios o de teasers).
 
+- **Informe de Replit (17:54 Oslo, de su rastreador, solo lectura) y embudo completo del 25/11:**
+
+  | Paso | Visitantes | Sobre el paso anterior |
+  |---|---|---|
+  | Exposiciones (Aller) | 500 000 | |
+  | Abrieron el artículo (`view` de Replit, únicos) | 2 755 | 0,55 % |
+  | Vieron productos (Vio) | 922 | 33 % |
+  | Abrieron un producto | 132 (Vio) · 136 (Replit) | 14 % |
+  | Añadieron al carrito (Vio) | 12 | 9 % |
+  | Compraron (Vio) | 2 | |
+
+  - Sin el visitante de pruebas de Replit (`8d9b61c3…`, 13:23–16:45, 44 vistas), que en nuestra lista de internos
+    **no** está marcado: sale de las dos columnas.
+  - **Permanencia** (2 689 salidas registradas): mediana 4,5 s; 64 % menos de 10 s; 18 % de 10 a 30 s; 9 % de 30 a
+    60 s; 7 % de 1 a 3 min; 2 % más de 3 min.
+  - **Scroll:** el 77 % vio menos de un cuarto de la página; el 14 % llegó a tres cuartos o más.
+  - **Por hora, visitantes que llegan a ver productos / que abren el artículo:** 16 h 27 %, 17 h 25 %, 18 h 30 %,
+    19 h 36 %, 20 h 31 %, 21 h 44 %, 22 h 45 %. Causa sin determinar.
+  - Los ids coinciden en formato y en el paso de abrir producto (136 frente a 132 + 3 internos nuestros): el cruce
+    por `ml_analytics_sid` = `session_id` funciona. El CSV con los 2 756 ids lo tiene Angelo.
+  - Replit no guarda referrer, UTM ni dispositivo. Su `view` sale en el navegador al montar la app, sin consentimiento.
+    Corrigió además que Google Tag Manager carga sin esperar al consentimiento.
+- **Lectura:** el hueco grande está antes de los productos. Dos de cada tres lectores se van en menos de 10 s y la
+  mitad en menos de 4,5 s; en el perfil de medida (móvil 4G, primera visita) los productos salen a los 6,3 s.
+  De quien sí los ve, el 14 % abre uno.
+
 ## Decisions
 - Propuesta a Angelo (sin decidir): (1) pedir a Aller los clics del 25/11 y a Replit las vistas y la permanencia de
   ese artículo, para cerrar el embudo de ayer con lo que ya existe; (2) etiquetas `utm_*` en los enlaces de Aller;
