@@ -29,3 +29,10 @@ Angelo preguntó por «el tracking que nos faltaba» de Kondomeriet y dio el OK 
 ## Next session
 - Cuando confirmen que la postback está guardada en Circlewise: mirar en el log de `campaigns` de prod la primera `circlewise_conversion` real y hacer la compra de 39 kr si Angelo da el OK.
 - Aviso en #vio-ordenes y evento `purchase_external` en el colector: sin construir (el segundo necesita a Miguel).
+
+> [claude, 2026-11-26 08:20 UTC] El tercer bloqueo (lecturas del colector en 500/504 desde el 24/11) quedó
+> diagnosticado y resuelto el 25/11: ClickHouse no existía ([caída](2026-11-25-clickhouse-caida-fin-prueba-oracle.md))
+> y después las lecturas saturaban la VM ([entrada](2026-11-25-analytics-lecturas-saturan-clickhouse.md)).
+> Sigue sin verse ninguna `circlewise_conversion`: el log del pod de `campaigns` de prod solo alcanza hasta su
+> reinicio del 25/11 17:38 UTC y desde entonces no hay ninguna línea de conversión. La campaña 7 tuvo 8
+> sesiones no internas entre el 25/11 16:30 y el 26/11 08:15 UTC.

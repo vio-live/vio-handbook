@@ -69,6 +69,14 @@ Angelo ve fallar analytics otra vez la tarde del 25/11, ya restaurada la VM de C
   de la compra de una compensación van directas (`fresh`). `/health` gana `reads`. 512 pruebas en verde
   (17 nuevas; las 141 de ClickHouse contra un contenedor local), `tsc` y `biome` limpios.
 
+> [claude, 2026-11-26 08:15 UTC] **Seguimiento a las 10 horas del despliegue.** Prod: 189 lecturas en ClickHouse
+> desde las 22:00 UTC, ninguna cortada, media 0,4 s, p95 1,5 s, máximo 2,2 s; `/health.reads` con `shed: 0`,
+> 59 de caché y 6 compartidas (uso real, no solo mis pruebas). Carga como la del panel: 13 de 13 en 200, la
+> más lenta 7,5 s en frío. 272 eventos guardados, `dropped 0`. Los informes diarios de Careless y Faves del
+> 25/11 salieron bien; **los del 23 y el 24/11 no se generaron** (el colector daba 504/500) y siguen sin
+> rehacer. La copia programada del disco (primera pasada a las 03:00 UTC) está sin comprobar: hace falta la
+> consola de Oracle.
+
 ## Decisions
 
 - Angelo (21:05 UTC): subir la VM y preparar la rama del colector. (21:20 UTC): subir la rama, abrir el PR y

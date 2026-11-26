@@ -1,6 +1,6 @@
 ---
 title: "Playbook — operar Vio Analytics"
-last-updated: 2026-11-25
+last-updated: 2026-11-26
 owner: angelo
 status: live
 ---
@@ -15,25 +15,24 @@ El runbook del pipeline de analytics. Arquitectura y porqués: [ADR-0009](../dec
 
 | Pieza | Recurso | Repo/código |
 |---|---|---|
-| Colector (×2 envs; development eliminado el 2026-09-16) | `ca-analytics-vio-{staging,production}` en `rg-api-vio-*` / `cae-api-vio-*` | `vio-live/vio-analytics` |
-| Dominios | `events-dev.vio.live` · `events-staging.vio.live` · `events.vio.live` (Cloudflare, nube gris + TXT `asuid.*`; certs managed de Azure) | — |
-| Store | VM `vm-clickhouse-vio` (rg-vio-shared) · bases `vio_{development,staging,production}` | `infra/clickhouse.tf` |
+| Colector (×2 envs) | **VMs de Oracle** (tenancy `vio-backend`, `eu-stockholm-1`), unit `vio-analytics.service`, árbol en `/opt/vio-analytics` sin `.git`: producción `vio-backend-amd` `82.70.54.151` (comparte máquina con el Vio Backend) · staging `vio-staging-amd` `129.151.196.99`. Las Container Apps de Azure desaparecieron el 2026-09-25. | `vio-live/vio-analytics` |
+| Dominios | `events.vio.live` → `82.70.54.151` · `events-staging.vio.live` → `129.151.196.99` · `analytics.vio.live` → `79.76.61.149` (Cloudflare; comprobado con `dig` el 26/11/2026) | — |
+| Store | Instancia de Oracle `vio-analytics-ch`, `VM.Standard.E5.Flex` 2 OCPU (4 vCPU) / 8 GB, IP reservada `79.76.61.149` (`analytics.vio.live`, Caddy delante; el 443 solo lo abren los dos colectores y «equipo Vio» por `iptables` `DOCKER-USER`) · bases `vio_staging` y `vio_production` · **de pago** (ver [caída del 23–25/11](../journal/2026-11/2026-11-25-clickhouse-caida-fin-prueba-oracle.md)) | `/opt/vio/docker-compose.yml` en la VM |
 | Vendors | Mixpanel: "Vio Analytics" (prod, id 4055947) · "Vio Analytics - Staging" (id 4055964) · dev sin Mixpanel a propósito | `src/sinks/mixpanel.ts` |
 | Espejo server | módulo `analytics` del outbox de vio-backend | `server/events/analytics-mirror.ts` |
 | Proxy dashboards | `/api/analytics/vio/*` en vio-backend | `server/analytics-proxy.ts` |
-| Identity pull | `id-analytics-vio` (user-assigned, AcrPull en `acrvioapi`) | `infra/main.tf` |
-| CI/CD | push a main → dev (→ staging con el PR vio-analytics#13) · staging/prod por `workflow_dispatch` · OIDC app `vio-analytics-cicd` | `.github/workflows/deploy.yml` |
-| IaC state | `viotfstate` (rg `vio-tools`) / container `tfstate` / key `vio-analytics.tfstate` | `infra/` (OpenTofu ok) |
+| CI | `ci.yml` en cada push y PR: `lint`, `check`, `test`, `build`. **No hay CD**: el despliegue es manual por SSH (abajo). | `.github/workflows/ci.yml` |
+| Azure (histórico) | `id-analytics-vio`, la app OIDC `vio-analytics-cicd`, el state `viotfstate` y el `infra/` del repo son de la etapa de Container Apps (hasta el 2026-09-25). No describen lo que corre hoy. | `infra/` |
 
 ## Dónde vive cada secret/config
 
 | Valor | Dónde |
 |---|---|
-| Password ClickHouse (`default`) | `vio-analytics/infra/terraform.tfvars` (gitignorado, máquina de Angelo) + secrets de las apps del colector |
-| `INTERNAL_EVENTS_TOKEN` (uno por env) | mismo tfvars + secret en colector Y en `ca-api-vio-*` (`analytics-internal-token`) |
-| `DATABASE_URL` por env (lookup api keys) | tfvars (copiado de los secrets de `ca-api-vio-*`) |
-| Mixpanel token/secret | tfvars (staging+prod) + secrets de las apps · local: `vio-analytics/.env` (apunta a STAGING siempre) |
-| GH secrets del repo | `AZURE_CLIENT_ID/TENANT_ID/SUBSCRIPTION_ID` (falta `TELEGRAM_*`, opcional) |
+| Todo lo del colector (`CLICKHOUSE_*`, `INTERNAL_EVENTS_TOKEN`, `INTERNAL_READ_TOKENS`, `MIXPANEL_*`, `CAMPAIGNS_URL`, `API_KEY_CACHE_FILE`, `STATS_*`) | `/opt/vio-analytics/.env` de cada VM (600, dueño `ubuntu`), distinto por entorno. No se toca al desplegar. Qué significa cada una: `docs/DESPLIEGUE.md` del repo. |
+| Password ClickHouse (`default`) | en el entorno del contenedor `vio-clickhouse-1` (compose de `/opt/vio`) y en el `.env` de los dos colectores |
+| Token de solo lectura de prod, para consultar `/v1/stats` desde la laptop de Angelo | `~/.vio/analytics-prod.env` (`ANALYTICS_READ_TOKEN`, cabecera `x-internal-token`; toda lectura interna lleva `?client_app_id=`) |
+| Lookup de api keys | ya no hay `DATABASE_URL`: el colector pregunta al micro de campañas (`CAMPAIGNS_URL`) desde el PR #16 |
+| Mixpanel local | `vio-analytics/.env` (apunta a STAGING siempre) |
 
 ## Regla de emparejamiento de entornos (confirmada por Angelo, 2026-08-21)
 
@@ -103,41 +102,100 @@ cuando hay filas esperando más de 60 s sin un insert correcto, y `GET /health/w
 despliegue, `status` dice `ok` aunque `lastError` esté puesto: mirar `lastError`, no `status`.
 Por qué el aviso anterior no sirvió: [lección](../lessons/un-aviso-publicado-con-tu-usuario-no-te-avisa.md).
 
-## ClickHouse (VM sin SSH — todo por run-command)
+## ClickHouse (VM de Oracle, por SSH)
 
 ```bash
-# Estado de contenedores / disco
-az vm run-command invoke -g rg-vio-shared -n vm-clickhouse-vio --command-id RunShellScript \
-  --scripts "docker ps; df -h /data" --query "value[0].message" -o tsv
+# Entrar (laptop de Angelo; la llave de Miguel `~/.ssh/vio_oracle` sigue en `authorized_keys`)
+ssh -i ~/.ssh/vio_oracle_ch ubuntu@79.76.61.149
 
-# Query directa (password en tfvars)
-curl -s -u "default:$PASS" 'https://vio-clickhouse.norwayeast.cloudapp.azure.com/?database=vio_staging' \
-  -d "SELECT name, count() FROM events FINAL GROUP BY name FORMAT PrettyCompact"
+# Estado: contenedores, carga, disco, memoria
+sudo docker ps; uptime; df -h /; free -m
 
-# Backups: cron 03:00 UTC → storage saapivio / container clickhouse-backups (uno por db por día)
-# Log del backup:  ... --scripts "tail -20 /var/log/vio-backup.log"
-# Restore (a una db nueva, luego renombrar):
-#   RESTORE DATABASE vio_staging AS vio_staging_restored FROM AzureBlobStorage('<conn>', 'clickhouse-backups', 'vio_staging-YYYYMMDD')
+# SQL sin sacar la contraseña de la máquina (la lee el contenedor de su entorno)
+ssh -i ~/.ssh/vio_oracle_ch ubuntu@79.76.61.149 'sudo docker exec -i vio-clickhouse-1 sh -c \
+  '"'"'clickhouse-client --user "${CLICKHOUSE_USER:-default}" --password "$CLICKHOUSE_PASSWORD" --multiquery'"'"'' <<'SQL'
+SELECT name, count() FROM vio_production.events FINAL WHERE received_at >= today() GROUP BY name ORDER BY 2 DESC;
+SQL
 ```
 
-Queries de lectura usan `FINAL` (dedupe de reintentos pre-merge). Upgrade de
-ClickHouse: cambiar el tag en `/opt/vio/docker-compose.yml` de la VM
-(run-command) + `docker compose -p vio up -d`; el dato vive en `/data`.
+- Compose en `/opt/vio` (`vio-clickhouse-1` 24.8 + `vio-caddy-1`), `restart: unless-stopped`; el dato vive en
+  `/data/clickhouse`, **en el boot volume**. Un timeout al 443 desde una máquina que no esté en la lista de
+  `iptables` es lo esperado, no una caída: probar por el colector (`/health`).
+- **Copias:** política de Oracle `vio-analytics-ch-diaria-7d-semanal-4s` sobre el boot volume (diaria 03:00 UTC,
+  7 días; semanal lunes 02:00 UTC, 28 días), puesta el 25/11/2026. En la VM **no hay** cron de copia (el de
+  Azure Blob de la etapa anterior no existe aquí). Restaurar = instancia nueva desde la copia del volumen.
+- **Tamaño:** se cambia en la consola (Instance → Edit → shape); reinicia la VM alrededor de un minuto y el
+  colector retiene los eventos en memoria mientras tanto (hasta 50.000 filas). Hecho el 25/11: 1 → 2 OCPU.
+- **Gasto:** presupuesto `vio-backend-mensual` (800 SEK/mes, avisos al 80 % real y 100 % de previsión). La
+  cuenta es Pay As You Go desde el 25/11; las dos VMs del colector siguen siendo Always Free.
+- Las lecturas usan `FINAL` (dedupe de reintentos antes del merge). Subir de versión: cambiar el tag en
+  `/opt/vio/docker-compose.yml` y `docker compose -p vio up -d`.
+
+## Lecturas de los paneles: qué mirar cuando van lentas o dan «analytics unavailable»
+
+Con `/health` en `ok` y las escrituras al día, el problema es de **lecturas**. Una lectura de panel es un SQL de
+~40.000 caracteres que cuesta 1,1–1,6 s de CPU **solo planificarlo**, y staging y producción comparten la VM.
+Desde el 25/11/2026 (colector `a29de5f`) cada lectura pasa por una cola con caché
+([entrada del día](../journal/2026-11/2026-11-25-analytics-lecturas-saturan-clickhouse.md)).
+
+1. `curl -s https://events.vio.live/health | jq .reads` → `queued` alto de forma sostenida o `shed` creciendo =
+   llegan más lecturas de las que caben; `cacheHits` y `shared` = lecturas que ClickHouse se ahorró.
+2. En ClickHouse, quién aprieta y cuánto esperan (cambiar la ventana):
+
+```sql
+SELECT toStartOfMinute(event_time) AS m,
+       multiIf(has(databases,'vio_production'),'prod', has(databases,'vio_staging'),'staging','otro') AS db,
+       count() AS lecturas, countIf(type != 'QueryFinish') AS cortadas,
+       round(avg(query_duration_ms)) AS media_ms, max(query_duration_ms) AS max_ms,
+       round(avg(ProfileEvents['OSCPUWaitMicroseconds'])/1000) AS espera_cpu_ms
+FROM system.query_log
+WHERE event_time > now() - INTERVAL 1 HOUR AND query_kind = 'Select' AND NOT has(databases,'system')
+  AND type IN ('QueryFinish','ExceptionWhileProcessing','ExceptionBeforeStart')
+GROUP BY m, db ORDER BY m;
+```
+
+   `forwarded_for` dice qué colector la mandó (`82.70.54.151` prod, `129.151.196.99` staging). Una espera de
+   CPU mucho mayor que el tiempo de trabajo = saturación, no consulta lenta.
+3. Palancas, de menos a más: `STATS_READ_CACHE_TTL_MS` y `STATS_MAX_CONCURRENT_READS` en el `.env` del colector
+   (el tope es por proceso; con 4 vCPU: prod 3, staging 2), más vCPU en la VM, y la de fondo, sin hacer:
+   abaratar el SQL (repite el filtro de navegadores internos 27 veces y anida la compensación).
+   Ver la [lección](../lessons/consulta-lenta-con-pocas-filas-mira-el-plan.md).
+
+## Recuperar el acceso SSH a una VM de Oracle (sin la llave que entra)
+
+Sirve para las tres VMs. Hace falta la consola de Oracle con Angelo dentro (el inicio de sesión le pide aprobar
+en el teléfono). Sin reinicios.
+
+1. Instance → **Management** → Oracle Cloud Agent → plugin **Bastion** → Enable. Tarda unos 10 minutos en
+   pasar de `Stopped` a `Running`; hasta entonces crear la sesión da «plugin is not running».
+2. Identity & Security → **Bastion** → Create: `vcn-vio`, `subnet-vio-pub`, allowlist = la IP pública de quien
+   entra `/32`.
+3. En el Bastion, **Create session**: Managed SSH session, usuario `ubuntu`, la instancia, y la llave pública.
+   El formulario va en un iframe: si reintenta y enseña el error anterior, cancelar y abrirlo de nuevo.
+4. «Copy SSH command» y conectarse con ese `ProxyCommand` (IP privada de la instancia: `10.0.0.99` staging,
+   `10.0.0.209` backend).
+5. Dentro, añadir la llave a `~/.ssh/authorized_keys` **en una línea propia**. El plugin mete la suya debajo
+   de un marcador `#ocid1.bastionsession…` y, al borrar la sesión, quita solo esas dos líneas.
+6. Borrar las sesiones, comprobar la entrada directa, borrar el Bastion y desactivar el plugin.
 
 ## Deploy y cambios
 
-- **Código del colector**: push a main → deploy automático a development;
-  staging/prod con `workflow_dispatch` eligiendo environment.
-- **Infra** (`infra/`): humanos aplican (nunca CI). `tofu plan` primero.
-  La imagen del contenedor tiene `ignore_changes` — CI es dueño de deploys.
+- **Código del colector**: merge a `main` y **despliegue manual por SSH**, staging primero. El procedimiento
+  exacto (`git archive` → `scp` → `sudo tar` + `chown` → `pnpm install --prod=false && pnpm build` →
+  `sudo systemctl restart vio-analytics`) vive en `docs/DESPLIEGUE.md` del repo. El reinicio corta ~2 s y el
+  apagado vacía el buffer; con `clickhouse.lastError` puesto **no reiniciar** (se pierde lo retenido). Después:
+  `/health` → `version` = el commit, `ready: true`, `lastError: null`. Producción necesita el OK de Angelo.
+  Lo hacía Miguel; el 25/11/2026 lo hizo claude desde la laptop de Angelo (su llave entra en las dos VMs).
 - **Agregar un evento a la taxonomía** (decisión de contrato, ADR-0009):
   1) Zod en `src/contract/analytics-schema.ts` + `docs/EVENTS_CONTRACT.md`
   2) deploy colector (acepta el nombre nuevo) 3) SDKs lo emiten después.
-- **Encender/cambiar vendor**: tfvars (`mixpanel_*` por env) + flip
-  `mixpanel_enabled` en `infra/variables.tf` + `tofu apply`. Local SIEMPRE
+- **Encender/cambiar vendor**: `MIXPANEL_*` en el `.env` de la VM y reiniciar el colector. Local SIEMPRE
   al proyecto Staging.
 
 ## Gotchas de despliegue (aprendidos con sangre el 2026-08-20)
+
+> Los tres primeros son de la etapa de Azure Container Apps (hasta el 2026-09-25) y ya no aplican al
+> despliegue por SSH; se dejan como historia.
 
 - **Identity de registry**: system-assigned muere al primer pull (el rol
   llega tarde) → user-assigned `id-analytics-vio` con AcrPull otorgado

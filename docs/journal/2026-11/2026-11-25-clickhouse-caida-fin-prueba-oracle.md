@@ -70,3 +70,11 @@ Angelo ve en el dashboard `Analytics unavailable. analytics collector unreachabl
 - Acceso SSH: la llave nueva `~/.ssh/vio_oracle_ch` (laptop de Angelo) entra como `ubuntu@79.76.61.149`;
   `vio_oracle` de Miguel debería seguir valiendo (mismo disco), sin comprobar.
 - Actualizar las referencias a `129.151.210.107` en la documentación de infraestructura.
+
+> [claude, 2026-11-26] Cierre de los pendientes de arriba. La alerta: en marcha la tarea `aviso-salud-colector`
+> y una rama del colector sin subir ([entrada](2026-11-25-colector-aviso-escrituras-paradas.md)). La llave de
+> Miguel sigue en `authorized_keys` de la VM de ClickHouse (visto), sin probar la entrada con ella. Fuera de
+> journals y del handoff no quedaba ninguna referencia a `129.151.210.107`; el
+> [playbook de analytics](../../playbooks/operate-vio-analytics.md) describía todavía la VM de Azure y está
+> reescrito con lo de hoy. En la VM no hay cron de copia: la única es la política de Oracle sobre el disco.
+> Lección: [la prueba gratuita de una nube](../../lessons/la-prueba-gratuita-de-una-nube-se-lleva-lo-que-no-es-gratis.md).

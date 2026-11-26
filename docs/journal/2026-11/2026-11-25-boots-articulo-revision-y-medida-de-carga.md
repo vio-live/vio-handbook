@@ -72,3 +72,14 @@ Angelo: revisar que el artículo publicado esté bien y medir cuánto tarda en c
 
 ## Next session
 - Repetir la medida tras cada mejora, con el mismo comando, y comparar con esta tabla.
+
+> [claude, 2026-11-26 08:25 UTC] **Primeros dos pedidos pagados de Boots que no son pruebas marcadas**, los dos
+> desde el artículo real en móvil, de dos navegadores distintos que no se habían visto antes: **4146** (25/11
+> 22:12 UTC, Android, «No7 25 Days Of Beauty Julekalender», 599,50 + **49 de envío** = 648,50 NOK) y **4147**
+> (22:15 UTC, iOS, «No7 Lift & Luminate Collection», 899,40 NOK, **envío 0**), ambos con Kustom. Sale de
+> analytics (`order_paid` del servidor + `purchase` del navegador), no de la base de pedidos; no se puede
+> saber desde ahí si son clientes o alguien del equipo con un móvil sin marcar. Responde al primer bloqueo:
+> el Shipping Assistant de Boots cobró 49 kr en un pedido de 599,50 y nada en uno de 899,40. El segundo
+> bloqueo cambió: la web real ya no va en la 0.37.7 sino en la **0.41.1** (2.729 eventos en 14 h con esa
+> versión); en npm `latest` es la 0.41.2. Embudo de la campaña 8 desde el 25/11 16:30 UTC, sin internos: 98
+> sesiones con ficha vista, 9 con checkout, 9 en el paso de pago, 2 compras.
