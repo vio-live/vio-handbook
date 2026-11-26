@@ -51,6 +51,20 @@ Dos pedidos de Boots que Angelo trasladó, para hacerlos generales en el SDK:
   `?vio_internal=1`, sin añadir al carrito ni abrir la kasse. Prompt en inglés para el agente de Replit entregado a
   Angelo en el chat (misma lista que el handoff).
 
+- **En la web real (~15:10 UTC, Replit publicó la 0.42.0; revisado con `?vio_internal=1`, móvil, sin pagar):**
+  - `moteoglivsstil.no` carga la 0.42.0 (cadena de versión y `payment-marks` en su bundle; sin «Du sparer»).
+  - Artículo de Boots, ficha de «No7 Good Intent Skin Sip Moisture Milk»: los seis logos y la marca de Kustom bajo
+    «Kjøp nå», sobre «Du handler direkte hos Boots».
+  - Carrito con ese producto: línea con 229,90 Kr tachado sobre 183,92 Kr; «Delsum» 183,92; logos bajo «Til kassen».
+    **Primera vez con datos reales:** la línea ya estaba sincronizada con el servidor (`cartItemId`, tarifas) y
+    conserva `compareAtPrice: 229.9`, así que shopcart sí devuelve el precio anterior por línea.
+  - Artículo de Careless (Vipps): ficha sin logos, con su botón de Vipps, como antes.
+  - Carrito vaciado al terminar. No se abrió la kasse (cuenta real de Kustom de Boots).
+  - Los tres 401 de la consola son de `/api/auth/me`, de Replit.
+  - Sin confirmar: la primera carga tras el despliegue hizo 35 peticiones a `graph-ql.vio.live` a los ~2,1 s; la
+    segunda, ninguna. Puede ser carga fría frente a caliente; falta medirlo con el script de carga.
+  - Detalle menor: en el carrito, la marca de Kustom queda pegada a la línea que separa las promesas de la marca.
+
 ## Decisions
 - **Directo a la web real, sin pasar por la copia de pruebas (Angelo, ~14:45 UTC):** «lo quiero llevar directo a
   prod, al Replit de prod». `moteoglivsstil.no` estaba en la 0.41.1 a esa hora (vuelta atrás = fijar esa versión).
@@ -77,9 +91,8 @@ Dos pedidos de Boots que Angelo trasladó, para hacerlos generales en el SDK:
   para todas las marcas.
 
 ## Blockers / open questions
-- **Sin ver con datos reales.** Ningún producto de QA tiene precio anterior (canales Boots test y Bohus). El precio
-  anterior de la captura se inyectó en la respuesta del navegador. Que el servicio lo devuelve por línea está leído
-  en el código de shopcart (`compare_at`, `compare_at_incl_taxes` en `line_items.price`), no observado.
+- ~~Sin ver con datos reales~~: visto en la web real a las ~15:10 UTC (arriba). En QA sigue sin haber productos con
+  precio anterior.
 - Kustom no monta desde un origen http (`Kustom 400 BAD_VALUE: confirmation`): para verlo hace falta el túnel
   (`cloudflared tunnel --config ~/.cloudflared/config-vio-web-dev.yml run` + la página de `examples/` en el 5174 con
   `__VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS=vio-web-dev.vio.live`).
