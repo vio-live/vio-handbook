@@ -42,6 +42,15 @@ Dos pedidos de Boots que Angelo trasladó, para hacerlos generales en el SDK:
   queda encima de «Betalingsmåte: Kustom» y del widget; el resumen bajo el widget lleva el precio tachado. No se pagó.
   La cuenta de Kustom de QA enseña en su pie cinco logos, **sin Vipps**; nuestra tira enseña seis.
 
+- **0.42.0 en npm** (`latest` desde las 14:39 UTC, publicada por Angelo desde `sdk-publish-0420`, shasum
+  `b137a7d2…`). El registro tardó unos 5 min en enseñarla tras el «+ @vio-live/web-sdk@0.42.0» de la terminal.
+- **Copia de pruebas de Replit a las 14:37 UTC:** sigue en la **0.41.1** (cadena de versión en su bundle; sin
+  `payment-marks`). Artículo `mote-livsstil-hub-vio.replit.app/skjonnhet/annet/boots-no7-test` (Vio prod, campaña 8).
+  Sus productos sí traen precio anterior real: Julekalender 1 749,50 / 3 499 kr; Lift & Luminate 317,94 / 529,90 kr.
+  El CSS de Replit no toca los precios de las líneas (`::part(price)` solo, para su «Gratis frakt»). Mirado con
+  `?vio_internal=1`, sin añadir al carrito ni abrir la kasse. Prompt en inglés para el agente de Replit entregado a
+  Angelo en el chat (misma lista que el handoff).
+
 ## Decisions
 - **Sin fila «Du sparer» (Angelo, ~15:25 UTC, antes de publicar):** «el du sparer no me gusta, quítalo, solo lo que
   muestre el precio før/etter». Fuera la fila del carrito y de la kasse, con su texto, sus opciones de tema y sus
@@ -76,7 +85,7 @@ Dos pedidos de Boots que Angelo trasladó, para hacerlos generales en el SDK:
 - Al publicar, el ahorro aparece para **todas** las marcas con precio anterior, no solo Boots.
 
 ## Next session
-- Angelo publica la 0.42.0 en npm → pasar el texto a Replit → mirar el artículo de Boots en la copia de pruebas, que
-  sí tiene precios anteriores reales.
+- Replit sube la copia de pruebas a la 0.42.0 → mirar el artículo de Boots (ficha, carrito, kasse) con los precios
+  anteriores reales → OK de Angelo para la web real.
 - Vev: rebundle + deploy cuando Angelo lo pida.
 - Lista de logos por marca (config del método en Commerce, o Kustom Elements).
