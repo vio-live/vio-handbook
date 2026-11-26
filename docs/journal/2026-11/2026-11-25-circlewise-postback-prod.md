@@ -51,3 +51,12 @@ Angelo preguntó por «el tracking que nos faltaba» de Kondomeriet y dio el OK 
 > (`a-alan-local.vev.site/woo-origin`), la nuestra (`a-vio-dev.vev.site/test-kondomeriet`) y la de VG
 > (`vg.no/annonsorinnhold/_dev/test/tipio-live-shopping-v2/`, con actividad hoy). En analytics no aparece
 > todavía ninguna URL pública del artículo: aún no hay ventas reales que medir.
+
+> [claude, 2026-11-26 14:10 UTC] **Artículo en vivo y Schibsted no ve la compra de Michael en Circlewise.** Comprobado:
+> los bloques sí mandan cada «Kjøp med Vipps» por el tracker (`c.trackmytarget.com`, `a=h9k6zq`, `i=3j26pb`, ref1 por
+> producto) y el puente pasa `tmt_*` a `kondomeriet.no/k/<slug>/kjop/`. Pero la venta la registra el script de Circlewise
+> **de Kondomeriet** (GTM-TFD74N: `entrypoint_v2` + `checkout.min.js` con `data-offer-sid=q1aa55`, ambos con consentimiento
+> `analytics_storage`), y la Hurtigkasse contesta al POST con un 302 a `/checkout/vipps/<id>/` **sin** `tmt_data`: el
+> lector no aterriza en ninguna página de Kondomeriet con el parámetro, así que el script no puede atribuir la venta.
+> Además hace falta que el lector acepte las cookies de Kondomeriet. Es un hueco de la integración Hurtigkasse ↔
+> Circlewise en Kondomeriet/EQOM, no una URL que falte en Vio. El clic sí debería verse en Circlewise.
