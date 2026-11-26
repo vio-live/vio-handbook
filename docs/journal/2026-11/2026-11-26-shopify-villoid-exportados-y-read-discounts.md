@@ -60,6 +60,12 @@ Angelo: buscar el estado de los códigos de Shopify y de las pruebas de Alan, y 
 - **#138 mergeado** a las 12:00 UTC (merge commit `1fd057c`, como los PR anteriores). Lo mergeé yo por orden expresa
   de Angelo («mergea tú»), que es una excepción puntual a ADR-0001. `custom/client-app` queda idéntica a lo
   desplegado (`git diff 6445241 1fd057c` vacío) y los seis dominios siguen en los mismos deploys tras el merge.
+- **Revisión «¿está todo en prod?»:** lo de Villoid está en la campaña **5 «Villoid test»** (Aller 1330, surface 1,
+  marca principal 1323, sin fin). La web de la surface 1 va con la SDK 0.41.1 desde el 25/11, que ya aplica códigos
+  de campaña (hacen falta ≥ 0.40.1). En prod hay un solo código elegido, el de Faves (campaña 4 × 1301); para la
+  5 × 1323 no hay ninguno, y se elige cuando Villoid acepte el permiso. Lo único de códigos que no está en prod es
+  campaigns [#37](https://github.com/vio-live/vio-campaigns-microservice/pull/37) (regalo del código en el canal y
+  chequeo diario de códigos), en `develop` a la espera de release; no hace falta para los códigos de Villoid.
 - **Floyd no instaló nunca.** Su link venció el 5/11 y `/internal/token` sigue en 409 `no_session`. La app y el
   proyecto de Vercel están listos (registro del playbook); si quieren seguir, hay que crear otra app, como con Villoid.
 
