@@ -66,6 +66,15 @@ ve los productos; falta saber cuántos entran, cuántos se quedan y cuántos de 
   mitad en menos de 4,5 s; en el perfil de medida (móvil 4G, primera visita) los productos salen a los 6,3 s.
   De quien sí los ve, el 14 % abre uno.
 
+- **Dónde se pierde la gente dentro del embudo (25/11, nuestros eventos):**
+  - De los 132 que abrieron un producto, 55 abrieron la descripción, 49 cerraron la ficha y solo **17 tocaron comprar**
+    («Legg i handlekurv» 11, «Kjøp nå» 9).
+  - De esos 17, 5 se quedaron en el carrito y **12 llegaron a la kasse de Kustom; compraron 2**. Los 10 que la
+    abandonaron llevaban 179–1 798 kr; tres iban por debajo de 399 kr (el umbral de envío gratis de Boots).
+  - 95 de las 132 aperturas salieron del primer bloque (el carrusel).
+  - `select_item` llega de los bloques de Replit sin producto (nombre vacío, precio 0): no sabemos cuáles se abren.
+  - Dentro del widget de Kustom no vemos nada: no hay eventos de sus pasos.
+
 ## Decisions
 - Propuesta a Angelo (sin decidir): (1) pedir a Aller los clics del 25/11 y a Replit las vistas y la permanencia de
   ese artículo, para cerrar el embudo de ayer con lo que ya existe; (2) etiquetas `utm_*` en los enlaces de Aller;
