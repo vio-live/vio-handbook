@@ -52,6 +52,10 @@ Dos pedidos de Boots que Angelo trasladó, para hacerlos generales en el SDK:
   Angelo en el chat (misma lista que el handoff).
 
 ## Decisions
+- **Directo a la web real, sin pasar por la copia de pruebas (Angelo, ~14:45 UTC):** «lo quiero llevar directo a
+  prod, al Replit de prod». `moteoglivsstil.no` estaba en la 0.41.1 a esa hora (vuelta atrás = fijar esa versión).
+  Prompt en inglés para el agente de Replit entregado en el chat, con la vuelta atrás incluida. Será la primera vez
+  que el precio anterior en carrito y kasse se vea con datos reales.
 - **Sin fila «Du sparer» (Angelo, ~15:25 UTC, antes de publicar):** «el du sparer no me gusta, quítalo, solo lo que
   muestre el precio før/etter». Fuera la fila del carrito y de la kasse, con su texto, sus opciones de tema y sus
   `part`s ([web-sdk#175](https://github.com/vio-live/vio-web-sdk/pull/175), `e455910`). Queda el precio anterior
@@ -85,7 +89,7 @@ Dos pedidos de Boots que Angelo trasladó, para hacerlos generales en el SDK:
 - Al publicar, el ahorro aparece para **todas** las marcas con precio anterior, no solo Boots.
 
 ## Next session
-- Replit sube la copia de pruebas a la 0.42.0 → mirar el artículo de Boots (ficha, carrito, kasse) con los precios
-  anteriores reales → OK de Angelo para la web real.
+- Replit sube la web real a la 0.42.0 → mirar el artículo de Boots (`…/arets-skjonnhetsgaver-pa-tilbud-no7-favorittene-du-kan-legge-under-treet`)
+  con `?vio_internal=1`: ficha y carrito; sin pagar.
 - Vev: rebundle + deploy cuando Angelo lo pida.
 - Lista de logos por marca (config del método en Commerce, o Kustom Elements).
