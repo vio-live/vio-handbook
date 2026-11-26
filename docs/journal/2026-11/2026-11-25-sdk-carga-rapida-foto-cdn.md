@@ -98,6 +98,7 @@ cualquier publisher).
 - **campaigns a prod**: `develop` lleva también [#37](https://github.com/vio-live/vio-campaigns-microservice/pull/37)
   (regalo del código en el canal + chequeo diario de códigos) sin publicar; aplicar solo #46 sobre `main`
   choca en los tests. Propuesto release de `develop` entero; espera la frase de Angelo.
+  - > [claude, 2026-11-26] **Resuelto el mismo 25/11:** `develop` entero (con #37 y #46) salió a prod en la release [#47](https://github.com/vio-live/vio-campaigns-microservice/pull/47) (15:00 UTC), con la migración 1793300 aplicada antes, y shopcart #125 en la [#126](https://github.com/vio-live/vio-shopcart-microservice/pull/126). El CronJob `campaigns-discount-check` corre en prod a las 06:00 UTC.
 - **SDK en npm**: lo publica Angelo.
 
 ## Next session

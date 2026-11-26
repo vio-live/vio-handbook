@@ -63,9 +63,18 @@ Angelo: buscar el estado de los códigos de Shopify y de las pruebas de Alan, y 
 - **Revisión «¿está todo en prod?»:** lo de Villoid está en la campaña **5 «Villoid test»** (Aller 1330, surface 1,
   marca principal 1323, sin fin). La web de la surface 1 va con la SDK 0.41.1 desde el 25/11, que ya aplica códigos
   de campaña (hacen falta ≥ 0.40.1). En prod hay un solo código elegido, el de Faves (campaña 4 × 1301); para la
-  5 × 1323 no hay ninguno, y se elige cuando Villoid acepte el permiso. Lo único de códigos que no está en prod es
-  campaigns [#37](https://github.com/vio-live/vio-campaigns-microservice/pull/37) (regalo del código en el canal y
-  chequeo diario de códigos), en `develop` a la espera de release; no hace falta para los códigos de Villoid.
+  5 × 1323 no hay ninguno, y se elige cuando Villoid acepte el permiso.
+  - **Corrección:** primero dije que campaigns [#37](https://github.com/vio-live/vio-campaigns-microservice/pull/37)
+    (regalo del código en el canal y chequeo diario) no estaba en prod; me fié del blocker del 25/11 sin mirar el
+    repo. **Está en prod desde el 25/11:**
+    - campaigns: release [#47](https://github.com/vio-live/vio-campaigns-microservice/pull/47) a las 15:00 UTC; la
+      imagen de prod es la build 65 = `e799abf`, la punta de `main`;
+    - migración 1793300: aplicada (`surface_campaign_discount_code.problem` y `problem_notified_at` existen en prod);
+    - shopcart #125, la cobertura con los regalos: release
+      [#126](https://github.com/vio-live/vio-shopcart-microservice/pull/126) a las 15:14 UTC; `src/modules/discount`
+      es idéntico entre `main` y `develop`;
+    - api `POST /notifications/saveStatic` en `master`; dashboard: webapp #117 vía la release #118;
+    - CronJob `campaigns-discount-check` (06:00 UTC): hoy revisó 1 código, el de Faves, con 0 problemas y HTTP 200.
 - **Floyd no instaló nunca.** Su link venció el 5/11 y `/internal/token` sigue en 409 `no_session`. La app y el
   proyecto de Vercel están listos (registro del playbook); si quieren seguir, hay que crear otra app, como con Villoid.
 
