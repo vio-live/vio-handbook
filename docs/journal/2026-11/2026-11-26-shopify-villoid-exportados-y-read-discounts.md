@@ -88,7 +88,12 @@ Angelo: buscar el estado de los códigos de Shopify y de las pruebas de Alan, y 
 
 ## Blockers
 - Ninguno técnico. Falta que Villoid abra la app y acepte `read_discounts`.
-- **Mensaje a Villoid:** listo abajo; lo mandan Angelo o Michael.
+- **Mensaje a Villoid:** listo abajo; lo mandan Angelo o Michael. **En espera** (Angelo, 26/11): antes, Alan
+  comprueba en prod el 27/11 lo mismo que hará Daniel, en la tienda demo (`vio-demo`, cuenta 1322, misma build y
+  misma versión de la app): la pantalla del permiso, Update, la lista de exportados y que Vio lea los códigos.
+  La demo no ha aceptado el permiso a propósito, para que Alan vea la pantalla igual que Daniel. La compra con
+  código en prod no entra en esa prueba: en la demo no hay campaña y sus productos son de prueba en USD; se hace
+  con Villoid cuando acepten (lo de comprar con código ya está probado en QA, #490 33/33).
 
 ## Mensajes listos para mandar
 **A Daniel (Villoid).** Comprobado en la demo (26/11): al abrir la app, Shopify muestra primero «Authorize Vio Sync»
