@@ -1,6 +1,6 @@
 ---
 date: 2026-11-26
-session: web-sdk — «Du sparer» en carrito y kasse, y los logos de pago de Kustom bajo los botones de compra
+session: web-sdk 0.42.0 — precio anterior en carrito y kasse, y los logos de pago de Kustom bajo los botones de compra
 participants: [angelo, claude]
 status: live
 ---
@@ -18,8 +18,8 @@ Dos pedidos de Boots que Angelo trasladó, para hacerlos generales en el SDK:
 - [web-sdk#173](https://github.com/vio-live/vio-web-sdk/pull/173) mergeada en `main` (`298bf30`) con el OK de Angelo
   («sube la rama y abre el PR y actualizamos para ver qué tal», ~15:00 UTC). Release
   [#174](https://github.com/vio-live/vio-web-sdk/pull/174) = **0.42.0** (`2599079`). **Sin publicar en npm**: copia
-  limpia de `main`, compilada y comprobada con `npm pack --dry-run`, en `~/vio-commerce/worktrees/sdk-publish-0420`;
-  la publica Angelo. Texto para Replit en el
+  limpia de `main` (rehecha en `e455910` tras #175), compilada y comprobada con `npm pack --dry-run`, en
+  `~/vio-commerce/worktrees/sdk-publish-0420`; la publica Angelo. Texto para Replit en el
   [handoff](../../handoff/2026-10-15-replit-y-demo-web-a-commerce.md). Vev sin tocar.
 - **Ahorro.**
   - La línea del carrito guarda `compareAtPrice` (el `compare_at_incl_taxes` de Commerce, si no `compare_at`), solo
@@ -43,6 +43,12 @@ Dos pedidos de Boots que Angelo trasladó, para hacerlos generales en el SDK:
   La cuenta de Kustom de QA enseña en su pie cinco logos, **sin Vipps**; nuestra tira enseña seis.
 
 ## Decisions
+- **Sin fila «Du sparer» (Angelo, ~15:25 UTC, antes de publicar):** «el du sparer no me gusta, quítalo, solo lo que
+  muestre el precio før/etter». Fuera la fila del carrito y de la kasse, con su texto, sus opciones de tema y sus
+  `part`s ([web-sdk#175](https://github.com/vio-live/vio-web-sdk/pull/175), `e455910`). Queda el precio anterior
+  tachado sobre el de ahora en cada línea. Las funciones de cálculo siguen exportadas. La entrada 0.42.0 del
+  changelog se reescribió en su sitio porque esa versión no había llegado a npm. Lo de «Du sparer» que se lee más
+  abajo en esta entrada describe la primera versión, ya retirada.
 - **Tira propia del SDK, no el elemento oficial de Kustom.** Kustom tiene `<kustom-payment-method-display>` (Kustom
   Elements), que enseña exactamente los métodos activos de cada comercio. Pide un script de Kustom en la página con
   una clave pública por comercio y **cada dominio registrado en el Portal del comercio**; un script es de un solo
