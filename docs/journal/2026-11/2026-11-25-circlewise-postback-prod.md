@@ -45,3 +45,9 @@ Angelo preguntó por «el tracking que nos faltaba» de Kondomeriet y dio el OK 
 > verse. Camino más ligero, sin proponer aún: los enlaces ya llevan `ref1`–`ref3` (sesión y campaña), así que
 > un export del informe de conversiones de Circlewise bastaría para atribuir ventas. No está comprobado que
 > su export incluya esos campos.
+
+> [claude, 2026-11-26 10:00 UTC] **Corrección a la nota anterior:** las 114 sesiones y los 107 clics en «Vipps
+> hurtigkasse» de la campaña 7 **no son lectores**. Salen de tres páginas de prueba: la de Alan
+> (`a-alan-local.vev.site/woo-origin`), la nuestra (`a-vio-dev.vev.site/test-kondomeriet`) y la de VG
+> (`vg.no/annonsorinnhold/_dev/test/tipio-live-shopping-v2/`, con actividad hoy). En analytics no aparece
+> todavía ninguna URL pública del artículo: aún no hay ventas reales que medir.

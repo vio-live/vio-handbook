@@ -185,3 +185,12 @@ un test rápido en Vev: el botón de compra manda a la **Vipps Hurtigkasse** de 
 - Kondomeriet: precios de Black Week. Comprobar que el tachado y el % salen solos.
 - El feed de Kondomeriet vuelve a subir todas las imágenes con nombres nuevos en cada importación. Mirarlo aparte.
 - Las cachés de productos de los demás canales en Redis guardan URLs de imagen con `?size=`. Funcionan, pero con dos redirecciones.
+
+> [claude, 2026-11-26 10:00 UTC] **Formato de las imágenes de Kondomeriet** (pregunta de quien monta la página).
+> Comprobado sobre la foto pública de la surface de VG (37 productos, 296 imágenes): **todas son JPG**, servidas
+> desde el CDN de Kondomeriet (`cdn.kondomeriet.no/…/produktbilder/ekstrastore/<n>xs<k>.jpg`, con el
+> redimensionado de Cloudflare `width=400,format=auto`: el navegador recibe AVIF o WebP). 77 originales
+> descargados: los 77 son JPEG de verdad. **Ninguna tiene transparencia** (un JPEG no puede). Fondo: 36 de las
+> 37 imágenes principales van sobre blanco (la excepción es el julekalender, que es una foto); en la galería,
+> 25 de 40 sobre blanco y el resto fotos de ambiente. Tamaño de la principal: 660×800. Además, la página de
+> pruebas `a-vio-dev.vev.site/test-kondomeriet` **ha caducado** en Vev («This Content Has Expired»).
