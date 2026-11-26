@@ -35,10 +35,11 @@ pegado al código: `docs/CUSTOM-APP.md` en la rama `custom/client-app` de
 
 | Cliente | Tienda | App Shopify (id / client id) | Config (rama) | Vercel | Estado (último dato) |
 |---|---|---|---|---|---|
-| Villoid | `villoid.myshopify.com` | **`438624845825` / `3ced68df11709eceb7ecb322fa7f0e99`** (desde 2026-10-22). La primera, `425118728193` / `bd36f14691ec80081374e40f71ad9d72`, queda **retirada**: su link venció sin usarse y no se puede regenerar | `shopify.app.vio-client-villoid.toml` ([#128](https://github.com/vio-live/vio-shopify-sync/pull/128)); la vieja, `shopify.app.vio-client.toml`, no se despliega más | `vio-sync-client` → `https://vio-sync-client.vercel.app` (el mismo deploy para las dos apps) | App nueva creada y verificada el 2026-10-22 (config `vio-client-villoid-1`, secret comprobado con webhook firmado, 409 `no_session` desde `extensions`). **Link mandado el 2026-10-22**, con la key de la cuenta Vio **1323** (variante con key). **Instalada el 2026-10-23 14:07 y conectada 14:09** (Oslo) a la cuenta **1323** (`sales-channel/create` 200 en 0,26 s, conexión Shopify 542, NOK). **2026-11-02 16:33:** desplegado #133, el filtro de export sobre todo el catálogo; tenía 136 en Vio y no se veían entre los más de 10.000 productos |
+| Villoid | `villoid.myshopify.com` | **`438624845825` / `3ced68df11709eceb7ecb322fa7f0e99`** (desde 2026-10-22). La primera, `425118728193` / `bd36f14691ec80081374e40f71ad9d72`, queda **retirada**: su link venció sin usarse y no se puede regenerar | `shopify.app.vio-client-villoid.toml` ([#128](https://github.com/vio-live/vio-shopify-sync/pull/128)); la vieja, `shopify.app.vio-client.toml`, no se despliega más | `vio-sync-client` → `https://vio-sync-client.vercel.app` (el mismo deploy para las dos apps) | App nueva creada y verificada el 2026-10-22 (config `vio-client-villoid-1`, secret comprobado con webhook firmado, 409 `no_session` desde `extensions`). **Link mandado el 2026-10-22**, con la key de la cuenta Vio **1323** (variante con key). **Instalada el 2026-10-23 14:07 y conectada 14:09** (Oslo) a la cuenta **1323** (`sales-channel/create` 200 en 0,26 s, conexión Shopify 542, NOK). **2026-11-02 16:33:** desplegado #133, el filtro de export sobre todo el catálogo; tenía 136 en Vio y no se veían entre los más de 10.000 productos. **2026-11-25:** 166 productos en Vio; la app mostraba 0 porque `listings` con variantes tardaba ~12 s y la app corta a los 10 ([#138](https://github.com/vio-live/vio-shopify-sync/pull/138), `variants=false`). **2026-11-26:** `read_discounts` desplegado (versión `vio-sync-3`), pendiente de que la tienda lo acepte |
 | Gladkokken | `wxuxre-tf.myshopify.com` (`shop.gladkokken.no`) | `426105274369` / `a372fcbd6348fc847e4f6a547518350b` | `shopify.app.vio-client-gladkokken.toml` | `vio-sync-gladkokken` → `https://vio-sync-gladkokken.vercel.app` | Verificada el 2026-09-22 (config `vio-client-gladkokken-1`). Instalada y exportando: cuenta Vio **1324**; `/internal/token` 200 y pushes de token sin errores al 2026-10-22 |
 | Makeup Mekka | `makeup-mekka.myshopify.com` (`makeupmekka.com`) | `426736517121` / `5287ee98f0381e1200754c5f16c9c914` | `shopify.app.vio-client-makeupmekka.toml` | `vio-sync-makeupmekka` → `https://vio-sync-makeupmekka.vercel.app` | Verificada el 2026-09-22 (healthz 200, secret, Redis compartido, API 2026-04; config `vio-client-makeupmekka-1`). **Instalaron el 2026-09-24 13:10 Oslo** (usuario Vio 1325, conexión Shopify 540) y conectaron a los 2 minutos; sus dos calendarios de adviento entraron a Vio sin pasar por "Export selected" (casi seguro publicándolos al canal desde el admin de Shopify) |
 | Careless | `dignitycollect.myshopify.com` (`careless.no`) | `434547228673` / `dd30cfd709d3f09dbdec6c81674f350c` | `shopify.app.vio-client-careless.toml` | `vio-sync-careless` → `https://vio-sync-careless.vercel.app` | Creada el 2026-10-12 (config `vio-client-careless-1`, cuenta Vio **1327**). **Instalada el 2026-10-16 10:49, conectada 13:58** (Oslo), 20/20 productos SUCCESS; exportando al 2026-10-22 |
+| Floyd | `floyd-as.myshopify.com` (`floyd.no`) | `441433849857` / `c7cc6c281c87d707f90aeb7fd7c38c2f` | `shopify.app.vio-client-floyd.toml` ([#131](https://github.com/vio-live/vio-shopify-sync/pull/131)) | `vio-sync-floyd` → `https://vio-sync-floyd.vercel.app` | Creada el 2026-10-29: config `vio-client-floyd-1`, Redis conectado, `SHOPIFY_API_SECRET` y `CRON_SECRET` sensibles, tienda en `VIO_CUSTOM_APPS` (respaldo previo en el blob `extensions/.env.snapshot-pre-floyd-20261029`). Link mandado el 29/10. **Venció el 2026-11-05 sin instalar**: `/internal/token` sigue en 409 `no_session` al 26/11. Si siguen, app nueva (sección «Si el link vence sin instalar») |
 | (demo) | `vio-demo.myshopify.com` (dev store de Vio, datos de prueba) | `426319511553` / `2f1d046a49f1322e4b0990e47da955a1` | `shopify.app.vio-client-demo.toml` | `vio-sync-demo` → `https://vio-sync-demo.vercel.app` | Para grabar el proceso de instalación (video de Angelo, 2026-09-22). Primera prueba de punta a punta contra prod. Link vence el 2026-09-29 |
 | (gemela QA) | dev store de Alan | `426102554625` / `31f8416cbe5ec1d605c8dc29618636f1` | `shopify.app.vio-client-dev.toml` | — (corre local con `shopify app dev`) | Prueba de Alan OK contra staging (Trello [phMU2DP0](https://trello.com/c/phMU2DP0), Done el 2026-09-22) |
 
@@ -299,6 +300,10 @@ enlazado a `vio-sync`, la app pública.
 - Con más de **1.000 listings** en la cuenta de Vio, "Connection & log" no muestra los
   logs: `listings` pide `size=1000` (`app/lib/vioEndpoints.ts`). Observación de Alan,
   2026-09-21.
+- **`listings` sin variantes** (2026-11-26): con variantes, el servicio de productos convierte la moneda de cada
+  una y con unas 900 variantes pasa de los 10 s que espera la app; la app lo cuenta como 0 exportados en las dos
+  pantallas. Desde [#138](https://github.com/vio-live/vio-shopify-sync/pull/138) se piden con `variants=false`
+  (Villoid: 11,8 s → 1,4 s). Si vuelve a salir 0, buscar `failed: timeout` en `vercel logs`.
 - Las **órdenes no llegan a Shopify si el mismo usuario de Vio es proveedor y vendedor**;
   con usuarios separados funciona (Alan, 2026-09-21). Para probar órdenes, el vendedor
   tiene que ser otra cuenta.
@@ -381,3 +386,18 @@ Vercel, y la rama `custom/client-app`.
 > 3. Los clientes reales usan sus apps propias (rama `custom/client-app`), no `Vio Sync`. Estado 21/10: todas con
 >    `refunds/create`; activo = repo comprobado en Careless, Gladkokken y Makeupmekka.
 > Un `deploy`/`release` con `--allow-deletes` lo lanza una persona: el control de seguridad de los agentes lo bloquea.
+
+## Un permiso nuevo en las apps de clientes (read_discounts, 26/11)
+
+> [claude, 2026-11-26] Los códigos de descuento de Shopify necesitan `read_discounts`. Está en los `toml` desde
+> [#136](https://github.com/vio-live/vio-shopify-sync/pull/136) y se desplegó en las seis apps el 26/11, con la comparación
+> de la sección anterior: el único cambio era el scope. Lo que hay que saber:
+> 1. **Desplegar no basta.** Cada tienda tiene que abrir la app y aceptar el permiso; hasta entonces el token sigue con
+>    los permisos de antes y todo funciona como antes.
+> 2. **Saber si una tienda ya lo aceptó**, desde un pod de `extensions`: token de `/internal/token` (con el secret de
+>    `VIO_CUSTOM_APPS`) y `{currentAppInstallation{accessScopes{handle}}}` contra la Admin API de la tienda.
+>    Más corto: `POST http://extensions/coupons/list` con `{"data":{"userId":<cuenta>}}` responde
+>    `missingScope: "read_discounts"` mientras no lo acepte.
+> 3. **Ver sus códigos:** `coupons/list` dice cuáles admite Vio y por qué no los otros. `codeDiscountNodes` en la Admin
+>    API da además `appliesOncePerCustomer` y `combinesWith` (Vio todavía no combina códigos).
+
