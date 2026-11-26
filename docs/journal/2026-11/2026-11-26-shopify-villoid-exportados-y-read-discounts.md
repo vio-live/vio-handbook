@@ -57,6 +57,9 @@ Angelo: buscar el estado de los códigos de Shopify y de las pruebas de Alan, y 
     `GET /api/listings?page=0&size=1000&variants=false` da HTTP 200 en **1,75 s**, 0,6 MB, 166 productos, los 166
     con `originId` y `title`;
   - logs de los 30 minutos siguientes: ningún `failed`; nadie había abierto todavía las pantallas de la app.
+- **#138 mergeado** a las 12:00 UTC (merge commit `1fd057c`, como los PR anteriores). Lo mergeé yo por orden expresa
+  de Angelo («mergea tú»), que es una excepción puntual a ADR-0001. `custom/client-app` queda idéntica a lo
+  desplegado (`git diff 6445241 1fd057c` vacío) y los seis dominios siguen en los mismos deploys tras el merge.
 - **Floyd no instaló nunca.** Su link venció el 5/11 y `/internal/token` sigue en 409 `no_session`. La app y el
   proyecto de Vercel están listos (registro del playbook); si quieren seguir, hay que crear otra app, como con Villoid.
 
@@ -69,15 +72,50 @@ Angelo: buscar el estado de los códigos de Shopify y de las pruebas de Alan, y 
   campo «Rabattkode» si la página lo activa.
 
 ## Blockers
-- **Angelo:** mergear #138 para que `custom/client-app` coincida con lo que está en producción. Ya está desplegado.
-- **Mensaje a Villoid** (redactado en la sesión, en noruego): ya se puede mandar; lo mandan Angelo o Michael.
+- Ninguno técnico. Falta que Villoid abra la app y acepte `read_discounts`.
+- **Mensaje a Villoid:** listo abajo; lo mandan Angelo o Michael.
+
+## Mensajes listos para mandar
+**A Daniel (Villoid):**
+
+> Hei Daniel!
+>
+> Takk for beskjed. Vi har sett på begge deler:
+>
+> **1. Eksporterte produkter.** Eksporten deres har fungert hele tiden – dere har 166 produkter i Vio. Feilen lå i
+> appen: listen over eksporterte produkter tok for lang tid å hente, og da viste appen 0. Det er rettet nå. Åpne
+> Vio Sync i Shopify igjen, så ser dere alle 166 under «Exported to Vio» og i «Connection & log». Dere trenger ikke
+> eksportere noe på nytt.
+>
+> **2. Rabattkoder.** Vio kan nå bruke rabattkodene deres fra Shopify. Når dere åpner Vio Sync, ber Shopify dere
+> godkjenne en ny tilgang (lese rabatter). Trykk godkjenn – Vio leser bare kodene, vi endrer ingenting.
+>
+> Slik fungerer det:
+> - Hver kampanje bruker én kode, som velges i Vio. Kunden trenger ikke skrive noe: rabatten legges på automatisk i
+>   artikkelen, og selve koden vises ikke. Vi kan også lage egne lenker med en annen kode, for eksempel til
+>   nyhetsbrev eller Instagram.
+> - Vi anbefaler at dere lager en egen kode for Vio, så dere ser hvilke salg som kommer derfra.
+> - Støttes: prosent på hele handlekurven, på utvalgte produkter eller kolleksjoner, fast beløp per vare, og
+>   minstebeløp for handlekurven.
+> - Støttes ikke ennå: én gang per kunde, fri frakt, kjøp X få Y, rabatter fra apper og minimum antall varer.
+> - Rabattkoder fungerer foreløpig bare med Vipps.
+> - Én kode per handlekurv – to koder kan ikke kombineres foreløpig.
+>
+> Når dere har godkjent, sjekker vi hvilke av kodene deres som fungerer, og så avtaler vi hvilken som skal brukes
+> i kampanjen.
+
+**A Gladkokken, Makeup Mekka y Careless** (opcional, para que el aviso del permiso no los sorprenda):
+
+> Hei! Vi har oppdatert Vio Sync-appen. Neste gang dere åpner den i Shopify, ber Shopify dere godkjenne en ny
+> tilgang: lese rabatter. Trykk godkjenn – da kan Vio bruke rabattkodene deres fra Shopify i kampanjene. Vio leser
+> bare kodene, vi endrer ingenting i butikken. Si fra hvis dere har spørsmål!
 
 ## Next session
 1. Cuando Daniel abra la app, confirmar en `vercel logs` de `vio-sync-client` que no hay `failed: timeout` y que
-   ve los 166. Comprobar que #138 está mergeado.
+   ve los 166.
 2. Cuando Villoid acepte `read_discounts`:
    - `coupons/list` de 1323 para saber qué códigos admite Vio;
    - la consulta de `codeDiscountNodes`, para ver tipo, alcance, `appliesOncePerCustomer` y `combinesWith`;
    - con Daniel, elegir el código de la campaña y hacer una compra de prueba en prod (código y uso +1 en Shopify,
      Vipps cobra el neto) y cancelarla.
-3. Avisar a Gladkokken, Makeup Mekka y Careless de que les va a aparecer el permiso nuevo.
+3. Si se decide, mandar a Gladkokken, Makeup Mekka y Careless el aviso del permiso nuevo (texto arriba).
