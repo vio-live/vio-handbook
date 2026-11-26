@@ -114,3 +114,14 @@ el kernel (ya está).
 >
 > Arreglo de fondo pendiente: subir `progressDeadlineSeconds` en los charts, o escalonar los dispatches de
 > `kernel-published`.
+
+## Nota 2026-11-26 — `yarn build` del kernel rojo por `@babel/types` 7.29.15
+
+> [claude, 2026-11-26] `publish-packages.js` borra el `yarn.lock` de cada paquete e instala lo último. El 20/11 salió
+> `@babel/types` 7.29.15, cuyo `lib/index.d.ts` usa `infer N extends Node` (TypeScript ≥ 4.7); seis paquetes del kernel
+> compilan con TypeScript 4.1.3 y el release falló en `yarn build` con `TS1005` dentro de `node_modules` (run
+> 45786729538, no publicó nada). Arreglo: `"@babel/types": "7.29.14"` en `resolutions` de utils, config, logger,
+> database, testing y definitions (PRs #10/#10/#11/#37/#10/#10, mergeados con `[skip ci]`), igual que el pin de
+> `@types/babel__traverse` que ya existía. `service` usa TypeScript 4.7 y no lo necesita. Si vuelve a pasar con otro
+> paquete de tipos: probar el `.d.ts` de la versión nueva con `tsc --noEmit` 4.1.3 y fijar la anterior. Arreglo de fondo
+> pendiente: que el release no borre el lockfile, o subir TypeScript en el kernel.
