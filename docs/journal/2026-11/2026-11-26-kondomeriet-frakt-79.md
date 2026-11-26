@@ -22,9 +22,9 @@ Michael: la tarjeta de Kondomeriet dice «Frakt 59 Kr», pero «Kjøp med Vipps�
 
 - Con OK de Angelo («arregla las descripciones»), 08:37 UTC: 7 productos de Kondomeriet con las etiquetas del feed
   rotas (6 de la captura de Michael + 410308 Nexus Alpha Surge, rota a mitad del texto) reescritos en
-  \`product.description\` desde sus fichas de kondomeriet.no, con el formato y el marcador
-  \`<!-- vio:keep-description -->\` del 18/11 (el feed ya no los pisa). Ensayo + COMMIT (\`alta-marca/desc-write.js\`).
-  \`custom_product\` (copias de VG) sin tocar: también están rotas en los 34 del 18/11 y el canal lee \`product\`.
+  `product.description` desde sus fichas de kondomeriet.no, con el formato y el marcador
+  `<!-- vio:keep-description -->` del 18/11 (el feed ya no los pisa). Ensayo + COMMIT (`alta-marca/desc-write.js`).
+  `custom_product` (copias de VG) sin tocar: también están rotas en los 34 del 18/11 y el canal lee `product`.
   Foto de la surface a las 08:38 UTC: 37/37 productos con el marcador, 0 restos de etiquetas, 38 tarifas a 79 kr.
 
 ## Decisions
