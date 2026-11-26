@@ -91,19 +91,28 @@ Angelo: buscar el estado de los códigos de Shopify y de las pruebas de Alan, y 
 - **Mensaje a Villoid:** listo abajo; lo mandan Angelo o Michael.
 
 ## Mensajes listos para mandar
-**A Daniel (Villoid):**
+**A Daniel (Villoid).** Comprobado en la demo (26/11): al abrir la app, Shopify muestra primero «Authorize Vio Sync»
+(«Vio Sync needs access to: View store data · View discounts — Discount codes and promotions», botones Cancel y
+Update), y la app no carga detrás. El link directo usa el handle de la app en cada tienda (sacado con
+`currentAppInstallation.app.handle`): demo `vio-sync-3`, Gladkokken `vio-sync-2`, Makeup Mekka `vio-sync-4`,
+Careless `vio-sync-5`, Villoid `vio-sync-6`.
+
 
 > Hei Daniel!
 >
-> Takk for beskjed. Vi har sett på begge deler:
+> Takk for beskjed. Vi har sett på begge deler, og begge er klare.
+>
+> **Åpne Vio Sync her:** https://admin.shopify.com/store/villoid/apps/vio-sync-6
+>
+> Første gang ber Shopify dere godkjenne en ny tilgang: «Vio Sync needs access to: View discounts». Trykk
+> **Update** (eller «Oppdater»). Vio leser bare rabattkodene, vi endrer ingenting. Appen åpner seg først når dette
+> er godkjent.
 >
 > **1. Eksporterte produkter.** Eksporten deres har fungert hele tiden – dere har 166 produkter i Vio. Feilen lå i
-> appen: listen over eksporterte produkter tok for lang tid å hente, og da viste appen 0. Det er rettet nå. Åpne
-> Vio Sync i Shopify igjen, så ser dere alle 166 under «Exported to Vio» og i «Connection & log». Dere trenger ikke
-> eksportere noe på nytt.
+> appen: listen over eksporterte produkter tok for lang tid å hente, og da viste appen 0. Det er rettet nå: dere ser
+> alle 166 under «Exported to Vio» og i «Connection & log». Dere trenger ikke eksportere noe på nytt.
 >
-> **2. Rabattkoder.** Vio kan nå bruke rabattkodene deres fra Shopify. Når dere åpner Vio Sync, ber Shopify dere
-> godkjenne en ny tilgang (lese rabatter). Trykk godkjenn – Vio leser bare kodene, vi endrer ingenting.
+> **2. Rabattkoder.** Med den nye tilgangen kan Vio bruke rabattkodene deres fra Shopify.
 >
 > Slik fungerer det:
 > - Hver kampanje bruker én kode, som velges i Vio. Kunden trenger ikke skrive noe: rabatten legges på automatisk i
