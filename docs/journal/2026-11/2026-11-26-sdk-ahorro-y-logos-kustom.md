@@ -16,7 +16,7 @@ Dos pedidos de Boots que Angelo trasladó, para hacerlos generales en el SDK:
 
 ## Done
 - [web-sdk#173](https://github.com/vio-live/vio-web-sdk/pull/173) mergeada en `main` (`298bf30`) con el OK de Angelo
-  («sube la rama y abre el PR y actualizamos para ver qué tal», ~15:00 UTC). Release
+  («sube la rama y abre el PR y actualizamos para ver qué tal», ~14:00 UTC). Release
   [#174](https://github.com/vio-live/vio-web-sdk/pull/174) = **0.42.0** (`2599079`). **Sin publicar en npm**: copia
   limpia de `main` (rehecha en `e455910` tras #175), compilada y comprobada con `npm pack --dry-run`, en
   `~/vio-commerce/worktrees/sdk-publish-0420`; la publica Angelo. Texto para Replit en el
@@ -38,7 +38,7 @@ Dos pedidos de Boots que Angelo trasladó, para hacerlos generales en el SDK:
   ficheros (`cart-manager.quantity`, `klarna-confirm`, `vio-cart.stepper`); los mismos 3 fallan en `main` sin tocar,
   por `localStorage` con Node 26 en esta máquina.
 - **Vista en local** contra QA (surface 17 «Boots test», canal 518, Kustom), en móvil: ficha, carrito y kasse.
-- **Con Kustom montado** (~15:15 UTC, `main` a 0.42.0 tras el túnel `vio-web-dev.vio.live`): «Du sparer 95,96 Kr»
+- **Con Kustom montado** (~14:15 UTC, `main` a 0.42.0 tras el túnel `vio-web-dev.vio.live`): «Du sparer 95,96 Kr»
   queda encima de «Betalingsmåte: Kustom» y del widget; el resumen bajo el widget lleva el precio tachado. No se pagó.
   La cuenta de Kustom de QA enseña en su pie cinco logos, **sin Vipps**; nuestra tira enseña seis.
 
@@ -51,7 +51,7 @@ Dos pedidos de Boots que Angelo trasladó, para hacerlos generales en el SDK:
   `?vio_internal=1`, sin añadir al carrito ni abrir la kasse. Prompt en inglés para el agente de Replit entregado a
   Angelo en el chat (misma lista que el handoff).
 
-- **En la web real (~15:10 UTC, Replit publicó la 0.42.0; revisado con `?vio_internal=1`, móvil, sin pagar):**
+- **En la web real (~15:00 UTC, Replit publicó la 0.42.0; revisado con `?vio_internal=1`, móvil, sin pagar):**
   - `moteoglivsstil.no` carga la 0.42.0 (cadena de versión y `payment-marks` en su bundle; sin «Du sparer»).
   - Artículo de Boots, ficha de «No7 Good Intent Skin Sip Moisture Milk»: los seis logos y la marca de Kustom bajo
     «Kjøp nå», sobre «Du handler direkte hos Boots».
@@ -70,7 +70,7 @@ Dos pedidos de Boots que Angelo trasladó, para hacerlos generales en el SDK:
   prod, al Replit de prod». `moteoglivsstil.no` estaba en la 0.41.1 a esa hora (vuelta atrás = fijar esa versión).
   Prompt en inglés para el agente de Replit entregado en el chat, con la vuelta atrás incluida. Será la primera vez
   que el precio anterior en carrito y kasse se vea con datos reales.
-- **Sin fila «Du sparer» (Angelo, ~15:25 UTC, antes de publicar):** «el du sparer no me gusta, quítalo, solo lo que
+- **Sin fila «Du sparer» (Angelo, ~14:25 UTC, antes de publicar):** «el du sparer no me gusta, quítalo, solo lo que
   muestre el precio før/etter». Fuera la fila del carrito y de la kasse, con su texto, sus opciones de tema y sus
   `part`s ([web-sdk#175](https://github.com/vio-live/vio-web-sdk/pull/175), `e455910`). Queda el precio anterior
   tachado sobre el de ahora en cada línea. Las funciones de cálculo siguen exportadas. La entrada 0.42.0 del
@@ -91,7 +91,7 @@ Dos pedidos de Boots que Angelo trasladó, para hacerlos generales en el SDK:
   para todas las marcas.
 
 ## Blockers / open questions
-- ~~Sin ver con datos reales~~: visto en la web real a las ~15:10 UTC (arriba). En QA sigue sin haber productos con
+- ~~Sin ver con datos reales~~: visto en la web real a las ~15:00 UTC (arriba). En QA sigue sin haber productos con
   precio anterior.
 - Kustom no monta desde un origen http (`Kustom 400 BAD_VALUE: confirmation`): para verlo hace falta el túnel
   (`cloudflared tunnel --config ~/.cloudflared/config-vio-web-dev.yml run` + la página de `examples/` en el 5174 con
