@@ -795,3 +795,27 @@ cards are in the HTML the server sends, in their place in the article, and React
 > CLS 0 en móvil, una impresión por bloque). Su línea de base en la web real: 0,55–0,7 s con buena red y **~7,6 s en
 > móvil con perfil lento** (150 ms, 1,6 Mbit/s, CPU ×4), que es donde debe notarse. Caché de las páginas con tarjetas:
 > `max-age=60, s-maxage=60, stale-while-revalidate=60`.
+
+## Quitar la copia duplicada del artículo en el HTML (27/11) — texto para el agente de Replit
+
+> [claude, 2026-11-27] Pedido por Angelo tras quedar en prod la versión con tarjetas en servidor (20:24 UTC,
+> `index-wrUMzWqw.js`). El artículo viaja dos veces: pintado en `#root` y como texto en `window.__SEO_HTML__`
+> (121 KB de 280 KB; 37 KB → 24 KB comprimido). Línea de base de esa versión con Lighthouse (throttling aplicado):
+> FCP 1,99–2,34 s en móvil lento, 0,56–0,96 s en móvil y 0,61–0,69 s en escritorio. Detalle en el
+> [journal](../journal/2026-11/2026-11-27-replit-medida-de-carga-articulo-boots.md).
+
+> Remove the duplicate article markup from the page. Go straight to the live site; Angelo has approved it.
+>
+> 1. **Drop `window.__SEO_HTML__`** from the server response. On the client, read the markup from `#root`
+>    (`innerHTML`) once, before React replaces the server content, and use that wherever the string was used.
+> 2. **Nothing else changes**: same cards in the server HTML, same images (2 eager, 22 lazy, `medium`, no preloads,
+>    no `fetchpriority`), same early-click handling (`__VIO_PENDING_CLICK__`), same takeover when the app mounts.
+> 3. **Rollback target** is the current live build (published 20:24 UTC, `index-wrUMzWqw.js`). Keep it ready.
+> 4. **Checks right after publishing**, on the live Boots article with `?vio_internal=1`: «View source» has the
+>    24 cards once and no `__SEO_HTML__`; nothing moves or flashes when the app mounts (CLS under 0.05); one
+>    impression per block on `events.vio.live`; a click before the app mounts still opens the right product
+>    detail; cart and Kustom checkout open. **Do not press «Betal ordren».**
+> 5. **Speed is judged on paint only**: Lighthouse first contentful paint plus filmstrip, devtools throttling
+>    (150 ms, 1.6 Mbit/s, CPU ×4, cold cache), for mobile, desktop and mobile slow profile. No DOM-based measures.
+>    If a functional check in point 4 fails, roll back first and report after. Do not roll back on speed numbers
+>    alone: send them and wait.
