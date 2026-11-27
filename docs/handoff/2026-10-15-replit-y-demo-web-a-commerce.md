@@ -722,3 +722,56 @@ hace 18 llamadas a `/api/vio/article-products` (1,6–2,5 s cada una) y 18 a `gr
 
 Queda para después, aparte: pintar las tarjetas en el servidor (que vengan dibujadas en el HTML y la SDK solo active
 los clics). Es lo que baja el caso bueno de ~1 s a casi instantáneo, pero es un cambio mayor en Replit.
+
+## Tarjetas de producto pintadas en el servidor (27/11) — texto para el agente de Replit
+
+> [claude, 2026-11-27] Fase siguiente de la carga, pedida por Angelo. Sale de la
+> [segunda medida](../journal/2026-11/2026-11-27-replit-medida-de-carga-articulo-boots.md): con los productos ya en el
+> HTML las tarjetas salen a 0,66–0,83 s porque esperan al JavaScript (244 KB comprimido). El servidor de Replit ya
+> pinta el artículo en `#root` (`data-seo-shell`: titular, foto, texto y títulos), pero se salta los bloques
+> `vioProducts`. **No hace falta ningún cambio en la SDK**: las tarjetas son componentes React de Replit. El texto se
+> entrega en inglés.
+
+**Product cards rendered on the server**
+
+Today the server already renders the article into `#root` (the `data-seo-shell` markup: kicker, headline, hero image,
+paragraphs and headings), and `window.__VIO_PRODUCTS__` carries the products. But the `vioProducts` blocks are left
+out of that markup, so the cards only appear when React mounts (0.66–0.83 s, after the 244 KB bundle). The goal: the
+cards are in the HTML the server sends, in their place in the article, and React takes over without anything moving.
+
+> 1. **Render every `vioProducts` block in the server markup, where it sits in `content`.** Use the same products the
+>    server already inlines as `__VIO_PRODUCTS__`. For each product: image, brand, title, price now
+>    (`price.amount_incl_taxes`), the price before struck through when `price.compare_at_incl_taxes` is higher, the
+>    discount badge, and the button (`ctaText`, «Kjøp her»). A product that is not in the server's copy is left out;
+>    React adds it later as it does today.
+> 2. **Same look as the React card, so nothing jumps when React mounts.** The best way is to produce the markup from
+>    the same component (`renderToStaticMarkup` of the block in a static mode, or real SSR with `hydrateRoot` if you
+>    prefer). If you write separate markup, it must use the same classes and sizes. Reserve the space of anything the
+>    static card does not show (shipping label, brand logo), so the layout does not shift when it appears.
+> 3. **Both layouts.** `layout: "stack"` renders one card per product. `layout: "carousel"` renders the row with the
+>    same card width and horizontal scroll (CSS scroll is enough before React; arrows and snapping come with React).
+> 4. **Images.** Give every product image its `width`/`height` or an `aspect-ratio`, so the card has its final height
+>    before the image loads. The images of the first block: `loading="eager"` and `fetchpriority="high"`; the rest
+>    `loading="lazy"`.
+> 5. **A click before React is ready must not be lost.** Put `data-vio-product-id` (and the sponsor and campaign ids)
+>    on each static card. A small inline script remembers the last card clicked before the app mounts and shows it as
+>    pressed; when the block mounts, it opens that product's detail the same way a click does today.
+> 6. **The static markup sends nothing to Vio.** No impressions, no slot registration, no SDK calls from it. The React
+>    block keeps doing all of that exactly once, as today (`registerSlot`, the impression observer, `getByIds`). After
+>    the change the article must send the same events as before, not more.
+> 7. **Prices stay honest.** The server's copy is at most ~2 minutes old (keep the background refresh). When React and
+>    the SDK load, they update price and stock from the snapshot as today. The cart and the checkout always use live
+>    prices, so nothing changes there.
+> 8. **Verify**, on the Boots article
+>    (`…/arets-skjonnhetsgaver-pa-tilbud-no7-favorittene-du-kan-legge-under-treet?vio_internal=1`):
+>    - «View source» contains the cards, with image, title, price and button, between the right paragraphs;
+>    - with JavaScript disabled the cards are visible and laid out correctly;
+>    - with JavaScript on, nothing moves when the app mounts (layout shift under 0.05 in the Performance panel);
+>    - a click on «Kjøp her» in the first half second still opens the product detail;
+>    - the Network tab shows the same `events.vio.live` calls as before (one impression per block, not two);
+>    - the product detail, the cart and the Kustom checkout open as before. **Do not press «Betal ordren».**
+>    - send the time until the cards are visible, before and after, on desktop and on mobile, and a screenshot of the
+>      article on mobile.
+>
+> Do it on the test copy first (`mote-livsstil-hub-vio.replit.app`) and send the results; the live site after Angelo's
+> OK. This is a larger change than the last one.
