@@ -173,3 +173,16 @@ Chrome sin caché en cada pasada, `?vio_internal=1`.
 - El cuerpo del HTML tarda ~270 ms en llegar tras el primer byte (37 KB comprimido; curl y navegador coinciden).
   Quitar la copia de `window.__SEO_HTML__` lo baja a 24 KB.
 - Las pasadas están en el scratchpad de la sesión (`ssr/lh/`), no en el repo.
+
+### Cierre: la sonda de Replit no medía el pintado (27/11, ~21:00 UTC)
+
+> [claude, 2026-11-27] Replit explicó su sonda: daba por «visible» la primera imagen de producto descargada y
+> maquetada (sin exigir que estuviera pintada ni en pantalla), sondeando cada 50 ms desde fuera con lectura de
+> `document.body.innerText`, lo que fuerza una maquetación completa y pesa mucho más en la página de 280 KB. En la
+> web vieja medía montaje + datos + imagen; en la nueva, solo la imagen. Sus números de «tarjeta visible» **no
+> sirven para juzgar ninguna de las dos versiones**, y el rollback se pedía por ellos.
+
+- La versión de las 20:24 (`index-wrUMzWqw.js`) sigue en la web real. Recomendación a Angelo: se queda, sin rollback.
+- A partir de ahora las comparaciones de carga con Replit van en pintado: FCP + filmstrip de Lighthouse con
+  throttling aplicado, nunca medidas de DOM.
+- Pendiente como cambio aparte: quitar la copia de `window.__SEO_HTML__`.
