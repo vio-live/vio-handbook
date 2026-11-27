@@ -714,7 +714,9 @@ hace 18 llamadas a `/api/vio/article-products` (1,6–2,5 s cada una) y 18 a `gr
 >    - no sale ninguna `GetProductsByIds` a `graph-ql.vio.live` (con la SDK nueva);
 >    - mandad el tiempo hasta ver las tarjetas, antes y después, en escritorio y en móvil.
 >
-> Primero en la copia de pruebas (`mote-livsstil-hub-vio.replit.app`); a la web real con el OK de Angelo.
+> Directo en la web real (`moteoglivsstil.no`): Angelo lo aprobó el 27/11 («voy a ir directo a prod»). Desplegad los
+> puntos 1 a 5 de uno en uno, repetid la comprobación del punto 7 tras cada uno y tened a mano el despliegue anterior
+> para volver atrás.
 
 Queda para después, aparte: pintar las tarjetas en el servidor (que vengan dibujadas en el HTML y la SDK solo active
 los clics). Es lo que baja el caso bueno de ~1 s a casi instantáneo, pero es un cambio mayor en Replit.
