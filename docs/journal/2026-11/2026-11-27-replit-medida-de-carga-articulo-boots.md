@@ -145,3 +145,31 @@ Medido en el Chrome de Angelo (escritorio, buena red, `?vio_internal=1`) y con c
   temprano, caja) y Replit lo confirma por su lado.
 - Recomendación a Angelo: volver al despliegue anterior ya y republicar solo cuando los tres perfiles igualen o
   mejoren la línea de base.
+
+### Segundo intento en la web real (20:24 UTC) y medida propia con Lighthouse (27/11, ~20:40 UTC)
+
+> [claude, 2026-11-27] Replit publicó el arreglo del punto 4 (2 imágenes inmediatas, 22 `lazy`, variante `medium`,
+> sin `fetchpriority` ni precargas; comprobado en el HTML, JS `index-wrUMzWqw.js`) y pide volver atrás otra vez:
+> su «primera tarjeta visible» da 1,16–1,59 s en móvil, 1,02–2,06 s en escritorio y 11–17 s en móvil lento, frente
+> a 0,58–0,71 / 0,55–0,69 / ~7,6 s de la web vieja.
+
+**No lo reproduzco.** Ahora sí puedo medir el perfil lento: Lighthouse 12 en local con el throttling aplicado
+(`npx lighthouse <url> --only-categories=performance --throttling-method=devtools`: 150 ms, 1,6 Mbit/s, CPU ×4),
+Chrome sin caché en cada pasada, `?vio_internal=1`.
+
+| Versión de las 20:24 | Primer pintado (FCP) | Notas |
+|---|---|---|
+| Móvil lento (3 pasadas) | 1,99–2,34 s | a los 3,2 s las tarjetas ya están en pantalla con título, precio y botón; la imagen de la primera llega a ~3,0–3,2 s en 2 de 3 pasadas (8,2 s en la otra) |
+| Móvil sin límite (2) | 0,56–0,96 s | |
+| Escritorio sin límite (2) | 0,61–0,69 s | |
+| Chrome real, nivel superior, JS recién bajado | 0,38 s | LCP 0,40 s |
+
+- En el perfil lento el JS principal (239 KB) termina de bajar entre 5,5 y 9,2 s: en la web vieja las tarjetas no
+  podían salir antes de eso. El banner de consentimiento (Didomi) tapa la página hacia los 12 s en las dos versiones.
+- Hipótesis sobre la diferencia con Replit, **sin comprobar**: su sonda espera a la tarjeta que pinta la app al
+  montar (el HTML del servidor se sustituye entero en ese momento), o su contenedor (CPU ruidosa, lo dicen ellos)
+  tarda mucho más en leer un HTML de 280 KB. La pasada local de Replit también falló en predecir el primer intento.
+- **Falta la web vieja medida con este mismo método.** Sin eso comparo mi laboratorio con el suyo.
+- El cuerpo del HTML tarda ~270 ms en llegar tras el primer byte (37 KB comprimido; curl y navegador coinciden).
+  Quitar la copia de `window.__SEO_HTML__` lo baja a 24 KB.
+- Las pasadas están en el scratchpad de la sesión (`ssr/lh/`), no en el repo.
