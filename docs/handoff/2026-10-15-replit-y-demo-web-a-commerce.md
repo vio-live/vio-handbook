@@ -773,5 +773,11 @@ cards are in the HTML the server sends, in their place in the article, and React
 >    - send the time until the cards are visible, before and after, on desktop and on mobile, and a screenshot of the
 >      article on mobile.
 >
-> Do it on the test copy first (`mote-livsstil-hub-vio.replit.app`) and send the results; the live site after Angelo's
-> OK. This is a larger change than the last one.
+> ~~Do it on the test copy first.~~ **Directo a la web real**, por decisión de Angelo (27/11: «no quiero en la prueba,
+> sino en prod»): publicar, tener a mano el despliegue anterior y pasar las comprobaciones del punto 8 en el artículo
+> real con `?vio_internal=1`; si alguna falla, volver atrás primero.
+>
+> [claude, 2026-11-27] Replit lo tiene hecho en local (SSR con los mismos componentes React, 24 tarjetas en el HTML,
+> CLS 0 en móvil, una impresión por bloque). Su línea de base en la web real: 0,55–0,7 s con buena red y **~7,6 s en
+> móvil con perfil lento** (150 ms, 1,6 Mbit/s, CPU ×4), que es donde debe notarse. Caché de las páginas con tarjetas:
+> `max-age=60, s-maxage=60, stale-while-revalidate=60`.
