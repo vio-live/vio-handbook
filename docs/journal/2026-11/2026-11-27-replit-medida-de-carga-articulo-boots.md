@@ -36,13 +36,19 @@ Medido en el Chrome de Angelo (escritorio, buena red, `?vio_internal=1`) y con c
   de la carga en frío no retrasaban las tarjetas: se tiraban. En frío las tarjetas salen cuando llega la foto
   (~1,55 s en esa carga); lo que las retrasa es que la foto empieza tarde (941 ms, tras el JS de Replit) y el HTML
   sin productos.
-- **SDK** [web-sdk#176](https://github.com/vio-live/vio-web-sdk/pull/176) (abierto, sin mergear): `getByIds` espera
+- **SDK** [web-sdk#176](https://github.com/vio-live/vio-web-sdk/pull/176) (mergeado, `584b9a9`): `getByIds` espera
   350 ms a la foto en vuelo antes de preguntar también a GraphQL; las llamadas del mismo turno salen como una sola
   petición (máx. 50 ids); `snapshotUrl()` en `./preload` para que un host con servidor escriba la etiqueta de la foto
   en su HTML. 11 tests nuevos (1599 en verde; los 16 rojos son los de Node 26, iguales en `main`).
 - **Texto para Replit** en el [handoff](../../handoff/2026-10-15-replit-y-demo-web-a-commerce.md) (sección del 27/11):
   `__VIO_PRODUCTS__` siempre en el HTML, la foto en el `<head>`, caché del HTML sin parámetros de seguimiento y con
   stale-while-revalidate, una llamada en vez de 18, assets inmutables.
+
+- **Release 0.43.0** ([web-sdk#177](https://github.com/vio-live/vio-web-sdk/pull/177), `1c9790e`): solo el bump y el
+  changelog. Copia limpia de `main`, compilada, en `~/vio-commerce/worktrees/sdk-publish-0430`; la publica Angelo.
+- **Lo nuestro en prod, comprobado (15:46 UTC):** la foto de la surface 1 (`.web.json` y `.web.js`) responde 200, con
+  37 s de antigüedad, 98 productos con envío y los 18 de la campaña 8. npm `latest` = 0.42.0.
+- Angelo: Replit aplica el texto **directo en la web real**, sin pasar por la copia de pruebas.
 
 ## Decisions
 - Angelo: «sí, prepara el cambio de la SDK y el texto para Replit». Propuesta entregada (Replit: productos siempre en el HTML, caché del HTML sin contar las
@@ -54,4 +60,4 @@ Medido en el Chrome de Angelo (escritorio, buena red, `?vio_internal=1`) y con c
 - Sin medida en móvil.
 
 ## Next session
-- Con el OK de Angelo: cambios de la SDK y texto para Replit; volver a medir en frío y en móvil.
+- Cuando Angelo publique la 0.43.0 y Replit aplique el texto: volver a medir el artículo de Boots en frío y en móvil.

@@ -672,7 +672,8 @@ Dos pedidos de Boots, hechos para todas las marcas. No hay que cambiar código e
 
 > [claude, 2026-11-27] Sale de la [medida del artículo de Boots](../journal/2026-11/2026-11-27-replit-medida-de-carga-articulo-boots.md).
 > Los puntos 1 a 5 no dependen de ninguna versión nueva de la SDK (valen con la 0.42.0). El punto 6 espera a que
-> Angelo publique la versión con [web-sdk#176](https://github.com/vio-live/vio-web-sdk/pull/176).
+> Angelo publique la **0.43.0** ([web-sdk#176](https://github.com/vio-live/vio-web-sdk/pull/176) y
+> [#177](https://github.com/vio-live/vio-web-sdk/pull/177), mergeados el 27/11; `main` en `1c9790e`, sin publicar).
 
 Medimos el artículo de Boots en `moteoglivsstil.no`. Con todo en caché las tarjetas salen a ~1 s. El problema es la
 primera visita: el HTML tarda de 1 a 2,4 s cuando no está en la caché del CDN, llega sin productos, y el navegador
@@ -704,7 +705,7 @@ hace 18 llamadas a `/api/vio/article-products` (1,6–2,5 s cada una) y 18 a `gr
 > 5. **Los ficheros de `/assets/`** llevan hash en el nombre pero se sirven con `max-age=60` y sin caché del CDN
 >    (`cf-cache-status: BYPASS`). Ponedles `cache-control: public, max-age=31536000, immutable`. En los artículos con
 >    `vioEnabled`, añadid `<link rel="modulepreload">` del chunk `VioProductsBlock` y del chunk de la SDK.
-> 6. **Cuando Angelo avise de la versión nueva de la SDK**, subidla con `--save-exact`. No hay que cambiar código:
+> 6. **Cuando Angelo avise de que la SDK `0.43.0` está en npm**, subidla: `npm i --save-exact @vio-live/web-sdk@0.43.0`. No hay que cambiar código:
 >    `getByIds` espera a la foto antes de preguntar a GraphQL y junta en una sola petición las llamadas de todos los
 >    bloques.
 > 7. **Comprobad, en una ventana de incógnito y con la pestaña Red abierta**, este artículo con una query que no
