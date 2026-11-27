@@ -60,3 +60,12 @@ Angelo preguntó por «el tracking que nos faltaba» de Kondomeriet y dio el OK 
 > lector no aterriza en ninguna página de Kondomeriet con el parámetro, así que el script no puede atribuir la venta.
 > Además hace falta que el lector acepte las cookies de Kondomeriet. Es un hueco de la integración Hurtigkasse ↔
 > Circlewise en Kondomeriet/EQOM, no una URL que falte en Vio. El clic sí debería verse en Circlewise.
+
+> [claude, 2026-11-27] **GTM de Kondomeriet (GTM-TFD74N v293) leído:** el script de entrada de Circlewise (tag 213,
+> `entrypoint_v2`, el que guarda el `tmt_data` del clic) solo se dispara con consentimiento de estadística de
+> CookieInformation (`cookie_cat_statistic`); el de venta (tag 214, `checkout.min.js`, oferta `q1aa55`, evento
+> `s85siw`) con el evento `purchase` del dataLayer (`ecommerce.transaction_id/value/currency/coupon`). Con la
+> Hurtigkasse el `tmt_data` se pierde en el 302 de `/kjop/` → `/checkout/vipps/<id>/` y el lector no carga ninguna
+> página de Kondomeriet antes de Vipps: no hay arreglo desde Vio. Opciones para Kondomeriet/EQOM: guardar `tmt_*` del
+> POST en la orden y mandar la venta a Circlewise de servidor a servidor, o reportarlas a mano a Circlewise. Go-live
+> previsto 28/11.
