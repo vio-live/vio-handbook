@@ -50,6 +50,17 @@ Medido en el Chrome de Angelo (escritorio, buena red, `?vio_internal=1`) y con c
   37 s de antigüedad, 98 productos con envío y los 18 de la campaña 8. npm `latest` = 0.42.0.
 - Angelo: Replit aplica el texto **directo en la web real**, sin pasar por la copia de pruebas.
 
+- **0.43.0 en npm** (`latest` desde las 16:00 UTC, publicada por Angelo; shasum `d24de126…`, el mismo del build
+  preparado; lleva `snapshotUrl`). Costó varios intentos: `npm publish` se queda esperando la confirmación en el
+  navegador (2FA de la cuenta `vio-`) y, con dos intentos a la vez o uno cortado, el registro contesta
+  `409 Cannot publish over previously staged version` mientras `npm stage list` no enseña nada. El intento pendiente
+  acabó publicándose solo unos minutos después.
+- **Error mío:** con el 409 repetido di la 0.43.0 por perdida y corté una 0.43.1
+  ([#178](https://github.com/vio-live/vio-web-sdk/pull/178)) en el mismo comando que volvía a mirar el registro, sin
+  esperar a leerlo: justo entonces la 0.43.0 ya estaba publicada. Revertido en
+  [#179](https://github.com/vio-live/vio-web-sdk/pull/179): `main` (`df854ea`) tiene el mismo árbol que la release
+  0.43.0. La 0.43.1 no se publicó.
+
 ## Decisions
 - Angelo: «sí, prepara el cambio de la SDK y el texto para Replit». Propuesta entregada (Replit: productos siempre en el HTML, caché del HTML sin contar las
   queries de seguimiento y con stale-while-revalidate, assets inmutables, tarjetas pintadas en servidor, una llamada
@@ -60,4 +71,4 @@ Medido en el Chrome de Angelo (escritorio, buena red, `?vio_internal=1`) y con c
 - Sin medida en móvil.
 
 ## Next session
-- Cuando Angelo publique la 0.43.0 y Replit aplique el texto: volver a medir el artículo de Boots en frío y en móvil.
+- Cuando Replit aplique el texto (la 0.43.0 ya está en npm): volver a medir el artículo de Boots en frío y en móvil.
