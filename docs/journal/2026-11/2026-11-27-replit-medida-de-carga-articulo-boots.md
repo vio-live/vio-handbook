@@ -72,3 +72,28 @@ Medido en el Chrome de Angelo (escritorio, buena red, `?vio_internal=1`) y con c
 
 ## Next session
 - Cuando Replit aplique el texto (la 0.43.0 ya está en npm): volver a medir el artículo de Boots en frío y en móvil.
+
+## Segunda medida, con los cambios de Replit en la web real (27/11, ~16:45 UTC)
+
+> [claude, 2026-11-27] Mismo artículo, mismo Chrome (escritorio, buena red, `?vio_internal=1`), curl para las cabeceras.
+
+| | Antes | Después |
+|---|---|---|
+| HTML con `fbclid` distinto cada vez | 1,0–2,4 s (siempre en frío) | 0,23–0,37 s (`x-cache: HIT`) |
+| HTML con un parámetro desconocido (frío) | 1,0–1,5 s | 0,45–0,49 s |
+| `__VIO_PRODUCTS__` en el HTML en frío | no | sí (copia de 158 s) |
+| Tarjetas, visita con `fbclid` nuevo (iframe, DOM) | ~1,6 s | 0,74–0,83 s |
+| Tarjetas, todo en caché | ~1,0–1,1 s | ~0,66 s |
+| Peticiones de la primera carga | 83 | 38 |
+| `/api/vio/article-products` | 18 | 0 |
+| `graph-ql.vio.live` al cargar | 18 | 0 |
+
+- Aplicado: productos siempre en el HTML, etiqueta de la foto y `preconnect` en el `<head>`, 5 `modulepreload`,
+  `fbclid`/`utm_*` fuera de la clave de caché, SDK **0.43.0** en el bundle.
+- **Sin aplicar:** los ficheros de `/assets/` siguen con `max-age=60, s-maxage=30` y `cf-cache-status: BYPASS`
+  (el principal pesa 244 KB comprimido); `/api/vio/article-products` sigue `cache-control: private` (ya no se llama
+  al cargar); la cabecera del HTML no lleva `stale-while-revalidate`.
+- En la primera carga de nivel superior (JS sin caché): HTML a 0,31 s, JS principal terminado a 0,67 s, chunk del
+  bloque a 0,77 s; el momento exacto de las tarjetas ahí no se observó (pestaña oculta). La foto baja desde los
+  0,31 s y ya no bloquea las tarjetas.
+- Sin medida en móvil ni con red lenta.
