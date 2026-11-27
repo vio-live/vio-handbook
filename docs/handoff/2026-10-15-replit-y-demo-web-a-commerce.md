@@ -725,6 +725,13 @@ los clics). Es lo que baja el caso bueno de ~1 s a casi instantáneo, pero es un
 
 ## Tarjetas de producto pintadas en el servidor (27/11) — texto para el agente de Replit
 
+> [claude, 2026-11-27, ~19:15 UTC] **Corrección: esta versión pinta más lento que la anterior y hay que volver
+> atrás** (móvil lento 23–25 s frente a ~7,6 s, medido por Replit). Causa: el punto 4 de este texto pide
+> `eager` + `fetchpriority="high"` para todas las imágenes del primer bloque; en un carrusel de 7 son 1,4 MB a
+> prioridad alta (variante `large`). **El punto 4 queda sustituido:** solo las tarjetas visibles en pantalla cargan
+> ya (sin `fetchpriority="high"` ni `preload`), el resto `lazy`, y las tarjetas usan la variante `medium`. Detalle
+> en la [corrección del journal](../journal/2026-11/2026-11-27-replit-medida-de-carga-articulo-boots.md).
+>
 > [claude, 2026-11-27, ~18:10 UTC] **Publicado en la web real y comprobado**
 > ([tercera medida](../journal/2026-11/2026-11-27-replit-medida-de-carga-articulo-boots.md)): 24 tarjetas en el HTML
 > del servidor, en el DOM a 0,37 s (escritorio) y 0,49 s (ancho de móvil), sin movimiento al montar, una impresión

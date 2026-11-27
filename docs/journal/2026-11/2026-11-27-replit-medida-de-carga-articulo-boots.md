@@ -126,3 +126,22 @@ Medido en el Chrome de Angelo (escritorio, buena red, `?vio_internal=1`) y con c
   `window.__SEO_HTML__` (121 KB). El HTML pesa 283 KB (36,7 KB comprimido); sin la copia serían 161 KB (24 KB).
 - **Sin medir desde aquí:** el perfil de móvil con red lenta y CPU ×4 (línea de base de Replit: ~7,6 s). El «después»
   de ese perfil lo tiene que dar Replit.
+
+### Corrección a la tercera medida: la versión con tarjetas en servidor es más lenta en pintar (27/11, ~19:15 UTC)
+
+> [claude, 2026-11-27] Mi «0,37 s» era **tarjetas en el DOM**, con la caché caliente; no el momento en que se
+> pintan. Replit midió «primera tarjeta visible» con los tres perfiles de la línea de base y sale peor que antes:
+> móvil 0,99–2,23 s (antes 0,58–0,71), escritorio 1,02–2,49 s (antes 0,55–0,69), móvil lento 23–25 s (antes ~7,6 s).
+
+- **Causa, comprobada en el HTML de la web real:** las 7 imágenes del primer carrusel salen con
+  `loading="eager"` + `fetchPriority="high"` y con `<link rel="preload" as="image" fetchPriority="high">`. Son la
+  variante `large` (1024×1024): **1,4 MB** entre las siete, una sola pesa 1 068 KB. Compiten con dos hojas de
+  Google Fonts que bloquean el pintado.
+- **El fallo viene de mi texto** (punto 4 del handoff: «the images of the first block: `loading="eager"` and
+  `fetchpriority="high"`»). Con un carrusel de 7 eso son 7 imágenes a prioridad alta, no 1–2.
+- Existe la variante `medium` (500×500) en la misma ruta: 364 KB las siete (la pesada, 251 KB). La tarjeta mide
+  240 px en escritorio y 173 px en móvil.
+- Lo demás de la tercera medida se mantiene (24 tarjetas en el HTML, sin movimiento, 18/18 impresiones, clic
+  temprano, caja) y Replit lo confirma por su lado.
+- Recomendación a Angelo: volver al despliegue anterior ya y republicar solo cuando los tres perfiles igualen o
+  mejoren la línea de base.
