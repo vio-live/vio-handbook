@@ -7,6 +7,10 @@ status: live
 
 # 26/11: las 500 000 exposiciones de Aller y lo que vemos nosotros
 
+> [claude, 2026-11-27] Corrección: las cifras de Vio de esta entrada incluyen unas 15 visitas de prueba marcadas
+> `internal = 1` que no estaban en la lista de internos. Con los dos filtros el 25/11 es 907 → 128 → 11 → 11 → 2.
+> Detalle en [la entrada del 27/11](2026-11-27-informe-diario-boots-en-spam.md).
+
 ## Goal
 Aller dice que mandó 500 000 exposiciones al artículo de Boots el 25/11. Angelo: lo que nosotros contamos es quien
 ve los productos; falta saber cuántos entran, cuántos se quedan y cuántos de esos 500 000 hacen clic.
