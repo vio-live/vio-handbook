@@ -68,7 +68,10 @@ Todo es del 25/11 (día de Oslo), artículo de Boots en `moteoglivsstil.no`, Cli
 - Lectura para Angelo: hay dos pérdidas distintas. Antes de los productos (2 de cada 3 se van; la mitad antes de
   4,5 s y las tarjetas tardan entre 6 y 10 s en móvil 4G, ver abajo) y después (la mitad de quien los ve se va en
   menos de 10 s sin tocar nada). La compra sale de un grupo pequeño que se queda más de un minuto.
-- Análisis entregado a Angelo en noruego, en el chat (para reenviar).
+- Análisis entregado a Angelo en noruego, en el chat (para reenviar), y como hoja de Google en su Drive:
+  [«Boots i Mote & Livsstil: analyse av 25.11.2026»](https://docs.google.com/spreadsheets/d/1GPYXSl5i9XTYYi0eh0eIUoWcZMjFkAlIr5wKmpWzIsw/edit).
+  Diez pestañas (resumen, embudo, tiempo, bloques, productos, hora y dispositivo, kasse, botones, carga y
+  permanencia, fuentes); las tasas son fórmulas y cada tabla lleva nota de fuente. Privada, sin compartir.
 
 ## Blockers / open questions
 - «Quien se queda 10 s ve productos» sale de comparar totales (Replit: 36 % se queda 10 s o más, unos 970; Vio: 907
