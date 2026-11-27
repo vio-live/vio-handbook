@@ -725,6 +725,13 @@ los clics). Es lo que baja el caso bueno de ~1 s a casi instantáneo, pero es un
 
 ## Tarjetas de producto pintadas en el servidor (27/11) — texto para el agente de Replit
 
+> [claude, 2026-11-27, ~18:10 UTC] **Publicado en la web real y comprobado**
+> ([tercera medida](../journal/2026-11/2026-11-27-replit-medida-de-carga-articulo-boots.md)): 24 tarjetas en el HTML
+> del servidor, en el DOM a 0,37 s (escritorio) y 0,49 s (ancho de móvil), sin movimiento al montar, una impresión
+> por bloque (18 de 18), clic temprano, detalle y caja de Kustom correctos. Quedan: quitar la copia del artículo en
+> `window.__SEO_HTML__` (121 KB de 283 KB), la regla de Cloudflare para `/assets/` y el «después» del perfil de
+> móvil lento, que lo mide Replit.
+
 > [claude, 2026-11-27] Fase siguiente de la carga, pedida por Angelo. Sale de la
 > [segunda medida](../journal/2026-11/2026-11-27-replit-medida-de-carga-articulo-boots.md): con los productos ya en el
 > HTML las tarjetas salen a 0,66–0,83 s porque esperan al JavaScript (244 KB comprimido). El servidor de Replit ya

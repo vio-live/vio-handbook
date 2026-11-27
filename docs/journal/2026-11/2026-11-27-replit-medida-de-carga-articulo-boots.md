@@ -97,3 +97,32 @@ Medido en el Chrome de Angelo (escritorio, buena red, `?vio_internal=1`) y con c
   bloque a 0,77 s; el momento exacto de las tarjetas ahí no se observó (pestaña oculta). La foto baja desde los
   0,31 s y ya no bloquea las tarjetas.
 - Sin medida en móvil ni con red lenta.
+
+## Tercera medida, con las tarjetas pintadas en el servidor en la web real (27/11, ~18:10 UTC)
+
+> [claude, 2026-11-27] Replit publicó directo en la web real (decisión de Angelo: «no quiero en la prueba, sino en
+> prod»). Mismo artículo de Boots, `?vio_internal=1`, Chrome de escritorio con buena red; iframe del mismo origen a
+> 1280×800 y a 390×844, con `fetch` interceptado para leer lo que sale a `events.vio.live`.
+
+| | Segunda medida | Con tarjetas en servidor |
+|---|---|---|
+| Tarjetas en el DOM, escritorio (`fbclid` nuevo) | 0,74–0,83 s | **0,37 s** |
+| Tarjetas en el DOM, ancho de móvil | sin medir | **0,49 s** |
+| La app monta (escritorio / móvil) | — | 0,88 s / 1,13 s |
+| Movimiento de las tarjetas al montar | — | ≤ 1 px; CLS 0,0004 (escritorio), 0 (móvil) |
+| `article-products` / GraphQL al cargar | 0 / 0 | 0 / 0 |
+
+- El HTML del servidor trae las **24 tarjetas (17 productos, 18 bloques)** dentro de `#root`, en su sitio en el
+  artículo. Servidor y cliente pintan lo mismo: mismos 24, mismo orden, mismos títulos y precios.
+- **Impresiones: una por bloque, 18 de 18, ninguna repetida** (`component_impression`, SDK 0.43.0), aunque entre
+  los 0,6 y los 0,88 s conviven en el DOM las dos copias de las tarjetas (48).
+- **Clic antes de montar la app** (a los 0,27 s, la app montó a los 0,87 s): se guarda en `__VIO_PENDING_CLICK__` y
+  al montar abre el detalle del producto pulsado (`select_item`, `view_item`, `cta_click`). «Kjøp nå» abre la caja
+  con Kustom, datos y envíos de Boots (`begin_checkout`, `add_payment_info`). No se pagó.
+- **Sin aplicar todavía:** `/assets/` sigue con `max-age=60, s-maxage=30` y `cf-cache-status: BYPASS` (regla de
+  Cloudflare, zona que no es de Vio). La cabecera del HTML sigue `max-age=60, s-maxage=30`, sin
+  `stale-while-revalidate`.
+- **Mejora nueva a pedir:** el artículo viaja dos veces en el HTML — en `#root` y otra vez como texto en
+  `window.__SEO_HTML__` (121 KB). El HTML pesa 283 KB (36,7 KB comprimido); sin la copia serían 161 KB (24 KB).
+- **Sin medir desde aquí:** el perfil de móvil con red lenta y CPU ×4 (línea de base de Replit: ~7,6 s). El «después»
+  de ese perfil lo tiene que dar Replit.
