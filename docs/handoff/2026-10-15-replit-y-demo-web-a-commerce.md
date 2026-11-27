@@ -667,3 +667,54 @@ Dos pedidos de Boots, hechos para todas las marcas. No hay que cambiar código e
 >    `applyVioTheme({ paymentMarksDisplay: 'none' })`. Avisad antes de hacerlo.
 > 6. Mandad una captura de la ficha, del carrito y de la kasse del artículo de Boots. Con el OK de Angelo, publicad lo
 >    mismo en la web real (`moteoglivsstil.no`).
+
+## Carga de los artículos: productos siempre en el HTML y caché (27/11) — texto para el agente de Replit
+
+> [claude, 2026-11-27] Sale de la [medida del artículo de Boots](../journal/2026-11/2026-11-27-replit-medida-de-carga-articulo-boots.md).
+> Los puntos 1 a 5 no dependen de ninguna versión nueva de la SDK (valen con la 0.42.0). El punto 6 espera a que
+> Angelo publique la versión con [web-sdk#176](https://github.com/vio-live/vio-web-sdk/pull/176).
+
+Medimos el artículo de Boots en `moteoglivsstil.no`. Con todo en caché las tarjetas salen a ~1 s. El problema es la
+primera visita: el HTML tarda de 1 a 2,4 s cuando no está en la caché del CDN, llega sin productos, y el navegador
+hace 18 llamadas a `/api/vio/article-products` (1,6–2,5 s cada una) y 18 a `graph-ql.vio.live`.
+
+> 1. **`window.__VIO_PRODUCTS__` siempre en el HTML.** Hoy solo va cuando la caché del servidor está caliente; en frío
+>    el HTML sale sin productos (29 KB en vez de 47 KB). El servidor debe tener siempre a mano los productos de los
+>    artículos publicados: refrescadlos en segundo plano cada 2 minutos (no al llegar un lector) y servid siempre la
+>    última copia. El navegador descarta una copia de más de 5 minutos (`fetchedAt`), así que el refresco tiene que
+>    ser más corto que eso. La fuente más barata es la foto del CDN de Vio, una sola petición con todos los productos
+>    de la surface (precios, envío y stock, regenerada cada ~90 s):
+>    `https://container.vio.live/reachu-uploads-production/snapshots/04481de528542747b4666db8ddbb0040.web.json`
+>    (`products` es la lista; `catalogs` dice qué ids son de cada campaña y sponsor).
+> 2. **La foto, en el `<head>` del HTML** de los artículos con productos de Vio, para que empiece a bajar con la página
+>    y no después del JavaScript:
+>    ```html
+>    <link rel="preconnect" href="https://container.vio.live">
+>    <script async src="https://container.vio.live/reachu-uploads-production/snapshots/04481de528542747b4666db8ddbb0040.web.js"></script>
+>    ```
+>    La SDK usa esa etiqueta si ya está en la página (no añade otra). `preloadVio` se queda como está.
+> 3. **Caché del HTML.** Ahora es `max-age=60, s-maxage=30` y cada URL distinta es otra entrada: un lector que llega
+>    con `?fbclid=…` o `?utm_…` cae siempre en frío (1–2,4 s). Dos cambios:
+>    - quitar de la clave de caché los parámetros de seguimiento: `fbclid`, `gclid`, `utm_*`, `vio_internal`
+>      (ninguno cambia el HTML);
+>    - añadir `stale-while-revalidate=600` para servir la copia anterior mientras se regenera por detrás.
+> 4. **Una llamada en vez de 18.** `/api/vio/article-products` se pide una vez por bloque. Si hace falta (porque
+>    `__VIO_PRODUCTS__` no está), pedid todos los ids del artículo en una sola llamada. Y que sea cacheable:
+>    hoy responde `cache-control: private`; con `public, s-maxage=60, stale-while-revalidate=300` la sirve el CDN.
+> 5. **Los ficheros de `/assets/`** llevan hash en el nombre pero se sirven con `max-age=60` y sin caché del CDN
+>    (`cf-cache-status: BYPASS`). Ponedles `cache-control: public, max-age=31536000, immutable`. En los artículos con
+>    `vioEnabled`, añadid `<link rel="modulepreload">` del chunk `VioProductsBlock` y del chunk de la SDK.
+> 6. **Cuando Angelo avise de la versión nueva de la SDK**, subidla con `--save-exact`. No hay que cambiar código:
+>    `getByIds` espera a la foto antes de preguntar a GraphQL y junta en una sola petición las llamadas de todos los
+>    bloques.
+> 7. **Comprobad, en una ventana de incógnito y con la pestaña Red abierta**, este artículo con una query que no
+>    esté en caché: `…/arets-skjonnhetsgaver-pa-tilbud-no7-favorittene-du-kan-legge-under-treet?fbclid=prueba123&vio_internal=1`
+>    - el HTML llega en menos de 0,3 s y lleva `__VIO_PRODUCTS__`;
+>    - no sale ninguna llamada a `/api/vio/article-products`;
+>    - no sale ninguna `GetProductsByIds` a `graph-ql.vio.live` (con la SDK nueva);
+>    - mandad el tiempo hasta ver las tarjetas, antes y después, en escritorio y en móvil.
+>
+> Primero en la copia de pruebas (`mote-livsstil-hub-vio.replit.app`); a la web real con el OK de Angelo.
+
+Queda para después, aparte: pintar las tarjetas en el servidor (que vengan dibujadas en el HTML y la SDK solo active
+los clics). Es lo que baja el caso bueno de ~1 s a casi instantáneo, pero es un cambio mayor en Replit.

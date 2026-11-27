@@ -32,8 +32,20 @@ Medido en el Chrome de Angelo (escritorio, buena red, `?vio_internal=1`) y con c
 - **Foto del CDN:** 51 KB br (382 KB), 97 productos de toda la surface; `max-age=30, s-maxage=60, swr=300`, HIT.
   Conexión nueva a `container.vio.live`: 0,3–0,6 s.
 
+- **Corrección (leído el código de la SDK):** `getByIds` ya corría la foto contra GraphQL, así que las 18 consultas
+  de la carga en frío no retrasaban las tarjetas: se tiraban. En frío las tarjetas salen cuando llega la foto
+  (~1,55 s en esa carga); lo que las retrasa es que la foto empieza tarde (941 ms, tras el JS de Replit) y el HTML
+  sin productos.
+- **SDK** [web-sdk#176](https://github.com/vio-live/vio-web-sdk/pull/176) (abierto, sin mergear): `getByIds` espera
+  350 ms a la foto en vuelo antes de preguntar también a GraphQL; las llamadas del mismo turno salen como una sola
+  petición (máx. 50 ids); `snapshotUrl()` en `./preload` para que un host con servidor escriba la etiqueta de la foto
+  en su HTML. 11 tests nuevos (1599 en verde; los 16 rojos son los de Node 26, iguales en `main`).
+- **Texto para Replit** en el [handoff](../../handoff/2026-10-15-replit-y-demo-web-a-commerce.md) (sección del 27/11):
+  `__VIO_PRODUCTS__` siempre en el HTML, la foto en el `<head>`, caché del HTML sin parámetros de seguimiento y con
+  stale-while-revalidate, una llamada en vez de 18, assets inmutables.
+
 ## Decisions
-- Ninguna todavía: propuesta entregada a Angelo (Replit: productos siempre en el HTML, caché del HTML sin contar las
+- Angelo: «sí, prepara el cambio de la SDK y el texto para Replit». Propuesta entregada (Replit: productos siempre en el HTML, caché del HTML sin contar las
   queries de seguimiento y con stale-while-revalidate, assets inmutables, tarjetas pintadas en servidor, una llamada
   en vez de 18; SDK: `getByIds` espera a la foto en vuelo, aceptar los productos que da la página, juntar llamadas).
 
