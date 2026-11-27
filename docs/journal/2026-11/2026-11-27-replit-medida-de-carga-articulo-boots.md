@@ -1,0 +1,45 @@
+---
+date: 2026-11-27
+session: Replit / Mote & Livsstil — medida de carga del artículo de Boots
+participants: [angelo, claude]
+status: live
+---
+
+# Carga del artículo de Boots en Replit: dónde se va el tiempo ahora
+
+## Goal
+Angelo: «tenemos que mejorar el tiempo de carga con Replit»; su idea, guardar la respuesta del backend al publicar y
+dejar remoto solo lo que se abre (ficha, carrito, checkout). Medir y proponer.
+
+## Done
+Medido en el Chrome de Angelo (escritorio, buena red, `?vio_internal=1`) y con curl, artículo No7 de
+`moteoglivsstil.no`. Replit está en la SDK **0.42.0**.
+
+- **Replit ya mete los productos en el HTML** (`window.__VIO_PRODUCTS__`, junto a `__VIO_PRELOAD__` y
+  `__ARTICLE_PAYLOAD__`), pero **solo si la caché de su servidor está caliente** (y el cliente la descarta con más de
+  5 min). En frío el HTML llega sin productos (29 KB en vez de 47 KB).
+- **Con todo caliente:** HTML a 0,45–0,5 s, tarjetas a ~1,0–1,1 s (iframe del mismo origen, DOM observado). El camino
+  es HTML → `index-*.js` (238 KB gz / 797 KB) → chunk `VioProductsBlock` → tarjetas. Las tarjetas las pinta React en
+  el cliente; no vienen en el HTML.
+- **En frío** (primera carga de nivel superior): 18 `/api/vio/article-products` (una por bloque, `cache-control:
+  private`, 1,6–2,5 s cada una en el navegador; 0,5–1,0 s con curl) y 18 consultas a `graph-ql.vio.live` (0,4–1,6 s):
+  la SDK pidió `getByIds` antes de que llegara la foto del CDN (941 → 1546 ms), así que no la usó. Las tarjetas
+  dependen de la primera respuesta de cada bloque: entre ~1,8 y ~3 s (deducido de los tiempos de respuesta; el DOM de
+  esa carga no se pudo observar porque la pestaña estaba oculta).
+- **HTML:** `cache-control: max-age=60, s-maxage=30`; TTFB 0,08–0,16 s en caché y **1,0–2,4 s sin ella**. Cualquier
+  query nueva (`fbclid`, `utm_*`) es otra entrada de caché: quien llega desde redes cae siempre en frío.
+- **JS de Replit:** los ficheros con hash se sirven con `max-age=60` y `cf-cache-status: BYPASS`.
+- **Foto del CDN:** 51 KB br (382 KB), 97 productos de toda la surface; `max-age=30, s-maxage=60, swr=300`, HIT.
+  Conexión nueva a `container.vio.live`: 0,3–0,6 s.
+
+## Decisions
+- Ninguna todavía: propuesta entregada a Angelo (Replit: productos siempre en el HTML, caché del HTML sin contar las
+  queries de seguimiento y con stale-while-revalidate, assets inmutables, tarjetas pintadas en servidor, una llamada
+  en vez de 18; SDK: `getByIds` espera a la foto en vuelo, aceptar los productos que da la página, juntar llamadas).
+
+## Blockers
+- La carga en frío de nivel superior no se midió con el DOM (ventanas emergentes bloqueadas, pestaña oculta).
+- Sin medida en móvil.
+
+## Next session
+- Con el OK de Angelo: cambios de la SDK y texto para Replit; volver a medir en frío y en móvil.
